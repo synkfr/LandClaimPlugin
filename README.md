@@ -206,14 +206,6 @@ claims:
     - "nether,5,-30"
 ```
 
-## 🖼️ Screenshots
-
-![Claim Visualization](https://i.imgur.com/5Kz9Q7r.png)  
-*Visual representation of claimed chunks*
-
-![Action Bar Display](https://i.imgur.com/3GfYt2H.png)  
-*Action bar showing claim ownership*
-
 ## ❓ Support
 
 For support, bug reports, or feature requests:  
