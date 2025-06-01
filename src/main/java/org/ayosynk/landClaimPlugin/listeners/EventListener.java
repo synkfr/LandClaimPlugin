@@ -71,7 +71,6 @@ public class EventListener implements Listener {
         this.configManager = configManager;
         this.commandHandler = plugin.getCommandHandler();
 
-        // Start action bar task
         startActionBarTask();
     }
 
@@ -118,7 +117,6 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        // Check if the player moved to a new chunk
         Location from = event.getFrom();
         Location to = event.getTo();
         if (to == null) return;
@@ -130,7 +128,6 @@ public class EventListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        // Handle auto claim
         if (commandHandler.isAutoClaimEnabled(playerId)) {
             ChunkPosition pos = new ChunkPosition(toChunk);
             if (!claimManager.isChunkClaimed(pos)) {
@@ -140,7 +137,6 @@ public class EventListener implements Listener {
             }
         }
 
-        // Handle auto unclaim
         if (commandHandler.isAutoUnclaimEnabled(playerId)) {
             ChunkPosition fromPos = new ChunkPosition(fromChunk);
             if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
@@ -152,13 +148,11 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        // Check the block's location, not player's location
         checkBlockPermission(event.getPlayer(), event.getBlock(), event);
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        // Check the block's location, not player's location
         checkBlockPermission(event.getPlayer(), event.getBlock(), event);
     }
 
@@ -168,7 +162,6 @@ public class EventListener implements Listener {
 
         Block block = event.getClickedBlock();
 
-        // Only handle interactable blocks
         if (!INTERACTABLE_BLOCKS.contains(block.getType())) return;
 
         // Check the block's location
@@ -287,7 +280,6 @@ public class EventListener implements Listener {
             UUID owner = claimManager.getChunkOwner(pos);
             UUID playerId = player.getUniqueId();
 
-            // Allow owner and globally trusted players
             return !playerId.equals(owner) &&
                     !trustManager.isTrusted(owner, player);
         }

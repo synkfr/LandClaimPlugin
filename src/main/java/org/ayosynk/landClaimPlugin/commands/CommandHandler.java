@@ -113,7 +113,6 @@ public class CommandHandler implements CommandExecutor {
             }
         }
 
-        // Check if player is eligible for unstuck
         Location location = player.getLocation();
         ChunkPosition currentPos = new ChunkPosition(location);
 
@@ -133,18 +132,14 @@ public class CommandHandler implements CommandExecutor {
             return;
         }
 
-        // Find nearest unclaimed chunk
         Location safeLocation = findNearestUnclaimed(location);
 
         if (safeLocation == null) {
-            // Fallback to world spawn
             safeLocation = player.getWorld().getSpawnLocation();
         }
 
-        // Set cooldown
         unstuckCooldowns.put(playerId, System.currentTimeMillis());
 
-        // Teleport player
         player.teleport(safeLocation);
         sendMessage(player, "unstuck-success");
     }
@@ -183,7 +178,7 @@ public class CommandHandler implements CommandExecutor {
         int centerX = (chunkX << 4) + 8;
         int centerZ = (chunkZ << 4) + 8;
 
-        // Get highest safe block
+        // Get the highest safe block
         int y = world.getHighestBlockYAt(centerX, centerZ);
         Location location = new Location(world, centerX, y + 1, centerZ);
 
