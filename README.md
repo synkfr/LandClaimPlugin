@@ -218,7 +218,7 @@ claims:
 
 For support, bug reports, or feature requests:  
 [![Discord](https://img.shields.io/discord/1378591879393710110?style=for-the-badge)](https://discord.gg/pAPPvSmWRK)  
-[![GitHub Issues](https://img.shields.io/github/issues/yourusername/LandClaim?style=for-the-badge)](https://github.com/synkfr/LandClaimPlugin/issues)
+[![GitHub Issues](https://img.shields.io/github/issues/synkfr/LandClaimPlugin?style=for-the-badge)](https://github.com/synkfr/LandClaimPlugin/issues)
 
 ## 📜 License
 
