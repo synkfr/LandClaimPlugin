@@ -1,0 +1,30 @@
+name: LandClaimPlugin
+version: '1.0'
+main: org.ayosynk.landClaimPlugin.LandClaimPlugin
+api-version: '1.21'
+author: AyoSynk
+commands:
+  claim:
+    description: Main land claim command
+    usage: /claim [auto|trust <player>|untrust <player>|unstuck|help|reload]
+  unclaim:
+    description: Unclaim land chunks
+    usage: /unclaim [auto]
+permissions:
+  landclaim.*:
+    description: All landclaim permissions
+    children:
+      landclaim.claim: true
+      landclaim.admin: true
+  landclaim.claim:
+    description: Basic claiming permission
+    default: true
+  landclaim.admin:
+    description: Bypass protection and limits
+    default: op
+  landclaim.limit.*:
+    description: All claim limit permissions
+    default: false
+  landclaim.auto:
+    description: Use auto-claim feature
+    default: true
