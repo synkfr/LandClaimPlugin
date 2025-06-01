@@ -1,6 +1,6 @@
 # LandClaim - Ultimate Territory Protection for Minecraft
 
-![LandClaim Banner]([https://i.imgur.com/vYb0W0m.png](https://i.postimg.cc/J0qzLndL/minecraft-title-2.png))
+![LandClaim Banner](https://i.postimg.cc/jS6mh13k/minecraft-title-2.png)
 
 **LandClaimPlugin** is a premium land protection plugin that empowers players to claim territory, protect their builds, and manage access with powerful features. With robust protection against griefing, PvP, and mob damage, plus advanced claim management tools, LandClaim provides the ultimate territory control solution for your server.
 
