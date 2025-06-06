@@ -23,6 +23,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -60,7 +61,8 @@ public class EventListener implements Listener {
             Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
             Material.LIGHT_GRAY_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX,
             Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
-            Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX
+            Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX,Material.WATER_BUCKET,
+            Material.LAVA_BUCKET
     ));
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
@@ -109,6 +111,45 @@ public class EventListener implements Listener {
                 lastActionBarMap.remove(player.getUniqueId());
             }
         }
+    }
+
+    @EventHandler
+    public void onBucketEmpty(PlayerBucketEmptyEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlockClicked().getRelative(event.getBlockFace());
+        Material bucket = event.getBucket();
+
+        // Only handle water and lava buckets
+        if (bucket != Material.WATER_BUCKET && bucket != Material.LAVA_BUCKET) {
+            return;
+        }
+
+        // Check if in claimed land
+        if (shouldCancelBucketPlacement(player, block)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatUtils.colorize(
+                    configManager.getConfig().getString("messages.bucket-denied", "&cYou can't place fluids in claimed land!")
+            ));
+        }
+    }
+
+    private boolean shouldCancelBucketPlacement(Player player, Block block) {
+        if (player.hasPermission("landclaim.admin")) {
+            return false;
+        }
+
+        ChunkPosition pos = new ChunkPosition(block);
+
+        if (claimManager.isChunkClaimed(pos)) {
+            UUID owner = claimManager.getChunkOwner(pos);
+            UUID playerId = player.getUniqueId();
+
+            // Allow owner and trusted players
+            return !playerId.equals(owner) &&
+                    !trustManager.isTrusted(owner, player);
+        }
+
+        return false;
     }
 
     private void sendActionBar(Player player, String message) {

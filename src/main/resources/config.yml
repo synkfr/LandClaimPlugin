@@ -100,3 +100,4 @@ messages:
   cannot-unstuck-here: "&cYou can only use this when trapped in someone else's claim!"
   unstuck-success: "&aYou've been teleported to a safe location!"
   unstuck-cooldown: "&cYou must wait {seconds} more seconds before using this again!"
+  bucket-denied: "&cYou can't place fluids in claimed land!"
