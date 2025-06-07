@@ -1,9 +1,11 @@
 package org.ayosynk.landClaimPlugin;
 
 import org.ayosynk.landClaimPlugin.commands.CommandHandler;
+import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
 import org.ayosynk.landClaimPlugin.listeners.EventListener;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
+import org.ayosynk.landClaimPlugin.managers.ClaimVisualizer;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,6 +18,7 @@ public class LandClaimPlugin extends JavaPlugin {
     private ConfigManager configManager;
     private ClaimManager claimManager;
     private TrustManager trustManager;
+    private ClaimVisualizer claimVisualizer;
     private CommandHandler commandHandler;
     private List<String> blockedCommands = new ArrayList<>();
     private List<String> blockedWorlds = new ArrayList<>();
@@ -27,13 +30,14 @@ public class LandClaimPlugin extends JavaPlugin {
             configManager = new ConfigManager(this);
             claimManager = new ClaimManager(this, configManager);
             trustManager = new TrustManager(this, claimManager, configManager);
+            claimVisualizer = new ClaimVisualizer(this, claimManager, configManager);
 
             // Load claims and trust data
             claimManager.initialize();
             trustManager.initialize();
 
             // Register commands
-            commandHandler = new CommandHandler(this, claimManager, trustManager, configManager);
+            commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, claimVisualizer);
 
             // Register events
             getServer().getPluginManager().registerEvents(
@@ -46,6 +50,14 @@ public class LandClaimPlugin extends JavaPlugin {
                     new CommandBlocker(this, claimManager, trustManager),
                     this
             );
+
+            // Register tab completers
+            if (getCommand("claim") != null) {
+                getCommand("claim").setTabCompleter(new ClaimTabCompleter());
+            }
+            if (getCommand("unclaim") != null) {
+                getCommand("unclaim").setTabCompleter(new ClaimTabCompleter());
+            }
 
             // Load configuration
             reloadConfiguration();

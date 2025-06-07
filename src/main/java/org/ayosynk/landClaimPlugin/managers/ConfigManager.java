@@ -1,6 +1,7 @@
 package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.bukkit.Color;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -102,6 +103,23 @@ public class ConfigManager {
 
     public int getUnstuckCooldown() {
         return getConfig().getInt("cooldown-unstuck", 30);
+    }
+
+    public int getVisualizationDuration() {
+        return getConfig().getInt("visualization-duration", 10);
+    }
+
+    public Color getVisualizationColor() {
+        String colorStr = getConfig().getString("visualization-color", "0,255,0");
+        String[] rgb = colorStr.split(",");
+        try {
+            int r = Integer.parseInt(rgb[0].trim());
+            int g = Integer.parseInt(rgb[1].trim());
+            int b = Integer.parseInt(rgb[2].trim());
+            return Color.fromRGB(r, g, b);
+        } catch (Exception e) {
+            return Color.LIME; // Default to green
+        }
     }
 
     public void saveClaimsConfig() {

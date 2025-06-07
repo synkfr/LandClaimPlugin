@@ -184,6 +184,7 @@ public class ClaimManager {
     public int getClaimLimit(Player player) {
         if (player.hasPermission("landclaim.admin")) return Integer.MAX_VALUE;
 
+        // Check for specific limit permissions
         for (int i = 100; i > 0; i--) {
             if (player.hasPermission("landclaim.limit." + i)) return i;
         }

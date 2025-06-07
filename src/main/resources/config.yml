@@ -59,6 +59,11 @@ auto-unclaim-default: false
 # Cooldown for /claim unstuck command
 cooldown-unstuck: 30  # seconds
 
+
+# Visualization settings
+visualization-duration: 10  # seconds
+visualization-color: "0,255,0"  # RGB color for particles
+
 # 𝖤𝖣𝖨𝖳 𝖬𝖤𝖲𝖲𝖠𝖦𝖤𝖲
 # Messages (supports color codes with '&')
 messages:
@@ -86,6 +91,7 @@ messages:
   help-trust: "&e/claim trust <player> &7- Trust a player in all your claims"
   help-untrust: "&e/claim untrust <player> &7- Untrust a player from all your claims"
   help-unstuck: "&e/claim unstuck &7- Teleport out of someone else's claim"
+  help-visible: "&e/claim visible &7- Toggle claim visualization"
   player-not-found: "&cPlayer not found!"
   access-denied: "&cYou don't have permission to build here!"
   access-denied-interact: "&cYou can't interact with that here!"
@@ -101,3 +107,6 @@ messages:
   unstuck-success: "&aYou've been teleported to a safe location!"
   unstuck-cooldown: "&cYou must wait {seconds} more seconds before using this again!"
   bucket-denied: "&cYou can't place fluids in claimed land!"
+  visible-enabled: "&aClaim visualization enabled for {duration} seconds!"
+  visible-disabled: "&cClaim visualization disabled!"
+  visible-others: "&cYou can only visualize your own claims!"

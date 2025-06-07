@@ -38,7 +38,7 @@ public class CommandBlocker implements Listener {
         // Check if player is in a claimed chunk
         ChunkPosition pos = new ChunkPosition(player.getLocation());
         if (!claimManager.isChunkClaimed(pos)) {
-            return;
+            return; // Not in claimed land
         }
 
         UUID owner = claimManager.getChunkOwner(pos);
@@ -49,6 +49,7 @@ public class CommandBlocker implements Listener {
             return;
         }
 
+        // Block the command
         event.setCancelled(true);
         player.sendMessage(ChatUtils.colorize(
                 plugin.getConfigManager().getConfig().getString("messages.command-blocked", "&cThis command is blocked in claimed land!")

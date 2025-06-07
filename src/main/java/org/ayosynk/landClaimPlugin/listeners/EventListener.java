@@ -73,6 +73,7 @@ public class EventListener implements Listener {
         this.configManager = configManager;
         this.commandHandler = plugin.getCommandHandler();
 
+        // Start action bar task
         startActionBarTask();
     }
 
@@ -113,6 +114,74 @@ public class EventListener implements Listener {
         }
     }
 
+    private void sendActionBar(Player player, String message) {
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        // Check if the player moved to a new chunk
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        if (to == null) return;
+
+        Chunk fromChunk = from.getChunk();
+        Chunk toChunk = to.getChunk();
+        if (fromChunk.equals(toChunk)) return;
+
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+
+        // Handle auto claim
+        if (commandHandler.isAutoClaimEnabled(playerId)) {
+            ChunkPosition pos = new ChunkPosition(toChunk);
+            if (!claimManager.isChunkClaimed(pos)) {
+                if (claimManager.claimChunk(player, toChunk)) {
+                    player.sendMessage(ChatUtils.colorize(configManager.getConfig().getString("messages.chunk-claimed")));
+                }
+            }
+        }
+
+        // Handle auto unclaim
+        if (commandHandler.isAutoUnclaimEnabled(playerId)) {
+            ChunkPosition fromPos = new ChunkPosition(fromChunk);
+            if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
+                claimManager.unclaimChunk(fromChunk);
+                player.sendMessage(ChatUtils.colorize(configManager.getConfig().getString("messages.auto-unclaimed")));
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        // Check the block's location, not player's location
+        checkBlockPermission(event.getPlayer(), event.getBlock(), event);
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        // Check the block's location, not player's location
+        checkBlockPermission(event.getPlayer(), event.getBlock(), event);
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getClickedBlock() == null) return;
+
+        Block block = event.getClickedBlock();
+
+        // Only handle interactable blocks
+        if (!INTERACTABLE_BLOCKS.contains(block.getType())) return;
+
+        // Check the block's location
+        if (shouldCancelInteraction(event.getPlayer(), block)) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ChatUtils.colorize(
+                    configManager.getConfig().getString("messages.access-denied-interact")
+            ));
+        }
+    }
+
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
         Player player = event.getPlayer();
@@ -129,87 +198,6 @@ public class EventListener implements Listener {
             event.setCancelled(true);
             player.sendMessage(ChatUtils.colorize(
                     configManager.getConfig().getString("messages.bucket-denied", "&cYou can't place fluids in claimed land!")
-            ));
-        }
-    }
-
-    private boolean shouldCancelBucketPlacement(Player player, Block block) {
-        if (player.hasPermission("landclaim.admin")) {
-            return false;
-        }
-
-        ChunkPosition pos = new ChunkPosition(block);
-
-        if (claimManager.isChunkClaimed(pos)) {
-            UUID owner = claimManager.getChunkOwner(pos);
-            UUID playerId = player.getUniqueId();
-
-            // Allow owner and trusted players
-            return !playerId.equals(owner) &&
-                    !trustManager.isTrusted(owner, player);
-        }
-
-        return false;
-    }
-
-    private void sendActionBar(Player player, String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
-    }
-
-    @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
-        Location from = event.getFrom();
-        Location to = event.getTo();
-        if (to == null) return;
-
-        Chunk fromChunk = from.getChunk();
-        Chunk toChunk = to.getChunk();
-        if (fromChunk.equals(toChunk)) return;
-
-        Player player = event.getPlayer();
-        UUID playerId = player.getUniqueId();
-
-        if (commandHandler.isAutoClaimEnabled(playerId)) {
-            ChunkPosition pos = new ChunkPosition(toChunk);
-            if (!claimManager.isChunkClaimed(pos)) {
-                if (claimManager.claimChunk(player, toChunk)) {
-                    player.sendMessage(ChatUtils.colorize(configManager.getConfig().getString("messages.chunk-claimed")));
-                }
-            }
-        }
-
-        if (commandHandler.isAutoUnclaimEnabled(playerId)) {
-            ChunkPosition fromPos = new ChunkPosition(fromChunk);
-            if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
-                claimManager.unclaimChunk(fromChunk);
-                player.sendMessage(ChatUtils.colorize(configManager.getConfig().getString("messages.auto-unclaimed")));
-            }
-        }
-    }
-
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        checkBlockPermission(event.getPlayer(), event.getBlock(), event);
-    }
-
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        checkBlockPermission(event.getPlayer(), event.getBlock(), event);
-    }
-
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() == null) return;
-
-        Block block = event.getClickedBlock();
-
-        if (!INTERACTABLE_BLOCKS.contains(block.getType())) return;
-
-        // Check the block's location
-        if (shouldCancelInteraction(event.getPlayer(), block)) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.access-denied-interact")
             ));
         }
     }
@@ -312,6 +300,25 @@ public class EventListener implements Listener {
         }
     }
 
+    private boolean shouldCancelBucketPlacement(Player player, Block block) {
+        if (player.hasPermission("landclaim.admin")) {
+            return false;
+        }
+
+        ChunkPosition pos = new ChunkPosition(block);
+
+        if (claimManager.isChunkClaimed(pos)) {
+            UUID owner = claimManager.getChunkOwner(pos);
+            UUID playerId = player.getUniqueId();
+
+            // Allow owner and trusted players
+            return !playerId.equals(owner) &&
+                    !trustManager.isTrusted(owner, player);
+        }
+
+        return false;
+    }
+
     private boolean shouldCancelInteraction(Player player, Block block) {
         if (player.hasPermission("landclaim.admin")) return false;
 
@@ -321,6 +328,7 @@ public class EventListener implements Listener {
             UUID owner = claimManager.getChunkOwner(pos);
             UUID playerId = player.getUniqueId();
 
+            // Allow owner and globally trusted players
             return !playerId.equals(owner) &&
                     !trustManager.isTrusted(owner, player);
         }

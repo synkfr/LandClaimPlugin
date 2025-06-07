@@ -6,7 +6,7 @@ author: AyoSynk
 commands:
   claim:
     description: Main land claim command
-    usage: /claim [auto|trust <player>|untrust <player>|unstuck|help|reload]
+    usage: /claim [auto|trust <player>|untrust <player>|unstuck|visible|help|reload]
   unclaim:
     description: Unclaim land chunks
     usage: /unclaim [auto]

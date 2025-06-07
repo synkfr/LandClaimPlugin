@@ -2,6 +2,7 @@ package org.ayosynk.landClaimPlugin.commands;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
+import org.ayosynk.landClaimPlugin.managers.ClaimVisualizer;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
@@ -24,15 +25,20 @@ public class CommandHandler implements CommandExecutor {
     private final ClaimManager claimManager;
     private final TrustManager trustManager;
     private final ConfigManager configManager;
+    private final ClaimVisualizer claimVisualizer;
     private final Map<UUID, Boolean> autoClaimPlayers = new HashMap<>();
     private final Map<UUID, Boolean> autoUnclaimPlayers = new HashMap<>();
     private final Map<UUID, Long> unstuckCooldowns = new HashMap<>();
+    private final Map<UUID, Long> visibleCooldowns = new HashMap<>();
 
-    public CommandHandler(LandClaimPlugin plugin, ClaimManager claimManager, TrustManager trustManager, ConfigManager configManager) {
+    public CommandHandler(LandClaimPlugin plugin, ClaimManager claimManager,
+                          TrustManager trustManager, ConfigManager configManager,
+                          ClaimVisualizer claimVisualizer) {
         this.plugin = plugin;
         this.claimManager = claimManager;
         this.trustManager = trustManager;
         this.configManager = configManager;
+        this.claimVisualizer = claimVisualizer;
 
         // Safe command registration
         if (plugin.getCommand("claim") != null) {
@@ -86,6 +92,9 @@ public class CommandHandler implements CommandExecutor {
                 case "unstuck":
                     handleUnstuckCommand(player);
                     break;
+                case "visible":
+                    handleVisibleCommand(player);
+                    break;
                 case "help":
                     showHelp(player);
                     break;
@@ -96,6 +105,32 @@ public class CommandHandler implements CommandExecutor {
                     sendMessage(player, "invalid-command");
             }
         }
+    }
+
+    private void handleVisibleCommand(Player player) {
+        UUID playerId = player.getUniqueId();
+
+        // Check cooldown
+        if (visibleCooldowns.containsKey(playerId)) {
+            long lastUsed = visibleCooldowns.get(playerId);
+            long timeLeft = (lastUsed + 30000) - System.currentTimeMillis();
+
+            if (timeLeft > 0) {
+                int seconds = (int) (timeLeft / 1000) + 1;
+                sendMessage(player, "unstuck-cooldown", "{seconds}", String.valueOf(seconds));
+                return;
+            }
+        }
+
+        // Visualize claims
+        int duration = configManager.getVisualizationDuration();
+        claimVisualizer.showPlayerClaims(player, duration);
+
+        // Set cooldown
+        visibleCooldowns.put(playerId, System.currentTimeMillis());
+
+        // Send message
+        sendMessage(player, "visible-enabled", "{duration}", String.valueOf(duration));
     }
 
     private void handleUnstuckCommand(Player player) {
@@ -113,6 +148,7 @@ public class CommandHandler implements CommandExecutor {
             }
         }
 
+        // Check if player is eligible for unstuck
         Location location = player.getLocation();
         ChunkPosition currentPos = new ChunkPosition(location);
 
@@ -132,14 +168,18 @@ public class CommandHandler implements CommandExecutor {
             return;
         }
 
+        // Find nearest unclaimed chunk
         Location safeLocation = findNearestUnclaimed(location);
 
         if (safeLocation == null) {
+            // Fallback to world spawn
             safeLocation = player.getWorld().getSpawnLocation();
         }
 
+        // Set cooldown
         unstuckCooldowns.put(playerId, System.currentTimeMillis());
 
+        // Teleport player
         player.teleport(safeLocation);
         sendMessage(player, "unstuck-success");
     }
@@ -178,13 +218,12 @@ public class CommandHandler implements CommandExecutor {
         int centerX = (chunkX << 4) + 8;
         int centerZ = (chunkZ << 4) + 8;
 
-        // Get the highest safe block
+        // Get highest safe block
         int y = world.getHighestBlockYAt(centerX, centerZ);
         Location location = new Location(world, centerX, y + 1, centerZ);
 
         // Check if location is safe (not in water or lava)
-        Material blockType = location.getBlock().getType();
-        if (blockType == Material.WATER || blockType == Material.LAVA) {
+        if (location.getBlock().isLiquid()) {
             // Find nearby safe block
             for (int x = -2; x <= 2; x++) {
                 for (int z = -2; z <= 2; z++) {
@@ -192,8 +231,7 @@ public class CommandHandler implements CommandExecutor {
                     int testY = world.getHighestBlockYAt(testLoc);
                     testLoc.setY(testY + 1);
 
-                    Material testType = testLoc.getBlock().getType();
-                    if (testType != Material.WATER && testType != Material.LAVA) {
+                    if (!testLoc.getBlock().isLiquid()) {
                         return testLoc;
                     }
                 }
@@ -297,6 +335,7 @@ public class CommandHandler implements CommandExecutor {
         player.sendMessage(ChatUtils.colorize(config.getString("messages.help-trust")));
         player.sendMessage(ChatUtils.colorize(config.getString("messages.help-untrust")));
         player.sendMessage(ChatUtils.colorize(config.getString("messages.help-unstuck")));
+        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-visible")));
     }
 
     private void reloadConfig(Player player) {
