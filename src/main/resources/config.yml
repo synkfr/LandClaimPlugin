@@ -60,7 +60,7 @@ auto-unclaim-default: false
 cooldown-unstuck: 30  # seconds
 
 
-# Visualization settings
+# 𝘝𝘐𝘚𝘜𝘈𝘓𝘐𝘡𝘈𝘛𝘐𝘖𝘕 𝘚𝘌𝘛𝘐𝘕𝘎𝘚
 visualization:
   always-color: "0,255,0"  # Green
   temporary-color: "255,255,0"  # Yellow
@@ -96,7 +96,7 @@ messages:
   help-unstuck: "&e/claim unstuck &7- Teleport out of someone else's claim"
   help-visible: "&e/claim visible [always|off] &7- Toggle claim visualization"
   player-not-found: "&cPlayer not found!"
-  access-denied: "&cYou don't have permission to build here!"
+  access-denied: "&cYou don't have permission"
   access-denied-interact: "&cYou can't interact with that here!"
   reloaded: "&aConfiguration reloaded successfully!"
   actionbar-owner: "&e{owner}'s claim"
