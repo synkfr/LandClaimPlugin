@@ -94,6 +94,14 @@ auto-unclaim-default: false
 # Cooldown for /claim unstuck command
 cooldown-unstuck: 30  # seconds
 
+
+# 𝘝𝘐𝘚𝘜𝘈𝘓𝘐𝘡𝘈𝘛𝘐𝘖𝘕 𝘚𝘌𝘛𝘐𝘕𝘎𝘚
+visualization:
+  always-color: "0,255,0"  # Green
+  temporary-color: "255,255,0"  # Yellow
+  particle-spacing: 0.5
+  update-interval: 20  # Ticks between updates for always-on mode
+
 # 𝖤𝖣𝖨𝖳 𝖬𝖤𝖲𝖲𝖠𝖦𝖤𝖲
 # Messages (supports color codes with '&')
 messages:
@@ -121,6 +129,7 @@ messages:
   help-trust: "&e/claim trust <player> &7- Trust a player in all your claims"
   help-untrust: "&e/claim untrust <player> &7- Untrust a player from all your claims"
   help-unstuck: "&e/claim unstuck &7- Teleport out of someone else's claim"
+  help-visible: "&e/claim visible [always|off] &7- Toggle claim visualization"
   player-not-found: "&cPlayer not found!"
   access-denied: "&cYou don't have permission to build here!"
   access-denied-interact: "&cYou can't interact with that here!"
@@ -135,6 +144,11 @@ messages:
   cannot-unstuck-here: "&cYou can only use this when trapped in someone else's claim!"
   unstuck-success: "&aYou've been teleported to a safe location!"
   unstuck-cooldown: "&cYou must wait {seconds} more seconds before using this again!"
+  bucket-denied: "&cYou can't place fluids in claimed land!"
+  visible-enabled-always: "&aClaim visualization enabled permanently!"
+  visible-enabled-temporary: "&aClaim visualization enabled!"
+  visible-disabled: "&cClaim visualization disabled!"
+
 
 ```
 
@@ -151,6 +165,8 @@ messages:
 | `/claim help` | Show help information | `landclaim.claim` |
 | `/unclaim` | Unclaim current chunk | `landclaim.claim` |
 | `/unclaim auto` | Toggle auto-unclaim | `landclaim.auto` |
+| `/unclaim visble [always|off]` | Toggle auto-unclaim | `landclaim.claim` |
+
 
 ### Admin Commands
 | Command | Description | Permission |
