@@ -19,6 +19,7 @@
   - Explosion damage prevention
 - **Connected Claims**: Optional adjacency requirements
 - **Action Bar Display**: Shows claim ownership when entering chunks
+- **Visibility Of The Claims**: Shows a border of your claims
 
 ## 📥 Installation
 
