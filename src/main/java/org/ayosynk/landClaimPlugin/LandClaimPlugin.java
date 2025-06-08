@@ -1,13 +1,13 @@
 package org.ayosynk.landClaimPlugin;
 
-import org.ayosynk.landClaimPlugin.commands.CommandHandler;
 import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
 import org.ayosynk.landClaimPlugin.listeners.EventListener;
+import org.ayosynk.landClaimPlugin.commands.CommandHandler;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
-import org.ayosynk.landClaimPlugin.managers.ClaimVisualizer;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
+import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class LandClaimPlugin extends JavaPlugin {
     private ConfigManager configManager;
     private ClaimManager claimManager;
     private TrustManager trustManager;
-    private ClaimVisualizer claimVisualizer;
+    private VisualizationManager visualizationManager;
     private CommandHandler commandHandler;
     private List<String> blockedCommands = new ArrayList<>();
     private List<String> blockedWorlds = new ArrayList<>();
@@ -30,14 +30,16 @@ public class LandClaimPlugin extends JavaPlugin {
             configManager = new ConfigManager(this);
             claimManager = new ClaimManager(this, configManager);
             trustManager = new TrustManager(this, claimManager, configManager);
-            claimVisualizer = new ClaimVisualizer(this, claimManager, configManager);
 
             // Load claims and trust data
             claimManager.initialize();
             trustManager.initialize();
 
+            // Initialize visualization manager
+            visualizationManager = new VisualizationManager(this, claimManager, configManager);
+
             // Register commands
-            commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, claimVisualizer);
+            commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager);
 
             // Register events
             getServer().getPluginManager().registerEvents(
@@ -110,6 +112,10 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public TrustManager getTrustManager() {
         return trustManager;
+    }
+
+    public VisualizationManager getVisualizationManager() {
+        return visualizationManager;
     }
 
     public CommandHandler getCommandHandler() {

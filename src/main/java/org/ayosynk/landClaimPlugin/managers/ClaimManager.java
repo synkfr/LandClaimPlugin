@@ -132,6 +132,9 @@ public class ClaimManager {
         claimedChunks.put(pos, playerId);
         claims.add(pos);
         playerClaims.put(playerId, claims);
+
+        // Invalidate visualization cache
+        plugin.getVisualizationManager().invalidateCache(playerId);
         return true;
     }
 
@@ -164,6 +167,9 @@ public class ClaimManager {
                     playerClaims.remove(owner);
                 }
             }
+
+            // Invalidate visualization cache
+            plugin.getVisualizationManager().invalidateCache(owner);
             return true;
         }
         return false;

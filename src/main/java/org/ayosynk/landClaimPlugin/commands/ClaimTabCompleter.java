@@ -32,6 +32,8 @@ public class ClaimTabCompleter implements TabCompleter {
                         args[0].equalsIgnoreCase("untrust")) {
                     // Return null to let Bukkit handle online player suggestions
                     return null;
+                } else if (args[0].equalsIgnoreCase("visible")) {
+                    completions.addAll(Arrays.asList("always", "off"));
                 }
             }
         } else if (cmd.equals("unclaim")) {

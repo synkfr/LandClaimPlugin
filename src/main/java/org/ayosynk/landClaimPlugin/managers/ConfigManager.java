@@ -105,12 +105,8 @@ public class ConfigManager {
         return getConfig().getInt("cooldown-unstuck", 30);
     }
 
-    public int getVisualizationDuration() {
-        return getConfig().getInt("visualization-duration", 10);
-    }
-
-    public Color getVisualizationColor() {
-        String colorStr = getConfig().getString("visualization-color", "0,255,0");
+    public Color getVisualizationColor(String type) {
+        String colorStr = getConfig().getString("visualization." + type, "0,255,0");
         String[] rgb = colorStr.split(",");
         try {
             int r = Integer.parseInt(rgb[0].trim());
@@ -118,8 +114,16 @@ public class ConfigManager {
             int b = Integer.parseInt(rgb[2].trim());
             return Color.fromRGB(r, g, b);
         } catch (Exception e) {
-            return Color.LIME; // Default to green
+            return type.equals("always-color") ? Color.LIME : Color.YELLOW;
         }
+    }
+
+    public double getParticleSpacing() {
+        return getConfig().getDouble("visualization.particle-spacing", 0.5);
+    }
+
+    public int getVisualizationUpdateInterval() {
+        return getConfig().getInt("visualization.update-interval", 20);
     }
 
     public void saveClaimsConfig() {

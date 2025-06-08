@@ -1,15 +1,16 @@
 package org.ayosynk.landClaimPlugin.commands;
 
+
+import org.ayosynk.landClaimPlugin.managers.VisualizationManager.VisualizationMode;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
-import org.ayosynk.landClaimPlugin.managers.ClaimVisualizer;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
+import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.utils.ChatUtils;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -25,20 +26,19 @@ public class CommandHandler implements CommandExecutor {
     private final ClaimManager claimManager;
     private final TrustManager trustManager;
     private final ConfigManager configManager;
-    private final ClaimVisualizer claimVisualizer;
+    private final VisualizationManager visualizationManager;
     private final Map<UUID, Boolean> autoClaimPlayers = new HashMap<>();
     private final Map<UUID, Boolean> autoUnclaimPlayers = new HashMap<>();
     private final Map<UUID, Long> unstuckCooldowns = new HashMap<>();
-    private final Map<UUID, Long> visibleCooldowns = new HashMap<>();
 
     public CommandHandler(LandClaimPlugin plugin, ClaimManager claimManager,
                           TrustManager trustManager, ConfigManager configManager,
-                          ClaimVisualizer claimVisualizer) {
+                          VisualizationManager visualizationManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
         this.trustManager = trustManager;
         this.configManager = configManager;
-        this.claimVisualizer = claimVisualizer;
+        this.visualizationManager = visualizationManager;
 
         // Safe command registration
         if (plugin.getCommand("claim") != null) {
@@ -93,7 +93,7 @@ public class CommandHandler implements CommandExecutor {
                     handleUnstuckCommand(player);
                     break;
                 case "visible":
-                    handleVisibleCommand(player);
+                    handleVisibleCommand(player, args);
                     break;
                 case "help":
                     showHelp(player);
@@ -107,30 +107,21 @@ public class CommandHandler implements CommandExecutor {
         }
     }
 
-    private void handleVisibleCommand(Player player) {
-        UUID playerId = player.getUniqueId();
-
-        // Check cooldown
-        if (visibleCooldowns.containsKey(playerId)) {
-            long lastUsed = visibleCooldowns.get(playerId);
-            long timeLeft = (lastUsed + 30000) - System.currentTimeMillis();
-
-            if (timeLeft > 0) {
-                int seconds = (int) (timeLeft / 1000) + 1;
-                sendMessage(player, "unstuck-cooldown", "{seconds}", String.valueOf(seconds));
-                return;
+    private void handleVisibleCommand(Player player, String[] args) {
+        if (args.length > 1) {
+            if (args[1].equalsIgnoreCase("always")) {
+                visualizationManager.setVisualizationMode(player.getUniqueId(), VisualizationMode.ALWAYS);
+                sendMessage(player, "visible-enabled-always");
+            } else if (args[1].equalsIgnoreCase("off")) {
+                visualizationManager.setVisualizationMode(player.getUniqueId(), null);
+                sendMessage(player, "visible-disabled");
+            } else {
+                sendMessage(player, "invalid-command");
             }
+        } else {
+            visualizationManager.showTemporary(player);
+            sendMessage(player, "visible-enabled-temporary");
         }
-
-        // Visualize claims
-        int duration = configManager.getVisualizationDuration();
-        claimVisualizer.showPlayerClaims(player, duration);
-
-        // Set cooldown
-        visibleCooldowns.put(playerId, System.currentTimeMillis());
-
-        // Send message
-        sendMessage(player, "visible-enabled", "{duration}", String.valueOf(duration));
     }
 
     private void handleUnstuckCommand(Player player) {
@@ -150,14 +141,14 @@ public class CommandHandler implements CommandExecutor {
 
         // Check if player is eligible for unstuck
         Location location = player.getLocation();
-        ChunkPosition currentPos = new ChunkPosition(location);
+        ChunkPosition pos = new ChunkPosition(location);
 
-        if (!claimManager.isChunkClaimed(currentPos)) {
+        if (!claimManager.isChunkClaimed(pos)) {
             sendMessage(player, "cannot-unstuck-here");
             return;
         }
 
-        UUID owner = claimManager.getChunkOwner(currentPos);
+        UUID owner = claimManager.getChunkOwner(pos);
         if (player.getUniqueId().equals(owner)) {
             sendMessage(player, "cannot-unstuck-here");
             return;
@@ -327,15 +318,22 @@ public class CommandHandler implements CommandExecutor {
 
     private void showHelp(Player player) {
         FileConfiguration config = configManager.getConfig();
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-header")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-claim")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-unclaim")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-claim-auto")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-unclaim-auto")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-trust")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-untrust")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-unstuck")));
-        player.sendMessage(ChatUtils.colorize(config.getString("messages.help-visible")));
+        sendIfNotNull(player, "messages.help-header");
+        sendIfNotNull(player, "messages.help-claim");
+        sendIfNotNull(player, "messages.help-unclaim");
+        sendIfNotNull(player, "messages.help-claim-auto");
+        sendIfNotNull(player, "messages.help-unclaim-auto");
+        sendIfNotNull(player, "messages.help-trust");
+        sendIfNotNull(player, "messages.help-untrust");
+        sendIfNotNull(player, "messages.help-unstuck");
+        sendIfNotNull(player, "messages.help-visible");
+    }
+
+    private void sendIfNotNull(Player player, String path) {
+        String message = configManager.getConfig().getString(path);
+        if (message != null) {
+            player.sendMessage(ChatUtils.colorize(message));
+        }
     }
 
     private void reloadConfig(Player player) {
