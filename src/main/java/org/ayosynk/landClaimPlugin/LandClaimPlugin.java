@@ -8,6 +8,7 @@ import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ public class LandClaimPlugin extends JavaPlugin {
     private CommandHandler commandHandler;
     private List<String> blockedCommands = new ArrayList<>();
     private List<String> blockedWorlds = new ArrayList<>();
+    private int autoSaveTaskId = -1;
 
     @Override
     public void onEnable() {
@@ -30,6 +32,7 @@ public class LandClaimPlugin extends JavaPlugin {
             configManager = new ConfigManager(this);
             claimManager = new ClaimManager(this, configManager);
             trustManager = new TrustManager(this, claimManager, configManager);
+            scheduleAutoSave();
 
             // Load claims and trust data
             claimManager.initialize();
@@ -84,9 +87,22 @@ public class LandClaimPlugin extends JavaPlugin {
         blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();
     }
 
+    private void scheduleAutoSave() {
+        // Auto-save every 5 minutes (6000 ticks)
+        autoSaveTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
+            getLogger().info("Auto-saving claims and trust data...");
+            claimManager.saveClaims();
+            trustManager.saveTrustedPlayers();
+        }, 6000L, 6000L);
+    }
+
     @Override
     public void onDisable() {
         try {
+            // Cancel auto-save task
+            if (autoSaveTaskId != -1) {
+                Bukkit.getScheduler().cancelTask(autoSaveTaskId);
+            }
             // Save claims data if managers were initialized
             if (claimManager != null) {
                 claimManager.saveClaims();

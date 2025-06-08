@@ -1,12 +1,12 @@
 name: LandClaimPlugin
-version: '1.1'
+version: '1.2'
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: '1.21'
 author: AyoSynk
 commands:
   claim:
     description: Main land claim command
-    usage: /claim [auto|trust <player>|untrust <player>|unstuck|visible [always|off]|help|reload]
+    usage: /claim [auto|trust <player>|untrust <player>|unstuck|visible [always|off]|admin [unclaim]|help|reload]
   unclaim:
     description: Unclaim land chunks
     usage: /unclaim [auto]

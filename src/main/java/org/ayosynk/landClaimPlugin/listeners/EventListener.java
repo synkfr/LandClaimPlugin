@@ -16,6 +16,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -206,19 +207,31 @@ public class EventListener implements Listener {
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!configManager.preventPvP()) return;
 
-        // Check if it's PvP damage
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
-            Player attacker = (Player) event.getDamager();
-            Player victim = (Player) event.getEntity();
-            Location location = victim.getLocation();
+        Player attacker = null;
+        Player victim = null;
 
-            // Check if in claimed chunk
-            if (isInProtectedChunk(location)) {
-                event.setCancelled(true);
-                attacker.sendMessage(ChatUtils.colorize(
-                        configManager.getConfig().getString("messages.pvp-denied")
-                ));
+        // Handle direct player attacks
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
+            attacker = (Player) event.getDamager();
+            victim = (Player) event.getEntity();
+        }
+        // Handle projectile attacks (arrows, etc.)
+        else if (event.getDamager() instanceof Projectile) {
+            Projectile projectile = (Projectile) event.getDamager();
+            if (projectile.getShooter() instanceof Player && event.getEntity() instanceof Player) {
+                attacker = (Player) projectile.getShooter();
+                victim = (Player) event.getEntity();
             }
+        }
+
+        if (attacker == null || victim == null) return;
+
+        Location location = victim.getLocation();
+        if (isInProtectedChunk(location)) {
+            event.setCancelled(true);
+            attacker.sendMessage(ChatUtils.colorize(
+                    configManager.getConfig().getString("messages.pvp-denied")
+            ));
         }
     }
 

@@ -101,9 +101,50 @@ public class CommandHandler implements CommandExecutor {
                 case "reload":
                     reloadConfig(player);
                     break;
+                case "admin":
+                    handleAdminCommand(player, args);
+                    break;
                 default:
                     sendMessage(player, "invalid-command");
             }
+        }
+    }
+
+    private void handleAdminCommand(Player player, String[] args) {
+        if (!player.hasPermission("landclaim.admin")) {
+            sendMessage(player, "access-denied");
+            return;
+        }
+
+        if (args.length < 2) {
+            sendMessage(player, "invalid-command");
+            return;
+        }
+
+        switch (args[1].toLowerCase()) {
+            case "unclaim":
+                adminUnclaim(player);
+                break;
+            default:
+                sendMessage(player, "invalid-command");
+        }
+    }
+
+    private void adminUnclaim(Player player) {
+        Chunk chunk = player.getLocation().getChunk();
+        ChunkPosition pos = new ChunkPosition(chunk);
+
+        if (!claimManager.isChunkClaimed(pos)) {
+            sendMessage(player, "not-owner");
+            return;
+        }
+
+        UUID ownerId = claimManager.getChunkOwner(pos);
+        String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
+        if (ownerName == null) ownerName = "Unknown";
+
+        if (claimManager.unclaimChunk(chunk)) {
+            sendMessage(player, "admin-unclaimed", "{owner}", ownerName);
         }
     }
 
@@ -348,11 +389,7 @@ public class CommandHandler implements CommandExecutor {
     }
 
     private void sendMessage(Player player, String key, String... replacements) {
-        String message = configManager.getConfig().getString("messages." + key, "&cMessage not found: " + key);
-        for (int i = 0; i < replacements.length; i += 2) {
-            message = message.replace(replacements[i], replacements[i+1]);
-        }
-        player.sendMessage(ChatUtils.colorize(message));
+        player.sendMessage(configManager.getMessage(key, replacements));
     }
 
     public boolean isAutoClaimEnabled(UUID playerId) {
@@ -364,4 +401,5 @@ public class CommandHandler implements CommandExecutor {
         return autoUnclaimPlayers.getOrDefault(playerId,
                 configManager.getConfig().getBoolean("auto-unclaim-default", false));
     }
+
 }

@@ -25,15 +25,17 @@ public class ClaimTabCompleter implements TabCompleter {
             if (args.length == 1) {
                 completions.addAll(Arrays.asList(
                         "auto", "trust", "untrust", "unstuck",
-                        "visible", "help", "reload"
+                        "visible", "help", "reload", "admin"
                 ));
             } else if (args.length == 2) {
                 if (args[0].equalsIgnoreCase("trust") ||
                         args[0].equalsIgnoreCase("untrust")) {
-                    // Return null to let Bukkit handle online player suggestions
+                    // Let Bukkit handle player name suggestions
                     return null;
                 } else if (args[0].equalsIgnoreCase("visible")) {
                     completions.addAll(Arrays.asList("always", "off"));
+                } else if (args[0].equalsIgnoreCase("admin")) {
+                    completions.add("unclaim");
                 }
             }
         } else if (cmd.equals("unclaim")) {
@@ -42,7 +44,6 @@ public class ClaimTabCompleter implements TabCompleter {
             }
         }
 
-        // Filter based on current input
         return completions.stream()
                 .filter(s -> s.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
                 .collect(Collectors.toList());
