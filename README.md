@@ -164,8 +164,8 @@ messages:
 | `/claim unstuck` | Escape from others' claims | `landclaim.claim` |
 | `/claim help` | Show help information | `landclaim.claim` |
 | `/unclaim` | Unclaim current chunk | `landclaim.claim` |
-| `/unclaim auto` | Toggle auto-unclaim | `landclaim.auto` |
-| `/unclaim visble [always|off]` | Toggle auto-unclaim | `landclaim.claim` |
+| `/unclaim auto` | Toggle auto-unclaim | `landclaim.auto` |_-
+| `/unclaim visble [always/off]` | Toggle visibility of the claims | `landclaim.claim` |
 
 
 ### Admin Commands
