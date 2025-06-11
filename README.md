@@ -20,6 +20,7 @@
 - **Connected Claims**: Optional adjacency requirements
 - **Action Bar Display**: Shows claim ownership when entering chunks
 - **Visibility Of The Claims**: Shows a border of your claims
+- **Admin Unclaim**: Unclaim other players land as an admin
 
 ## 📥 Installation
 
@@ -35,6 +36,7 @@ Customize LandClaimPlugin to fit your server's needs through `config.yml`:
 
 ```yaml
 
+
 #    ██╗      █████╗ ███╗  ██╗██████╗          █████╗ ██╗      █████╗ ██╗███╗   ███╗ ██████╗
 #    ██║     ██╔══██╗████╗ ██║██╔══██╗        ██╔══██╗██║     ██╔══██╗██║████╗ ████║██╔════╝
 #    ██║     ███████║██╔██╗██║██║  ██║        ██║  ╚═╝██║     ███████║██║██╔████╔██║╚█████╗
@@ -44,6 +46,9 @@ Customize LandClaimPlugin to fit your server's needs through `config.yml`:
 
 # claims.yml contains player's claims with their uuid and the chunk coordinates (you can see chunk coordinates in F3 menu)
 # trust.yml contains player's uuid with other players uuid who they have trusted with the /claim trust command
+
+# Add prefix setting
+prefix: "&8[&6LandClaim&8]&r "
 
 # 𝖢𝖫𝖠𝖨𝖬 𝖲𝖤𝖳𝖳𝖨𝖭𝖦𝖲
 # Set how many claims a player can have.
@@ -106,49 +111,50 @@ visualization:
 # 𝖤𝖣𝖨𝖳 𝖬𝖤𝖲𝖲𝖠𝖦𝖤𝖲
 # Messages (supports color codes with '&')
 messages:
-  chunk-claimed: "&aChunk claimed successfully!"
-  chunk-unclaimed: "&aChunk unclaimed!"
-  auto-claim-enabled: "&aAuto-claim enabled. Walk to claim chunks."
-  auto-claim-disabled: "&cAuto-claim disabled."
-  auto-unclaim-enabled: "&aAuto-unclaim enabled. Walk to unclaim your chunks."
-  auto-unclaim-disabled: "&cAuto-unclaim disabled."
-  auto-unclaimed: "&eChunk auto-unclaimed!"
-  claim-limit-reached: "&cYou've reached your claim limit of {limit} chunks!"
-  already-claimed: "&cThis chunk is already claimed by {owner}!"
-  not-owner: "&cYou don't own this land!"
-  not-connected: "&cYou can only claim chunks adjacent to your existing claims!"
-  player-trusted-all: "&aAdded {player} to trusted list for all your claims!"
-  player-untrusted-all: "&aRemoved {player} from trusted list for all your claims!"
-  trust-usage: "&cUsage: /claim trust <player>"
-  untrust-usage: "&cUsage: /claim untrust <player>"
-  invalid-command: "&cInvalid command. Use /claim help for help."
-  help-header: "&6--- LandClaim Help ---"
-  help-claim: "&e/claim &7- Claim the current chunk"
-  help-unclaim: "&e/unclaim &7- Unclaim the current chunk"
-  help-claim-auto: "&e/claim auto &7- Toggle auto claim"
-  help-unclaim-auto: "&e/unclaim auto &7- Toggle auto unclaim"
-  help-trust: "&e/claim trust <player> &7- Trust a player in all your claims"
-  help-untrust: "&e/claim untrust <player> &7- Untrust a player from all your claims"
-  help-unstuck: "&e/claim unstuck &7- Teleport out of someone else's claim"
-  help-visible: "&e/claim visible [always|off] &7- Toggle claim visualization"
-  player-not-found: "&cPlayer not found!"
-  access-denied: "&cYou don't have permission to build here!"
-  access-denied-interact: "&cYou can't interact with that here!"
-  reloaded: "&aConfiguration reloaded successfully!"
-  actionbar-owner: "&e{owner}'s claim"
-  cannot-trust-self: "&cYou cannot trust yourself!"
-  player-not-trusted: "&cThat player is not trusted!"
-  pvp-denied: "&cYou cannot PvP in this claimed land!"
-  mob-grief-denied: "&cMobs cannot grief in claimed land!"
-  command-blocked: "&cThis command is blocked in claimed land!"
-  world-blocked: "&cYou cannot claim land in this world!"
-  cannot-unstuck-here: "&cYou can only use this when trapped in someone else's claim!"
-  unstuck-success: "&aYou've been teleported to a safe location!"
-  unstuck-cooldown: "&cYou must wait {seconds} more seconds before using this again!"
-  bucket-denied: "&cYou can't place fluids in claimed land!"
-  visible-enabled-always: "&aClaim visualization enabled permanently!"
-  visible-enabled-temporary: "&aClaim visualization enabled!"
-  visible-disabled: "&cClaim visualization disabled!"
+  chunk-claimed: "&a✔ Chunk claimed successfully!"
+  chunk-unclaimed: "&a✔ Chunk unclaimed!"
+  auto-claim-enabled: "&b➤ Auto-claim &aenabled&r. Walk to claim chunks."
+  auto-claim-disabled: "&b➤ Auto-claim &cdisabled&r."
+  auto-unclaim-enabled: "&b➤ Auto-unclaim &aenabled&r. Walk to unclaim your chunks."
+  auto-unclaim-disabled: "&b➤ Auto-unclaim &cdisabled&r."
+  auto-unclaimed: "&e⚠ Chunk auto-unclaimed!"
+  claim-limit-reached: "&c✖ Claim limit reached: &f{limit} &cchunks!"
+  already-claimed: "&c✖ This chunk is already claimed by &f{owner}&c!"
+  not-owner: "&c✖ You don't own this land!"
+  not-connected: "&c✖ You can only claim chunks adjacent to your existing claims!"
+  player-trusted-all: "&a✔ &f{player} &ahas been trusted on all your claims!"
+  player-untrusted-all: "&a✔ &f{player} &ahas been untrusted from all your claims!"
+  trust-usage: "&c✖ Usage: &f/claim trust <player>"
+  untrust-usage: "&c✖ Usage: &f/claim untrust <player>"
+  invalid-command: "&c✖ Invalid command. Use &f/claim help &cfor help."
+  help-header: "&6&l--- LandClaim Help ---"
+  help-claim: "&e/claim &7- &fClaim the current chunk"
+  help-unclaim: "&e/unclaim &7- &fUnclaim the current chunk"
+  help-claim-auto: "&e/claim auto &7- &fToggle auto-claim mode"
+  help-unclaim-auto: "&e/unclaim auto &7- &fToggle auto-unclaim mode"
+  help-trust: "&e/claim trust <player> &7- &fTrust a player in all your claims"
+  help-untrust: "&e/claim untrust <player> &7- &fUntrust a player from all your claims"
+  help-unstuck: "&e/claim unstuck &7- &fTeleport out of someone else's claim"
+  help-visible: "&e/claim visible [always|off] &7- &fToggle claim visualization"
+  player-not-found: "&c✖ Player not found!"
+  access-denied: "&c✖ You don’t have permission!"
+  access-denied-interact: "&c✖ You can’t interact with that here!"
+  reloaded: "&a✔ Configuration reloaded successfully!"
+  actionbar-owner: "&eℹ &f{owner}&7's claim"
+  cannot-trust-self: "&c✖ You cannot trust yourself!"
+  player-not-trusted: "&c✖ That player is not trusted!"
+  pvp-denied: "&c✖ PvP is not allowed in this claimed land!"
+  mob-grief-denied: "&c✖ Mobs are not allowed to grief in claimed land!"
+  command-blocked: "&c✖ This command is blocked in claimed land!"
+  world-blocked: "&c✖ Land claiming is not allowed in this world!"
+  cannot-unstuck-here: "&c✖ You can only use this when trapped in someone else's claim!"
+  unstuck-success: "&a✔ You’ve been teleported to a safe location!"
+  unstuck-cooldown: "&c✖ You must wait &f{seconds} &cseconds before using this again!"
+  bucket-denied: "&c✖ You can’t place or remove fluids in claimed land!"
+  visible-enabled-always: "&a✔ Claim visualization is now always visible!"
+  visible-enabled-temporary: "&a✔ Claim visualization enabled!"
+  visible-disabled: "&c✖ Claim visualization disabled!"
+  admin-unclaimed: "&a✔ Admin forcibly unclaimed chunk owned by &f{owner}&a!"
 
 
 ```
@@ -173,6 +179,7 @@ messages:
 | Command | Description | Permission |
 |---------|-------------|------------|
 | `/claim reload` | Reload configuration | `landclaim.admin` |
+| `/claim admin unclaim` | Unclaim other players claim | `landclaim.admin` |
 
 ## 🔐 Permissions
 
