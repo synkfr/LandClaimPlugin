@@ -2,6 +2,7 @@ package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.utils.ChatUtils;
+import org.ayosynk.landClaimPlugin.utils.ConfigUpdater;
 import org.bukkit.Color;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -23,7 +24,12 @@ public class ConfigManager {
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
+        updateConfig();
         loadConfigs();
+    }
+
+    private void updateConfig() {
+        ConfigUpdater.updateConfig(plugin);
     }
 
     private void loadConfigs() {
@@ -54,18 +60,6 @@ public class ConfigManager {
             plugin.getLogger().severe("Failed to create file: " + file.getName());
             e.printStackTrace();
         }
-    }
-
-    public String getMessage(String key, String... replacements) {
-        String prefix = config.getString("messages.prefix", "&8[&6LandClaim&8]&r ");
-        String message = config.getString("messages." + key, "&cMessage not found: " + key);
-
-        // Apply replacements
-        for (int i = 0; i < replacements.length; i += 2) {
-            message = message.replace(replacements[i], replacements[i+1]);
-        }
-
-        return ChatUtils.colorize(prefix + message);
     }
 
     public void reloadMainConfig() {
@@ -153,5 +147,14 @@ public class ConfigManager {
         } catch (IOException e) {
             plugin.getLogger().severe("Could not save trust.yml: " + e.getMessage());
         }
+    }
+
+    public String getMessage(String key, String... replacements) {
+        String prefix = getConfig().getString("prefix", "&8[&6LandClaim&8]&r ");
+        String message = getConfig().getString("messages." + key, "&cMessage not found: " + key);
+        for (int i = 0; i < replacements.length; i += 2) {
+            message = message.replace(replacements[i], replacements[i+1]);
+        }
+        return ChatUtils.colorize(prefix + message);
     }
 }

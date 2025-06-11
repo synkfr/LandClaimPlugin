@@ -12,11 +12,8 @@ import org.ayosynk.landClaimPlugin.utils.ChatUtils;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -102,8 +99,21 @@ public class EventListener implements Listener {
                 String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
                 if (ownerName == null) ownerName = "Unknown";
 
-                String message = configManager.getConfig().getString("messages.actionbar-owner", "&e{owner}'s claim")
-                        .replace("{owner}", ownerName);
+                String message;
+                UUID playerId = player.getUniqueId();
+
+                if (playerId.equals(ownerId)) {
+                    message = configManager.getConfig().getString("messages.actionbar-own", "&aYour claim");
+                } else if (trustManager.isTrusted(ownerId, player)) {
+                    message = configManager.getConfig().getString("messages.actionbar-trusted", "&eTrusted in {owner}'s claim")
+                            .replace("{owner}", ownerName);
+                } else if (player.hasPermission("landclaim.admin")) {
+                    message = configManager.getConfig().getString("messages.actionbar-admin", "&cAdmin: {owner}'s claim")
+                            .replace("{owner}", ownerName);
+                } else {
+                    message = configManager.getConfig().getString("messages.actionbar-owner", "&e{owner}'s claim")
+                            .replace("{owner}", ownerName);
+                }
 
                 sendActionBar(player, ChatUtils.colorize(message));
                 lastActionBarMap.put(player.getUniqueId(), message);
@@ -138,7 +148,7 @@ public class EventListener implements Listener {
             ChunkPosition pos = new ChunkPosition(toChunk);
             if (!claimManager.isChunkClaimed(pos)) {
                 if (claimManager.claimChunk(player, toChunk)) {
-                    player.sendMessage(ChatUtils.colorize(configManager.getConfig().getString("messages.chunk-claimed")));
+                    player.sendMessage(configManager.getMessage("chunk-claimed"));
                 }
             }
         }
@@ -147,10 +157,26 @@ public class EventListener implements Listener {
         if (commandHandler.isAutoUnclaimEnabled(playerId)) {
             ChunkPosition fromPos = new ChunkPosition(fromChunk);
             if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
-                claimManager.unclaimChunk(fromChunk);
-                player.sendMessage(ChatUtils.colorize(configManager.getConfig().getString("messages.auto-unclaimed")));
+                if (!isConnectedToOtherClaims(fromPos, playerId)) {
+                    claimManager.unclaimChunk(fromChunk);
+                    player.sendMessage(configManager.getMessage("auto-unclaimed"));
+                }
             }
         }
+    }
+
+    private boolean isConnectedToOtherClaims(ChunkPosition pos, UUID playerId) {
+        if (!configManager.requireConnectedClaims()) return false;
+
+        Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
+        if (claims.isEmpty()) return false;
+
+        // Check if this chunk is connected to others
+        Set<ChunkPosition> neighbors = new HashSet<>(pos.getNeighbors(configManager.allowDiagonalConnections()));
+        neighbors.retainAll(claims);
+        neighbors.remove(pos);
+
+        return !neighbors.isEmpty();
     }
 
     @EventHandler
@@ -177,9 +203,7 @@ public class EventListener implements Listener {
         // Check the block's location
         if (shouldCancelInteraction(event.getPlayer(), block)) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.access-denied-interact")
-            ));
+            event.getPlayer().sendMessage(configManager.getMessage("access-denied-interact"));
         }
     }
 
@@ -197,9 +221,7 @@ public class EventListener implements Listener {
         // Check if in claimed land
         if (shouldCancelBucketPlacement(player, block)) {
             event.setCancelled(true);
-            player.sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.bucket-denied", "&cYou can't place fluids in claimed land!")
-            ));
+            player.sendMessage(configManager.getMessage("bucket-denied"));
         }
     }
 
@@ -229,9 +251,7 @@ public class EventListener implements Listener {
         Location location = victim.getLocation();
         if (isInProtectedChunk(location)) {
             event.setCancelled(true);
-            attacker.sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.pvp-denied")
-            ));
+            attacker.sendMessage(configManager.getMessage("pvp-denied"));
         }
     }
 
@@ -264,10 +284,7 @@ public class EventListener implements Listener {
         if (!nearClaim) return;
 
         // Remove any blocks that are in claimed chunks from the explosion list
-        event.blockList().removeIf(block -> {
-            ChunkPosition blockChunk = new ChunkPosition(block);
-            return claimManager.isChunkClaimed(blockChunk);
-        });
+        event.blockList().removeIf(b -> claimManager.isChunkClaimed(new ChunkPosition(b)));
     }
 
     @EventHandler
@@ -307,9 +324,7 @@ public class EventListener implements Listener {
             }
 
             event.setCancelled(true);
-            player.sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.access-denied")
-            ));
+            player.sendMessage(configManager.getMessage("access-denied"));
         }
     }
 

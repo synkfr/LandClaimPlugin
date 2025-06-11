@@ -25,25 +25,36 @@ public class ClaimTabCompleter implements TabCompleter {
             if (args.length == 1) {
                 completions.addAll(Arrays.asList(
                         "auto", "trust", "untrust", "unstuck",
-                        "visible", "help", "reload", "admin"
+                        "visible", "help", "reload", "admin", "trustlist", "info"
                 ));
             } else if (args.length == 2) {
                 if (args[0].equalsIgnoreCase("trust") ||
                         args[0].equalsIgnoreCase("untrust")) {
-                    // Let Bukkit handle player name suggestions
+                    // Return null to let Bukkit handle online player suggestions
                     return null;
                 } else if (args[0].equalsIgnoreCase("visible")) {
                     completions.addAll(Arrays.asList("always", "off"));
                 } else if (args[0].equalsIgnoreCase("admin")) {
-                    completions.add("unclaim");
+                    completions.addAll(Arrays.asList("unclaim", "unclaimall"));
+                }
+            } else if (args.length == 3) {
+                if (args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("unclaimall")) {
+                    return null; // Player suggestions for unclaimall
                 }
             }
         } else if (cmd.equals("unclaim")) {
             if (args.length == 1) {
-                completions.add("auto");
+                completions.addAll(Arrays.asList("auto", "all"));
+            } else if (args.length == 2 && args[0].equalsIgnoreCase("all")) {
+                completions.add("confirm");
+            }
+        } else if (cmd.equals("unclaimall")) {
+            if (args.length == 1) {
+                completions.add("confirm");
             }
         }
 
+        // Filter based on current input
         return completions.stream()
                 .filter(s -> s.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
                 .collect(Collectors.toList());

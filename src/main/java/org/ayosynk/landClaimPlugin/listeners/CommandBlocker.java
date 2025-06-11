@@ -4,7 +4,6 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.utils.ChatUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,32 +26,28 @@ public class CommandBlocker implements Listener {
     @EventHandler
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
+        if (player.hasPermission("landclaim.admin")) return;
+
         String command = event.getMessage().split(" ")[0].substring(1).toLowerCase(); // Remove slash
 
-        // Get blocked commands
         List<String> blockedCommands = plugin.getConfigManager().getBlockedCommands();
         if (blockedCommands.isEmpty() || !blockedCommands.contains(command)) {
-            return; // Command not blocked
+            return;
         }
 
-        // Check if player is in a claimed chunk
         ChunkPosition pos = new ChunkPosition(player.getLocation());
         if (!claimManager.isChunkClaimed(pos)) {
-            return; // Not in claimed land
+            return;
         }
 
         UUID owner = claimManager.getChunkOwner(pos);
 
-        // Allow owner and trusted players to use commands
         if (player.getUniqueId().equals(owner) ||
                 trustManager.isTrusted(owner, player)) {
             return;
         }
 
-        // Block the command
         event.setCancelled(true);
-        player.sendMessage(ChatUtils.colorize(
-                plugin.getConfigManager().getConfig().getString("messages.command-blocked", "&cThis command is blocked in claimed land!")
-        ));
+        player.sendMessage(plugin.getConfigManager().getMessage("command-blocked"));
     }
 }

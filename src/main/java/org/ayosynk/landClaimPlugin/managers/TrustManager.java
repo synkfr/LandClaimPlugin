@@ -1,6 +1,8 @@
 package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -68,18 +70,30 @@ public class TrustManager {
         configManager.saveTrustConfig();
     }
 
-    public boolean addTrustedPlayer(Player owner, Player trusted) {
-        UUID ownerId = owner.getUniqueId();
-        UUID trustedId = trusted.getUniqueId();
+    public boolean addTrustedPlayer(Player owner, String targetName) {
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        if (target == null || !target.hasPlayedBefore()) {
+            return false;
+        }
+        return addTrustedPlayer(owner, target.getUniqueId());
+    }
 
+    public boolean addTrustedPlayer(Player owner, UUID trustedId) {
+        UUID ownerId = owner.getUniqueId();
         trustedPlayers.computeIfAbsent(ownerId, k -> new HashSet<>()).add(trustedId);
         return true;
     }
 
-    public boolean removeTrustedPlayer(Player owner, Player trusted) {
-        UUID ownerId = owner.getUniqueId();
-        UUID trustedId = trusted.getUniqueId();
+    public boolean removeTrustedPlayer(Player owner, String targetName) {
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        if (target == null || !target.hasPlayedBefore()) {
+            return false;
+        }
+        return removeTrustedPlayer(owner, target.getUniqueId());
+    }
 
+    public boolean removeTrustedPlayer(Player owner, UUID trustedId) {
+        UUID ownerId = owner.getUniqueId();
         Set<UUID> trustedSet = trustedPlayers.get(ownerId);
         if (trustedSet != null) {
             return trustedSet.remove(trustedId);

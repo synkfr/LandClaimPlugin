@@ -2,7 +2,7 @@ package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.utils.ChatUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -87,12 +87,9 @@ public class ClaimManager {
     }
 
     public boolean claimChunk(Player player, Chunk chunk) {
-        // Check world restrictions
         String worldName = chunk.getWorld().getName();
         if (configManager.isWorldBlocked(worldName)) {
-            player.sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.world-blocked", "&cYou cannot claim land in this world!")
-            ));
+            player.sendMessage(configManager.getMessage("world-blocked"));
             return false;
         }
 
@@ -100,9 +97,9 @@ public class ClaimManager {
         if (isChunkClaimed(pos)) {
             UUID owner = getChunkOwner(pos);
             String ownerName = plugin.getServer().getOfflinePlayer(owner).getName();
-            player.sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.already-claimed", "&cThis chunk is already claimed by {owner}!")
-                            .replace("{owner}", ownerName != null ? ownerName : "Unknown")
+            player.sendMessage(configManager.getMessage(
+                    "already-claimed",
+                    "{owner}", ownerName != null ? ownerName : "Unknown"
             ));
             return false;
         }
@@ -111,20 +108,17 @@ public class ClaimManager {
         int claimLimit = getClaimLimit(player);
         Set<ChunkPosition> claims = playerClaims.getOrDefault(playerId, new HashSet<>());
         if (claims.size() >= claimLimit) {
-            player.sendMessage(ChatUtils.colorize(
-                    configManager.getConfig().getString("messages.claim-limit-reached", "&cYou've reached your claim limit of {limit} chunks!")
-                            .replace("{limit}", String.valueOf(claimLimit))
+            player.sendMessage(configManager.getMessage(
+                    "claim-limit-reached",
+                    "{limit}", String.valueOf(claimLimit)
             ));
             return false;
         }
 
-        // Check if claim needs to be connected to existing claims
         if (configManager.requireConnectedClaims() && !claims.isEmpty()) {
             boolean isConnected = isConnectedToOwnClaims(pos, playerId);
             if (!isConnected) {
-                player.sendMessage(ChatUtils.colorize(
-                        configManager.getConfig().getString("messages.not-connected", "&cYou can only claim chunks adjacent to your existing claims!")
-                ));
+                player.sendMessage(configManager.getMessage("not-connected"));
                 return false;
             }
         }
@@ -133,7 +127,6 @@ public class ClaimManager {
         claims.add(pos);
         playerClaims.put(playerId, claims);
 
-        // Invalidate visualization cache
         plugin.getVisualizationManager().invalidateCache(playerId);
         return true;
     }
@@ -168,11 +161,30 @@ public class ClaimManager {
                 }
             }
 
-            // Invalidate visualization cache
             plugin.getVisualizationManager().invalidateCache(owner);
             return true;
         }
         return false;
+    }
+
+    public int unclaimAll(UUID playerId) {
+        Set<ChunkPosition> claims = playerClaims.getOrDefault(playerId, new HashSet<>());
+        if (claims.isEmpty()) {
+            return 0;
+        }
+
+        Set<ChunkPosition> toRemove = new HashSet<>(claims);
+        int count = 0;
+        for (ChunkPosition pos : toRemove) {
+            World world = Bukkit.getWorld(pos.getWorld());
+            if (world != null) {
+                Chunk chunk = world.getChunkAt(pos.getX(), pos.getZ());
+                if (unclaimChunk(chunk)) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     public boolean isChunkClaimed(ChunkPosition pos) {
@@ -190,7 +202,6 @@ public class ClaimManager {
     public int getClaimLimit(Player player) {
         if (player.hasPermission("landclaim.admin")) return Integer.MAX_VALUE;
 
-        // Check for specific limit permissions
         for (int i = 100; i > 0; i--) {
             if (player.hasPermission("landclaim.limit." + i)) return i;
         }

@@ -15,10 +15,8 @@ public class VisualizationManager {
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
 
-    // Cache for merged edges: PlayerID -> WorldName -> Edges
     private final Map<UUID, Map<String, Set<Edge>>> mergedEdgesCache = new HashMap<>();
 
-    // Visualization modes: PlayerID -> Mode
     private final Map<UUID, VisualizationMode> visualizationModes = new HashMap<>();
 
     public enum VisualizationMode {
@@ -52,15 +50,12 @@ public class VisualizationManager {
         World world = player.getWorld();
         String worldName = world.getName();
 
-        // Get merged edges
         Set<Edge> edges = getMergedEdges(playerId, worldName, claims);
 
-        // Get visualization color
         Color color = mode == VisualizationMode.ALWAYS ?
                 configManager.getVisualizationColor("always-color") :
                 configManager.getVisualizationColor("temporary-color");
 
-        // Show particles along edges
         showEdges(player, edges, color);
     }
 
@@ -70,18 +65,14 @@ public class VisualizationManager {
         World world = player.getWorld();
         String worldName = world.getName();
 
-        // Get merged edges
         Set<Edge> edges = getMergedEdges(playerId, worldName, claims);
 
-        // Get visualization color
         Color color = configManager.getVisualizationColor("temporary-color");
 
-        // Show particles along edges
         showEdges(player, edges, color);
     }
 
     private Set<Edge> getMergedEdges(UUID playerId, String worldName, Set<ChunkPosition> claims) {
-        // Use cached edges if available
         if (mergedEdgesCache.containsKey(playerId)) {
             Map<String, Set<Edge>> worldCache = mergedEdgesCache.get(playerId);
             if (worldCache.containsKey(worldName)) {
@@ -89,7 +80,6 @@ public class VisualizationManager {
             }
         }
 
-        // Calculate merged edges
         Map<Edge, Integer> edgeCounts = new HashMap<>();
 
         for (ChunkPosition claim : claims) {
@@ -106,14 +96,12 @@ public class VisualizationManager {
             Edge west = new Edge(minX, minZ, minX, maxZ);
             Edge east = new Edge(maxX, minZ, maxX, maxZ);
 
-            // Count edge occurrences
             edgeCounts.put(north, edgeCounts.getOrDefault(north, 0) + 1);
             edgeCounts.put(south, edgeCounts.getOrDefault(south, 0) + 1);
             edgeCounts.put(west, edgeCounts.getOrDefault(west, 0) + 1);
             edgeCounts.put(east, edgeCounts.getOrDefault(east, 0) + 1);
         }
 
-        // Only keep edges that are unique (not shared with another claim)
         Set<Edge> uniqueEdges = new HashSet<>();
         for (Map.Entry<Edge, Integer> entry : edgeCounts.entrySet()) {
             if (entry.getValue() == 1) {
@@ -121,7 +109,6 @@ public class VisualizationManager {
             }
         }
 
-        // Cache the result
         cacheEdges(playerId, worldName, uniqueEdges);
         return uniqueEdges;
     }
