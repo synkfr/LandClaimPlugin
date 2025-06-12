@@ -39,6 +39,7 @@ public class CommandHandler implements CommandExecutor {
         this.configManager = configManager;
         this.visualizationManager = visualizationManager;
 
+        // Safe command registration
         if (plugin.getCommand("claim") != null) {
             plugin.getCommand("claim").setExecutor(this);
         }
@@ -138,6 +139,7 @@ public class CommandHandler implements CommandExecutor {
         UUID playerId = player.getUniqueId();
         int cooldown = configManager.getUnstuckCooldown();
 
+        // Check cooldown
         if (unstuckCooldowns.containsKey(playerId)) {
             long lastUsed = unstuckCooldowns.get(playerId);
             long secondsLeft = cooldown - ((System.currentTimeMillis() - lastUsed) / 1000);
@@ -148,6 +150,7 @@ public class CommandHandler implements CommandExecutor {
             }
         }
 
+        // Check if player is eligible for unstuck
         Location location = player.getLocation();
         ChunkPosition pos = new ChunkPosition(location);
 
@@ -167,34 +170,43 @@ public class CommandHandler implements CommandExecutor {
             return;
         }
 
+        // Find nearest unclaimed chunk
         Location safeLocation = findNearestUnclaimed(location);
 
         if (safeLocation == null) {
+            // Fallback to world spawn
             safeLocation = player.getWorld().getSpawnLocation();
         }
 
+        // Set cooldown
         unstuckCooldowns.put(playerId, System.currentTimeMillis());
 
+        // Teleport player
         player.teleport(safeLocation);
         sendMessage(player, "unstuck-success");
     }
 
     private Location findNearestUnclaimed(Location origin) {
         World world = origin.getWorld();
-        int startX = origin.getBlockX() >> 4;
+        int startX = origin.getBlockX() >> 4; // Convert to chunk coordinates
         int startZ = origin.getBlockZ() >> 4;
 
+        // Search in expanding rings
         for (int radius = 1; radius <= 50; radius++) {
             for (int x = -radius; x <= radius; x++) {
                 for (int z = -radius; z <= radius; z++) {
+                    // Only check perimeter of the ring
                     if (Math.abs(x) != radius && Math.abs(z) != radius) continue;
 
                     int chunkX = startX + x;
                     int chunkZ = startZ + z;
 
+                    // Create chunk position
                     ChunkPosition pos = new ChunkPosition(world.getName(), chunkX, chunkZ);
 
+                    // Check if chunk is unclaimed
                     if (!claimManager.isChunkClaimed(pos)) {
+                        // Find safe location in chunk
                         return findSafeLocation(world, chunkX, chunkZ);
                     }
                 }
@@ -208,10 +220,13 @@ public class CommandHandler implements CommandExecutor {
         int centerX = (chunkX << 4) + 8;
         int centerZ = (chunkZ << 4) + 8;
 
+        // Get highest safe block
         int y = world.getHighestBlockYAt(centerX, centerZ);
         Location location = new Location(world, centerX, y + 1, centerZ);
 
+        // Check if location is safe (not in water or lava)
         if (location.getBlock().isLiquid()) {
+            // Find nearby safe block
             for (int x = -2; x <= 2; x++) {
                 for (int z = -2; z <= 2; z++) {
                     Location testLoc = location.clone().add(x, 0, z);
@@ -320,8 +335,10 @@ public class CommandHandler implements CommandExecutor {
         String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
         if (ownerName == null) ownerName = "Unknown";
 
+        // Show owner
         sendMessage(player, "claim-info-owner", "{owner}", ownerName);
 
+        // Show trusted players
         Set<UUID> trusted = trustManager.getTrustedPlayers(ownerId);
         if (!trusted.isEmpty()) {
             List<String> names = new ArrayList<>();
@@ -391,6 +408,11 @@ public class CommandHandler implements CommandExecutor {
     }
 
     private void trustPlayer(Player player, String targetName) {
+        if (player.getName().equalsIgnoreCase(targetName)) {
+            sendMessage(player, "cannot-trust-self");
+            return;
+        }
+
         if (trustManager.addTrustedPlayer(player, targetName)) {
             sendMessage(player, "player-trusted-all", "{player}", targetName);
             trustManager.saveTrustedPlayers();
@@ -420,6 +442,7 @@ public class CommandHandler implements CommandExecutor {
     }
 
     private void showHelp(Player player) {
+        // Define all help message keys in order
         String[] helpKeys = {
                 "help-header",
                 "help-claim",
@@ -436,6 +459,7 @@ public class CommandHandler implements CommandExecutor {
                 "help-unclaimall"
         };
 
+        // Send each help message
         for (String key : helpKeys) {
             String message = configManager.getConfig().getString("messages." + key);
             if (message != null) {
@@ -450,6 +474,7 @@ public class CommandHandler implements CommandExecutor {
             return;
         }
 
+        // Reload main config
         configManager.reloadMainConfig();
         plugin.reloadConfiguration();
         sendMessage(player, "reloaded");

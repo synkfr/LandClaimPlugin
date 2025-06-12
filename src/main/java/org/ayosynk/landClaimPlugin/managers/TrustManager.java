@@ -71,11 +71,26 @@ public class TrustManager {
     }
 
     public boolean addTrustedPlayer(Player owner, String targetName) {
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target == null || !target.hasPlayedBefore()) {
+        // Check if player is trying to trust themselves
+        if (owner.getName().equalsIgnoreCase(targetName)) {
             return false;
         }
-        return addTrustedPlayer(owner, target.getUniqueId());
+
+        // Search online players first
+        Player onlinePlayer = Bukkit.getPlayerExact(targetName);
+        if (onlinePlayer != null) {
+            return addTrustedPlayer(owner, onlinePlayer.getUniqueId());
+        }
+
+        // Search offline players
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (offlinePlayer.getName() != null &&
+                    offlinePlayer.getName().equalsIgnoreCase(targetName)) {
+                return addTrustedPlayer(owner, offlinePlayer.getUniqueId());
+            }
+        }
+
+        return false;
     }
 
     public boolean addTrustedPlayer(Player owner, UUID trustedId) {
@@ -85,11 +100,21 @@ public class TrustManager {
     }
 
     public boolean removeTrustedPlayer(Player owner, String targetName) {
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target == null || !target.hasPlayedBefore()) {
-            return false;
+        // Search online players first
+        Player onlinePlayer = Bukkit.getPlayerExact(targetName);
+        if (onlinePlayer != null) {
+            return removeTrustedPlayer(owner, onlinePlayer.getUniqueId());
         }
-        return removeTrustedPlayer(owner, target.getUniqueId());
+
+        // Search offline players
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (offlinePlayer.getName() != null &&
+                    offlinePlayer.getName().equalsIgnoreCase(targetName)) {
+                return removeTrustedPlayer(owner, offlinePlayer.getUniqueId());
+            }
+        }
+
+        return false;
     }
 
     public boolean removeTrustedPlayer(Player owner, UUID trustedId) {
