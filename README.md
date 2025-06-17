@@ -27,7 +27,7 @@
 4. Configure settings in `plugins/LandClaim/config.yml`
 5. Use `/claim help` in-game to get started
 
-**note**: if your updating to 1.3.1 to 1.4 Read This [Here](https://github.com/synkfr/LandClaimPlugin/releases/tag/V_1_4)
+**note**: if your updating to 1.3.1 to 1.4 Read This [Here](https://github.com/synkfr/LandClaimPlugin/releases/tag/v_1_4)
 
 ## ⚙️ Configuration
 
