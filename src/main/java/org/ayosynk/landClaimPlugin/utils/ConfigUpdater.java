@@ -33,7 +33,7 @@ public class ConfigUpdater {
             YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(
                     new InputStreamReader(defaultStream, StandardCharsets.UTF_8)
             );
-            int defaultVersion = defaultConfig.getInt("config-version", 1);
+            int defaultVersion = defaultConfig.getInt("config-version", 3);
 
             // Update if versions differ
             if (currentVersion < defaultVersion) {

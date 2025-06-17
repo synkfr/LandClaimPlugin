@@ -3,15 +3,13 @@ package org.ayosynk.landClaimPlugin.listeners;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
-import org.ayosynk.landClaimPlugin.commands.CommandHandler;
+import org.ayosynk.landClaimPlugin.gui.TrustMenuGUI;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.utils.ChatUtils;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -20,7 +18,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -34,7 +34,6 @@ public class EventListener implements Listener {
     private final ClaimManager claimManager;
     private final TrustManager trustManager;
     private final ConfigManager configManager;
-    private final CommandHandler commandHandler;
     private final Map<UUID, ChunkPosition> lastChunkMap = new HashMap<>();
     private final Map<UUID, String> lastActionBarMap = new HashMap<>();
 
@@ -69,7 +68,6 @@ public class EventListener implements Listener {
         this.claimManager = claimManager;
         this.trustManager = trustManager;
         this.configManager = configManager;
-        this.commandHandler = plugin.getCommandHandler();
 
         // Start action bar task
         startActionBarTask();
@@ -144,7 +142,7 @@ public class EventListener implements Listener {
         UUID playerId = player.getUniqueId();
 
         // Handle auto claim
-        if (commandHandler.isAutoClaimEnabled(playerId)) {
+        if (plugin.getCommandHandler().isAutoClaimEnabled(playerId)) {
             ChunkPosition pos = new ChunkPosition(toChunk);
             if (!claimManager.isChunkClaimed(pos)) {
                 if (claimManager.claimChunk(player, toChunk)) {
@@ -154,7 +152,7 @@ public class EventListener implements Listener {
         }
 
         // Handle auto unclaim
-        if (commandHandler.isAutoUnclaimEnabled(playerId)) {
+        if (plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
             ChunkPosition fromPos = new ChunkPosition(fromChunk);
             if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
                 if (!isConnectedToOtherClaims(fromPos, playerId)) {
@@ -182,13 +180,13 @@ public class EventListener implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         // Check the block's location, not player's location
-        checkBlockPermission(event.getPlayer(), event.getBlock(), event);
+        checkBlockPermission(event.getPlayer(), event.getBlock(), event, "BUILD");
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         // Check the block's location, not player's location
-        checkBlockPermission(event.getPlayer(), event.getBlock(), event);
+        checkBlockPermission(event.getPlayer(), event.getBlock(), event, "BUILD");
     }
 
     @EventHandler
@@ -201,10 +199,7 @@ public class EventListener implements Listener {
         if (!INTERACTABLE_BLOCKS.contains(block.getType())) return;
 
         // Check the block's location
-        if (shouldCancelInteraction(event.getPlayer(), block)) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(configManager.getMessage("access-denied-interact"));
-        }
+        checkInteractionPermission(event.getPlayer(), event, "INTERACT");
     }
 
     @EventHandler
@@ -227,6 +222,41 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Villager ||
+                event.getEntity() instanceof Animals ||
+                isPet(event.getEntity())) {
+
+            // Get the attacking player
+            Player damager = null;
+            if (event.getDamager() instanceof Player) {
+                damager = (Player) event.getDamager();
+            }
+            else if (event.getDamager() instanceof Projectile) {
+                Projectile projectile = (Projectile) event.getDamager();
+                if (projectile.getShooter() instanceof Player) {
+                    damager = (Player) projectile.getShooter();
+                }
+            }
+
+            if (damager == null) return;
+
+            Location location = event.getEntity().getLocation();
+            if (isInProtectedChunk(location)) {
+                ChunkPosition pos = new ChunkPosition(location);
+                if (claimManager.isChunkClaimed(pos)) {
+                    UUID owner = claimManager.getChunkOwner(pos);
+                    if (damager.getUniqueId().equals(owner) ||
+                            trustManager.isTrusted(owner, damager)) {
+                        return; // Owner or trusted can harm
+                    }
+
+                    event.setCancelled(true);
+                    damager.sendMessage(configManager.getMessage("harm-entity-denied"));
+                }
+            }
+            return;
+        }
+
         if (!configManager.preventPvP()) return;
 
         Player attacker = null;
@@ -253,6 +283,15 @@ public class EventListener implements Listener {
             event.setCancelled(true);
             attacker.sendMessage(configManager.getMessage("pvp-denied"));
         }
+    }
+
+    private boolean isPet(Entity entity) {
+        // Check if entity is a tamed animal
+        if (entity instanceof Tameable) {
+            Tameable tameable = (Tameable) entity;
+            return tameable.isTamed() && tameable.getOwner() != null;
+        }
+        return false;
     }
 
     @EventHandler
@@ -306,7 +345,7 @@ public class EventListener implements Listener {
         return claimManager.isChunkClaimed(pos);
     }
 
-    private void checkBlockPermission(Player player, Block block, org.bukkit.event.Cancellable event) {
+    private void checkBlockPermission(Player player, Block block, org.bukkit.event.Cancellable event, String permission) {
         if (player.hasPermission("landclaim.admin")) return;
 
         // Always check the block's chunk, not the player's chunk
@@ -318,9 +357,16 @@ public class EventListener implements Listener {
                 return; // Owner can build
             }
 
-            // Check global trust for this owner
+            // Check if trusted with permission
             if (trustManager.isTrusted(owner, player)) {
-                return; // Trusted player can build
+                if (trustManager.hasTrustPermission(owner, player.getUniqueId(), permission)) {
+                    return; // Trusted with permission
+                }
+            } else {
+                // Check visitor permission
+                if (trustManager.hasVisitorPermission(owner, permission)) {
+                    return; // Visitor permission enabled
+                }
             }
 
             event.setCancelled(true);
@@ -339,28 +385,64 @@ public class EventListener implements Listener {
             UUID owner = claimManager.getChunkOwner(pos);
             UUID playerId = player.getUniqueId();
 
-            // Allow owner and trusted players
-            return !playerId.equals(owner) &&
-                    !trustManager.isTrusted(owner, player);
+            // Allow owner
+            if (playerId.equals(owner)) return false;
+
+            // Check if trusted with BUILD permission
+            if (trustManager.isTrusted(owner, player)) {
+                return !trustManager.hasTrustPermission(owner, player.getUniqueId(), "BUILD");
+            }
+
+            // Check visitor permission
+            return !trustManager.hasVisitorPermission(owner, "BUILD");
         }
 
         return false;
     }
 
-    private boolean shouldCancelInteraction(Player player, Block block) {
-        if (player.hasPermission("landclaim.admin")) return false;
+    private void checkInteractionPermission(Player player, PlayerInteractEvent event, String permission) {
+        if (player.hasPermission("landclaim.admin")) return;
 
+        Block block = event.getClickedBlock();
         ChunkPosition pos = new ChunkPosition(block);
 
         if (claimManager.isChunkClaimed(pos)) {
             UUID owner = claimManager.getChunkOwner(pos);
-            UUID playerId = player.getUniqueId();
+            if (player.getUniqueId().equals(owner)) {
+                return; // Owner can always interact
+            }
 
-            // Allow owner and globally trusted players
-            return !playerId.equals(owner) &&
-                    !trustManager.isTrusted(owner, player);
+            // Check if trusted with permission
+            if (trustManager.isTrusted(owner, player)) {
+                if (trustManager.hasTrustPermission(owner, player.getUniqueId(), permission)) {
+                    return; // Trusted with permission
+                }
+            } else {
+                // Check visitor permission
+                if (trustManager.hasVisitorPermission(owner, permission)) {
+                    return; // Visitor permission enabled
+                }
+            }
+
+            event.setCancelled(true);
+            player.sendMessage(configManager.getMessage("access-denied-interact"));
         }
+    }
 
-        return false;
+    @EventHandler
+    public void onPlayerChat(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        String message = event.getMessage();
+
+        // Check if player clicked a trust entry
+        if (message.startsWith("§7- §e")) {
+            event.setCancelled(true);
+            String playerName = message.substring(6); // Extract player name
+
+            Player trustedPlayer = Bukkit.getPlayer(playerName);
+            if (trustedPlayer != null) {
+                TrustMenuGUI.open(player, trustedPlayer, trustManager);
+            }
+        }
     }
 }

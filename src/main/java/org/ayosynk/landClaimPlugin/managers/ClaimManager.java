@@ -72,7 +72,7 @@ public class ClaimManager {
 
     public void saveClaims() {
         FileConfiguration config = configManager.getClaimsConfig();
-        config.set("claims", null); // Clear existing claims
+        config.set("claims", null);
 
         ConfigurationSection claimsSection = config.createSection("claims");
         for (Map.Entry<UUID, Set<ChunkPosition>> entry : playerClaims.entrySet()) {

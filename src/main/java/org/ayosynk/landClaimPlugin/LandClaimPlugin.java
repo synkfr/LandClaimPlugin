@@ -1,9 +1,10 @@
 package org.ayosynk.landClaimPlugin;
 
+import org.ayosynk.landClaimPlugin.commands.CommandHandler;
 import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
+import org.ayosynk.landClaimPlugin.gui.GUIListener;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
 import org.ayosynk.landClaimPlugin.listeners.EventListener;
-import org.ayosynk.landClaimPlugin.commands.CommandHandler;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
@@ -29,27 +30,40 @@ public class LandClaimPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
+            // Initialize managers
             configManager = new ConfigManager(this);
             claimManager = new ClaimManager(this, configManager);
             trustManager = new TrustManager(this, claimManager, configManager);
 
+            // Load claims and trust data
             claimManager.initialize();
             trustManager.initialize();
 
+            // Initialize visualization manager
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
 
+            // Register commands
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager);
 
+            // Register events
             getServer().getPluginManager().registerEvents(
                     new EventListener(this, claimManager, trustManager, configManager),
                     this
             );
 
+            // Register command blocker
             getServer().getPluginManager().registerEvents(
                     new CommandBlocker(this, claimManager, trustManager),
                     this
             );
 
+            // Register GUI listener
+            getServer().getPluginManager().registerEvents(
+                    new GUIListener(trustManager),
+                    this
+            );
+
+            // Register tab completers
             if (getCommand("claim") != null) {
                 getCommand("claim").setTabCompleter(new ClaimTabCompleter());
             }
@@ -60,8 +74,10 @@ public class LandClaimPlugin extends JavaPlugin {
                 getCommand("unclaimall").setTabCompleter(new ClaimTabCompleter());
             }
 
+            // Load configuration
             reloadConfiguration();
 
+            // Schedule auto-save task
             scheduleAutoSave();
 
             getLogger().info("LandClaim has been enabled! Loaded " +
@@ -75,42 +91,53 @@ public class LandClaimPlugin extends JavaPlugin {
     }
 
     private void scheduleAutoSave() {
-        // Auto-save every 5 minutes (12000 ticks)
+        // Auto-save every 5 minutes (6000 ticks)
         autoSaveTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
             getLogger().info("Auto-saving claims and trust data...");
             claimManager.saveClaims();
             trustManager.saveTrustedPlayers();
-        }, 12000L, 12000L);
+            trustManager.savePermissionsAndMembers();
+        }, 6000L, 6000L);
     }
 
     public void reloadConfiguration() {
+        // Update config to latest version
         ConfigUpdater.updateConfig(this);
 
+        // Reload config manager
         configManager.reloadMainConfig();
 
+        // Reload blocked commands and worlds
         blockedCommands = configManager.getBlockedCommands();
         blockedWorlds = configManager.getConfig().getStringList("block-world");
 
+        // Convert to lowercase for case-insensitive matching
         blockedCommands = blockedCommands.stream().map(String::toLowerCase).toList();
         blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();
 
+        // Reload claims and trust
         claimManager.loadClaims();
         trustManager.loadTrustedPlayers();
+        trustManager.loadPermissions();
+        trustManager.loadMembers();
     }
 
     @Override
     public void onDisable() {
         try {
+            // Cancel auto-save task
             if (autoSaveTaskId != -1) {
                 Bukkit.getScheduler().cancelTask(autoSaveTaskId);
             }
 
+            // Save claims data if managers were initialized
             if (claimManager != null) {
                 claimManager.saveClaims();
                 getLogger().info("Saved " + claimManager.getTotalClaims() + " claims");
             }
             if (trustManager != null) {
                 trustManager.saveTrustedPlayers();
+                trustManager.savePermissionsAndMembers();
                 getLogger().info("Saved trust data for " + trustManager.getTotalTrusts() + " relationships");
             }
             getLogger().info("LandClaim has been disabled!");

@@ -1,5 +1,10 @@
 package org.ayosynk.landClaimPlugin.commands;
 
+import org.ayosynk.landClaimPlugin.gui.TrustListGUI;
+import org.ayosynk.landClaimPlugin.gui.TrustMenuGUI;
+import org.ayosynk.landClaimPlugin.gui.VisitorMenuGUI;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
@@ -78,11 +83,7 @@ public class CommandHandler implements CommandExecutor {
                     toggleAutoClaim(player);
                     break;
                 case "trust":
-                    if (args.length < 2) {
-                        sendMessage(player, "trust-usage");
-                        break;
-                    }
-                    trustPlayer(player, args[1]);
+                    handleTrustCommand(player, args);
                     break;
                 case "untrust":
                     if (args.length < 2) {
@@ -112,9 +113,36 @@ public class CommandHandler implements CommandExecutor {
                 case "info":
                     showClaimInfo(player);
                     break;
+                case "visitor":
+                    handleVisitorCommand(player, args);
+                    break;
+                case "member":
+                    handleMemberCommand(player, args);
+                    break;
                 default:
                     sendMessage(player, "invalid-command");
             }
+        }
+    }
+
+    private void handleTrustCommand(Player player, String[] args) {
+        if (args.length < 2) {
+            sendMessage(player, "trust-usage");
+            return;
+        }
+
+        if (args[1].equalsIgnoreCase("menu")) {
+            openTrustMenu(player);
+        } else {
+            trustPlayer(player, args[1]);
+        }
+    }
+
+    private void handleVisitorCommand(Player player, String[] args) {
+        if (args.length > 1 && args[1].equalsIgnoreCase("menu")) {
+            openVisitorMenu(player);
+        } else {
+            sendMessage(player, "invalid-command");
         }
     }
 
@@ -138,8 +166,6 @@ public class CommandHandler implements CommandExecutor {
     private void handleUnstuckCommand(Player player) {
         UUID playerId = player.getUniqueId();
         int cooldown = configManager.getUnstuckCooldown();
-
-        // Check cooldown
         if (unstuckCooldowns.containsKey(playerId)) {
             long lastUsed = unstuckCooldowns.get(playerId);
             long secondsLeft = cooldown - ((System.currentTimeMillis() - lastUsed) / 1000);
@@ -150,7 +176,6 @@ public class CommandHandler implements CommandExecutor {
             }
         }
 
-        // Check if player is eligible for unstuck
         Location location = player.getLocation();
         ChunkPosition pos = new ChunkPosition(location);
 
@@ -170,18 +195,14 @@ public class CommandHandler implements CommandExecutor {
             return;
         }
 
-        // Find nearest unclaimed chunk
         Location safeLocation = findNearestUnclaimed(location);
 
         if (safeLocation == null) {
-            // Fallback to world spawn
             safeLocation = player.getWorld().getSpawnLocation();
         }
 
-        // Set cooldown
         unstuckCooldowns.put(playerId, System.currentTimeMillis());
 
-        // Teleport player
         player.teleport(safeLocation);
         sendMessage(player, "unstuck-success");
     }
@@ -191,22 +212,17 @@ public class CommandHandler implements CommandExecutor {
         int startX = origin.getBlockX() >> 4; // Convert to chunk coordinates
         int startZ = origin.getBlockZ() >> 4;
 
-        // Search in expanding rings
         for (int radius = 1; radius <= 50; radius++) {
             for (int x = -radius; x <= radius; x++) {
                 for (int z = -radius; z <= radius; z++) {
-                    // Only check perimeter of the ring
                     if (Math.abs(x) != radius && Math.abs(z) != radius) continue;
 
                     int chunkX = startX + x;
                     int chunkZ = startZ + z;
 
-                    // Create chunk position
                     ChunkPosition pos = new ChunkPosition(world.getName(), chunkX, chunkZ);
 
-                    // Check if chunk is unclaimed
                     if (!claimManager.isChunkClaimed(pos)) {
-                        // Find safe location in chunk
                         return findSafeLocation(world, chunkX, chunkZ);
                     }
                 }
@@ -216,17 +232,13 @@ public class CommandHandler implements CommandExecutor {
     }
 
     private Location findSafeLocation(World world, int chunkX, int chunkZ) {
-        // Center of chunk
         int centerX = (chunkX << 4) + 8;
         int centerZ = (chunkZ << 4) + 8;
 
-        // Get highest safe block
         int y = world.getHighestBlockYAt(centerX, centerZ);
         Location location = new Location(world, centerX, y + 1, centerZ);
 
-        // Check if location is safe (not in water or lava)
         if (location.getBlock().isLiquid()) {
-            // Find nearby safe block
             for (int x = -2; x <= 2; x++) {
                 for (int z = -2; z <= 2; z++) {
                     Location testLoc = location.clone().add(x, 0, z);
@@ -306,7 +318,7 @@ public class CommandHandler implements CommandExecutor {
         }
     }
 
-    private void showTrustList(Player player) {
+    public void showTrustList(Player player) {
         UUID playerId = player.getUniqueId();
         Set<UUID> trusted = trustManager.getTrustedPlayers(playerId);
 
@@ -319,9 +331,22 @@ public class CommandHandler implements CommandExecutor {
         for (UUID id : trusted) {
             String name = Bukkit.getOfflinePlayer(id).getName();
             if (name != null) {
-                player.sendMessage(configManager.getMessage("trust-list-item", "{player}", name));
+                // Create clickable trust entry
+                player.spigot().sendMessage(ChatMessageType.CHAT,
+                        TextComponent.fromLegacyText(configManager.getMessage(
+                                "trust-list-item", "{player}", name
+                        )));
             }
         }
+        sendMessage(player, "click-to-manage");
+    }
+
+    private void openTrustMenu(Player player) {
+        TrustListGUI.open(player, trustManager);
+    }
+
+    private void openVisitorMenu(Player player) {
+        VisitorMenuGUI.open(player, trustManager);
     }
 
     private void showClaimInfo(Player player) {
@@ -335,10 +360,8 @@ public class CommandHandler implements CommandExecutor {
         String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
         if (ownerName == null) ownerName = "Unknown";
 
-        // Show owner
         sendMessage(player, "claim-info-owner", "{owner}", ownerName);
 
-        // Show trusted players
         Set<UUID> trusted = trustManager.getTrustedPlayers(ownerId);
         if (!trusted.isEmpty()) {
             List<String> names = new ArrayList<>();
@@ -347,6 +370,61 @@ public class CommandHandler implements CommandExecutor {
                 if (name != null) names.add(name);
             }
             player.sendMessage(configManager.getMessage("claim-info-trusted", "{players}", String.join(", ", names)));
+        }
+
+        Set<UUID> members = trustManager.getMembers(ownerId);
+        if (!members.isEmpty()) {
+            List<String> memberNames = new ArrayList<>();
+            for (UUID id : members) {
+                String name = Bukkit.getOfflinePlayer(id).getName();
+                if (name != null) memberNames.add(name);
+            }
+            player.sendMessage(configManager.getMessage("claim-info-members", "{members}", String.join(", ", memberNames)));
+        }
+    }
+
+    private void handleMemberCommand(Player player, String[] args) {
+        if (args.length < 3) {
+            sendMessage(player, "invalid-command");
+            return;
+        }
+
+        ChunkPosition pos = new ChunkPosition(player.getLocation());
+        if (!claimManager.isChunkClaimed(pos)) {
+            sendMessage(player, "claim-info-not-claimed");
+            return;
+        }
+
+        UUID ownerId = claimManager.getChunkOwner(pos);
+
+        if (!player.getUniqueId().equals(ownerId)) {
+            sendMessage(player, "only-owner-can-manage");
+            return;
+        }
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+        if (target == null || !target.hasPlayedBefore()) {
+            sendMessage(player, "player-not-found");
+            return;
+        }
+
+        switch (args[1].toLowerCase()) {
+            case "add":
+                if (trustManager.addMember(ownerId, target)) {
+                    sendMessage(player, "member-added", "{player}", target.getName());
+                    trustManager.savePermissionsAndMembers();
+                }
+                break;
+            case "remove":
+                if (trustManager.removeMember(ownerId, target)) {
+                    sendMessage(player, "member-removed", "{player}", target.getName());
+                    trustManager.savePermissionsAndMembers();
+                } else {
+                    sendMessage(player, "not-a-member");
+                }
+                break;
+            default:
+                sendMessage(player, "invalid-command");
         }
     }
 
@@ -441,8 +519,7 @@ public class CommandHandler implements CommandExecutor {
         }
     }
 
-    private void showHelp(Player player) {
-        // Define all help message keys in order
+    public void showHelp(Player player) {
         String[] helpKeys = {
                 "help-header",
                 "help-claim",
@@ -456,10 +533,12 @@ public class CommandHandler implements CommandExecutor {
                 "help-trustlist",
                 "help-info",
                 "help-admin",
-                "help-unclaimall"
+                "help-unclaimall",
+                "help-trust-menu",
+                "help-visitor-menu",
+                "help-member"
         };
 
-        // Send each help message
         for (String key : helpKeys) {
             String message = configManager.getConfig().getString("messages." + key);
             if (message != null) {
@@ -474,7 +553,6 @@ public class CommandHandler implements CommandExecutor {
             return;
         }
 
-        // Reload main config
         configManager.reloadMainConfig();
         plugin.reloadConfiguration();
         sendMessage(player, "reloaded");

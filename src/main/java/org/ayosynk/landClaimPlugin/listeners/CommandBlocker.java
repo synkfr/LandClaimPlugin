@@ -30,23 +30,27 @@ public class CommandBlocker implements Listener {
 
         String command = event.getMessage().split(" ")[0].substring(1).toLowerCase(); // Remove slash
 
+        // Get blocked commands
         List<String> blockedCommands = plugin.getConfigManager().getBlockedCommands();
         if (blockedCommands.isEmpty() || !blockedCommands.contains(command)) {
-            return;
+            return; // Command not blocked
         }
 
+        // Check if player is in a claimed chunk
         ChunkPosition pos = new ChunkPosition(player.getLocation());
         if (!claimManager.isChunkClaimed(pos)) {
-            return;
+            return; // Not in claimed land
         }
 
         UUID owner = claimManager.getChunkOwner(pos);
 
+        // Allow owner and trusted players to use commands
         if (player.getUniqueId().equals(owner) ||
                 trustManager.isTrusted(owner, player)) {
             return;
         }
 
+        // Block the command
         event.setCancelled(true);
         player.sendMessage(plugin.getConfigManager().getMessage("command-blocked"));
     }

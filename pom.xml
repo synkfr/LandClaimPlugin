@@ -6,7 +6,7 @@
 
     <groupId>org.ayosynk</groupId>
     <artifactId>LandClaimPlugin</artifactId>
-    <version>1.3.1</version>
+    <version>1.4</version>
     <packaging>jar</packaging>
 
     <name>LandClaimPlugin</name>

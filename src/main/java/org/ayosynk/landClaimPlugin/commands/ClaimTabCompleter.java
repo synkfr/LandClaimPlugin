@@ -25,7 +25,8 @@ public class ClaimTabCompleter implements TabCompleter {
             if (args.length == 1) {
                 completions.addAll(Arrays.asList(
                         "auto", "trust", "untrust", "unstuck",
-                        "visible", "help", "reload", "admin", "trustlist", "info"
+                        "visible", "help", "reload", "admin", "trustlist", "info",
+                        "trust", "visitor", "member"
                 ));
             } else if (args.length == 2) {
                 if (args[0].equalsIgnoreCase("trust") ||
@@ -36,10 +37,18 @@ public class ClaimTabCompleter implements TabCompleter {
                     completions.addAll(Arrays.asList("always", "off"));
                 } else if (args[0].equalsIgnoreCase("admin")) {
                     completions.addAll(Arrays.asList("unclaim", "unclaimall"));
+                } else if (args[0].equalsIgnoreCase("trust")) {
+                    completions.add("menu");
+                } else if (args[0].equalsIgnoreCase("visitor")) {
+                    completions.add("menu");
+                } else if (args[0].equalsIgnoreCase("member")) {
+                    completions.addAll(Arrays.asList("add", "remove"));
                 }
             } else if (args.length == 3) {
                 if (args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("unclaimall")) {
                     return null; // Player suggestions for unclaimall
+                } else if (args[0].equalsIgnoreCase("member")) {
+                    return null; // Player suggestions for member add/remove
                 }
             }
         } else if (cmd.equals("unclaim")) {

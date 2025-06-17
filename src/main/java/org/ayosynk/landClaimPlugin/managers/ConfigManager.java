@@ -99,6 +99,10 @@ public class ConfigManager {
         return getConfig().getBoolean("prevent-explosion-damage", true);
     }
 
+    public boolean preventHarmEntities() {
+        return getConfig().getBoolean("prevent-harm-entities", true);
+    }
+
     public boolean isWorldBlocked(String worldName) {
         List<String> blockedWorlds = getConfig().getStringList("block-world");
         return blockedWorlds.contains(worldName);
@@ -131,6 +135,14 @@ public class ConfigManager {
 
     public int getVisualizationUpdateInterval() {
         return getConfig().getInt("visualization.update-interval", 20);
+    }
+
+    public boolean getDefaultTrustPermission(String permission) {
+        return getConfig().getBoolean("default-trust-permissions." + permission, true);
+    }
+
+    public boolean getDefaultVisitorPermission(String permission) {
+        return getConfig().getBoolean("default-visitor-permissions." + permission, false);
     }
 
     public void saveClaimsConfig() {
