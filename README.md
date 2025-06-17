@@ -35,7 +35,7 @@ Customize LandClaimPlugin to fit your server's needs through `config.yml`:
 
 ```yaml
 
-config-version: 1
+config-version: 3
 
 #    ██╗      █████╗ ███╗  ██╗██████╗          █████╗ ██╗      █████╗ ██╗███╗   ███╗ ██████╗
 #    ██║     ██╔══██╗████╗ ██║██╔══██╗        ██╔══██╗██║     ██╔══██╗██║████╗ ████║██╔════╝
@@ -96,6 +96,19 @@ auto-unclaim-default: false
 # Cooldown for /claim unstuck command
 cooldown-unstuck: 30  # seconds
 
+# New permission settings
+default-trust-permissions:
+  BUILD: true
+  INTERACT: true
+  CONTAINER: true
+  TELEPORT: true
+
+default-visitor-permissions:
+  BUILD: false
+  INTERACT: false
+  CONTAINER: false
+  TELEPORT: false
+
 
 # 𝘝𝘐𝘚𝘜𝘈𝘓𝘐𝘡𝘈𝘛𝘐𝘖𝘕 𝘚𝘌𝘛𝘐𝘕𝘎𝘚
 visualization:
@@ -105,9 +118,8 @@ visualization:
   update-interval: 20  # Ticks between updates for always-on mode
 
 # 𝖤𝖣𝖨𝖳 𝖬𝖤𝖲𝖲𝖠𝖦𝖤𝖲
-
 # Messages (supports color codes with '&')
-prefix: "&8[&6✦ LandClaim ✦&8]&r "
+prefix: "&8[&6LandClaim&8]&r "
 
 messages:
   chunk-claimed: "&a✔ Chunk claimed successfully!"
@@ -162,9 +174,12 @@ messages:
   help-unstuck: "&e/claim unstuck &7- Escape another's claim"
   help-visible: "&e/claim visible [always|off] &7- Toggle visuals"
   help-info: "&e/claim info &7- Show claim details"
-  help-admin: "&e/claim admin unclaim|unclaimall &7- Admin tools"
+  help-admin: "&e/claim admin unclaim|unclaimall <player> &7- Admin tools"
   help-unclaimall: "&e/unclaim all confirm &7- Remove all claims"
   invalid-command: "&c⚠ Invalid command. Use &e/claim help &cfor help."
+  help-visitor-menu: "&e/claim visitor menu &7- manage permissions for untrusted players"
+  help-trust-menu: "&e/claim trust menu &7- manage permissions for trusted players"
+  help-member: "&e/claim member add|remove <player> &7- add or remove a player as member"
 
   admin-unclaimed: "&a✔ Admin unclaimed chunk from &e{owner}&a."
   admin-unclaimed-all: "&a✔ Admin unclaimed &e{count} &achunks from &e{player}&a."
@@ -179,11 +194,24 @@ messages:
   claim-info-owner: "&e🏷 Owner: &a{owner}"
   claim-info-trusted: "&e🤝 Trusted: &a{players}"
   claim-info-not-claimed: "&c⚠ This chunk is not claimed!"
+  claim-info-members: "&e✦ Memeber: &a{members}"
 
   actionbar-own: "&a✔ Your Claim"
   actionbar-trusted: "&e✔ Trusted in &6{owner}&e's Claim"
   actionbar-admin: "&c⚠ Admin View: {owner}&c's Claim"
 
+  harm-entity-denied: "&cYou cannot harm this entity in claimed land!"
+  member-added: "&aAdded {player} as a member"
+  member-removed: "&aRemoved {player} from members!"
+  not-a-member: "&cThat player is not a member!"
+  only-owner-can-manage: "&cOnly the claim owner can manage members!"
+  trust-menu-title: "&6Premissions for: {player}"
+  visitor-menu-title: "&6Visitor Permissions"
+  permission-enabled: "&aEnabled: {permission}"
+  permission-disabled: "&cDisabled: {permission}"
+  permission-toggle: "&eClick to toggle {permission}"
+  click-to-manage: "&eClick a player to manage their permissions"
+  trust-list-title: "&6Trusted Players"
 
 ```
 
@@ -197,6 +225,9 @@ messages:
 | `/claim trust <player>` | Trust a player | `landclaim.claim` |
 | `/claim untrust <player>` | Remove trust | `landclaim.claim` |
 | `/claim trustlist` | see who is trusted | `landclaim.claim` |
+| `/claim trust menu` | manage permissions for trusted players | `landclaim.claim` |
+| `/claim visitor menu` | manage permissions for untrusted players | `landclaim.claim` |
+| `/claim member add/remove <player>` | add or remove players as member [you still need to give perms through trust, this is just for show] | `landclaim.claim` |
 | `/claim unstuck` | Escape from others' claims | `landclaim.claim` |
 | `/claim help` | Show help information | `landclaim.claim` |
 | `/unclaim` | Unclaim current chunk | `landclaim.claim` |
