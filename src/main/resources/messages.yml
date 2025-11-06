@@ -1,0 +1,98 @@
+# LandClaim Plugin Messages
+# All in-game messages can be customized here
+# Supports color codes with '&' symbol
+
+chunk-claimed: "&a✔ Chunk claimed successfully!"
+chunk-unclaimed: "&a✖ Chunk unclaimed!"
+
+auto-claim-enabled: "&b» &aAuto-Claim enabled. Walk to claim chunks."
+auto-claim-disabled: "&b» &cAuto-Claim disabled."
+auto-unclaim-enabled: "&b» &aAuto-Unclaim enabled. Walk to unclaim chunks."
+auto-unclaim-disabled: "&b» &cAuto-Unclaim disabled."
+auto-unclaimed: "&e⚠ Chunk auto-unclaimed!"
+
+claim-limit-reached: "&c⛔ Claim limit reached: &7({limit} chunks)"
+already-claimed: "&c⚠ This chunk is already claimed by &6{owner}&c."
+not-owner: "&c⛔ You don't own this land."
+not-connected: "&c❌ Chunks must be adjacent to existing claims."
+
+player-trusted-all: "&a✔ Added &e{player} &ato all trusted claims."
+player-untrusted-all: "&a✔ Removed &e{player} &afrom all trusted claims."
+trust-usage: "&cUsage: &e/claim trust <player>"
+untrust-usage: "&cUsage: &e/claim untrust <player>"
+player-not-trusted: "&c⚠ That player is not trusted!"
+cannot-trust-self: "&c⚠ You cannot trust yourself."
+
+player-not-found: "&c⚠ Player not found!"
+
+access-denied: "&c⛔ You don't have permission to build here!"
+access-denied-interact: "&c⛔ You can't interact with that here!"
+bucket-denied: "&c🚫 Fluid placement is blocked in claimed land."
+command-blocked: "&c🚫 This command is restricted in claimed land."
+mob-grief-denied: "&c👾 Mob griefing is disabled here."
+pvp-denied: "&c⚔ PvP is not allowed in claimed land."
+world-blocked: "&c🌍 Claiming is disabled in this world."
+
+unstuck-success: "&a✔ You've been teleported to a safe location!"
+cannot-unstuck-here: "&c⚠ You can only use this when stuck in someone else's claim."
+unstuck-cooldown: "&c⏳ Wait &e{seconds}s &cbefore using again."
+
+reloaded: "&a✔ Configuration reloaded successfully."
+
+visible-enabled-always: "&a📍 Claim visualization &f- &aAlways ON"
+visible-enabled-temporary: "&a📍 Claim visualization &f- &aEnabled"
+visible-disabled: "&c📍 Claim visualization &f- &cDisabled"
+
+help-header: "&6&l------ LandClaim Help ------"
+help-claim: "&e/claim &7- Claim your current chunk"
+help-unclaim: "&e/unclaim &7- Unclaim your current chunk"
+help-claim-auto: "&e/claim auto &7- Toggle Auto-Claim"
+help-unclaim-auto: "&e/unclaim auto &7- Toggle Auto-Unclaim"
+help-trust: "&e/claim trust <player> &7- Trust a player"
+help-untrust: "&e/claim untrust <player> &7- Untrust a player"
+help-trustlist: "&e/claim trustlist &7- View trusted players"
+help-unstuck: "&e/claim unstuck &7- Escape another's claim"
+help-visible: "&e/claim visible [always|off] &7- Toggle visuals"
+help-info: "&e/claim info &7- Show claim details"
+help-admin: "&e/claim admin unclaim|unclaimall <player> &7- Admin tools"
+help-unclaimall: "&e/unclaim all confirm &7- Remove all claims"
+invalid-command: "&c⚠ Invalid command. Use &e/claim help &cfor help."
+help-visitor-menu: "&e/claim visitor menu &7- manage permissions for untrusted players"
+help-trust-menu: "&e/claim trust menu &7- manage permissions for trusted players"
+help-member: "&e/claim member add|remove <player> &7- add or remove a player as member"
+
+admin-unclaimed: "&a✔ Admin unclaimed chunk from &e{owner}&a."
+admin-unclaimed-all: "&a✔ Admin unclaimed &e{count} &achunks from &e{player}&a."
+
+unclaimed-all: "&a✔ You unclaimed &e{count} &achunks."
+confirm-unclaimall: "&c⚠ Confirm with &4/unclaim all confirm &cto remove all claims!"
+
+trust-list-header: "&6☰ Trusted Players:"
+trust-list-item: "&7• &e{player}"
+no-trusted-players: "&e⚠ You haven't trusted any players."
+
+claim-info-owner: "&e🏷 Owner: &a{owner}"
+claim-info-trusted: "&e🤝 Trusted: &a{players}"
+claim-info-not-claimed: "&c⚠ This chunk is not claimed!"
+claim-info-members: "&e✦ Memeber: &a{members}"
+
+actionbar-own: "&a✔ Your Claim"
+actionbar-trusted: "&e✔ Trusted in &6{owner}&e's Claim"
+actionbar-admin: "&c⚠ Admin View: {owner}&c's Claim"
+
+harm-entity-denied: "&cYou cannot harm this entity in claimed land!"
+member-added: "&aAdded {player} as a member"
+member-removed: "&aRemoved {player} from members!"
+not-a-member: "&cThat player is not a member!"
+only-owner-can-manage: "&cOnly the claim owner can manage members!"
+trust-menu-title: "&6Premissions for: {player}"
+visitor-menu-title: "&6Visitor Permissions"
+permission-enabled: "&aEnabled: {permission}"
+permission-disabled: "&cDisabled: {permission}"
+permission-toggle: "&eClick to toggle {permission}"
+click-to-manage: "&eClick a player to manage their permissions"
+trust-list-title: "&6Trusted Players"
+too-close-to-other-claim: "&c⚠ You must leave {gap} chunks between claims!"
+too-close-to-worldguard: "&c⚠ You must be {gap} chunks away from protected regions!"
+actionbar-wilderness: "&7Wilderness"
+
