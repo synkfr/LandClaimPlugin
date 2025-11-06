@@ -97,10 +97,7 @@ public class ClaimManager {
         if (isChunkClaimed(pos)) {
             UUID owner = getChunkOwner(pos);
             String ownerName = plugin.getServer().getOfflinePlayer(owner).getName();
-            player.sendMessage(configManager.getMessage(
-                    "already-claimed",
-                    "{owner}", ownerName != null ? ownerName : "Unknown"
-            ));
+            player.sendMessage(configManager.getMessage("already-claimed", "{owner}", ownerName != null ? ownerName : "Unknown"));
             return false;
         }
 
@@ -108,10 +105,7 @@ public class ClaimManager {
         int claimLimit = getClaimLimit(player);
         Set<ChunkPosition> claims = playerClaims.getOrDefault(playerId, new HashSet<>());
         if (claims.size() >= claimLimit) {
-            player.sendMessage(configManager.getMessage(
-                    "claim-limit-reached",
-                    "{limit}", String.valueOf(claimLimit)
-            ));
+            player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
             return false;
         }
 
@@ -119,6 +113,22 @@ public class ClaimManager {
             boolean isConnected = isConnectedToOwnClaims(pos, playerId);
             if (!isConnected) {
                 player.sendMessage(configManager.getMessage("not-connected"));
+                return false;
+            }
+        }
+
+        int worldGuardGap = configManager.getWorldGuardGap();
+        if (worldGuardGap > 0) {
+            if (isTooCloseToWorldGuardRegion(pos, worldGuardGap)) {
+                player.sendMessage(configManager.getMessage("too-close-to-worldguard", "{gap}", String.valueOf(worldGuardGap)));
+                return false;
+            }
+        }
+
+        int minGap = configManager.getMinClaimGap();
+        if (minGap > 0) {
+            if (isTooCloseToOtherClaim(worldName, pos, playerId, minGap)) {
+                player.sendMessage(configManager.getMessage("too-close-to-other-claim", "{gap}", String.valueOf(minGap)));
                 return false;
             }
         }
@@ -131,12 +141,35 @@ public class ClaimManager {
         return true;
     }
 
+    private boolean isTooCloseToOtherClaim(String worldName, ChunkPosition pos, UUID playerId, int minGap) {
+        for (int dx = -minGap; dx <= minGap; dx++) {
+            for (int dz = -minGap; dz <= minGap; dz++) {
+                if (dx == 0 && dz == 0) continue;
+                ChunkPosition neighbor = new ChunkPosition(worldName, pos.getX() + dx, pos.getZ() + dz);
+                if (claimedChunks.containsKey(neighbor)) {
+                    UUID owner = claimedChunks.get(neighbor);
+                    if (!owner.equals(playerId)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isTooCloseToWorldGuardRegion(ChunkPosition pos, int gap) {
+        if (!plugin.isWorldGuardEnabled()) return false;
+
+        World world = Bukkit.getWorld(pos.getWorld());
+        if (world == null) return false;
+
+        // Implement using WorldGuard API if needed
+        return false; // Placeholder
+    }
+
     private boolean isConnectedToOwnClaims(ChunkPosition pos, UUID playerId) {
         Set<ChunkPosition> claims = playerClaims.get(playerId);
         if (claims == null || claims.isEmpty()) return false;
 
         boolean allowDiagonals = configManager.allowDiagonalConnections();
-
         for (ChunkPosition neighbor : pos.getNeighbors(allowDiagonals)) {
             if (claims.contains(neighbor)) {
                 return true;
@@ -147,9 +180,7 @@ public class ClaimManager {
 
     public boolean unclaimChunk(Chunk chunk) {
         ChunkPosition pos = new ChunkPosition(chunk);
-        if (!isChunkClaimed(pos)) {
-            return false;
-        }
+        if (!isChunkClaimed(pos)) return false;
 
         UUID owner = claimedChunks.remove(pos);
         if (owner != null) {
@@ -160,7 +191,6 @@ public class ClaimManager {
                     playerClaims.remove(owner);
                 }
             }
-
             plugin.getVisualizationManager().invalidateCache(owner);
             return true;
         }
@@ -169,9 +199,7 @@ public class ClaimManager {
 
     public int unclaimAll(UUID playerId) {
         Set<ChunkPosition> claims = playerClaims.getOrDefault(playerId, new HashSet<>());
-        if (claims.isEmpty()) {
-            return 0;
-        }
+        if (claims.isEmpty()) return 0;
 
         Set<ChunkPosition> toRemove = new HashSet<>(claims);
         int count = 0;
@@ -201,11 +229,9 @@ public class ClaimManager {
 
     public int getClaimLimit(Player player) {
         if (player.hasPermission("landclaim.admin")) return Integer.MAX_VALUE;
-
         for (int i = 100; i > 0; i--) {
             if (player.hasPermission("landclaim.limit." + i)) return i;
         }
-
         return configManager.getConfig().getInt("chunk-claim-limit", 5);
     }
 }

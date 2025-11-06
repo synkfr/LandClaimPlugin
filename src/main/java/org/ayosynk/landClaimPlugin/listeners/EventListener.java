@@ -115,13 +115,15 @@ public class EventListener implements Listener {
 
                 sendActionBar(player, ChatUtils.colorize(message));
                 lastActionBarMap.put(player.getUniqueId(), message);
-            } else if (lastActionBarMap.containsKey(player.getUniqueId())) {
-                // Clear action bar when not in claim
-                sendActionBar(player, "");
-                lastActionBarMap.remove(player.getUniqueId());
+            } else {
+                // Not claimed: show wilderness message
+                String wildernessMsg = configManager.getConfig().getString("messages.actionbar-wilderness", "&7Wilderness");
+                sendActionBar(player, ChatUtils.colorize(wildernessMsg));
+                lastActionBarMap.put(player.getUniqueId(), wildernessMsg);
             }
         }
     }
+
 
     private void sendActionBar(Player player, String message) {
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));

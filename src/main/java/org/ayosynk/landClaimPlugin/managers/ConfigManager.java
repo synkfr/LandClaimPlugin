@@ -22,6 +22,9 @@ public class ConfigManager {
     private FileConfiguration trustConfig;
     private File trustFile;
 
+    private FileConfiguration messagesConfig;
+    private File messagesFile;
+
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
         updateConfig();
@@ -50,6 +53,13 @@ public class ConfigManager {
             createEmptyFile(trustFile);
         }
         trustConfig = YamlConfiguration.loadConfiguration(trustFile);
+
+        // Messages
+        messagesFile = new File(plugin.getDataFolder(), "messages.yml");
+        if (!messagesFile.exists()) {
+            plugin.saveResource("messages.yml", false);
+        }
+        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
     }
 
     private void createEmptyFile(File file) {
@@ -65,6 +75,8 @@ public class ConfigManager {
     public void reloadMainConfig() {
         plugin.reloadConfig();
         config = plugin.getConfig();
+        // Reload messages.yml as well
+        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
     }
 
     public FileConfiguration getConfig() {
@@ -145,6 +157,22 @@ public class ConfigManager {
         return getConfig().getBoolean("default-visitor-permissions." + permission, false);
     }
 
+    public int getWorldGuardGap() {
+        return getConfig().getInt("worldguard-gap", 0);
+    }
+
+    public int getMinClaimGap() {
+        return getConfig().getInt("min-claim-gap", 0);
+    }
+
+    public boolean logAutoSaveMessage() {
+        return getConfig().getBoolean("log-auto-save-message", true);
+    }
+
+    public String getDefaultVisualizationMode() {
+        return getConfig().getString("visualization-default", "OFF");
+    }
+
     public void saveClaimsConfig() {
         try {
             claimsConfig.save(claimsFile);
@@ -163,7 +191,7 @@ public class ConfigManager {
 
     public String getMessage(String key, String... replacements) {
         String prefix = getConfig().getString("prefix", "&8[&6LandClaim&8]&r ");
-        String message = getConfig().getString("messages." + key, "&cMessage not found: " + key);
+        String message = messagesConfig.getString(key, "&cMessage not found: " + key);
         for (int i = 0; i < replacements.length; i += 2) {
             message = message.replace(replacements[i], replacements[i+1]);
         }

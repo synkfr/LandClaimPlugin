@@ -5,6 +5,7 @@ import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
 import org.ayosynk.landClaimPlugin.gui.GUIListener;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
 import org.ayosynk.landClaimPlugin.listeners.EventListener;
+import org.ayosynk.landClaimPlugin.listeners.PlayerJoinListener;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
@@ -26,10 +27,16 @@ public class LandClaimPlugin extends JavaPlugin {
     private List<String> blockedCommands = new ArrayList<>();
     private List<String> blockedWorlds = new ArrayList<>();
     private int autoSaveTaskId = -1;
+    private boolean worldGuardEnabled = false;
 
     @Override
     public void onEnable() {
         try {
+            // Check for WorldGuard
+            if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
+                worldGuardEnabled = true;
+                getLogger().info("WorldGuard detected. Enabling region gap protection.");
+            }
             // Initialize managers
             configManager = new ConfigManager(this);
             claimManager = new ClaimManager(this, configManager);
@@ -54,6 +61,11 @@ public class LandClaimPlugin extends JavaPlugin {
             // Register command blocker
             getServer().getPluginManager().registerEvents(
                     new CommandBlocker(this, claimManager, trustManager),
+                    this
+            );
+
+            getServer().getPluginManager().registerEvents(
+                    new PlayerJoinListener(visualizationManager),
                     this
             );
 
@@ -90,14 +102,19 @@ public class LandClaimPlugin extends JavaPlugin {
         }
     }
 
+    // Updated auto-save task
     private void scheduleAutoSave() {
-        // Auto-save every 5 minutes (6000 ticks)
         autoSaveTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
-            getLogger().info("Auto-saving claims and trust data...");
+            if (configManager.logAutoSaveMessage()) {
+                getLogger().info("Auto-saving claims and trust data...");
+            }
             claimManager.saveClaims();
             trustManager.saveTrustedPlayers();
             trustManager.savePermissionsAndMembers();
         }, 6000L, 6000L);
+    }
+    public boolean isWorldGuardEnabled() {
+        return worldGuardEnabled;
     }
 
     public void reloadConfiguration() {

@@ -1,8 +1,9 @@
 name: LandClaimPlugin
-version: '1.4'
+version: '1.5'
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: '1.21'
 author: AyoSynk
+soft-depend: WorldGuard`
 commands:
   claim:
     description: Main land claim command

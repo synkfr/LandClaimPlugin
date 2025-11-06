@@ -18,6 +18,8 @@
 * Claim visualizer (via particles)
 * Live config reload (`/claim reload`)
 * Auto-saving of claims/trusts
+* Configurable console logging (disable auto-save messages)
+* Separate messages.yml file for easy customization
 
 ## 📥 Installation
 
@@ -25,17 +27,18 @@
 2. Place the `LandClaimPlugin.jar` in your server's `plugins` folder
 3. Restart your server
 4. Configure settings in `plugins/LandClaim/config.yml`
-5. Use `/claim help` in-game to get started
+5. Customize messages in `plugins/LandClaim/messages.yml` (optional)
+6. Use `/claim help` in-game to get started
 
 **note**: if your updating to 1.2 to 1.3 Read This [Here](https://github.com/synkfr/LandClaimPlugin/releases/tag/V_1_3)
 
 ## ⚙️ Configuration
 
-Customize LandClaimPlugin to fit your server's needs through `config.yml`:
+Customize LandClaimPlugin to fit your server's needs through `config.yml` and `messages.yml`:
 
 ```yaml
 
-config-version: 3
+config-version: 4
 
 #    ██╗      █████╗ ███╗  ██╗██████╗          █████╗ ██╗      █████╗ ██╗███╗   ███╗ ██████╗
 #    ██║     ██╔══██╗████╗ ██║██╔══██╗        ██╔══██╗██║     ██╔══██╗██║████╗ ████║██╔════╝
@@ -109,6 +112,11 @@ default-visitor-permissions:
   CONTAINER: false
   TELEPORT: false
 
+# WorldGuard support and some few features
+worldguard-gap: 1  # Chunks between claims and WorldGuard regions
+min-claim-gap: 1   # Chunks between different players' claims
+visualization-default: "ALWAYS"  # ALWAYS or OFF
+log-auto-save-message: false   # Toggle auto-save logs (set to false to disable console messages)
 
 # 𝘝𝘐𝘚𝘜𝘈𝘓𝘐𝘡𝘈𝘛𝘐𝘖𝘕 𝘚𝘌𝘛𝘐𝘕𝘎𝘚
 visualization:
@@ -117,103 +125,48 @@ visualization:
   particle-spacing: 0.5
   update-interval: 20  # Ticks between updates for always-on mode
 
-# 𝖤𝖣𝖨𝖳 𝖬𝖤𝖲𝖲𝖠𝖦𝖤𝖲
-# Messages (supports color codes with '&')
+# Message prefix (used for all messages)
+# Messages are now stored in messages.yml file
 prefix: "&8[&6LandClaim&8]&r "
 
-messages:
-  chunk-claimed: "&a✔ Chunk claimed successfully!"
-  chunk-unclaimed: "&a✖ Chunk unclaimed!"
-
-  auto-claim-enabled: "&b» &aAuto-Claim enabled. Walk to claim chunks."
-  auto-claim-disabled: "&b» &cAuto-Claim disabled."
-  auto-unclaim-enabled: "&b» &aAuto-Unclaim enabled. Walk to unclaim chunks."
-  auto-unclaim-disabled: "&b» &cAuto-Unclaim disabled."
-  auto-unclaimed: "&e⚠ Chunk auto-unclaimed!"
-
-  claim-limit-reached: "&c⛔ Claim limit reached: &7({limit} chunks)"
-  already-claimed: "&c⚠ This chunk is already claimed by &6{owner}&c."
-  not-owner: "&c⛔ You don't own this land."
-  not-connected: "&c❌ Chunks must be adjacent to existing claims."
-
-  player-trusted-all: "&a✔ Added &e{player} &ato all trusted claims."
-  player-untrusted-all: "&a✔ Removed &e{player} &afrom all trusted claims."
-  trust-usage: "&cUsage: &e/claim trust <player>"
-  untrust-usage: "&cUsage: &e/claim untrust <player>"
-  player-not-trusted: "&c⚠ That player is not trusted!"
-  cannot-trust-self: "&c⚠ You cannot trust yourself."
-
-  player-not-found: "&c⚠ Player not found!"
-
-  access-denied: "&c⛔ You don’t have permission to build here!"
-  access-denied-interact: "&c⛔ You can’t interact with that here!"
-  bucket-denied: "&c🚫 Fluid placement is blocked in claimed land."
-  command-blocked: "&c🚫 This command is restricted in claimed land."
-  mob-grief-denied: "&c👾 Mob griefing is disabled here."
-  pvp-denied: "&c⚔ PvP is not allowed in claimed land."
-  world-blocked: "&c🌍 Claiming is disabled in this world."
-
-  unstuck-success: "&a✔ You’ve been teleported to a safe location!"
-  cannot-unstuck-here: "&c⚠ You can only use this when stuck in someone else's claim."
-  unstuck-cooldown: "&c⏳ Wait &e{seconds}s &cbefore using again."
-
-  reloaded: "&a✔ Configuration reloaded successfully."
-
-  visible-enabled-always: "&a📍 Claim visualization &f- &aAlways ON"
-  visible-enabled-temporary: "&a📍 Claim visualization &f- &aEnabled"
-  visible-disabled: "&c📍 Claim visualization &f- &cDisabled"
-
-  help-header: "&6&l------ LandClaim Help ------"
-  help-claim: "&e/claim &7- Claim your current chunk"
-  help-unclaim: "&e/unclaim &7- Unclaim your current chunk"
-  help-claim-auto: "&e/claim auto &7- Toggle Auto-Claim"
-  help-unclaim-auto: "&e/unclaim auto &7- Toggle Auto-Unclaim"
-  help-trust: "&e/claim trust <player> &7- Trust a player"
-  help-untrust: "&e/claim untrust <player> &7- Untrust a player"
-  help-trustlist: "&e/claim trustlist &7- View trusted players"
-  help-unstuck: "&e/claim unstuck &7- Escape another's claim"
-  help-visible: "&e/claim visible [always|off] &7- Toggle visuals"
-  help-info: "&e/claim info &7- Show claim details"
-  help-admin: "&e/claim admin unclaim|unclaimall <player> &7- Admin tools"
-  help-unclaimall: "&e/unclaim all confirm &7- Remove all claims"
-  invalid-command: "&c⚠ Invalid command. Use &e/claim help &cfor help."
-  help-visitor-menu: "&e/claim visitor menu &7- manage permissions for untrusted players"
-  help-trust-menu: "&e/claim trust menu &7- manage permissions for trusted players"
-  help-member: "&e/claim member add|remove <player> &7- add or remove a player as member"
-
-  admin-unclaimed: "&a✔ Admin unclaimed chunk from &e{owner}&a."
-  admin-unclaimed-all: "&a✔ Admin unclaimed &e{count} &achunks from &e{player}&a."
-
-  unclaimed-all: "&a✔ You unclaimed &e{count} &achunks."
-  confirm-unclaimall: "&c⚠ Confirm with &4/unclaim all confirm &cto remove all claims!"
-
-  trust-list-header: "&6☰ Trusted Players:"
-  trust-list-item: "&7• &e{player}"
-  no-trusted-players: "&e⚠ You haven't trusted any players."
-
-  claim-info-owner: "&e🏷 Owner: &a{owner}"
-  claim-info-trusted: "&e🤝 Trusted: &a{players}"
-  claim-info-not-claimed: "&c⚠ This chunk is not claimed!"
-  claim-info-members: "&e✦ Memeber: &a{members}"
-
-  actionbar-own: "&a✔ Your Claim"
-  actionbar-trusted: "&e✔ Trusted in &6{owner}&e's Claim"
-  actionbar-admin: "&c⚠ Admin View: {owner}&c's Claim"
-
-  harm-entity-denied: "&cYou cannot harm this entity in claimed land!"
-  member-added: "&aAdded {player} as a member"
-  member-removed: "&aRemoved {player} from members!"
-  not-a-member: "&cThat player is not a member!"
-  only-owner-can-manage: "&cOnly the claim owner can manage members!"
-  trust-menu-title: "&6Premissions for: {player}"
-  visitor-menu-title: "&6Visitor Permissions"
-  permission-enabled: "&aEnabled: {permission}"
-  permission-disabled: "&cDisabled: {permission}"
-  permission-toggle: "&eClick to toggle {permission}"
-  click-to-manage: "&eClick a player to manage their permissions"
-  trust-list-title: "&6Trusted Players"
-
 ```
+
+### Messages Configuration
+
+All in-game messages are now stored in a separate `messages.yml` file for easier customization. The file is located at `plugins/LandClaim/messages.yml` and supports color codes with `&`.
+
+**Key Features:**
+- ✅ All messages in one dedicated file
+- ✅ Easy to customize without touching main config
+- ✅ Automatic migration from old config format
+- ✅ Supports placeholders like `{player}`, `{owner}`, `{count}`, etc.
+
+Example `messages.yml` structure:
+
+```yaml
+# LandClaim Plugin Messages
+# All in-game messages can be customized here
+# Supports color codes with '&' symbol
+
+chunk-claimed: "&a✔ Chunk claimed successfully!"
+chunk-unclaimed: "&a✖ Chunk unclaimed!"
+auto-claim-enabled: "&b» &aAuto-Claim enabled. Walk to claim chunks."
+# ... and many more
+```
+
+**Note:** When updating from an older version, messages will be automatically migrated from `config.yml` to `messages.yml` on first load.
+
+### Configuration Options
+
+**Auto-Save Logging:**
+- `log-auto-save-message`: Set to `false` to disable periodic console messages about auto-saving (default: `false`)
+
+**WorldGuard Integration:**
+- `worldguard-gap`: Minimum chunks between claims and WorldGuard regions
+- `min-claim-gap`: Minimum chunks between different players' claims
+
+**Visualization:**
+- `visualization-default`: Default visualization mode (`ALWAYS` or `OFF`)
 
 ## 📋 Commands
 
@@ -231,8 +184,8 @@ messages:
 | `/claim unstuck` | Escape from others' claims | `landclaim.claim` |
 | `/claim help` | Show help information | `landclaim.claim` |
 | `/unclaim` | Unclaim current chunk | `landclaim.claim` |
-| `/unclaim auto` | Toggle auto-unclaim | `landclaim.auto` |_-
-| `/unclaim visble [always/off]` | Toggle visibility of the claims | `landclaim.claim` |
+| `/unclaim auto` | Toggle auto-unclaim | `landclaim.auto` |
+| `/claim visible [always/off]` | Toggle visibility of the claims | `landclaim.claim` |
 | `/unclaim all confirm` | Unclaims all claims | `landclaim.claim` |
 
 

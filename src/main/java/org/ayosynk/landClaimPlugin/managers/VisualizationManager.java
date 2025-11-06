@@ -178,4 +178,15 @@ public class VisualizationManager {
     public VisualizationMode getVisualizationMode(UUID playerId) {
         return visualizationModes.get(playerId);
     }
+
+    // Add player join handler
+    public void handlePlayerJoin(Player player) {
+        if (!visualizationModes.containsKey(player.getUniqueId())) {
+            String defaultMode = configManager.getDefaultVisualizationMode();
+            if ("ALWAYS".equalsIgnoreCase(defaultMode)) {
+                visualizationModes.put(player.getUniqueId(), VisualizationMode.ALWAYS);
+            }
+        }
+    }
+
 }

@@ -33,7 +33,7 @@ public class ConfigUpdater {
             YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(
                     new InputStreamReader(defaultStream, StandardCharsets.UTF_8)
             );
-            int defaultVersion = defaultConfig.getInt("config-version", 3);
+            int defaultVersion = defaultConfig.getInt("config-version", 4);
 
             // Update if versions differ
             if (currentVersion < defaultVersion) {
@@ -43,6 +43,28 @@ public class ConfigUpdater {
                 File backup = new File(plugin.getDataFolder(), "config_old_v" + currentVersion + ".yml");
                 Files.copy(configFile.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 plugin.getLogger().info("Backed up old config to " + backup.getName());
+
+                // Migrate messages to messages.yml if they exist in config.yml
+                if (currentConfig.contains("messages")) {
+                    File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
+                    if (!messagesFile.exists()) {
+                        // Create messages.yml and migrate messages
+                        YamlConfiguration messagesConfig = new YamlConfiguration();
+                        if (currentConfig.isConfigurationSection("messages")) {
+                            for (String key : currentConfig.getConfigurationSection("messages").getKeys(false)) {
+                                messagesConfig.set(key, currentConfig.getString("messages." + key));
+                            }
+                            try {
+                                messagesConfig.save(messagesFile);
+                                plugin.getLogger().info("Migrated messages from config.yml to messages.yml");
+                            } catch (IOException e) {
+                                plugin.getLogger().warning("Failed to migrate messages: " + e.getMessage());
+                            }
+                        }
+                    }
+                    // Remove messages section from config.yml
+                    currentConfig.set("messages", null);
+                }
 
                 // Add new keys
                 Set<String> currentKeys = currentConfig.getKeys(true);

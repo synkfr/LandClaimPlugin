@@ -47,6 +47,13 @@ public class VisitorMenuGUI {
             gui.setItem(i, item);
         }
 
+        // Add back button at slot 8
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        backMeta.setDisplayName(ChatUtils.colorize("&cBack"));
+        backButton.setItemMeta(backMeta);
+        gui.setItem(8, backButton);
+
         owner.openInventory(gui);
     }
 }

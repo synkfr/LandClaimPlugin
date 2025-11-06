@@ -540,10 +540,7 @@ public class CommandHandler implements CommandExecutor {
         };
 
         for (String key : helpKeys) {
-            String message = configManager.getConfig().getString("messages." + key);
-            if (message != null) {
-                player.sendMessage(configManager.getMessage(key));
-            }
+            player.sendMessage(configManager.getMessage(key));
         }
     }
 

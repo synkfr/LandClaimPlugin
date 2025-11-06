@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LandClaimPlugin.iml" filepath="$PROJECT_DIR$/LandClaimPlugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/LandClaimPlugin.iml" filepath="$PROJECT_DIR$/.idea/LandClaimPlugin.iml" />
     </modules>
   </component>
 </project>
