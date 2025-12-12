@@ -8,16 +8,17 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TrustManager {
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
-    private final Map<UUID, Set<UUID>> trustedPlayers = new HashMap<>(); // Owner -> Trusted Players
+    private final Map<UUID, Set<UUID>> trustedPlayers = new ConcurrentHashMap<>(); // Owner -> Trusted Players
 
-    private final Map<UUID, Map<UUID, Set<String>>> trustPermissions = new HashMap<>(); // Owner -> Trusted Player -> Permissions
-    private final Map<UUID, Map<String, Boolean>> visitorPermissions = new HashMap<>(); // Owner -> Permission -> Enabled
-    private final Map<UUID, Set<UUID>> claimMembers = new HashMap<>(); // Owner -> Members
+    private final Map<UUID, Map<UUID, Set<String>>> trustPermissions = new ConcurrentHashMap<>(); // Owner -> Trusted Player -> Permissions
+    private final Map<UUID, Map<String, Boolean>> visitorPermissions = new ConcurrentHashMap<>(); // Owner -> Permission -> Enabled
+    private final Map<UUID, Set<UUID>> claimMembers = new ConcurrentHashMap<>(); // Owner -> Members
 
     public TrustManager(LandClaimPlugin plugin, ClaimManager claimManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -185,11 +186,11 @@ public class TrustManager {
             return addTrustedPlayer(owner, onlinePlayer.getUniqueId());
         }
 
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-            if (offlinePlayer.getName() != null &&
-                    offlinePlayer.getName().equalsIgnoreCase(targetName)) {
-                return addTrustedPlayer(owner, offlinePlayer.getUniqueId());
-            }
+        // Use Bukkit's cached offline player lookup instead of iterating all players
+        @SuppressWarnings("deprecation")
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetName);
+        if (offlinePlayer.hasPlayedBefore()) {
+            return addTrustedPlayer(owner, offlinePlayer.getUniqueId());
         }
 
         return false;

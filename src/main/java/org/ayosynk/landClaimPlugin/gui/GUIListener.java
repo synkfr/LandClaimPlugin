@@ -40,8 +40,12 @@ public class GUIListener implements Listener {
 
             ItemStack item = event.getCurrentItem();
             if (item == null || item.getType() == Material.AIR) return;
+            
+            // Ignore border panes
+            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
-            if (event.getSlot() == event.getInventory().getSize() - 1) {
+            // Close button at slot 49
+            if (event.getSlot() == 49) {
                 player.closeInventory();
                 return;
             }
@@ -65,15 +69,28 @@ public class GUIListener implements Listener {
 
             ItemStack item = event.getCurrentItem();
             if (item == null || item.getType() == Material.AIR) return;
+            
+            // Ignore border panes
+            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
-            if (event.getSlot() == 8) {
-                // Back button - close inventory
+            // Close button at slot 22
+            if (event.getSlot() == 22) {
                 player.closeInventory();
                 return;
             }
 
-            if (event.getSlot() < 4) {
-                String permission = VisitorMenuGUI.PERMISSIONS[event.getSlot()];
+            // Handle permission toggles (now at slots 10, 12, 14, 16)
+            int clickedSlot = event.getSlot();
+            int permissionIndex = -1;
+            for (int i = 0; i < VisitorMenuGUI.PERMISSION_SLOTS.length; i++) {
+                if (VisitorMenuGUI.PERMISSION_SLOTS[i] == clickedSlot) {
+                    permissionIndex = i;
+                    break;
+                }
+            }
+            
+            if (permissionIndex >= 0 && permissionIndex < VisitorMenuGUI.PERMISSIONS.length) {
+                String permission = VisitorMenuGUI.PERMISSIONS[permissionIndex];
                 boolean current = trustManager.hasVisitorPermission(
                         player.getUniqueId(),
                         permission
@@ -95,42 +112,46 @@ public class GUIListener implements Listener {
         // Trust menu handling
         String trustMenuTitleTemplate = trustManager.getConfigManager().getMessage("trust-menu-title", "{player}", "");
         String trustPrefix = ChatUtils.colorize(trustMenuTitleTemplate);
-        if (title.startsWith(trustPrefix)) {
+        if (trustPrefix != null && !trustPrefix.isEmpty() && title.startsWith(trustPrefix)) {
             event.setCancelled(true);
 
             ItemStack item = event.getCurrentItem();
             if (item == null || item.getType() == Material.AIR) return;
+            
+            // Ignore border panes
+            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
-            // Extract player name from title
-            String trustedName = ChatColor.stripColor(title.substring(trustPrefix.length()).trim());
-            if (trustedName.isEmpty()) return;
-
-            // Try to find the player (online or offline)
-            OfflinePlayer trustedPlayer = null;
-            Player onlinePlayer = plugin.getServer().getPlayerExact(trustedName);
-            if (onlinePlayer != null) {
-                trustedPlayer = onlinePlayer;
-            } else {
-                // Try to find offline player
-                for (OfflinePlayer offline : plugin.getServer().getOfflinePlayers()) {
-                    if (offline.getName() != null && offline.getName().equals(trustedName)) {
-                        trustedPlayer = offline;
-                        break;
-                    }
-                }
+            // Extract player name from title - with null safety
+            String trustedName;
+            try {
+                trustedName = ChatColor.stripColor(title.substring(trustPrefix.length()).trim());
+            } catch (Exception e) {
+                return;
             }
+            if (trustedName == null || trustedName.isEmpty()) return;
 
+            // Try to find the player using cached lookup
+            OfflinePlayer trustedPlayer = findOfflinePlayer(trustedName);
             if (trustedPlayer == null) return;
 
-            // Handle back button
-            if (event.getSlot() == 8) {
+            // Handle back button (now at slot 22)
+            if (event.getSlot() == 22) {
                 TrustListGUI.open(player, trustManager);
                 return;
             }
 
-            // Handle permission toggles
-            if (event.getSlot() < 4) {
-                String permission = TrustMenuGUI.PERMISSIONS[event.getSlot()];
+            // Handle permission toggles (now at slots 10, 12, 14, 16)
+            int clickedSlot = event.getSlot();
+            int permissionIndex = -1;
+            for (int i = 0; i < TrustMenuGUI.PERMISSION_SLOTS.length; i++) {
+                if (TrustMenuGUI.PERMISSION_SLOTS[i] == clickedSlot) {
+                    permissionIndex = i;
+                    break;
+                }
+            }
+            
+            if (permissionIndex >= 0 && permissionIndex < TrustMenuGUI.PERMISSIONS.length) {
+                String permission = TrustMenuGUI.PERMISSIONS[permissionIndex];
                 boolean current = trustManager.hasTrustPermission(
                         player.getUniqueId(),
                         trustedPlayer.getUniqueId(),
@@ -149,5 +170,27 @@ public class GUIListener implements Listener {
                 TrustMenuGUI.open(player, trustedPlayer, trustManager);
             }
         }
+    }
+    
+    /**
+     * Find an offline player by name with caching for performance
+     */
+    private OfflinePlayer findOfflinePlayer(String name) {
+        // First check online players (fast)
+        Player onlinePlayer = plugin.getServer().getPlayerExact(name);
+        if (onlinePlayer != null) {
+            return onlinePlayer;
+        }
+        
+        // Use Bukkit's deprecated but functional method - it's cached internally
+        @SuppressWarnings("deprecation")
+        OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(name);
+        
+        // Only return if they have actually played before
+        if (offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline()) {
+            return offlinePlayer;
+        }
+        
+        return null;
     }
 }

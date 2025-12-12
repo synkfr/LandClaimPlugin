@@ -1,9 +1,9 @@
 name: LandClaimPlugin
-version: '1.5'
+version: '1.7'
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: '1.21'
 author: AyoSynk
-soft-depend: WorldGuard`
+soft-depend: [WorldGuard]
 commands:
   claim:
     description: Main land claim command
@@ -14,6 +14,14 @@ commands:
   unclaimall:
     description: Unclaims all your land
     usage: /unclaimall [confirm]
+  c:
+    description: Alias for /claim
+    usage: /c
+    aliases: []
+  uc:
+    description: Alias for /unclaim
+    usage: /uc
+    aliases: []
 permissions:
   landclaim.*:
     description: All landclaim permissions

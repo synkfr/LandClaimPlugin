@@ -9,13 +9,21 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.regions.RegionContainer;
+
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClaimManager {
     private final LandClaimPlugin plugin;
     private final ConfigManager configManager;
-    private final Map<ChunkPosition, UUID> claimedChunks = new HashMap<>();
-    private final Map<UUID, Set<ChunkPosition>> playerClaims = new HashMap<>();
+    private final Map<ChunkPosition, UUID> claimedChunks = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<ChunkPosition>> playerClaims = new ConcurrentHashMap<>();
 
     public ClaimManager(LandClaimPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
@@ -161,8 +169,44 @@ public class ClaimManager {
         World world = Bukkit.getWorld(pos.getWorld());
         if (world == null) return false;
 
-        // Implement using WorldGuard API if needed
-        return false; // Placeholder
+        try {
+            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+            RegionManager regionManager = container.get(BukkitAdapter.adapt(world));
+            if (regionManager == null) return false;
+
+            // Check the chunk area plus gap chunks around it
+            int chunkX = pos.getX();
+            int chunkZ = pos.getZ();
+            
+            // Check all chunks within gap distance
+            for (int dx = -gap; dx <= gap; dx++) {
+                for (int dz = -gap; dz <= gap; dz++) {
+                    int checkX = (chunkX + dx) * 16;
+                    int checkZ = (chunkZ + dz) * 16;
+                    
+                    // Check corners and center of the chunk
+                    int[][] points = {
+                        {checkX, checkZ},
+                        {checkX + 15, checkZ},
+                        {checkX, checkZ + 15},
+                        {checkX + 15, checkZ + 15},
+                        {checkX + 8, checkZ + 8}
+                    };
+                    
+                    for (int[] point : points) {
+                        BlockVector3 blockVector = BlockVector3.at(point[0], 64, point[1]);
+                        for (ProtectedRegion region : regionManager.getApplicableRegions(blockVector)) {
+                            // Found a WorldGuard region within gap distance
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error checking WorldGuard regions: " + e.getMessage());
+        }
+
+        return false;
     }
 
     private boolean isConnectedToOwnClaims(ChunkPosition pos, UUID playerId) {

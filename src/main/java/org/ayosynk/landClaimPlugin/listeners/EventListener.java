@@ -3,7 +3,6 @@ package org.ayosynk.landClaimPlugin.listeners;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
-import org.ayosynk.landClaimPlugin.gui.TrustMenuGUI;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
@@ -20,7 +19,6 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -37,11 +35,21 @@ public class EventListener implements Listener {
     private final Map<UUID, ChunkPosition> lastChunkMap = new HashMap<>();
     private final Map<UUID, String> lastActionBarMap = new HashMap<>();
 
-    // List of interactable blocks
-    private static final Set<Material> INTERACTABLE_BLOCKS = new HashSet<>(Arrays.asList(
+    // Container blocks - require CONTAINER permission
+    private static final Set<Material> CONTAINER_BLOCKS = new HashSet<>(Arrays.asList(
             Material.CHEST, Material.TRAPPED_CHEST, Material.ENDER_CHEST, Material.BARREL,
             Material.FURNACE, Material.BLAST_FURNACE, Material.SMOKER, Material.HOPPER,
             Material.DROPPER, Material.DISPENSER, Material.BREWING_STAND,
+            Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
+            Material.MAGENTA_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX,
+            Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
+            Material.LIGHT_GRAY_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX,
+            Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
+            Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX
+    ));
+
+    // Interactable blocks - require INTERACT permission
+    private static final Set<Material> INTERACTABLE_BLOCKS = new HashSet<>(Arrays.asList(
             Material.ACACIA_DOOR, Material.BIRCH_DOOR, Material.DARK_OAK_DOOR, Material.JUNGLE_DOOR,
             Material.OAK_DOOR, Material.SPRUCE_DOOR, Material.CHERRY_DOOR, Material.PALE_OAK_DOOR, Material.BAMBOO_DOOR, Material.CRIMSON_DOOR, Material.WARPED_DOOR,
             Material.ACACIA_TRAPDOOR, Material.BIRCH_TRAPDOOR, Material.CHERRY_TRAPDOOR, Material.BAMBOO_TRAPDOOR, Material.PALE_OAK_TRAPDOOR,
@@ -52,14 +60,7 @@ public class EventListener implements Listener {
             Material.DARK_OAK_BUTTON, Material.CRIMSON_BUTTON, Material.WARPED_BUTTON,
             Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL, Material.GRINDSTONE,
             Material.SMITHING_TABLE, Material.LOOM, Material.CARTOGRAPHY_TABLE, Material.FLETCHING_TABLE,
-            Material.STONECUTTER, Material.BELL, Material.COMPOSTER,
-            Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
-            Material.MAGENTA_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX,
-            Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
-            Material.LIGHT_GRAY_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX,
-            Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
-            Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX,Material.WATER_BUCKET,
-            Material.LAVA_BUCKET
+            Material.STONECUTTER, Material.BELL, Material.COMPOSTER
     ));
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
@@ -196,12 +197,18 @@ public class EventListener implements Listener {
         if (event.getClickedBlock() == null) return;
 
         Block block = event.getClickedBlock();
+        Material blockType = block.getType();
 
-        // Only handle interactable blocks
-        if (!INTERACTABLE_BLOCKS.contains(block.getType())) return;
+        // Check container blocks with CONTAINER permission
+        if (CONTAINER_BLOCKS.contains(blockType)) {
+            checkInteractionPermission(event.getPlayer(), event, "CONTAINER");
+            return;
+        }
 
-        // Check the block's location
-        checkInteractionPermission(event.getPlayer(), event, "INTERACT");
+        // Check interactable blocks with INTERACT permission
+        if (INTERACTABLE_BLOCKS.contains(blockType)) {
+            checkInteractionPermission(event.getPlayer(), event, "INTERACT");
+        }
     }
 
     @EventHandler
@@ -431,20 +438,13 @@ public class EventListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        String message = event.getMessage();
+    // Removed vulnerable onPlayerChat handler - trust menu is now accessed via GUI only
 
-        // Check if player clicked a trust entry
-        if (message.startsWith("§7- §e")) {
-            event.setCancelled(true);
-            String playerName = message.substring(6); // Extract player name
-
-            Player trustedPlayer = Bukkit.getPlayer(playerName);
-            if (trustedPlayer != null) {
-                TrustMenuGUI.open(player, trustedPlayer, trustManager);
-            }
-        }
+    /**
+     * Clean up player data when they quit to prevent memory leaks
+     */
+    public void cleanupPlayer(UUID playerId) {
+        lastChunkMap.remove(playerId);
+        lastActionBarMap.remove(playerId);
     }
 }

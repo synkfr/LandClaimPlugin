@@ -24,6 +24,7 @@ public class LandClaimPlugin extends JavaPlugin {
     private TrustManager trustManager;
     private VisualizationManager visualizationManager;
     private CommandHandler commandHandler;
+    private EventListener eventListener;
     private List<String> blockedCommands = new ArrayList<>();
     private List<String> blockedWorlds = new ArrayList<>();
     private int autoSaveTaskId = -1;
@@ -53,10 +54,8 @@ public class LandClaimPlugin extends JavaPlugin {
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager);
 
             // Register events
-            getServer().getPluginManager().registerEvents(
-                    new EventListener(this, claimManager, trustManager, configManager),
-                    this
-            );
+            eventListener = new EventListener(this, claimManager, trustManager, configManager);
+            getServer().getPluginManager().registerEvents(eventListener, this);
 
             // Register command blocker
             getServer().getPluginManager().registerEvents(
@@ -65,7 +64,7 @@ public class LandClaimPlugin extends JavaPlugin {
             );
 
             getServer().getPluginManager().registerEvents(
-                    new PlayerJoinListener(visualizationManager),
+                    new PlayerJoinListener(this, visualizationManager),
                     this
             );
 
@@ -76,14 +75,22 @@ public class LandClaimPlugin extends JavaPlugin {
             );
 
             // Register tab completers
+            ClaimTabCompleter tabCompleter = new ClaimTabCompleter();
             if (getCommand("claim") != null) {
-                getCommand("claim").setTabCompleter(new ClaimTabCompleter());
+                getCommand("claim").setTabCompleter(tabCompleter);
             }
             if (getCommand("unclaim") != null) {
-                getCommand("unclaim").setTabCompleter(new ClaimTabCompleter());
+                getCommand("unclaim").setTabCompleter(tabCompleter);
             }
             if (getCommand("unclaimall") != null) {
-                getCommand("unclaimall").setTabCompleter(new ClaimTabCompleter());
+                getCommand("unclaimall").setTabCompleter(tabCompleter);
+            }
+            // Register tab completers for aliases
+            if (getCommand("c") != null) {
+                getCommand("c").setTabCompleter(tabCompleter);
+            }
+            if (getCommand("uc") != null) {
+                getCommand("uc").setTabCompleter(tabCompleter);
             }
 
             // Load configuration
@@ -157,6 +164,14 @@ public class LandClaimPlugin extends JavaPlugin {
                 trustManager.savePermissionsAndMembers();
                 getLogger().info("Saved trust data for " + trustManager.getTotalTrusts() + " relationships");
             }
+            if (commandHandler != null) {
+                commandHandler.saveAllPlayerData();
+                getLogger().info("Saved player data (auto-claim states)");
+            }
+            if (visualizationManager != null) {
+                visualizationManager.saveAllPlayerData();
+                getLogger().info("Saved visualization modes");
+            }
             getLogger().info("LandClaim has been disabled!");
         } catch (Exception e) {
             getLogger().severe("Error while disabling LandClaim: " + e.getMessage());
@@ -189,5 +204,9 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public List<String> getBlockedWorlds() {
         return blockedWorlds;
+    }
+
+    public EventListener getEventListener() {
+        return eventListener;
     }
 }

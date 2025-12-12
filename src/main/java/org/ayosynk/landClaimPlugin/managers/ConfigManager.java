@@ -25,6 +25,9 @@ public class ConfigManager {
     private FileConfiguration messagesConfig;
     private File messagesFile;
 
+    private FileConfiguration playerDataConfig;
+    private File playerDataFile;
+
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
         updateConfig();
@@ -60,6 +63,13 @@ public class ConfigManager {
             plugin.saveResource("messages.yml", false);
         }
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+
+        // Player data (auto-claim, visualization modes, etc.)
+        playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
+        if (!playerDataFile.exists()) {
+            createEmptyFile(playerDataFile);
+        }
+        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
     }
 
     private void createEmptyFile(File file) {
@@ -89,6 +99,23 @@ public class ConfigManager {
 
     public FileConfiguration getTrustConfig() {
         return trustConfig;
+    }
+
+    public FileConfiguration getPlayerDataConfig() {
+        return playerDataConfig;
+    }
+
+    public void savePlayerData() {
+        try {
+            playerDataConfig.save(playerDataFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save playerdata.yml");
+            e.printStackTrace();
+        }
+    }
+
+    public void reloadPlayerData() {
+        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
     }
 
     public boolean requireConnectedClaims() {

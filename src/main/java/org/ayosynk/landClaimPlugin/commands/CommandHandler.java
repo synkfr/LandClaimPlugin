@@ -1,7 +1,6 @@
 package org.ayosynk.landClaimPlugin.commands;
 
 import org.ayosynk.landClaimPlugin.gui.TrustListGUI;
-import org.ayosynk.landClaimPlugin.gui.TrustMenuGUI;
 import org.ayosynk.landClaimPlugin.gui.VisitorMenuGUI;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -44,6 +43,9 @@ public class CommandHandler implements CommandExecutor {
         this.configManager = configManager;
         this.visualizationManager = visualizationManager;
 
+        // Load persisted player data
+        loadPlayerData();
+
         // Safe command registration
         if (plugin.getCommand("claim") != null) {
             plugin.getCommand("claim").setExecutor(this);
@@ -53,6 +55,13 @@ public class CommandHandler implements CommandExecutor {
         }
         if (plugin.getCommand("unclaimall") != null) {
             plugin.getCommand("unclaimall").setExecutor(this);
+        }
+        // Register aliases
+        if (plugin.getCommand("c") != null) {
+            plugin.getCommand("c").setExecutor(this);
+        }
+        if (plugin.getCommand("uc") != null) {
+            plugin.getCommand("uc").setExecutor(this);
         }
     }
 
@@ -65,9 +74,10 @@ public class CommandHandler implements CommandExecutor {
 
         String cmd = command.getName().toLowerCase();
 
-        if (cmd.equals("claim")) {
+        // Handle aliases
+        if (cmd.equals("claim") || cmd.equals("c")) {
             handleClaimCommand(player, args);
-        } else if (cmd.equals("unclaim") || cmd.equals("unclaimall")) {
+        } else if (cmd.equals("unclaim") || cmd.equals("unclaimall") || cmd.equals("uc")) {
             handleUnclaimCommand(player, args, cmd);
         }
 
@@ -314,7 +324,7 @@ public class CommandHandler implements CommandExecutor {
             sendMessage(admin, "admin-unclaimed-all", "{player}", targetName, "{count}", String.valueOf(count));
             visualizationManager.invalidateCache(targetId);
         } else {
-            sendMessage(admin, "&cThat player has no claims.");
+            sendMessage(admin, "no-claims-found");
         }
     }
 
@@ -515,7 +525,7 @@ public class CommandHandler implements CommandExecutor {
             sendMessage(player, "unclaimed-all", "{count}", String.valueOf(count));
             visualizationManager.invalidateCache(playerId);
         } else {
-            sendMessage(player, "&cYou don't have any claims!");
+            sendMessage(player, "no-claims-found");
         }
     }
 
@@ -567,5 +577,76 @@ public class CommandHandler implements CommandExecutor {
     public boolean isAutoUnclaimEnabled(UUID playerId) {
         return autoUnclaimPlayers.getOrDefault(playerId,
                 configManager.getConfig().getBoolean("auto-unclaim-default", false));
+    }
+
+    /**
+     * Clean up player data when they quit to prevent memory leaks
+     */
+    public void cleanupPlayer(UUID playerId) {
+        // Save state before removing from memory
+        savePlayerState(playerId);
+        autoClaimPlayers.remove(playerId);
+        autoUnclaimPlayers.remove(playerId);
+        unstuckCooldowns.remove(playerId);
+    }
+
+    /**
+     * Load persisted player data from playerdata.yml
+     */
+    private void loadPlayerData() {
+        var playerDataConfig = configManager.getPlayerDataConfig();
+        var autoClaimSection = playerDataConfig.getConfigurationSection("auto-claim");
+        var autoUnclaimSection = playerDataConfig.getConfigurationSection("auto-unclaim");
+
+        if (autoClaimSection != null) {
+            for (String uuidStr : autoClaimSection.getKeys(false)) {
+                try {
+                    UUID playerId = UUID.fromString(uuidStr);
+                    autoClaimPlayers.put(playerId, autoClaimSection.getBoolean(uuidStr));
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
+
+        if (autoUnclaimSection != null) {
+            for (String uuidStr : autoUnclaimSection.getKeys(false)) {
+                try {
+                    UUID playerId = UUID.fromString(uuidStr);
+                    autoUnclaimPlayers.put(playerId, autoUnclaimSection.getBoolean(uuidStr));
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
+    }
+
+    /**
+     * Save a single player's state to playerdata.yml
+     */
+    private void savePlayerState(UUID playerId) {
+        var playerDataConfig = configManager.getPlayerDataConfig();
+        String uuidStr = playerId.toString();
+
+        if (autoClaimPlayers.containsKey(playerId)) {
+            playerDataConfig.set("auto-claim." + uuidStr, autoClaimPlayers.get(playerId));
+        }
+        if (autoUnclaimPlayers.containsKey(playerId)) {
+            playerDataConfig.set("auto-unclaim." + uuidStr, autoUnclaimPlayers.get(playerId));
+        }
+
+        configManager.savePlayerData();
+    }
+
+    /**
+     * Save all player data (called on plugin disable)
+     */
+    public void saveAllPlayerData() {
+        var playerDataConfig = configManager.getPlayerDataConfig();
+
+        for (Map.Entry<UUID, Boolean> entry : autoClaimPlayers.entrySet()) {
+            playerDataConfig.set("auto-claim." + entry.getKey().toString(), entry.getValue());
+        }
+        for (Map.Entry<UUID, Boolean> entry : autoUnclaimPlayers.entrySet()) {
+            playerDataConfig.set("auto-unclaim." + entry.getKey().toString(), entry.getValue());
+        }
+
+        configManager.savePlayerData();
     }
 }

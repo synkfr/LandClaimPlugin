@@ -9,6 +9,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class VisualizationManager {
     private final LandClaimPlugin plugin;
@@ -16,10 +17,10 @@ public class VisualizationManager {
     private final ConfigManager configManager;
 
     // Cache for merged edges: PlayerID -> WorldName -> Edges
-    private final Map<UUID, Map<String, Set<Edge>>> mergedEdgesCache = new HashMap<>();
+    private final Map<UUID, Map<String, Set<Edge>>> mergedEdgesCache = new ConcurrentHashMap<>();
 
     // Visualization modes: PlayerID -> Mode
-    private final Map<UUID, VisualizationMode> visualizationModes = new HashMap<>();
+    private final Map<UUID, VisualizationMode> visualizationModes = new ConcurrentHashMap<>();
 
     public enum VisualizationMode {
         ALWAYS
@@ -29,6 +30,7 @@ public class VisualizationManager {
         this.plugin = plugin;
         this.claimManager = claimManager;
         this.configManager = configManager;
+        loadPlayerData();
         startVisualizationTask();
     }
 
@@ -189,4 +191,62 @@ public class VisualizationManager {
         }
     }
 
+    /**
+     * Clean up player data when they quit to prevent memory leaks
+     */
+    public void handlePlayerQuit(UUID playerId) {
+        // Save state before removing
+        savePlayerState(playerId);
+        visualizationModes.remove(playerId);
+        mergedEdgesCache.remove(playerId);
+    }
+
+    /**
+     * Load persisted visualization modes from playerdata.yml
+     */
+    private void loadPlayerData() {
+        var playerDataConfig = configManager.getPlayerDataConfig();
+        var vizSection = playerDataConfig.getConfigurationSection("visualization-modes");
+
+        if (vizSection != null) {
+            for (String uuidStr : vizSection.getKeys(false)) {
+                try {
+                    UUID playerId = UUID.fromString(uuidStr);
+                    String modeStr = vizSection.getString(uuidStr);
+                    if ("ALWAYS".equalsIgnoreCase(modeStr)) {
+                        visualizationModes.put(playerId, VisualizationMode.ALWAYS);
+                    }
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
+    }
+
+    /**
+     * Save a single player's visualization state
+     */
+    private void savePlayerState(UUID playerId) {
+        var playerDataConfig = configManager.getPlayerDataConfig();
+        String uuidStr = playerId.toString();
+
+        if (visualizationModes.containsKey(playerId)) {
+            playerDataConfig.set("visualization-modes." + uuidStr, visualizationModes.get(playerId).name());
+        } else {
+            playerDataConfig.set("visualization-modes." + uuidStr, null);
+        }
+
+        configManager.savePlayerData();
+    }
+
+    /**
+     * Save all player visualization data (called on plugin disable)
+     */
+    public void saveAllPlayerData() {
+        var playerDataConfig = configManager.getPlayerDataConfig();
+
+        for (Map.Entry<UUID, VisualizationMode> entry : visualizationModes.entrySet()) {
+            playerDataConfig.set("visualization-modes." + entry.getKey().toString(), entry.getValue().name());
+        }
+
+        configManager.savePlayerData();
+    }
 }
