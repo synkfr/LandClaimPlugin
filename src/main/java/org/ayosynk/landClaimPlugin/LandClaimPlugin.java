@@ -12,6 +12,7 @@ import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.managers.SaveManager;
 import org.ayosynk.landClaimPlugin.utils.ConfigUpdater;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,6 +35,9 @@ public class LandClaimPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
+            // Initialize bStats metrics (https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
+            new Metrics(this, 28407);
+            
             // Check for WorldGuard
             if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
                 worldGuardEnabled = true;
