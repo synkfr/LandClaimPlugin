@@ -77,6 +77,7 @@ worldguard-gap: 1  # Chunks between claims and WorldGuard regions
 min-claim-gap: 1   # Chunks between different players' claims
 visualization-default: "ALWAYS"  # ALWAYS or OFF
 log-auto-save-message: false   # Toggle auto-save logs (set to false to disable console messages)
+actionbar-update-interval: 20  # Ticks between actionbar updates (20 = 1 second, lower = more responsive but more CPU)
 
 # 𝘝𝘐𝘚𝘜𝘈𝘓𝘐𝘡𝘈𝘛𝘐𝘖𝘕 𝘚𝘌𝘛𝘐𝘕𝘎𝘚
 visualization:
@@ -87,4 +88,4 @@ visualization:
 
 # Message prefix (used for all messages)
 # Messages are now stored in messages.yml file
-prefix: "&8[&6LandClaim&8]&r "
+prefix: "&8[&#31A2DDLandClaim&8] &7"

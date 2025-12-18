@@ -6,10 +6,10 @@ import org.ayosynk.landClaimPlugin.models.Edge;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class VisualizationManager {
     private final LandClaimPlugin plugin;
@@ -17,7 +17,10 @@ public class VisualizationManager {
     private final ConfigManager configManager;
 
     // Cache for merged edges: PlayerID -> WorldName -> Edges
+    // Limited to MAX_CACHE_ENTRIES to prevent unbounded memory growth
+    private static final int MAX_CACHE_ENTRIES = 100;
     private final Map<UUID, Map<String, Set<Edge>>> mergedEdgesCache = new ConcurrentHashMap<>();
+    private final AtomicInteger cacheSize = new AtomicInteger(0);
 
     // Visualization modes: PlayerID -> Mode
     private final Map<UUID, VisualizationMode> visualizationModes = new ConcurrentHashMap<>();
@@ -129,43 +132,70 @@ public class VisualizationManager {
     }
 
     private void cacheEdges(UUID playerId, String worldName, Set<Edge> edges) {
+        // Check if we need to evict old entries
+        if (!mergedEdgesCache.containsKey(playerId) && cacheSize.get() >= MAX_CACHE_ENTRIES) {
+            evictOldestCacheEntry();
+        }
+        
+        boolean isNewPlayer = !mergedEdgesCache.containsKey(playerId);
         mergedEdgesCache.computeIfAbsent(playerId, k -> new HashMap<>()).put(worldName, edges);
+        
+        if (isNewPlayer) {
+            cacheSize.incrementAndGet();
+        }
+    }
+    
+    private void evictOldestCacheEntry() {
+        // Simple eviction: remove first entry found
+        Iterator<UUID> iterator = mergedEdgesCache.keySet().iterator();
+        if (iterator.hasNext()) {
+            UUID toRemove = iterator.next();
+            // Don't evict online players
+            if (Bukkit.getPlayer(toRemove) == null) {
+                mergedEdgesCache.remove(toRemove);
+                cacheSize.decrementAndGet();
+            }
+        }
     }
 
     public void invalidateCache(UUID playerId) {
-        mergedEdgesCache.remove(playerId);
+        if (mergedEdgesCache.remove(playerId) != null) {
+            cacheSize.decrementAndGet();
+        }
     }
 
     private void showEdges(Player player, Set<Edge> edges, Color color) {
         double spacing = configManager.getParticleSpacing();
         Particle.DustOptions dustOptions = new Particle.DustOptions(color, 1.0f);
         double y = player.getLocation().getY() + 1;
+        World world = player.getWorld();
 
+        // Batch collect all particle locations first
+        List<Location> particleLocations = new ArrayList<>();
+        
         for (Edge edge : edges) {
-            drawEdge(player, edge, y, spacing, dustOptions);
+            collectEdgeParticles(world, edge, y, spacing, particleLocations);
+        }
+        
+        // Spawn all particles in batches for better performance
+        for (Location loc : particleLocations) {
+            player.spawnParticle(Particle.DUST, loc, 1, 0, 0, 0, 0, dustOptions);
         }
     }
 
-    private void drawEdge(Player player, Edge edge, double y, double spacing, Particle.DustOptions dustOptions) {
-        World world = player.getWorld();
-        Vector start = new Vector(edge.x1, y, edge.z1);
-        Vector end = new Vector(edge.x2, y, edge.z2);
-
-        Vector direction = end.clone().subtract(start);
-        double length = direction.length();
-        direction.normalize().multiply(spacing);
+    private void collectEdgeParticles(World world, Edge edge, double y, double spacing, List<Location> locations) {
+        double dx = edge.x2 - edge.x1;
+        double dz = edge.z2 - edge.z1;
+        double length = Math.sqrt(dx * dx + dz * dz);
+        
+        if (length == 0) return;
+        
         int particles = (int) (length / spacing);
+        double stepX = dx / particles;
+        double stepZ = dz / particles;
 
         for (int i = 0; i < particles; i++) {
-            Vector point = start.clone().add(direction.clone().multiply(i));
-            player.spawnParticle(
-                    Particle.DUST,
-                    point.getX(), point.getY(), point.getZ(),
-                    1, // Count
-                    0, 0, 0, // Offset
-                    0, // Speed
-                    dustOptions
-            );
+            locations.add(new Location(world, edge.x1 + stepX * i, y, edge.z1 + stepZ * i));
         }
     }
 
@@ -198,7 +228,9 @@ public class VisualizationManager {
         // Save state before removing
         savePlayerState(playerId);
         visualizationModes.remove(playerId);
-        mergedEdgesCache.remove(playerId);
+        if (mergedEdgesCache.remove(playerId) != null) {
+            cacheSize.decrementAndGet();
+        }
     }
 
     /**

@@ -17,7 +17,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -34,6 +33,7 @@ public class EventListener implements Listener {
     private final ConfigManager configManager;
     private final Map<UUID, ChunkPosition> lastChunkMap = new HashMap<>();
     private final Map<UUID, String> lastActionBarMap = new HashMap<>();
+    private final Map<UUID, Boolean> lastClaimStatusMap = new HashMap<>(); // true = claimed, false = wilderness
 
     // Container blocks - require CONTAINER permission
     private static final Set<Material> CONTAINER_BLOCKS = new HashSet<>(Arrays.asList(
@@ -75,6 +75,7 @@ public class EventListener implements Listener {
     }
 
     private void startActionBarTask() {
+        int interval = configManager.getActionBarUpdateInterval();
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -82,46 +83,65 @@ public class EventListener implements Listener {
                     updateActionBar(player);
                 }
             }
-        }.runTaskTimer(plugin, 0, 10); // Update every 1/2 second
+        }.runTaskTimer(plugin, 0, interval);
     }
 
     private void updateActionBar(Player player) {
+        UUID playerId = player.getUniqueId();
         ChunkPosition currentPos = new ChunkPosition(player.getLocation().getChunk());
-        ChunkPosition lastPos = lastChunkMap.get(player.getUniqueId());
+        ChunkPosition lastPos = lastChunkMap.get(playerId);
+        
+        boolean isClaimed = claimManager.isChunkClaimed(currentPos);
+        Boolean wasClaimedBefore = lastClaimStatusMap.get(playerId);
+        
+        // For wilderness: only update if transitioning from claimed to wilderness (or first time)
+        // For claimed chunks: update when chunk changes (different owner/trust status possible)
+        boolean needsUpdate = false;
+        
+        if (isClaimed) {
+            // In claimed land - update if chunk changed
+            needsUpdate = (lastPos == null || !currentPos.equals(lastPos));
+        } else {
+            // In wilderness - only update if status changed from claimed to wilderness
+            needsUpdate = (wasClaimedBefore == null || wasClaimedBefore);
+        }
+        
+        if (needsUpdate) {
+            lastChunkMap.put(playerId, currentPos);
+            lastClaimStatusMap.put(playerId, isClaimed);
 
-        // Only update if chunk changed
-        if (lastPos == null || !currentPos.equals(lastPos)) {
-            lastChunkMap.put(player.getUniqueId(), currentPos);
-
-            if (claimManager.isChunkClaimed(currentPos)) {
+            if (isClaimed) {
                 UUID ownerId = claimManager.getChunkOwner(currentPos);
                 String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
                 if (ownerName == null) ownerName = "Unknown";
 
                 String message;
-                UUID playerId = player.getUniqueId();
 
                 if (playerId.equals(ownerId)) {
-                    message = configManager.getConfig().getString("messages.actionbar-own", "&aYour claim");
+                    message = configManager.getActionBarMessage("actionbar-own");
                 } else if (trustManager.isTrusted(ownerId, player)) {
-                    message = configManager.getConfig().getString("messages.actionbar-trusted", "&eTrusted in {owner}'s claim")
+                    message = configManager.getActionBarMessage("actionbar-trusted")
                             .replace("{owner}", ownerName);
                 } else if (player.hasPermission("landclaim.admin")) {
-                    message = configManager.getConfig().getString("messages.actionbar-admin", "&cAdmin: {owner}'s claim")
+                    message = configManager.getActionBarMessage("actionbar-admin")
                             .replace("{owner}", ownerName);
                 } else {
-                    message = configManager.getConfig().getString("messages.actionbar-owner", "&e{owner}'s claim")
+                    message = configManager.getActionBarMessage("actionbar-owner")
                             .replace("{owner}", ownerName);
                 }
 
                 sendActionBar(player, ChatUtils.colorize(message));
-                lastActionBarMap.put(player.getUniqueId(), message);
+                lastActionBarMap.put(playerId, message);
             } else {
-                // Not claimed: show wilderness message
-                String wildernessMsg = configManager.getConfig().getString("messages.actionbar-wilderness", "&7Wilderness");
+                // Not claimed: show wilderness message (persists until entering claimed land)
+                String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
                 sendActionBar(player, ChatUtils.colorize(wildernessMsg));
-                lastActionBarMap.put(player.getUniqueId(), wildernessMsg);
+                lastActionBarMap.put(playerId, wildernessMsg);
             }
+        } else if (!isClaimed) {
+            // In wilderness and status hasn't changed - resend wilderness message to keep it visible
+            String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
+            sendActionBar(player, ChatUtils.colorize(wildernessMsg));
         }
     }
 
@@ -446,5 +466,6 @@ public class EventListener implements Listener {
     public void cleanupPlayer(UUID playerId) {
         lastChunkMap.remove(playerId);
         lastActionBarMap.remove(playerId);
+        lastClaimStatusMap.remove(playerId);
     }
 }

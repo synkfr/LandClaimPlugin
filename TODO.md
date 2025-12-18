@@ -28,20 +28,20 @@
 
 ### Performance
 - [x] ~~**Use ConcurrentHashMap** - Replace HashMap with ConcurrentHashMap for thread-safe operations in managers~~ ✅ Fixed in v1.6
-- [ ] **Batch Particle Spawning** - `VisualizationManager.java` spawns particles one at a time; batch them for better performance
+- [x] ~~**Batch Particle Spawning** - `VisualizationManager.java` spawns particles one at a time; batch them for better performance~~ ✅ Fixed in v1.8
 - [x] ~~**Lazy Loading for Offline Players** - Cache offline player lookups instead of iterating every time~~ ✅ Fixed in v1.7
-- [ ] **Chunk Position Caching** - Create a chunk position pool to reduce object creation in hot paths
-- [ ] **Action Bar Update Throttling** - `EventListener.java:84` updates every 10 ticks; consider reducing frequency
-- [ ] **Edge Calculation Optimization** - Pre-calculate edges on claim/unclaim instead of on-demand in visualization
+- [x] ~~**Chunk Position Caching** - Create a chunk position pool to reduce object creation in hot paths~~ ✅ Fixed in v1.8
+- [x] ~~**Action Bar Update Throttling** - `EventListener.java:84` updates every 10 ticks; consider reducing frequency~~ ✅ Fixed in v1.8 (configurable)
+- [x] ~~**Edge Calculation Optimization** - Pre-calculate edges on claim/unclaim instead of on-demand in visualization~~ ✅ Fixed in v1.8 (cache invalidation)
 
 ### Memory
 - [ ] **Weak References for Player Data** - Use WeakHashMap for player-specific caches that should be GC'd when player leaves
-- [ ] **Limit Visualization Cache Size** - Add max size limit to `mergedEdgesCache` to prevent unbounded growth
+- [x] ~~**Limit Visualization Cache Size** - Add max size limit to `mergedEdgesCache` to prevent unbounded growth~~ ✅ Fixed in v1.8
 - [x] ~~**Clean Up Player Data on Quit** - Add PlayerQuitEvent listener to clean up all player-specific maps~~ ✅ Fixed in v1.6
 
 ### I/O
-- [ ] **Async File Operations** - Save claims/trust data asynchronously to prevent main thread blocking
-- [ ] **Debounce Saves** - Don't save immediately on every trust/permission change; batch saves
+- [x] ~~**Async File Operations** - Save claims/trust data asynchronously to prevent main thread blocking~~ ✅ Fixed in v1.8
+- [x] ~~**Debounce Saves** - Don't save immediately on every trust/permission change; batch saves~~ ✅ Fixed in v1.8
 - [ ] **Database Support** - Add MySQL/SQLite support for large servers
 
 ---

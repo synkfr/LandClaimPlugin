@@ -200,6 +200,10 @@ public class ConfigManager {
         return getConfig().getString("visualization-default", "OFF");
     }
 
+    public int getActionBarUpdateInterval() {
+        return getConfig().getInt("actionbar-update-interval", 20);
+    }
+
     public void saveClaimsConfig() {
         try {
             claimsConfig.save(claimsFile);
@@ -223,5 +227,12 @@ public class ConfigManager {
             message = message.replace(replacements[i], replacements[i+1]);
         }
         return ChatUtils.colorize(prefix + message);
+    }
+
+    /**
+     * Get actionbar message without prefix (for actionbar display)
+     */
+    public String getActionBarMessage(String key) {
+        return messagesConfig.getString(key, "&7" + key);
     }
 }

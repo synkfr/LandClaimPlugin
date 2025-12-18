@@ -1,5 +1,39 @@
 # LandClaimPlugin - Update History
 
+## Version 1.8
+
+### 🐛 Bug Fixes
+- **Fixed actionbar messages not updating**: Actionbar messages were reading from wrong config file; now properly reads from messages.yml
+- **Added missing actionbar-owner key**: Added missing message key for viewing other players' claims
+- **Wilderness actionbar persistence**: Wilderness message now stays visible instead of flickering when moving between unclaimed chunks
+
+### 🔧 Optimizations
+- **Batch Particle Spawning**: Visualization particles are now collected and spawned in batches, reducing object creation overhead
+- **Visualization Cache Limit**: Added max size limit (100 entries) to `mergedEdgesCache` to prevent unbounded memory growth
+- **Configurable Action Bar Interval**: Action bar update interval is now configurable via `actionbar-update-interval` (default: 20 ticks)
+- **Reduced Vector Object Creation**: Particle edge calculation now uses primitive math instead of Vector objects
+- **ChunkPosition Flyweight Cache**: Added object pooling for ChunkPosition instances to reduce GC pressure in hot paths
+- **Async Debounced Saves**: New `SaveManager` handles file I/O asynchronously with debouncing - data is marked dirty and saved in batches every 60 seconds
+- **Optimized Wilderness Detection**: Actionbar only recalculates when claim status changes, not on every chunk transition
+
+### 🎨 Styling
+- **Minimal Message Style**: All messages updated to minimal/formal style
+- **New Color Scheme**: Messages now use `&7` (gray) and `&#31A2DD` (blue accent) colors
+- **Removed Emojis**: All emoji characters removed from messages for cleaner look
+- **Updated Prefix**: Plugin prefix updated to match new color scheme
+
+### 📋 Technical Changes
+- Added `getActionBarMessage()` method to ConfigManager for actionbar-specific messages
+- Added `getActionBarUpdateInterval()` method to ConfigManager
+- Added `actionbar-update-interval` config option
+- Added `SaveManager` class for async debounced file operations
+- Added `ChunkPosition.of()` static factory method with flyweight caching
+- Added `lastClaimStatusMap` to EventListener for optimized wilderness tracking
+- Removed unused `Vector` import from VisualizationManager
+- Removed unused `EntityDamageEvent` import from EventListener
+
+---
+
 ## Version 1.7
 
 ### 🐛 Bug Fixes

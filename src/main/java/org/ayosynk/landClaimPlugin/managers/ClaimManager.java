@@ -146,6 +146,11 @@ public class ClaimManager {
         playerClaims.put(playerId, claims);
 
         plugin.getVisualizationManager().invalidateCache(playerId);
+        
+        // Mark claims as dirty for debounced save
+        if (plugin.getSaveManager() != null) {
+            plugin.getSaveManager().markClaimsDirty();
+        }
         return true;
     }
 
@@ -236,6 +241,11 @@ public class ClaimManager {
                 }
             }
             plugin.getVisualizationManager().invalidateCache(owner);
+            
+            // Mark claims as dirty for debounced save
+            if (plugin.getSaveManager() != null) {
+                plugin.getSaveManager().markClaimsDirty();
+            }
             return true;
         }
         return false;

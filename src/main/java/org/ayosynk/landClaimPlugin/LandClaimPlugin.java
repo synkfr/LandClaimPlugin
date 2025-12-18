@@ -10,6 +10,7 @@ import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
+import org.ayosynk.landClaimPlugin.managers.SaveManager;
 import org.ayosynk.landClaimPlugin.utils.ConfigUpdater;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,11 +24,11 @@ public class LandClaimPlugin extends JavaPlugin {
     private ClaimManager claimManager;
     private TrustManager trustManager;
     private VisualizationManager visualizationManager;
+    private SaveManager saveManager;
     private CommandHandler commandHandler;
     private EventListener eventListener;
     private List<String> blockedCommands = new ArrayList<>();
     private List<String> blockedWorlds = new ArrayList<>();
-    private int autoSaveTaskId = -1;
     private boolean worldGuardEnabled = false;
 
     @Override
@@ -49,6 +50,9 @@ public class LandClaimPlugin extends JavaPlugin {
 
             // Initialize visualization manager
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
+            
+            // Initialize save manager with debounced async saves
+            saveManager = new SaveManager(this, claimManager, trustManager);
 
             // Register commands
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager);
@@ -96,8 +100,8 @@ public class LandClaimPlugin extends JavaPlugin {
             // Load configuration
             reloadConfiguration();
 
-            // Schedule auto-save task
-            scheduleAutoSave();
+            // Start debounced auto-save task
+            saveManager.startAutoSave();
 
             getLogger().info("LandClaim has been enabled! Loaded " +
                     claimManager.getTotalClaims() + " claims and " +
@@ -109,17 +113,6 @@ public class LandClaimPlugin extends JavaPlugin {
         }
     }
 
-    // Updated auto-save task
-    private void scheduleAutoSave() {
-        autoSaveTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
-            if (configManager.logAutoSaveMessage()) {
-                getLogger().info("Auto-saving claims and trust data...");
-            }
-            claimManager.saveClaims();
-            trustManager.saveTrustedPlayers();
-            trustManager.savePermissionsAndMembers();
-        }, 6000L, 6000L);
-    }
     public boolean isWorldGuardEnabled() {
         return worldGuardEnabled;
     }
@@ -149,20 +142,11 @@ public class LandClaimPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         try {
-            // Cancel auto-save task
-            if (autoSaveTaskId != -1) {
-                Bukkit.getScheduler().cancelTask(autoSaveTaskId);
-            }
-
-            // Save claims data if managers were initialized
-            if (claimManager != null) {
-                claimManager.saveClaims();
-                getLogger().info("Saved " + claimManager.getTotalClaims() + " claims");
-            }
-            if (trustManager != null) {
-                trustManager.saveTrustedPlayers();
-                trustManager.savePermissionsAndMembers();
-                getLogger().info("Saved trust data for " + trustManager.getTotalTrusts() + " relationships");
+            // Save all data synchronously on disable
+            if (saveManager != null) {
+                saveManager.saveAll();
+                getLogger().info("Saved " + claimManager.getTotalClaims() + " claims and " + 
+                        trustManager.getTotalTrusts() + " trust relationships");
             }
             if (commandHandler != null) {
                 commandHandler.saveAllPlayerData();
@@ -192,6 +176,10 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public VisualizationManager getVisualizationManager() {
         return visualizationManager;
+    }
+
+    public SaveManager getSaveManager() {
+        return saveManager;
     }
 
     public CommandHandler getCommandHandler() {
