@@ -9,9 +9,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
 
-/**
- * Handles player join and quit events for initialization and cleanup
- */
 public class PlayerJoinListener implements Listener {
     private final LandClaimPlugin plugin;
     private final VisualizationManager visualizationManager;
@@ -29,14 +26,9 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         UUID playerId = event.getPlayer().getUniqueId();
-        
-        // Clean up visualization data
+
         visualizationManager.handlePlayerQuit(playerId);
-        
-        // Clean up command handler data
         plugin.getCommandHandler().cleanupPlayer(playerId);
-        
-        // Clean up event listener data
         plugin.getEventListener().cleanupPlayer(playerId);
     }
 }

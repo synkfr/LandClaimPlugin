@@ -38,9 +38,8 @@ public class EventListener implements Listener {
     private final ConfigManager configManager;
     private final Map<UUID, ChunkPosition> lastChunkMap = new HashMap<>();
     private final Map<UUID, String> lastActionBarMap = new HashMap<>();
-    private final Map<UUID, Boolean> lastClaimStatusMap = new HashMap<>(); // true = claimed, false = wilderness
+    private final Map<UUID, Boolean> lastClaimStatusMap = new HashMap<>();
 
-    // Container blocks - require CONTAINER permission
     private static final Set<Material> CONTAINER_BLOCKS = new HashSet<>(Arrays.asList(
             Material.CHEST, Material.TRAPPED_CHEST, Material.ENDER_CHEST, Material.BARREL,
             Material.FURNACE, Material.BLAST_FURNACE, Material.SMOKER, Material.HOPPER,
@@ -52,7 +51,6 @@ public class EventListener implements Listener {
             Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
             Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX));
 
-    // Interactable blocks - require INTERACT permission
     private static final Set<Material> INTERACTABLE_BLOCKS = new HashSet<>(Arrays.asList(
             Material.ACACIA_DOOR, Material.BIRCH_DOOR, Material.DARK_OAK_DOOR, Material.JUNGLE_DOOR,
             Material.OAK_DOOR, Material.SPRUCE_DOOR, Material.CHERRY_DOOR, Material.PALE_OAK_DOOR, Material.BAMBOO_DOOR,
@@ -76,7 +74,6 @@ public class EventListener implements Listener {
         this.trustManager = trustManager;
         this.configManager = configManager;
 
-        // Start action bar task
         startActionBarTask();
     }
 
@@ -100,17 +97,11 @@ public class EventListener implements Listener {
         boolean isClaimed = claimManager.isChunkClaimed(currentPos);
         Boolean wasClaimedBefore = lastClaimStatusMap.get(playerId);
 
-        // For wilderness: only update if transitioning from claimed to wilderness (or
-        // first time)
-        // For claimed chunks: update when chunk changes (different owner/trust status
-        // possible)
         boolean needsUpdate = false;
 
         if (isClaimed) {
-            // In claimed land - update if chunk changed
             needsUpdate = (lastPos == null || !currentPos.equals(lastPos));
         } else {
-            // In wilderness - only update if status changed from claimed to wilderness
             needsUpdate = (wasClaimedBefore == null || wasClaimedBefore);
         }
 
@@ -142,14 +133,11 @@ public class EventListener implements Listener {
                 sendActionBar(player, ChatUtils.colorize(message));
                 lastActionBarMap.put(playerId, message);
             } else {
-                // Not claimed: show wilderness message (persists until entering claimed land)
                 String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
                 sendActionBar(player, ChatUtils.colorize(wildernessMsg));
                 lastActionBarMap.put(playerId, wildernessMsg);
             }
         } else if (!isClaimed) {
-            // In wilderness and status hasn't changed - resend wilderness message to keep
-            // it visible
             String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
             sendActionBar(player, ChatUtils.colorize(wildernessMsg));
         }
@@ -161,7 +149,6 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        // Check if the player moved to a new chunk
         Location from = event.getFrom();
         Location to = event.getTo();
         if (to == null)
@@ -175,7 +162,6 @@ public class EventListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        // Handle auto claim
         if (plugin.getCommandHandler().isAutoClaimEnabled(playerId)) {
             ChunkPosition pos = new ChunkPosition(toChunk);
             if (!claimManager.isChunkClaimed(pos)) {
@@ -185,7 +171,6 @@ public class EventListener implements Listener {
             }
         }
 
-        // Handle auto unclaim
         if (plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
             ChunkPosition fromPos = new ChunkPosition(fromChunk);
             if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
@@ -205,7 +190,6 @@ public class EventListener implements Listener {
         if (claims.isEmpty())
             return false;
 
-        // Check if this chunk is connected to others
         Set<ChunkPosition> neighbors = new HashSet<>(pos.getNeighbors(configManager.allowDiagonalConnections()));
         neighbors.retainAll(claims);
         neighbors.remove(pos);
@@ -215,13 +199,11 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        // Check the block's location, not player's location
         checkBlockPermission(event.getPlayer(), event.getBlock(), event, "BUILD");
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        // Check the block's location, not player's location
         checkBlockPermission(event.getPlayer(), event.getBlock(), event, "BUILD");
     }
 
@@ -233,13 +215,11 @@ public class EventListener implements Listener {
         Block block = event.getClickedBlock();
         Material blockType = block.getType();
 
-        // Check container blocks with CONTAINER permission
         if (CONTAINER_BLOCKS.contains(blockType)) {
             checkInteractionPermission(event.getPlayer(), event, "CONTAINER");
             return;
         }
 
-        // Check interactable blocks with INTERACT permission
         if (INTERACTABLE_BLOCKS.contains(blockType)) {
             checkInteractionPermission(event.getPlayer(), event, "INTERACT");
         }
@@ -251,12 +231,10 @@ public class EventListener implements Listener {
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
         Material bucket = event.getBucket();
 
-        // Only handle water and lava buckets
         if (bucket != Material.WATER_BUCKET && bucket != Material.LAVA_BUCKET) {
             return;
         }
 
-        // Check if in claimed land
         if (shouldCancelBucketPlacement(player, block)) {
             event.setCancelled(true);
             player.sendMessage(configManager.getMessage("bucket-denied"));
@@ -344,18 +322,16 @@ public class EventListener implements Listener {
         if (!configManager.preventExplosionDamage())
             return;
 
-        // Get explosion location
         Location explosionLoc = event.getLocation();
         ChunkPosition explosionChunk = new ChunkPosition(explosionLoc);
 
-        // Check if explosion is near any claims
         boolean nearClaim = false;
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 ChunkPosition checkPos = new ChunkPosition(
                         explosionLoc.getWorld().getName(),
-                        explosionChunk.getX() + dx,
-                        explosionChunk.getZ() + dz);
+                        explosionChunk.x() + dx,
+                        explosionChunk.z() + dz);
                 if (claimManager.isChunkClaimed(checkPos)) {
                     nearClaim = true;
                     break;
@@ -365,11 +341,9 @@ public class EventListener implements Listener {
                 break;
         }
 
-        // If not near any claim, do nothing
         if (!nearClaim)
             return;
 
-        // Remove any blocks that are in claimed chunks from the explosion list
         event.blockList().removeIf(b -> claimManager.isChunkClaimed(new ChunkPosition(b)));
     }
 
@@ -378,18 +352,16 @@ public class EventListener implements Listener {
         if (!configManager.preventExplosionDamage())
             return;
 
-        // Get explosion location (e.g., respawn anchor)
         Location explosionLoc = event.getBlock().getLocation();
         ChunkPosition explosionChunk = new ChunkPosition(explosionLoc);
 
-        // Check if explosion is near any claims
         boolean nearClaim = false;
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 ChunkPosition checkPos = new ChunkPosition(
                         explosionLoc.getWorld().getName(),
-                        explosionChunk.getX() + dx,
-                        explosionChunk.getZ() + dz);
+                        explosionChunk.x() + dx,
+                        explosionChunk.z() + dz);
                 if (claimManager.isChunkClaimed(checkPos)) {
                     nearClaim = true;
                     break;
@@ -399,11 +371,9 @@ public class EventListener implements Listener {
                 break;
         }
 
-        // If not near any claim, do nothing
         if (!nearClaim)
             return;
 
-        // Remove any blocks that are in claimed chunks from the explosion list
         event.blockList().removeIf(b -> claimManager.isChunkClaimed(new ChunkPosition(b)));
     }
 

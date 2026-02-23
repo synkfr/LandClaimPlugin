@@ -15,16 +15,12 @@ public class ConfigManager {
     private final LandClaimPlugin plugin;
     private FileConfiguration config;
     private File configFile;
-
     private FileConfiguration claimsConfig;
     private File claimsFile;
-
     private FileConfiguration trustConfig;
     private File trustFile;
-
     private FileConfiguration messagesConfig;
     private File messagesFile;
-
     private FileConfiguration playerDataConfig;
     private File playerDataFile;
 
@@ -39,36 +35,27 @@ public class ConfigManager {
     }
 
     private void loadConfigs() {
-        // Load main config
         plugin.saveDefaultConfig();
         config = plugin.getConfig();
 
-        // Claims data
         claimsFile = new File(plugin.getDataFolder(), "claims.yml");
-        if (!claimsFile.exists()) {
+        if (!claimsFile.exists())
             createEmptyFile(claimsFile);
-        }
         claimsConfig = YamlConfiguration.loadConfiguration(claimsFile);
 
-        // Trust data
         trustFile = new File(plugin.getDataFolder(), "trust.yml");
-        if (!trustFile.exists()) {
+        if (!trustFile.exists())
             createEmptyFile(trustFile);
-        }
         trustConfig = YamlConfiguration.loadConfiguration(trustFile);
 
-        // Messages
         messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        if (!messagesFile.exists()) {
+        if (!messagesFile.exists())
             plugin.saveResource("messages.yml", false);
-        }
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
 
-        // Player data (auto-claim, visualization modes, etc.)
         playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
-        if (!playerDataFile.exists()) {
+        if (!playerDataFile.exists())
             createEmptyFile(playerDataFile);
-        }
         playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
     }
 
@@ -78,14 +65,12 @@ public class ConfigManager {
             file.createNewFile();
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to create file: " + file.getName());
-            e.printStackTrace();
         }
     }
 
     public void reloadMainConfig() {
         plugin.reloadConfig();
         config = plugin.getConfig();
-        // Reload messages.yml as well
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
     }
 
@@ -110,7 +95,6 @@ public class ConfigManager {
             playerDataConfig.save(playerDataFile);
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to save playerdata.yml");
-            e.printStackTrace();
         }
     }
 
@@ -143,8 +127,7 @@ public class ConfigManager {
     }
 
     public boolean isWorldBlocked(String worldName) {
-        List<String> blockedWorlds = getConfig().getStringList("block-world");
-        return blockedWorlds.contains(worldName);
+        return getConfig().getStringList("block-world").contains(worldName);
     }
 
     public List<String> getBlockedCommands() {
@@ -159,10 +142,8 @@ public class ConfigManager {
         String colorStr = getConfig().getString("visualization." + type, "0,255,0");
         String[] rgb = colorStr.split(",");
         try {
-            int r = Integer.parseInt(rgb[0].trim());
-            int g = Integer.parseInt(rgb[1].trim());
-            int b = Integer.parseInt(rgb[2].trim());
-            return Color.fromRGB(r, g, b);
+            return Color.fromRGB(Integer.parseInt(rgb[0].trim()), Integer.parseInt(rgb[1].trim()),
+                    Integer.parseInt(rgb[2].trim()));
         } catch (Exception e) {
             return type.equals("always-color") ? Color.LIME : Color.YELLOW;
         }
@@ -237,9 +218,6 @@ public class ConfigManager {
         return ChatUtils.colorize(message);
     }
 
-    /**
-     * Get actionbar message without prefix (for actionbar display)
-     */
     public String getActionBarMessage(String key) {
         return messagesConfig.getString(key, "&7" + key);
     }

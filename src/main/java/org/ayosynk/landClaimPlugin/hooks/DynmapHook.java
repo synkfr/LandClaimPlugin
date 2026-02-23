@@ -11,10 +11,6 @@ import org.dynmap.markers.MarkerSet;
 
 import java.util.*;
 
-/**
- * Integrates with Dynmap to display claim area markers on the web map.
- * Each claimed chunk is rendered as an area marker rectangle with owner labels.
- */
 public class DynmapHook {
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
@@ -39,7 +35,6 @@ public class DynmapHook {
                 return;
             }
 
-            // Create or get marker set
             markerSet = markerAPI.getMarkerSet("landclaims");
             if (markerSet == null) {
                 markerSet = markerAPI.createMarkerSet("landclaims", "Land Claims", null, false);
@@ -61,19 +56,14 @@ public class DynmapHook {
         }
     }
 
-    /**
-     * Refresh all claim markers on Dynmap. Called on claim/unclaim events.
-     */
     public void update() {
         if (!active || markerSet == null)
             return;
 
-        // Clear existing markers
         for (AreaMarker marker : markerSet.getAreaMarkers()) {
             marker.deleteMarker();
         }
 
-        // Get config colors
         String fillColorHex = plugin.getConfig().getString("dynmap.fill-color", "3366FF");
         double fillOpacity = plugin.getConfig().getDouble("dynmap.fill-opacity", 0.3);
         String borderColorHex = plugin.getConfig().getString("dynmap.border-color", "3366FF");
@@ -82,7 +72,6 @@ public class DynmapHook {
         int fillColor = parseHexColor(fillColorHex);
         int borderColor = parseHexColor(borderColorHex);
 
-        // Create markers for all claims
         for (UUID playerId : getAllPlayerIds()) {
             String playerName = Bukkit.getOfflinePlayer(playerId).getName();
             if (playerName == null)
@@ -90,10 +79,9 @@ public class DynmapHook {
 
             Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
 
-            // Group claims by world before merging
             Map<String, Set<ChunkPosition>> claimsByWorld = new HashMap<>();
             for (ChunkPosition pos : claims) {
-                claimsByWorld.computeIfAbsent(pos.getWorld(), k -> new HashSet<>()).add(pos);
+                claimsByWorld.computeIfAbsent(pos.world(), k -> new HashSet<>()).add(pos);
             }
 
             int i = 0;
@@ -137,8 +125,8 @@ public class DynmapHook {
     private List<double[][]> createPolygons(Set<ChunkPosition> chunks) {
         Set<Edge> edges = new HashSet<>();
         for (ChunkPosition chunk : chunks) {
-            int cx = chunk.getX();
-            int cz = chunk.getZ();
+            int cx = chunk.x();
+            int cz = chunk.z();
 
             Point p00 = new Point(cx, cz);
             Point p10 = new Point(cx + 1, cz);
@@ -146,10 +134,10 @@ public class DynmapHook {
             Point p01 = new Point(cx, cz + 1);
 
             Edge[] chunkEdges = {
-                    new Edge(p00, p10), // Top
-                    new Edge(p10, p11), // Right
-                    new Edge(p11, p01), // Bottom
-                    new Edge(p01, p00) // Left
+                    new Edge(p00, p10),
+                    new Edge(p10, p11),
+                    new Edge(p11, p01),
+                    new Edge(p01, p00)
             };
 
             for (Edge e : chunkEdges) {

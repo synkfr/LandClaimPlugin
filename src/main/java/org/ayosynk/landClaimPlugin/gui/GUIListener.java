@@ -24,27 +24,26 @@ public class GUIListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player))
+            return;
 
-        // Only handle clicks in the top inventory (GUI), not player's inventory
         if (event.getClickedInventory() != event.getView().getTopInventory()) {
             return;
         }
 
         String title = event.getView().getTitle();
-        
-        // Trust List GUI handling - check first to avoid conflicts
+
         String trustListTitle = ChatUtils.colorize(trustManager.getConfigManager().getMessage("trust-list-title"));
         if (title.equals(trustListTitle)) {
             event.setCancelled(true);
 
             ItemStack item = event.getCurrentItem();
-            if (item == null || item.getType() == Material.AIR) return;
-            
-            // Ignore border panes
-            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
+            if (item == null || item.getType() == Material.AIR)
+                return;
 
-            // Close button at slot 49
+            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE)
+                return;
+
             if (event.getSlot() == 49) {
                 player.closeInventory();
                 return;
@@ -62,24 +61,22 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Visitor menu handling
         String visitorMenuTitle = ChatUtils.colorize(trustManager.getConfigManager().getMessage("visitor-menu-title"));
         if (title.equals(visitorMenuTitle)) {
             event.setCancelled(true);
 
             ItemStack item = event.getCurrentItem();
-            if (item == null || item.getType() == Material.AIR) return;
-            
-            // Ignore border panes
-            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
+            if (item == null || item.getType() == Material.AIR)
+                return;
 
-            // Close button at slot 22
+            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE)
+                return;
+
             if (event.getSlot() == 22) {
                 player.closeInventory();
                 return;
             }
 
-            // Handle permission toggles (now at slots 10, 12, 14, 16)
             int clickedSlot = event.getSlot();
             int permissionIndex = -1;
             for (int i = 0; i < VisitorMenuGUI.PERMISSION_SLOTS.length; i++) {
@@ -88,19 +85,17 @@ public class GUIListener implements Listener {
                     break;
                 }
             }
-            
+
             if (permissionIndex >= 0 && permissionIndex < VisitorMenuGUI.PERMISSIONS.length) {
                 String permission = VisitorMenuGUI.PERMISSIONS[permissionIndex];
                 boolean current = trustManager.hasVisitorPermission(
                         player.getUniqueId(),
-                        permission
-                );
+                        permission);
 
                 trustManager.setVisitorPermission(
                         player.getUniqueId(),
                         permission,
-                        !current
-                );
+                        !current);
 
                 trustManager.savePermissionsAndMembers();
 
@@ -109,38 +104,36 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Trust menu handling
         String trustMenuTitleTemplate = trustManager.getConfigManager().getMessage("trust-menu-title", "{player}", "");
         String trustPrefix = ChatUtils.colorize(trustMenuTitleTemplate);
         if (trustPrefix != null && !trustPrefix.isEmpty() && title.startsWith(trustPrefix)) {
             event.setCancelled(true);
 
             ItemStack item = event.getCurrentItem();
-            if (item == null || item.getType() == Material.AIR) return;
-            
-            // Ignore border panes
-            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
+            if (item == null || item.getType() == Material.AIR)
+                return;
 
-            // Extract player name from title - with null safety
+            if (item.getType() == Material.GRAY_STAINED_GLASS_PANE)
+                return;
+
             String trustedName;
             try {
                 trustedName = ChatColor.stripColor(title.substring(trustPrefix.length()).trim());
             } catch (Exception e) {
                 return;
             }
-            if (trustedName == null || trustedName.isEmpty()) return;
+            if (trustedName == null || trustedName.isEmpty())
+                return;
 
-            // Try to find the player using cached lookup
             OfflinePlayer trustedPlayer = findOfflinePlayer(trustedName);
-            if (trustedPlayer == null) return;
+            if (trustedPlayer == null)
+                return;
 
-            // Handle back button (now at slot 22)
             if (event.getSlot() == 22) {
                 TrustListGUI.open(player, trustManager);
                 return;
             }
 
-            // Handle permission toggles (now at slots 10, 12, 14, 16)
             int clickedSlot = event.getSlot();
             int permissionIndex = -1;
             for (int i = 0; i < TrustMenuGUI.PERMISSION_SLOTS.length; i++) {
@@ -149,21 +142,19 @@ public class GUIListener implements Listener {
                     break;
                 }
             }
-            
+
             if (permissionIndex >= 0 && permissionIndex < TrustMenuGUI.PERMISSIONS.length) {
                 String permission = TrustMenuGUI.PERMISSIONS[permissionIndex];
                 boolean current = trustManager.hasTrustPermission(
                         player.getUniqueId(),
                         trustedPlayer.getUniqueId(),
-                        permission
-                );
+                        permission);
 
                 trustManager.setTrustPermission(
                         player.getUniqueId(),
                         trustedPlayer.getUniqueId(),
                         permission,
-                        !current
-                );
+                        !current);
 
                 trustManager.savePermissionsAndMembers();
 
@@ -171,26 +162,20 @@ public class GUIListener implements Listener {
             }
         }
     }
-    
-    /**
-     * Find an offline player by name with caching for performance
-     */
+
     private OfflinePlayer findOfflinePlayer(String name) {
-        // First check online players (fast)
         Player onlinePlayer = plugin.getServer().getPlayerExact(name);
         if (onlinePlayer != null) {
             return onlinePlayer;
         }
-        
-        // Use Bukkit's deprecated but functional method - it's cached internally
+
         @SuppressWarnings("deprecation")
         OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(name);
-        
-        // Only return if they have actually played before
+
         if (offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline()) {
             return offlinePlayer;
         }
-        
+
         return null;
     }
 }

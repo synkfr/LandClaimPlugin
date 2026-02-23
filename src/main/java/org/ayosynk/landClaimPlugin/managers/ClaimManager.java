@@ -15,6 +15,7 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -151,12 +152,10 @@ public class ClaimManager {
 
         plugin.getVisualizationManager().invalidateCache(playerId);
 
-        // Mark claims as dirty for debounced save
         if (plugin.getSaveManager() != null) {
             plugin.getSaveManager().markClaimsDirty();
         }
 
-        // Refresh map integrations
         plugin.refreshMapHooks();
         return true;
     }
@@ -166,7 +165,7 @@ public class ClaimManager {
             for (int dz = -minGap; dz <= minGap; dz++) {
                 if (dx == 0 && dz == 0)
                     continue;
-                ChunkPosition neighbor = new ChunkPosition(worldName, pos.getX() + dx, pos.getZ() + dz);
+                ChunkPosition neighbor = new ChunkPosition(worldName, pos.x() + dx, pos.z() + dz);
                 if (claimedChunks.containsKey(neighbor)) {
                     UUID owner = claimedChunks.get(neighbor);
                     if (!owner.equals(playerId))
@@ -181,7 +180,7 @@ public class ClaimManager {
         if (!plugin.isWorldGuardEnabled())
             return false;
 
-        World world = Bukkit.getWorld(pos.getWorld());
+        World world = Bukkit.getWorld(pos.world());
         if (world == null)
             return false;
 
@@ -191,17 +190,14 @@ public class ClaimManager {
             if (regionManager == null)
                 return false;
 
-            // Check the chunk area plus gap chunks around it
-            int chunkX = pos.getX();
-            int chunkZ = pos.getZ();
+            int chunkX = pos.x();
+            int chunkZ = pos.z();
 
-            // Check all chunks within gap distance
             for (int dx = -gap; dx <= gap; dx++) {
                 for (int dz = -gap; dz <= gap; dz++) {
                     int checkX = (chunkX + dx) * 16;
                     int checkZ = (chunkZ + dz) * 16;
 
-                    // Check corners and center of the chunk
                     int[][] points = {
                             { checkX, checkZ },
                             { checkX + 15, checkZ },
@@ -212,9 +208,13 @@ public class ClaimManager {
 
                     for (int[] point : points) {
                         BlockVector3 blockVector = BlockVector3.at(point[0], 64, point[1]);
-                        for (ProtectedRegion region : regionManager.getApplicableRegions(blockVector)) {
-                            // Found a WorldGuard region within gap distance
-                            return true;
+                        ApplicableRegionSet regions = regionManager.getApplicableRegions(blockVector);
+                        if (regions.size() > 0) {
+                            for (ProtectedRegion region : regions) {
+                                if (!region.getId().equals("__global__")) {
+                                    return true;
+                                }
+                            }
                         }
                     }
                 }
@@ -256,12 +256,10 @@ public class ClaimManager {
             }
             plugin.getVisualizationManager().invalidateCache(owner);
 
-            // Mark claims as dirty for debounced save
             if (plugin.getSaveManager() != null) {
                 plugin.getSaveManager().markClaimsDirty();
             }
 
-            // Refresh map integrations
             plugin.refreshMapHooks();
             return true;
         }
@@ -276,9 +274,9 @@ public class ClaimManager {
         Set<ChunkPosition> toRemove = new HashSet<>(claims);
         int count = 0;
         for (ChunkPosition pos : toRemove) {
-            World world = Bukkit.getWorld(pos.getWorld());
+            World world = Bukkit.getWorld(pos.world());
             if (world != null) {
-                Chunk chunk = world.getChunkAt(pos.getX(), pos.getZ());
+                Chunk chunk = world.getChunkAt(pos.x(), pos.z());
                 if (unclaimChunk(chunk)) {
                     count++;
                 }

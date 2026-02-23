@@ -15,40 +15,33 @@ import java.util.Set;
 public class ConfigUpdater {
     public static void updateConfig(LandClaimPlugin plugin) {
         try {
-            // Check if config exists
             File configFile = new File(plugin.getDataFolder(), "config.yml");
             if (!configFile.exists()) {
                 plugin.saveDefaultConfig();
                 return;
             }
 
-            // Load current config
             YamlConfiguration currentConfig = YamlConfiguration.loadConfiguration(configFile);
             int currentVersion = currentConfig.getInt("config-version", 0);
 
-            // Load default config from JAR
             InputStream defaultStream = plugin.getResource("config.yml");
-            if (defaultStream == null) return;
+            if (defaultStream == null)
+                return;
 
-            YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(
-                    new InputStreamReader(defaultStream, StandardCharsets.UTF_8)
-            );
+            YamlConfiguration defaultConfig = YamlConfiguration
+                    .loadConfiguration(new InputStreamReader(defaultStream, StandardCharsets.UTF_8));
             int defaultVersion = defaultConfig.getInt("config-version", 4);
 
-            // Update if versions differ
             if (currentVersion < defaultVersion) {
                 plugin.getLogger().info("Updating config from v" + currentVersion + " to v" + defaultVersion);
 
-                // Backup old config
                 File backup = new File(plugin.getDataFolder(), "config_old_v" + currentVersion + ".yml");
                 Files.copy(configFile.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 plugin.getLogger().info("Backed up old config to " + backup.getName());
 
-                // Migrate messages to messages.yml if they exist in config.yml
                 if (currentConfig.contains("messages")) {
                     File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
                     if (!messagesFile.exists()) {
-                        // Create messages.yml and migrate messages
                         YamlConfiguration messagesConfig = new YamlConfiguration();
                         if (currentConfig.isConfigurationSection("messages")) {
                             for (String key : currentConfig.getConfigurationSection("messages").getKeys(false)) {
@@ -62,11 +55,9 @@ public class ConfigUpdater {
                             }
                         }
                     }
-                    // Remove messages section from config.yml
                     currentConfig.set("messages", null);
                 }
 
-                // Add new keys
                 Set<String> currentKeys = currentConfig.getKeys(true);
                 for (String key : defaultConfig.getKeys(true)) {
                     if (!currentKeys.contains(key)) {
@@ -74,16 +65,12 @@ public class ConfigUpdater {
                     }
                 }
 
-                // Update version
                 currentConfig.set("config-version", defaultVersion);
-
-                // Save updated config
                 currentConfig.save(configFile);
                 plugin.getLogger().info("Config updated to version " + defaultVersion);
             }
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to update config: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }

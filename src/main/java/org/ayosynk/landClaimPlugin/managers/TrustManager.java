@@ -14,11 +14,10 @@ public class TrustManager {
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
-    private final Map<UUID, Set<UUID>> trustedPlayers = new ConcurrentHashMap<>(); // Owner -> Trusted Players
-
-    private final Map<UUID, Map<UUID, Set<String>>> trustPermissions = new ConcurrentHashMap<>(); // Owner -> Trusted Player -> Permissions
-    private final Map<UUID, Map<String, Boolean>> visitorPermissions = new ConcurrentHashMap<>(); // Owner -> Permission -> Enabled
-    private final Map<UUID, Set<UUID>> claimMembers = new ConcurrentHashMap<>(); // Owner -> Members
+    private final Map<UUID, Set<UUID>> trustedPlayers = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<UUID, Set<String>>> trustPermissions = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<String, Boolean>> visitorPermissions = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<UUID>> claimMembers = new ConcurrentHashMap<>();
 
     public TrustManager(LandClaimPlugin plugin, ClaimManager claimManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -52,7 +51,8 @@ public class TrustManager {
         trustedPlayers.clear();
         FileConfiguration config = configManager.getTrustConfig();
         ConfigurationSection trustSection = config.getConfigurationSection("trust");
-        if (trustSection == null) return;
+        if (trustSection == null)
+            return;
 
         for (String ownerIdStr : trustSection.getKeys(false)) {
             try {
@@ -75,7 +75,8 @@ public class TrustManager {
 
         FileConfiguration config = configManager.getTrustConfig();
         ConfigurationSection permissionsSection = config.getConfigurationSection("permissions");
-        if (permissionsSection == null) return;
+        if (permissionsSection == null)
+            return;
 
         for (String ownerIdStr : permissionsSection.getKeys(false)) {
             UUID owner = UUID.fromString(ownerIdStr);
@@ -105,7 +106,8 @@ public class TrustManager {
         claimMembers.clear();
         FileConfiguration config = configManager.getTrustConfig();
         ConfigurationSection membersSection = config.getConfigurationSection("members");
-        if (membersSection == null) return;
+        if (membersSection == null)
+            return;
 
         for (String ownerIdStr : membersSection.getKeys(false)) {
             UUID owner = UUID.fromString(ownerIdStr);
@@ -137,7 +139,6 @@ public class TrustManager {
     public void savePermissionsAndMembers() {
         FileConfiguration config = configManager.getTrustConfig();
 
-        // Save permissions
         config.set("permissions", null);
         ConfigurationSection permissionsSection = config.createSection("permissions");
 
@@ -151,7 +152,8 @@ public class TrustManager {
         }
 
         for (Map.Entry<UUID, Map<String, Boolean>> ownerEntry : visitorPermissions.entrySet()) {
-            ConfigurationSection ownerSection = permissionsSection.getConfigurationSection(ownerEntry.getKey().toString());
+            ConfigurationSection ownerSection = permissionsSection
+                    .getConfigurationSection(ownerEntry.getKey().toString());
             if (ownerSection == null) {
                 ownerSection = permissionsSection.createSection(ownerEntry.getKey().toString());
             }
@@ -186,7 +188,6 @@ public class TrustManager {
             return addTrustedPlayer(owner, onlinePlayer.getUniqueId());
         }
 
-        // Use Bukkit's cached offline player lookup instead of iterating all players
         @SuppressWarnings("deprecation")
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetName);
         if (offlinePlayer.hasPlayedBefore()) {
@@ -205,7 +206,7 @@ public class TrustManager {
     }
 
     private void setDefaultPermissions(UUID ownerId, UUID trustedId) {
-        for (String permission : new String[]{"BUILD", "INTERACT", "CONTAINER", "TELEPORT"}) {
+        for (String permission : new String[] { "BUILD", "INTERACT", "CONTAINER", "TELEPORT" }) {
             if (configManager.getDefaultTrustPermission(permission)) {
                 setTrustPermission(ownerId, trustedId, permission, true);
             }

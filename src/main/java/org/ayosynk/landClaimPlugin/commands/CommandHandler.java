@@ -46,10 +46,8 @@ public class CommandHandler implements CommandExecutor {
         this.visualizationManager = visualizationManager;
         this.homeManager = homeManager;
 
-        // Load persisted player data
         loadPlayerData();
 
-        // Safe command registration
         if (plugin.getCommand("claim") != null) {
             plugin.getCommand("claim").setExecutor(this);
         }
@@ -59,7 +57,7 @@ public class CommandHandler implements CommandExecutor {
         if (plugin.getCommand("unclaimall") != null) {
             plugin.getCommand("unclaimall").setExecutor(this);
         }
-        // Register aliases
+
         if (plugin.getCommand("c") != null) {
             plugin.getCommand("c").setExecutor(this);
         }
@@ -77,7 +75,6 @@ public class CommandHandler implements CommandExecutor {
 
         String cmd = command.getName().toLowerCase();
 
-        // Handle aliases
         if (cmd.equals("claim") || cmd.equals("c")) {
             handleClaimCommand(player, args);
         } else if (cmd.equals("unclaim") || cmd.equals("unclaimall") || cmd.equals("uc")) {
@@ -237,7 +234,7 @@ public class CommandHandler implements CommandExecutor {
 
     private Location findNearestUnclaimed(Location origin) {
         World world = origin.getWorld();
-        int startX = origin.getBlockX() >> 4; // Convert to chunk coordinates
+        int startX = origin.getBlockX() >> 4;
         int startZ = origin.getBlockZ() >> 4;
 
         for (int radius = 1; radius <= 50; radius++) {
@@ -361,7 +358,6 @@ public class CommandHandler implements CommandExecutor {
         for (UUID id : trusted) {
             String name = Bukkit.getOfflinePlayer(id).getName();
             if (name != null) {
-                // Create clickable trust entry
                 player.spigot().sendMessage(ChatMessageType.CHAT,
                         TextComponent.fromLegacyText(configManager.getMessage(
                                 "trust-list-item", "{player}", name)));
@@ -582,8 +578,6 @@ public class CommandHandler implements CommandExecutor {
         }
     }
 
-    // --- Claim List Command ---
-
     private void handleListCommand(Player player) {
         if (!player.hasPermission("landclaim.list")) {
             sendMessage(player, "access-denied");
@@ -598,10 +592,9 @@ public class CommandHandler implements CommandExecutor {
             return;
         }
 
-        // Group claims by world
         Map<String, List<ChunkPosition>> byWorld = new TreeMap<>();
         for (ChunkPosition pos : claims) {
-            byWorld.computeIfAbsent(pos.getWorld(), k -> new ArrayList<>()).add(pos);
+            byWorld.computeIfAbsent(pos.world(), k -> new ArrayList<>()).add(pos);
         }
 
         sendMessage(player, "claim-list-header");
@@ -609,14 +602,12 @@ public class CommandHandler implements CommandExecutor {
             player.sendMessage(configManager.getMessage("claim-list-world", "{world}", entry.getKey()));
             for (ChunkPosition pos : entry.getValue()) {
                 player.sendMessage(configManager.getMessage("claim-list-entry",
-                        "{x}", String.valueOf(pos.getX()),
-                        "{z}", String.valueOf(pos.getZ())));
+                        "{x}", String.valueOf(pos.x()),
+                        "{z}", String.valueOf(pos.z())));
             }
         }
         player.sendMessage(configManager.getMessage("claim-list-total", "{count}", String.valueOf(claims.size())));
     }
-
-    // --- Home Commands ---
 
     private void handleSetHomeCommand(Player player, String[] args) {
         if (!player.hasPermission("landclaim.sethome")) {
@@ -631,13 +622,11 @@ public class CommandHandler implements CommandExecutor {
 
         String name = args[1];
 
-        // Validate name: Unicode letters, numbers, underscores, max 16 chars
         if (!name.matches("^[\\p{L}0-9_]{1,16}$")) {
             sendMessage(player, "home-name-invalid");
             return;
         }
 
-        // Must be in own claim
         ChunkPosition pos = new ChunkPosition(player.getLocation());
         if (!claimManager.isChunkClaimed(pos) || !claimManager.getChunkOwner(pos).equals(player.getUniqueId())) {
             sendMessage(player, "home-must-be-in-own-claim");
@@ -646,7 +635,6 @@ public class CommandHandler implements CommandExecutor {
 
         UUID playerId = player.getUniqueId();
 
-        // Check if updating existing home (no limit check needed)
         boolean isUpdate = homeManager.getHome(playerId, name) != null;
 
         if (!isUpdate) {
@@ -764,20 +752,13 @@ public class CommandHandler implements CommandExecutor {
                 configManager.getConfig().getBoolean("auto-unclaim-default", false));
     }
 
-    /**
-     * Clean up player data when they quit to prevent memory leaks
-     */
     public void cleanupPlayer(UUID playerId) {
-        // Save state before removing from memory
         savePlayerState(playerId);
         autoClaimPlayers.remove(playerId);
         autoUnclaimPlayers.remove(playerId);
         unstuckCooldowns.remove(playerId);
     }
 
-    /**
-     * Load persisted player data from playerdata.yml
-     */
     private void loadPlayerData() {
         var playerDataConfig = configManager.getPlayerDataConfig();
         var autoClaimSection = playerDataConfig.getConfigurationSection("auto-claim");
@@ -821,9 +802,6 @@ public class CommandHandler implements CommandExecutor {
         configManager.savePlayerData();
     }
 
-    /**
-     * Save all player data (called on plugin disable)
-     */
     public void saveAllPlayerData() {
         var playerDataConfig = configManager.getPlayerDataConfig();
 

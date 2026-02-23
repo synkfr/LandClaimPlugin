@@ -41,42 +41,32 @@ public class LandClaimPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
-            // Initialize bStats metrics
-            // (https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
             new Metrics(this, 28407);
 
-            // Check for WorldGuard
             if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
                 worldGuardEnabled = true;
                 getLogger().info("WorldGuard detected. Enabling region gap protection.");
             }
-            // Initialize managers
+
             configManager = new ConfigManager(this);
             claimManager = new ClaimManager(this, configManager);
             trustManager = new TrustManager(this, claimManager, configManager);
 
-            // Load claims and trust data
             claimManager.initialize();
             trustManager.initialize();
 
-            // Initialize visualization manager
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
 
-            // Initialize home manager
             homeManager = new HomeManager(this, configManager);
 
-            // Initialize save manager with debounced async saves
             saveManager = new SaveManager(this, claimManager, trustManager, homeManager);
 
-            // Register commands
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager,
                     homeManager);
 
-            // Register events
             eventListener = new EventListener(this, claimManager, trustManager, configManager);
             getServer().getPluginManager().registerEvents(eventListener, this);
 
-            // Register command blocker
             getServer().getPluginManager().registerEvents(
                     new CommandBlocker(this, claimManager, trustManager),
                     this);
@@ -85,7 +75,6 @@ public class LandClaimPlugin extends JavaPlugin {
                     new PlayerJoinListener(this, visualizationManager),
                     this);
 
-            // Register GUI listener
             getServer().getPluginManager().registerEvents(
                     new GUIListener(trustManager),
                     this);
@@ -101,7 +90,7 @@ public class LandClaimPlugin extends JavaPlugin {
             if (getCommand("unclaimall") != null) {
                 getCommand("unclaimall").setTabCompleter(tabCompleter);
             }
-            // Register tab completers for aliases
+
             if (getCommand("c") != null) {
                 getCommand("c").setTabCompleter(tabCompleter);
             }
@@ -109,14 +98,10 @@ public class LandClaimPlugin extends JavaPlugin {
                 getCommand("uc").setTabCompleter(tabCompleter);
             }
 
-            // Load configuration
             reloadConfiguration();
 
-            // Start debounced auto-save task
             saveManager.startAutoSave();
 
-            // Initialize map integrations (after config is loaded and server finishes
-            // enabling)
             Bukkit.getScheduler().runTask(this, () -> {
                 if (configManager.getConfig().getBoolean("bluemap.enabled", true)
                         && Bukkit.getPluginManager().getPlugin("BlueMap") != null) {
@@ -145,21 +130,15 @@ public class LandClaimPlugin extends JavaPlugin {
     }
 
     public void reloadConfiguration() {
-        // Update config to latest version
         ConfigUpdater.updateConfig(this);
-
-        // Reload config manager
         configManager.reloadMainConfig();
 
-        // Reload blocked commands and worlds
         blockedCommands = configManager.getBlockedCommands();
         blockedWorlds = configManager.getConfig().getStringList("block-world");
 
-        // Convert to lowercase for case-insensitive matching
         blockedCommands = blockedCommands.stream().map(String::toLowerCase).toList();
         blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();
 
-        // Reload claims and trust
         claimManager.loadClaims();
         trustManager.loadTrustedPlayers();
         trustManager.loadPermissions();
@@ -169,7 +148,6 @@ public class LandClaimPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         try {
-            // Save all data synchronously on disable
             if (saveManager != null) {
                 saveManager.saveAll();
                 getLogger().info("Saved " + claimManager.getTotalClaims() + " claims and " +
@@ -241,9 +219,6 @@ public class LandClaimPlugin extends JavaPlugin {
         return dynmapHook;
     }
 
-    /**
-     * Refresh all map integrations (called on claim/unclaim)
-     */
     public void refreshMapHooks() {
         if (blueMapHook != null && blueMapHook.isActive()) {
             blueMapHook.update();

@@ -14,10 +14,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Manages multiple named homes per player, persisted in homes.yml.
- * Home limits can be overridden with landclaim.homes.limit.<n> permissions.
- */
 public class HomeManager {
     private final LandClaimPlugin plugin;
     private final ConfigManager configManager;
@@ -141,10 +137,6 @@ public class HomeManager {
         return playerHomes.getOrDefault(playerId, Collections.emptyMap());
     }
 
-    /**
-     * Get the home limit for a player. Checks landclaim.homes.limit.<n> permissions
-     * in descending order (like claim limits), falling back to config max-homes.
-     */
     public int getHomeLimit(Player player) {
         if (player.hasPermission("landclaim.admin"))
             return Integer.MAX_VALUE;
