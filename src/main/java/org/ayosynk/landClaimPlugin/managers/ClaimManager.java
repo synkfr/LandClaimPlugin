@@ -2,11 +2,10 @@ package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
+import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -18,13 +17,11 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
 
 public class ClaimManager {
     private final LandClaimPlugin plugin;
     private final ConfigManager configManager;
-    private final Map<ChunkPosition, UUID> claimedChunks = new ConcurrentHashMap<>();
-    private final Map<UUID, Set<ChunkPosition>> playerClaims = new ConcurrentHashMap<>();
 
     public ClaimManager(LandClaimPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
@@ -36,64 +33,45 @@ public class ClaimManager {
     }
 
     public int getTotalClaims() {
-        return claimedChunks.size();
+        return (int) plugin.getCacheManager().getClaimCache().estimatedSize();
     }
 
     public void loadClaims() {
-        claimedChunks.clear();
-        playerClaims.clear();
-
-        FileConfiguration config = configManager.getClaimsConfig();
-        ConfigurationSection claimsSection = config.getConfigurationSection("claims");
-        if (claimsSection == null)
-            return;
-
-        for (String playerIdStr : claimsSection.getKeys(false)) {
-            UUID ownerId;
-            try {
-                ownerId = UUID.fromString(playerIdStr);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Skipping invalid player UUID: " + playerIdStr);
-                continue;
+        plugin.getLogger().info("Loading claims from database...");
+        plugin.getDatabaseManager().getClaimDao().getAllClaims().thenAccept(claims -> {
+            for (Claim claim : claims) {
+                plugin.getCacheManager().getClaimCache().put(claim.getId(), claim);
             }
-
-            List<String> chunkStrings = claimsSection.getStringList(playerIdStr);
-            for (String chunkStr : chunkStrings) {
-                String[] parts = chunkStr.split(",");
-                if (parts.length != 3) {
-                    plugin.getLogger().warning("Skipping invalid chunk entry: " + chunkStr);
-                    continue;
-                }
-
-                try {
-                    String world = parts[0];
-                    int x = Integer.parseInt(parts[1]);
-                    int z = Integer.parseInt(parts[2]);
-                    ChunkPosition pos = new ChunkPosition(world, x, z);
-
-                    claimedChunks.put(pos, ownerId);
-                    playerClaims.computeIfAbsent(ownerId, k -> new HashSet<>()).add(pos);
-                } catch (NumberFormatException e) {
-                    plugin.getLogger().warning("Skipping chunk entry with invalid coordinates: " + chunkStr);
-                }
-            }
-        }
+            plugin.getLogger().info("Loaded " + claims.size() + " claims.");
+        });
     }
 
-    public void saveClaims() {
-        FileConfiguration config = configManager.getClaimsConfig();
-        config.set("claims", null);
-
-        ConfigurationSection claimsSection = config.createSection("claims");
-        for (Map.Entry<UUID, Set<ChunkPosition>> entry : playerClaims.entrySet()) {
-            List<String> chunkStrings = new ArrayList<>();
-            for (ChunkPosition pos : entry.getValue()) {
-                chunkStrings.add(pos.toString());
+    public Claim getClaimAt(ChunkPosition pos) {
+        for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
+            if (claim.getChunkPosition().equals(pos) && claim.getParentClaimId() == null) {
+                return claim;
             }
-            claimsSection.set(entry.getKey().toString(), chunkStrings);
         }
+        return null;
+    }
 
-        configManager.saveClaimsConfig();
+    public boolean isChunkClaimed(ChunkPosition pos) {
+        return getClaimAt(pos) != null;
+    }
+
+    public UUID getChunkOwner(ChunkPosition pos) {
+        Claim claim = getClaimAt(pos);
+        return claim != null ? claim.getOwnerId() : null;
+    }
+
+    public Set<Claim> getPlayerClaims(UUID playerId) {
+        Set<Claim> claims = new HashSet<>();
+        for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
+            if (claim.getOwnerId().equals(playerId) && claim.getParentClaimId() == null) {
+                claims.add(claim);
+            }
+        }
+        return claims;
     }
 
     public boolean claimChunk(Player player, Chunk chunk) {
@@ -114,7 +92,8 @@ public class ClaimManager {
 
         UUID playerId = player.getUniqueId();
         int claimLimit = getClaimLimit(player);
-        Set<ChunkPosition> claims = playerClaims.getOrDefault(playerId, new HashSet<>());
+        Set<Claim> claims = getPlayerClaims(playerId);
+
         if (claims.size() >= claimLimit) {
             player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
             return false;
@@ -146,18 +125,68 @@ public class ClaimManager {
             }
         }
 
-        claimedChunks.put(pos, playerId);
-        claims.add(pos);
-        playerClaims.put(playerId, claims);
+        Claim newClaim = new Claim(UUID.randomUUID(), pos, playerId);
+        long expireDays = 30L; // TODO: Pull from config
+        newClaim.setExpireAt(System.currentTimeMillis() + (expireDays * 24 * 60 * 60 * 1000));
+
+        // Save to cache immediately
+        plugin.getCacheManager().getClaimCache().put(newClaim.getId(), newClaim);
+
+        // Save to DB async
+        plugin.getDatabaseManager().getClaimDao().saveClaim(newClaim).thenRun(() -> {
+            // Sync with Redis
+            if (plugin.getRedisManager() != null) {
+                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", newClaim.getId());
+            }
+        });
 
         plugin.getVisualizationManager().invalidateCache(playerId);
-
-        if (plugin.getSaveManager() != null) {
-            plugin.getSaveManager().markClaimsDirty();
-        }
-
         plugin.refreshMapHooks();
         return true;
+    }
+
+    public boolean unclaimChunk(Chunk chunk) {
+        ChunkPosition pos = new ChunkPosition(chunk);
+        Claim claim = getClaimAt(pos);
+        if (claim == null)
+            return false;
+
+        UUID owner = claim.getOwnerId();
+
+        // Remove from cache
+        plugin.getCacheManager().getClaimCache().invalidate(claim.getId());
+
+        // Delete from DB async
+        plugin.getDatabaseManager().getClaimDao().deleteClaim(claim.getId()).thenRun(() -> {
+            if (plugin.getRedisManager() != null) {
+                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", claim.getId());
+            }
+        });
+
+        plugin.getVisualizationManager().invalidateCache(owner);
+        plugin.refreshMapHooks();
+        return true;
+    }
+
+    public int unclaimAll(UUID playerId) {
+        Set<Claim> claims = getPlayerClaims(playerId);
+        if (claims.isEmpty())
+            return 0;
+
+        int count = 0;
+        for (Claim claim : claims) {
+            plugin.getCacheManager().getClaimCache().invalidate(claim.getId());
+            plugin.getDatabaseManager().getClaimDao().deleteClaim(claim.getId());
+            count++;
+
+            if (plugin.getRedisManager() != null) {
+                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", claim.getId());
+            }
+        }
+
+        plugin.getVisualizationManager().invalidateCache(playerId);
+        plugin.refreshMapHooks();
+        return count;
     }
 
     private boolean isTooCloseToOtherClaim(String worldName, ChunkPosition pos, UUID playerId, int minGap) {
@@ -166,10 +195,9 @@ public class ClaimManager {
                 if (dx == 0 && dz == 0)
                     continue;
                 ChunkPosition neighbor = new ChunkPosition(worldName, pos.x() + dx, pos.z() + dz);
-                if (claimedChunks.containsKey(neighbor)) {
-                    UUID owner = claimedChunks.get(neighbor);
-                    if (!owner.equals(playerId))
-                        return true;
+                Claim claim = getClaimAt(neighbor);
+                if (claim != null && !claim.getOwnerId().equals(playerId)) {
+                    return true;
                 }
             }
         }
@@ -199,10 +227,8 @@ public class ClaimManager {
                     int checkZ = (chunkZ + dz) * 16;
 
                     int[][] points = {
-                            { checkX, checkZ },
-                            { checkX + 15, checkZ },
-                            { checkX, checkZ + 15 },
-                            { checkX + 15, checkZ + 15 },
+                            { checkX, checkZ }, { checkX + 15, checkZ },
+                            { checkX, checkZ + 15 }, { checkX + 15, checkZ + 15 },
                             { checkX + 8, checkZ + 8 }
                     };
 
@@ -222,79 +248,22 @@ public class ClaimManager {
         } catch (Exception e) {
             plugin.getLogger().warning("Error checking WorldGuard regions: " + e.getMessage());
         }
-
         return false;
     }
 
     private boolean isConnectedToOwnClaims(ChunkPosition pos, UUID playerId) {
-        Set<ChunkPosition> claims = playerClaims.get(playerId);
-        if (claims == null || claims.isEmpty())
+        Set<Claim> claims = getPlayerClaims(playerId);
+        if (claims.isEmpty())
             return false;
 
         boolean allowDiagonals = configManager.allowDiagonalConnections();
         for (ChunkPosition neighbor : pos.getNeighbors(allowDiagonals)) {
-            if (claims.contains(neighbor)) {
+            Claim claim = getClaimAt(neighbor);
+            if (claim != null && claim.getOwnerId().equals(playerId)) {
                 return true;
             }
         }
         return false;
-    }
-
-    public boolean unclaimChunk(Chunk chunk) {
-        ChunkPosition pos = new ChunkPosition(chunk);
-        if (!isChunkClaimed(pos))
-            return false;
-
-        UUID owner = claimedChunks.remove(pos);
-        if (owner != null) {
-            Set<ChunkPosition> claims = playerClaims.get(owner);
-            if (claims != null) {
-                claims.remove(pos);
-                if (claims.isEmpty()) {
-                    playerClaims.remove(owner);
-                }
-            }
-            plugin.getVisualizationManager().invalidateCache(owner);
-
-            if (plugin.getSaveManager() != null) {
-                plugin.getSaveManager().markClaimsDirty();
-            }
-
-            plugin.refreshMapHooks();
-            return true;
-        }
-        return false;
-    }
-
-    public int unclaimAll(UUID playerId) {
-        Set<ChunkPosition> claims = playerClaims.getOrDefault(playerId, new HashSet<>());
-        if (claims.isEmpty())
-            return 0;
-
-        Set<ChunkPosition> toRemove = new HashSet<>(claims);
-        int count = 0;
-        for (ChunkPosition pos : toRemove) {
-            World world = Bukkit.getWorld(pos.world());
-            if (world != null) {
-                Chunk chunk = world.getChunkAt(pos.x(), pos.z());
-                if (unclaimChunk(chunk)) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
-    public boolean isChunkClaimed(ChunkPosition pos) {
-        return claimedChunks.containsKey(pos);
-    }
-
-    public UUID getChunkOwner(ChunkPosition pos) {
-        return claimedChunks.get(pos);
-    }
-
-    public Set<ChunkPosition> getPlayerClaims(UUID playerId) {
-        return playerClaims.getOrDefault(playerId, Collections.emptySet());
     }
 
     public int getClaimLimit(Player player) {

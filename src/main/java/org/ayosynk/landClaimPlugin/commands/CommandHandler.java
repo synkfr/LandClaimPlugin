@@ -1,7 +1,5 @@
 package org.ayosynk.landClaimPlugin.commands;
 
-import org.ayosynk.landClaimPlugin.gui.TrustListGUI;
-import org.ayosynk.landClaimPlugin.gui.VisitorMenuGUI;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
@@ -12,6 +10,10 @@ import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager.VisualizationMode;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
+import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
+import org.ayosynk.landClaimPlugin.gui.MemberListGUI;
+import org.ayosynk.landClaimPlugin.gui.RoleSelectorGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -204,18 +206,19 @@ public class CommandHandler implements CommandExecutor {
         Location location = player.getLocation();
         ChunkPosition pos = new ChunkPosition(location);
 
-        if (!claimManager.isChunkClaimed(pos)) {
+        Claim claim = claimManager.getClaimAt(pos);
+        if (claim == null) {
             sendMessage(player, "cannot-unstuck-here");
             return;
         }
 
-        UUID owner = claimManager.getChunkOwner(pos);
+        UUID owner = claim.getOwnerId();
         if (player.getUniqueId().equals(owner)) {
             sendMessage(player, "cannot-unstuck-here");
             return;
         }
 
-        if (trustManager.isTrusted(owner, player)) {
+        if (trustManager.hasPermission(claim, player.getUniqueId(), "TELEPORT")) {
             sendMessage(player, "cannot-unstuck-here");
             return;
         }
@@ -312,12 +315,13 @@ public class CommandHandler implements CommandExecutor {
         Chunk chunk = admin.getLocation().getChunk();
         ChunkPosition pos = new ChunkPosition(chunk);
 
-        if (!claimManager.isChunkClaimed(pos)) {
+        Claim claim = claimManager.getClaimAt(pos);
+        if (claim == null) {
             sendMessage(admin, "not-owner");
             return;
         }
 
-        UUID ownerId = claimManager.getChunkOwner(pos);
+        UUID ownerId = claim.getOwnerId();
         String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
         if (ownerName == null)
             ownerName = "Unknown";
@@ -346,115 +350,76 @@ public class CommandHandler implements CommandExecutor {
     }
 
     public void showTrustList(Player player) {
-        UUID playerId = player.getUniqueId();
-        Set<UUID> trusted = trustManager.getTrustedPlayers(playerId);
-
-        if (trusted.isEmpty()) {
-            sendMessage(player, "no-trusted-players");
-            return;
-        }
-
-        sendMessage(player, "trust-list-header");
-        for (UUID id : trusted) {
-            String name = Bukkit.getOfflinePlayer(id).getName();
-            if (name != null) {
-                player.spigot().sendMessage(ChatMessageType.CHAT,
-                        TextComponent.fromLegacyText(configManager.getMessage(
-                                "trust-list-item", "{player}", name)));
-            }
-        }
-        sendMessage(player, "click-to-manage");
+        // Trust list is now per-claim, so this command needs to be claim-contextual or
+        // removed
+        sendMessage(player, "invalid-command");
     }
 
     private void openTrustMenu(Player player) {
-        TrustListGUI.open(player, trustManager);
+        ChunkPosition pos = new ChunkPosition(player.getLocation());
+        Claim claim = claimManager.getClaimAt(pos);
+
+        if (claim == null) {
+            sendMessage(player, "not-in-claim");
+            return;
+        }
+
+        if (!trustManager.canManageTrust(claim, player)) {
+            sendMessage(player, "access-denied");
+            return;
+        }
+
+        MemberListGUI.open(player, claim, plugin);
     }
 
     private void openVisitorMenu(Player player) {
-        VisitorMenuGUI.open(player, trustManager);
+        // Obsolete command with role system, redirecting to Main Menu
+        ChunkPosition pos = new ChunkPosition(player.getLocation());
+        Claim claim = claimManager.getClaimAt(pos);
+
+        if (claim == null) {
+            sendMessage(player, "not-in-claim");
+            return;
+        }
+
+        if (!trustManager.canManageTrust(claim, player)) {
+            sendMessage(player, "access-denied");
+            return;
+        }
+
+        MainMenuGUI.open(player, claim, plugin);
     }
 
     private void showClaimInfo(Player player) {
         ChunkPosition pos = new ChunkPosition(player.getLocation());
-        if (!claimManager.isChunkClaimed(pos)) {
+        Claim claim = claimManager.getClaimAt(pos);
+        if (claim == null) {
             sendMessage(player, "claim-info-not-claimed");
             return;
         }
 
-        UUID ownerId = claimManager.getChunkOwner(pos);
+        UUID ownerId = claim.getOwnerId();
         String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
         if (ownerName == null)
             ownerName = "Unknown";
 
         sendMessage(player, "claim-info-owner", "{owner}", ownerName);
 
-        Set<UUID> trusted = trustManager.getTrustedPlayers(ownerId);
-        if (!trusted.isEmpty()) {
+        // Replace trust query with check into claim.getPlayerRoles()
+        if (!claim.getPlayerRoles().isEmpty()) {
             List<String> names = new ArrayList<>();
-            for (UUID id : trusted) {
-                String name = Bukkit.getOfflinePlayer(id).getName();
-                if (name != null)
-                    names.add(name);
+            for (Map.Entry<UUID, String> entry : claim.getPlayerRoles().entrySet()) {
+                String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
+                if (name != null) {
+                    names.add(name + " (" + entry.getValue() + ")");
+                }
             }
             player.sendMessage(configManager.getMessage("claim-info-trusted", "{players}", String.join(", ", names)));
-        }
-
-        Set<UUID> members = trustManager.getMembers(ownerId);
-        if (!members.isEmpty()) {
-            List<String> memberNames = new ArrayList<>();
-            for (UUID id : members) {
-                String name = Bukkit.getOfflinePlayer(id).getName();
-                if (name != null)
-                    memberNames.add(name);
-            }
-            player.sendMessage(
-                    configManager.getMessage("claim-info-members", "{members}", String.join(", ", memberNames)));
         }
     }
 
     private void handleMemberCommand(Player player, String[] args) {
-        if (args.length < 3) {
-            sendMessage(player, "invalid-command");
-            return;
-        }
-
-        ChunkPosition pos = new ChunkPosition(player.getLocation());
-        if (!claimManager.isChunkClaimed(pos)) {
-            sendMessage(player, "claim-info-not-claimed");
-            return;
-        }
-
-        UUID ownerId = claimManager.getChunkOwner(pos);
-
-        if (!player.getUniqueId().equals(ownerId)) {
-            sendMessage(player, "only-owner-can-manage");
-            return;
-        }
-
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
-        if (target == null || !target.hasPlayedBefore()) {
-            sendMessage(player, "player-not-found");
-            return;
-        }
-
-        switch (args[1].toLowerCase()) {
-            case "add":
-                if (trustManager.addMember(ownerId, target)) {
-                    sendMessage(player, "member-added", "{player}", target.getName());
-                    trustManager.savePermissionsAndMembers();
-                }
-                break;
-            case "remove":
-                if (trustManager.removeMember(ownerId, target)) {
-                    sendMessage(player, "member-removed", "{player}", target.getName());
-                    trustManager.savePermissionsAndMembers();
-                } else {
-                    sendMessage(player, "not-a-member");
-                }
-                break;
-            default:
-                sendMessage(player, "invalid-command");
-        }
+        openTrustMenu(player);
     }
 
     private void handleUnclaimCommand(Player player, String[] args, String cmd) {
@@ -483,12 +448,13 @@ public class CommandHandler implements CommandExecutor {
         Chunk chunk = player.getLocation().getChunk();
         ChunkPosition pos = new ChunkPosition(chunk);
 
-        if (!claimManager.isChunkClaimed(pos)) {
+        Claim claim = claimManager.getClaimAt(pos);
+        if (claim == null) {
             sendMessage(player, "not-owner");
             return;
         }
 
-        if (!claimManager.getChunkOwner(pos).equals(player.getUniqueId())) {
+        if (!claim.getOwnerId().equals(player.getUniqueId())) {
             sendMessage(player, "not-owner");
             return;
         }
@@ -515,25 +481,50 @@ public class CommandHandler implements CommandExecutor {
     }
 
     private void trustPlayer(Player player, String targetName) {
-        if (player.getName().equalsIgnoreCase(targetName)) {
-            sendMessage(player, "cannot-trust-self");
+        ChunkPosition pos = new ChunkPosition(player.getLocation());
+        Claim claim = claimManager.getClaimAt(pos);
+
+        if (claim == null) {
+            sendMessage(player, "not-in-claim");
             return;
         }
 
-        if (trustManager.addTrustedPlayer(player, targetName)) {
-            sendMessage(player, "player-trusted-all", "{player}", targetName);
-            trustManager.saveTrustedPlayers();
-        } else {
-            sendMessage(player, "player-not-found");
+        if (!trustManager.canManageTrust(claim, player)) {
+            sendMessage(player, "access-denied");
+            return;
         }
+
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            sendMessage(player, "player-not-found");
+            return;
+        }
+
+        RoleSelectorGUI.open(player, claim, target.getUniqueId(), plugin);
     }
 
     private void untrustPlayer(Player player, String targetName) {
-        if (trustManager.removeTrustedPlayer(player, targetName)) {
-            sendMessage(player, "player-untrusted-all", "{player}", targetName);
-            trustManager.saveTrustedPlayers();
+        ChunkPosition pos = new ChunkPosition(player.getLocation());
+        Claim claim = claimManager.getClaimAt(pos);
+
+        if (claim == null) {
+            sendMessage(player, "not-in-claim");
+            return;
+        }
+
+        if (!trustManager.canManageTrust(claim, player)) {
+            sendMessage(player, "access-denied");
+            return;
+        }
+
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+
+        if (trustManager.removeRoleFromPlayer(claim, target.getUniqueId())) {
+            sendMessage(player, "role-removed");
         } else {
-            sendMessage(player, "player-not-trusted");
+            sendMessage(player, "member-not-found");
         }
     }
 
@@ -585,7 +576,10 @@ public class CommandHandler implements CommandExecutor {
         }
 
         UUID playerId = player.getUniqueId();
-        Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
+        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
+        Set<ChunkPosition> claims = claimObjects.stream()
+                .map(org.ayosynk.landClaimPlugin.models.Claim::getChunkPosition)
+                .collect(java.util.stream.Collectors.toSet());
 
         if (claims.isEmpty()) {
             sendMessage(player, "claim-list-empty");

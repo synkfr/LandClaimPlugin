@@ -50,7 +50,10 @@ public class VisualizationManager {
 
     public void showPlayerClaims(Player player, VisualizationMode mode) {
         UUID playerId = player.getUniqueId();
-        Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
+        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
+        Set<ChunkPosition> claims = claimObjects.stream()
+                .map(org.ayosynk.landClaimPlugin.models.Claim::getChunkPosition)
+                .collect(java.util.stream.Collectors.toSet());
         World world = player.getWorld();
         String worldName = world.getName();
 
@@ -67,7 +70,10 @@ public class VisualizationManager {
 
     public void showTemporary(Player player) {
         UUID playerId = player.getUniqueId();
-        Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
+        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
+        Set<ChunkPosition> claims = claimObjects.stream()
+                .map(org.ayosynk.landClaimPlugin.models.Claim::getChunkPosition)
+                .collect(java.util.stream.Collectors.toSet());
         World world = player.getWorld();
         String worldName = world.getName();
 

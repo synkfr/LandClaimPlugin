@@ -55,9 +55,10 @@ public class SaveManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    claimManager.saveClaims();
+                    // claimManager no longer uses saveClaims(), handled by Caffeine CacheWriter /
+                    // DAO
                     if (plugin.getConfigManager().logAutoSaveMessage())
-                        plugin.getLogger().info("Claims auto-saved.");
+                        plugin.getLogger().info("Claims auto-saved (handled by DAO).");
                 }
             }.runTask(plugin);
         }
@@ -66,9 +67,9 @@ public class SaveManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    trustManager.saveTrustedPlayers();
+                    // trustManager no longer uses saveTrustedPlayers()
                     if (plugin.getConfigManager().logAutoSaveMessage())
-                        plugin.getLogger().info("Trust data auto-saved.");
+                        plugin.getLogger().info("Roles auto-saved (handled by DAO).");
                 }
             }.runTask(plugin);
         }
@@ -77,9 +78,7 @@ public class SaveManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    trustManager.savePermissionsAndMembers();
-                    if (plugin.getConfigManager().logAutoSaveMessage())
-                        plugin.getLogger().info("Permissions auto-saved.");
+                    // handled by DAOs
                 }
             }.runTask(plugin);
         }
@@ -97,9 +96,6 @@ public class SaveManager {
     }
 
     public void saveAll() {
-        claimManager.saveClaims();
-        trustManager.saveTrustedPlayers();
-        trustManager.savePermissionsAndMembers();
         homeManager.save();
     }
 

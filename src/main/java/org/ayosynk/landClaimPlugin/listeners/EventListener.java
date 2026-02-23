@@ -7,6 +7,7 @@ import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
+import org.ayosynk.landClaimPlugin.models.Claim;
 import org.ayosynk.landClaimPlugin.utils.ChatUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -119,7 +120,8 @@ public class EventListener implements Listener {
 
                 if (playerId.equals(ownerId)) {
                     message = configManager.getActionBarMessage("actionbar-own");
-                } else if (trustManager.isTrusted(ownerId, player)) {
+                } else if (trustManager.hasPermission(claimManager.getClaimAt(currentPos), player.getUniqueId(),
+                        "INTERACT")) {
                     message = configManager.getActionBarMessage("actionbar-trusted")
                             .replace("{owner}", ownerName);
                 } else if (player.hasPermission("landclaim.admin")) {
@@ -186,7 +188,10 @@ public class EventListener implements Listener {
         if (!configManager.requireConnectedClaims())
             return false;
 
-        Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
+        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
+        Set<ChunkPosition> claims = claimObjects.stream()
+                .map(org.ayosynk.landClaimPlugin.models.Claim::getChunkPosition)
+                .collect(java.util.stream.Collectors.toSet());
         if (claims.isEmpty())
             return false;
 
@@ -265,9 +270,9 @@ public class EventListener implements Listener {
             if (isInProtectedChunk(location)) {
                 ChunkPosition pos = new ChunkPosition(location);
                 if (claimManager.isChunkClaimed(pos)) {
-                    UUID owner = claimManager.getChunkOwner(pos);
-                    if (damager.getUniqueId().equals(owner) ||
-                            trustManager.isTrusted(owner, damager)) {
+                    Claim claim = claimManager.getClaimAt(pos);
+                    if (damager.getUniqueId().equals(claim.getOwnerId()) ||
+                            trustManager.hasPermission(claim, damager.getUniqueId(), "DAMAGE_ENTITIES")) {
                         return; // Owner or trusted can harm
                     }
 
@@ -462,21 +467,13 @@ public class EventListener implements Listener {
         ChunkPosition pos = new ChunkPosition(block);
 
         if (claimManager.isChunkClaimed(pos)) {
-            UUID owner = claimManager.getChunkOwner(pos);
-            if (player.getUniqueId().equals(owner)) {
+            Claim claim = claimManager.getClaimAt(pos);
+            if (player.getUniqueId().equals(claim.getOwnerId())) {
                 return; // Owner can build
             }
 
-            // Check if trusted with permission
-            if (trustManager.isTrusted(owner, player)) {
-                if (trustManager.hasTrustPermission(owner, player.getUniqueId(), permission)) {
-                    return; // Trusted with permission
-                }
-            } else {
-                // Check visitor permission
-                if (trustManager.hasVisitorPermission(owner, permission)) {
-                    return; // Visitor permission enabled
-                }
+            if (trustManager.hasPermission(claim, player.getUniqueId(), permission)) {
+                return; // Has required role flag
             }
 
             event.setCancelled(true);
@@ -492,20 +489,15 @@ public class EventListener implements Listener {
         ChunkPosition pos = new ChunkPosition(block);
 
         if (claimManager.isChunkClaimed(pos)) {
-            UUID owner = claimManager.getChunkOwner(pos);
+            Claim claim = claimManager.getClaimAt(pos);
             UUID playerId = player.getUniqueId();
 
             // Allow owner
-            if (playerId.equals(owner))
+            if (playerId.equals(claim.getOwnerId()))
                 return false;
 
-            // Check if trusted with BUILD permission
-            if (trustManager.isTrusted(owner, player)) {
-                return !trustManager.hasTrustPermission(owner, player.getUniqueId(), "BUILD");
-            }
-
-            // Check visitor permission
-            return !trustManager.hasVisitorPermission(owner, "BUILD");
+            // Check for BUILD flag
+            return !trustManager.hasPermission(claim, playerId, "BUILD");
         }
 
         return false;
@@ -519,21 +511,13 @@ public class EventListener implements Listener {
         ChunkPosition pos = new ChunkPosition(block);
 
         if (claimManager.isChunkClaimed(pos)) {
-            UUID owner = claimManager.getChunkOwner(pos);
-            if (player.getUniqueId().equals(owner)) {
+            Claim claim = claimManager.getClaimAt(pos);
+            if (player.getUniqueId().equals(claim.getOwnerId())) {
                 return; // Owner can always interact
             }
 
-            // Check if trusted with permission
-            if (trustManager.isTrusted(owner, player)) {
-                if (trustManager.hasTrustPermission(owner, player.getUniqueId(), permission)) {
-                    return; // Trusted with permission
-                }
-            } else {
-                // Check visitor permission
-                if (trustManager.hasVisitorPermission(owner, permission)) {
-                    return; // Visitor permission enabled
-                }
+            if (trustManager.hasPermission(claim, player.getUniqueId(), permission)) {
+                return; // Has required role flag
             }
 
             event.setCancelled(true);

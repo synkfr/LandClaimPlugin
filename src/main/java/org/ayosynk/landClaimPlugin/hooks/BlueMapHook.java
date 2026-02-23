@@ -39,7 +39,10 @@ public class BlueMapHook {
             Map<String, Map<UUID, Set<ChunkPosition>>> worldPlayerClaims = new HashMap<>();
 
             for (UUID playerId : getAllPlayerIds()) {
-                Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
+                Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
+                Set<ChunkPosition> claims = claimObjects.stream()
+                        .map(org.ayosynk.landClaimPlugin.models.Claim::getChunkPosition)
+                        .collect(java.util.stream.Collectors.toSet());
                 for (ChunkPosition pos : claims) {
                     worldPlayerClaims
                             .computeIfAbsent(pos.world(), k -> new HashMap<>())

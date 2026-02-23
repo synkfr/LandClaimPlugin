@@ -5,7 +5,6 @@ import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
 import org.ayosynk.landClaimPlugin.db.DatabaseManager;
 import org.ayosynk.landClaimPlugin.managers.CacheManager;
 import org.ayosynk.landClaimPlugin.managers.RedisManager;
-import org.ayosynk.landClaimPlugin.gui.GUIListener;
 import org.ayosynk.landClaimPlugin.hooks.BlueMapHook;
 import org.ayosynk.landClaimPlugin.hooks.DynmapHook;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
@@ -93,9 +92,7 @@ public class LandClaimPlugin extends JavaPlugin {
                     new PlayerJoinListener(this, visualizationManager),
                     this);
 
-            getServer().getPluginManager().registerEvents(
-                    new GUIListener(trustManager),
-                    this);
+            // Legacy GUI Listener was removed here
 
             // Register tab completers
             ClaimTabCompleter tabCompleter = new ClaimTabCompleter();
@@ -134,8 +131,7 @@ public class LandClaimPlugin extends JavaPlugin {
             });
 
             getLogger().info("LandClaim has been enabled! Loaded " +
-                    claimManager.getTotalClaims() + " claims and " +
-                    trustManager.getTotalTrusts() + " trust relationships");
+                    claimManager.getTotalClaims() + " claims.");
         } catch (Exception e) {
             getLogger().severe("Failed to enable LandClaim: " + e.getMessage());
             e.printStackTrace();
@@ -158,9 +154,6 @@ public class LandClaimPlugin extends JavaPlugin {
         blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();
 
         claimManager.loadClaims();
-        trustManager.loadTrustedPlayers();
-        trustManager.loadPermissions();
-        trustManager.loadMembers();
     }
 
     @Override
@@ -168,8 +161,7 @@ public class LandClaimPlugin extends JavaPlugin {
         try {
             if (saveManager != null) {
                 saveManager.saveAll();
-                getLogger().info("Saved " + claimManager.getTotalClaims() + " claims and " +
-                        trustManager.getTotalTrusts() + " trust relationships");
+                getLogger().info("Saved " + claimManager.getTotalClaims() + " claims.");
             }
             if (homeManager != null) {
                 homeManager.save();
