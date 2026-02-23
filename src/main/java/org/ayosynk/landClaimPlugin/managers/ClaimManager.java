@@ -304,6 +304,6 @@ public class ClaimManager {
             if (player.hasPermission("landclaim.limit." + i))
                 return i;
         }
-        return configManager.getConfig().getInt("chunk-claim-limit", 5);
+        return configManager.getPluginConfig().chunkClaimLimit;
     }
 }

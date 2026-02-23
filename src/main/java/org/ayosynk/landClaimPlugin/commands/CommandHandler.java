@@ -500,7 +500,7 @@ public class CommandHandler implements CommandExecutor {
 
     private void toggleAutoClaim(Player player) {
         boolean current = autoClaimPlayers.getOrDefault(player.getUniqueId(),
-                configManager.getConfig().getBoolean("auto-claim-default", false));
+                configManager.getPluginConfig().autoClaimDefault);
         boolean newValue = !current;
         autoClaimPlayers.put(player.getUniqueId(), newValue);
         sendMessage(player, newValue ? "auto-claim-enabled" : "auto-claim-disabled");
@@ -508,7 +508,7 @@ public class CommandHandler implements CommandExecutor {
 
     private void toggleAutoUnclaim(Player player) {
         boolean current = autoUnclaimPlayers.getOrDefault(player.getUniqueId(),
-                configManager.getConfig().getBoolean("auto-unclaim-default", false));
+                configManager.getPluginConfig().autoUnclaimDefault);
         boolean newValue = !current;
         autoUnclaimPlayers.put(player.getUniqueId(), newValue);
         sendMessage(player, newValue ? "auto-unclaim-enabled" : "auto-unclaim-disabled");
@@ -744,12 +744,12 @@ public class CommandHandler implements CommandExecutor {
 
     public boolean isAutoClaimEnabled(UUID playerId) {
         return autoClaimPlayers.getOrDefault(playerId,
-                configManager.getConfig().getBoolean("auto-claim-default", false));
+                configManager.getPluginConfig().autoClaimDefault);
     }
 
     public boolean isAutoUnclaimEnabled(UUID playerId) {
         return autoUnclaimPlayers.getOrDefault(playerId,
-                configManager.getConfig().getBoolean("auto-unclaim-default", false));
+                configManager.getPluginConfig().autoUnclaimDefault);
     }
 
     public void cleanupPlayer(UUID playerId) {

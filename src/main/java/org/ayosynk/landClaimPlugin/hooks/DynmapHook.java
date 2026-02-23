@@ -64,10 +64,10 @@ public class DynmapHook {
             marker.deleteMarker();
         }
 
-        String fillColorHex = plugin.getConfig().getString("dynmap.fill-color", "3366FF");
-        double fillOpacity = plugin.getConfig().getDouble("dynmap.fill-opacity", 0.3);
-        String borderColorHex = plugin.getConfig().getString("dynmap.border-color", "3366FF");
-        double borderOpacity = plugin.getConfig().getDouble("dynmap.border-opacity", 0.8);
+        String fillColorHex = plugin.getConfigManager().getPluginConfig().dynmap.fillColor;
+        double fillOpacity = plugin.getConfigManager().getPluginConfig().dynmap.fillOpacity;
+        String borderColorHex = plugin.getConfigManager().getPluginConfig().dynmap.borderColor;
+        double borderOpacity = plugin.getConfigManager().getPluginConfig().dynmap.borderOpacity;
 
         int fillColor = parseHexColor(fillColorHex);
         int borderColor = parseHexColor(borderColorHex);

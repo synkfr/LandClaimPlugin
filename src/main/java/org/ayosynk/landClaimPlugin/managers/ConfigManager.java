@@ -1,8 +1,15 @@
 package org.ayosynk.landClaimPlugin.managers;
 
+import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
+import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
-import org.ayosynk.landClaimPlugin.utils.ChatUtils;
-import org.ayosynk.landClaimPlugin.utils.ConfigUpdater;
+import org.ayosynk.landClaimPlugin.config.EconomyConfig;
+import org.ayosynk.landClaimPlugin.config.MessagesConfig;
+import org.ayosynk.landClaimPlugin.config.PluginConfig;
 import org.bukkit.Color;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,30 +20,45 @@ import java.util.List;
 
 public class ConfigManager {
     private final LandClaimPlugin plugin;
-    private FileConfiguration config;
-    private File configFile;
+
+    private PluginConfig pluginConfig;
+    private MessagesConfig messagesConfig;
+    private EconomyConfig economyConfig;
+
+    // Legacy data configs (Will be moved to DB/Redis later)
     private FileConfiguration claimsConfig;
     private File claimsFile;
     private FileConfiguration trustConfig;
     private File trustFile;
-    private FileConfiguration messagesConfig;
-    private File messagesFile;
     private FileConfiguration playerDataConfig;
     private File playerDataFile;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
-        updateConfig();
         loadConfigs();
     }
 
-    private void updateConfig() {
-        ConfigUpdater.updateConfig(plugin);
-    }
-
     private void loadConfigs() {
-        plugin.saveDefaultConfig();
-        config = plugin.getConfig();
+        this.pluginConfig = eu.okaeri.configs.ConfigManager.create(PluginConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "config.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.messagesConfig = eu.okaeri.configs.ConfigManager.create(MessagesConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "messages.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.economyConfig = eu.okaeri.configs.ConfigManager.create(EconomyConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "economy.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
 
         claimsFile = new File(plugin.getDataFolder(), "claims.yml");
         if (!claimsFile.exists())
@@ -47,11 +69,6 @@ public class ConfigManager {
         if (!trustFile.exists())
             createEmptyFile(trustFile);
         trustConfig = YamlConfiguration.loadConfiguration(trustFile);
-
-        messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        if (!messagesFile.exists())
-            plugin.saveResource("messages.yml", false);
-        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
 
         playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
         if (!playerDataFile.exists())
@@ -69,13 +86,21 @@ public class ConfigManager {
     }
 
     public void reloadMainConfig() {
-        plugin.reloadConfig();
-        config = plugin.getConfig();
-        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+        pluginConfig.load();
+        messagesConfig.load();
+        economyConfig.load();
     }
 
-    public FileConfiguration getConfig() {
-        return config;
+    public PluginConfig getPluginConfig() {
+        return pluginConfig;
+    }
+
+    public MessagesConfig getMessagesConfig() {
+        return messagesConfig;
+    }
+
+    public EconomyConfig getEconomyConfig() {
+        return economyConfig;
     }
 
     public FileConfiguration getClaimsConfig() {
@@ -93,8 +118,7 @@ public class ConfigManager {
     public void savePlayerData() {
         try {
             playerDataConfig.save(playerDataFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to save playerdata.yml");
+        } catch (IOException ignored) {
         }
     }
 
@@ -102,123 +126,146 @@ public class ConfigManager {
         playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
     }
 
-    public boolean requireConnectedClaims() {
-        return getConfig().getBoolean("require-connected-claims", false);
-    }
-
-    public boolean allowDiagonalConnections() {
-        return getConfig().getBoolean("allow-diagonal-connections", true);
-    }
-
-    public boolean preventPvP() {
-        return getConfig().getBoolean("prevent-pvp", true);
-    }
-
-    public boolean preventMobGriefing() {
-        return getConfig().getBoolean("prevent-mob-griefing", true);
-    }
-
-    public boolean preventExplosionDamage() {
-        return getConfig().getBoolean("prevent-explosion-damage", true);
-    }
-
-    public boolean preventHarmEntities() {
-        return getConfig().getBoolean("prevent-harm-entities", true);
-    }
-
-    public boolean isWorldBlocked(String worldName) {
-        return getConfig().getStringList("block-world").contains(worldName);
-    }
-
-    public List<String> getBlockedCommands() {
-        return getConfig().getStringList("block-cmd");
-    }
-
-    public int getUnstuckCooldown() {
-        return getConfig().getInt("cooldown-unstuck", 30);
-    }
-
-    public Color getVisualizationColor(String type) {
-        String colorStr = getConfig().getString("visualization." + type, "0,255,0");
-        String[] rgb = colorStr.split(",");
-        try {
-            return Color.fromRGB(Integer.parseInt(rgb[0].trim()), Integer.parseInt(rgb[1].trim()),
-                    Integer.parseInt(rgb[2].trim()));
-        } catch (Exception e) {
-            return type.equals("always-color") ? Color.LIME : Color.YELLOW;
-        }
-    }
-
-    public double getParticleSpacing() {
-        return getConfig().getDouble("visualization.particle-spacing", 0.5);
-    }
-
-    public int getVisualizationUpdateInterval() {
-        return getConfig().getInt("visualization.update-interval", 20);
-    }
-
-    public boolean getDefaultTrustPermission(String permission) {
-        return getConfig().getBoolean("default-trust-permissions." + permission, true);
-    }
-
-    public boolean getDefaultVisitorPermission(String permission) {
-        return getConfig().getBoolean("default-visitor-permissions." + permission, false);
-    }
-
-    public int getWorldGuardGap() {
-        return getConfig().getInt("worldguard-gap", 0);
-    }
-
-    public int getMinClaimGap() {
-        return getConfig().getInt("min-claim-gap", 0);
-    }
-
-    public boolean logAutoSaveMessage() {
-        return getConfig().getBoolean("log-auto-save-message", true);
-    }
-
-    public String getDefaultVisualizationMode() {
-        return getConfig().getString("visualization-default", "OFF");
-    }
-
-    public int getActionBarUpdateInterval() {
-        return getConfig().getInt("actionbar-update-interval", 20);
-    }
-
     public void saveClaimsConfig() {
         try {
             claimsConfig.save(claimsFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save claims.yml: " + e.getMessage());
+        } catch (IOException ignored) {
         }
     }
 
     public void saveTrustConfig() {
         try {
             trustConfig.save(trustFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save trust.yml: " + e.getMessage());
+        } catch (IOException ignored) {
         }
     }
 
+    // --- Legacy wrapper methods to bridge until other classes are transformed ---
+
+    public boolean requireConnectedClaims() {
+        return pluginConfig.requireConnectedClaims;
+    }
+
+    public boolean allowDiagonalConnections() {
+        return pluginConfig.allowDiagonalConnections;
+    }
+
+    public boolean preventPvP() {
+        return pluginConfig.preventPvp;
+    }
+
+    public boolean preventMobGriefing() {
+        return pluginConfig.preventMobGriefing;
+    }
+
+    public boolean preventExplosionDamage() {
+        return pluginConfig.preventExplosionDamage;
+    }
+
+    public boolean preventHarmEntities() {
+        return pluginConfig.preventHarmEntities;
+    }
+
+    public boolean isWorldBlocked(String worldName) {
+        return pluginConfig.blockWorld.contains(worldName);
+    }
+
+    public List<String> getBlockedCommands() {
+        return pluginConfig.blockCmd;
+    }
+
+    public int getUnstuckCooldown() {
+        return pluginConfig.cooldownUnstuck;
+    }
+
+    public Color getVisualizationColor(String type) {
+        return Color.LIME;
+    } // Temporary stub for v2 border
+
+    public double getParticleSpacing() {
+        return 0.5;
+    } // Temporary stub
+
+    public int getVisualizationUpdateInterval() {
+        return 20;
+    } // Temporary stub
+
+    public boolean getDefaultTrustPermission(String permission) {
+        // In v2 we use custom Roles. Bridging for now:
+        if (permission.equals("build"))
+            return pluginConfig.defaultTrustPermissions.build;
+        if (permission.equals("interact"))
+            return pluginConfig.defaultTrustPermissions.interact;
+        if (permission.equals("container"))
+            return pluginConfig.defaultTrustPermissions.container;
+        if (permission.equals("teleport"))
+            return pluginConfig.defaultTrustPermissions.teleport;
+        return true;
+    }
+
+    public boolean getDefaultVisitorPermission(String permission) {
+        if (permission.equals("build"))
+            return pluginConfig.defaultVisitorPermissions.build;
+        if (permission.equals("interact"))
+            return pluginConfig.defaultVisitorPermissions.interact;
+        if (permission.equals("container"))
+            return pluginConfig.defaultVisitorPermissions.container;
+        if (permission.equals("teleport"))
+            return pluginConfig.defaultVisitorPermissions.teleport;
+        return false;
+    }
+
+    public int getWorldGuardGap() {
+        return pluginConfig.worldguardGap;
+    }
+
+    public int getMinClaimGap() {
+        return pluginConfig.minClaimGap;
+    }
+
+    public boolean logAutoSaveMessage() {
+        return true;
+    } // Temporary
+
+    public String getDefaultVisualizationMode() {
+        return "OFF";
+    }
+
+    public int getActionBarUpdateInterval() {
+        return pluginConfig.actionbarUpdateInterval;
+    }
+
+    // --- MiniMessage formatting ---
+
     public String getMessage(String key, String... replacements) {
-        String prefix = getConfig().getString("prefix", "&8[&6LandClaim&8]&r ");
-        String message = messagesConfig.getString(key, "&cMessage not found: " + key);
+        String template = getRawMessageString(key);
         for (int i = 0; i < replacements.length; i += 2) {
-            message = message.replace(replacements[i], replacements[i + 1]);
+            template = template.replace(replacements[i], replacements[i + 1]);
         }
-        return ChatUtils.colorize(prefix + message);
+        Component comp = MiniMessage.miniMessage().deserialize(pluginConfig.prefix + template);
+        return LegacyComponentSerializer.legacySection().serialize(comp);
     }
 
     public String getRawMessage(String key, String... replacements) {
-        String message = messagesConfig.getString(key, "&cMessage not found: " + key);
+        String template = getRawMessageString(key);
         for (int i = 0; i < replacements.length; i += 2) {
-            message = message.replace(replacements[i], replacements[i + 1]);
+            template = template.replace(replacements[i], replacements[i + 1]);
         }
-        return ChatUtils.colorize(message);
+        Component comp = MiniMessage.miniMessage().deserialize(template);
+        return LegacyComponentSerializer.legacySection().serialize(comp);
     }
 
     public String getActionBarMessage(String key) {
-        return messagesConfig.getString(key, "&7" + key);
+        Component comp = MiniMessage.miniMessage().deserialize(getRawMessageString(key));
+        return LegacyComponentSerializer.legacySection().serialize(comp);
+    }
+
+    private String getRawMessageString(String key) {
+        try {
+            var field = messagesConfig.getClass().getField(key);
+            return (String) field.get(messagesConfig);
+        } catch (Exception e) {
+            return "<red>Message not found: " + key;
+        }
     }
 }

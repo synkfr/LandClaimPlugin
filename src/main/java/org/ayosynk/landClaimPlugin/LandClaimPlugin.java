@@ -103,12 +103,12 @@ public class LandClaimPlugin extends JavaPlugin {
             saveManager.startAutoSave();
 
             Bukkit.getScheduler().runTask(this, () -> {
-                if (configManager.getConfig().getBoolean("bluemap.enabled", true)
+                if (configManager.getPluginConfig().bluemap.enabled
                         && Bukkit.getPluginManager().getPlugin("BlueMap") != null) {
                     blueMapHook = new BlueMapHook(LandClaimPlugin.this, claimManager);
                     getLogger().info("BlueMap detected. Enabling map integration.");
                 }
-                if (configManager.getConfig().getBoolean("dynmap.enabled", true)
+                if (configManager.getPluginConfig().dynmap.enabled
                         && Bukkit.getPluginManager().getPlugin("dynmap") != null) {
                     dynmapHook = new DynmapHook(LandClaimPlugin.this, claimManager);
                     getLogger().info("Dynmap detected. Enabling map integration.");
@@ -134,7 +134,7 @@ public class LandClaimPlugin extends JavaPlugin {
         configManager.reloadMainConfig();
 
         blockedCommands = configManager.getBlockedCommands();
-        blockedWorlds = configManager.getConfig().getStringList("block-world");
+        blockedWorlds = configManager.getPluginConfig().blockWorld;
 
         blockedCommands = blockedCommands.stream().map(String::toLowerCase).toList();
         blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();

@@ -48,8 +48,8 @@ public class BlueMapHook {
                 }
             }
 
-            double fillOpacity = plugin.getConfig().getDouble("bluemap.fill-opacity", 0.05);
-            double borderOpacity = plugin.getConfig().getDouble("bluemap.border-opacity", 0.8);
+            double fillOpacity = plugin.getConfigManager().getPluginConfig().bluemap.fillOpacity;
+            double borderOpacity = plugin.getConfigManager().getPluginConfig().bluemap.borderOpacity;
 
             for (BlueMapMap map : api.getMaps()) {
                 String worldId = map.getWorld().getId();

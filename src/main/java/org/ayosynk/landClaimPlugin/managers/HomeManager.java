@@ -144,7 +144,7 @@ public class HomeManager {
             if (player.hasPermission("landclaim.homes.limit." + i))
                 return i;
         }
-        return configManager.getConfig().getInt("max-homes", 3);
+        return configManager.getPluginConfig().maxHomes;
     }
 
     public int getHomeCount(UUID playerId) {
