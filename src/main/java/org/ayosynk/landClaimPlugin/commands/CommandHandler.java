@@ -416,6 +416,10 @@ public class CommandHandler implements CommandExecutor {
             }
             player.sendMessage(configManager.getMessage("claim-info-trusted", "{players}", String.join(", ", names)));
         }
+
+        if (trustManager.canManageTrust(claim, player) || player.hasPermission("landclaim.admin")) {
+            player.sendMessage(configManager.getMessage("claim-info-manage"));
+        }
     }
 
     private void handleMemberCommand(Player player, String[] args) {

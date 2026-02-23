@@ -34,8 +34,48 @@ public class TrustManager {
     // against the configured Role permissions.
 
     public void initialize() {
-        // Nothing to load on startup anymore since roles are in DB
-        // and claims load their own roles when fetched.
+        plugin.getDatabaseManager().getRoleDao().getAllRoles().thenAccept(roles -> {
+            if (roles.isEmpty()) {
+                plugin.getLogger().info("No roles found in database. Creating default roles...");
+                createDefaultRoles();
+            } else {
+                for (Role role : roles) {
+                    plugin.getCacheManager().getRoleCache().put(role.getId(), role);
+                }
+                plugin.getLogger().info("Loaded " + roles.size() + " roles into cache.");
+            }
+        });
+    }
+
+    private void createDefaultRoles() {
+        Role coOwner = new Role(UUID.randomUUID(), "Co-Owner", 100);
+        coOwner.addFlag("BUILD");
+        coOwner.addFlag("INTERACT");
+        coOwner.addFlag("CONTAINER");
+        coOwner.addFlag("MANAGE_TRUST");
+        coOwner.addFlag("DAMAGE_ENTITIES");
+
+        Role builder = new Role(UUID.randomUUID(), "Builder", 50);
+        builder.addFlag("BUILD");
+        builder.addFlag("INTERACT");
+
+        Role member = new Role(UUID.randomUUID(), "Member", 10);
+        member.addFlag("INTERACT");
+        member.addFlag("CONTAINER");
+        member.addFlag("DAMAGE_ENTITIES");
+
+        Role visitor = new Role(UUID.randomUUID(), "Visitor", 1);
+        visitor.addFlag("INTERACT");
+
+        saveAndCacheRole(coOwner);
+        saveAndCacheRole(builder);
+        saveAndCacheRole(member);
+        saveAndCacheRole(visitor);
+    }
+
+    private void saveAndCacheRole(Role role) {
+        plugin.getDatabaseManager().getRoleDao().saveRole(role);
+        plugin.getCacheManager().getRoleCache().put(role.getId(), role);
     }
 
     public boolean addRoleToPlayer(Claim claim, UUID playerId, String roleName) {

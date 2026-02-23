@@ -17,6 +17,7 @@ public class MessagesConfig extends OkaeriConfig {
 
     public String claimInfoOwner = "<gray>Claim Owner: <gold><owner>";
     public String claimInfoTrusted = "<gray>Trusted: <green><players>";
+    public String claimInfoManage = "\n<gray>[<green><click:run_command:'/claim member'><hover:show_text:'Click to manage claim members'>Manage Members</hover></click></green>] [<gold><click:run_command:'/claim'><hover:show_text:'Click to manage claim setings'>Manage Claim</hover></click></gold>]</gray>";
 
     public String actionbarWilderness = "<green>Wilderness";
     public String actionbarOwnedByYou = "<green>Your Claim";
