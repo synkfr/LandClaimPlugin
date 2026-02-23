@@ -2,6 +2,9 @@ package org.ayosynk.landClaimPlugin;
 
 import org.ayosynk.landClaimPlugin.commands.CommandHandler;
 import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
+import org.ayosynk.landClaimPlugin.db.DatabaseManager;
+import org.ayosynk.landClaimPlugin.managers.CacheManager;
+import org.ayosynk.landClaimPlugin.managers.RedisManager;
 import org.ayosynk.landClaimPlugin.gui.GUIListener;
 import org.ayosynk.landClaimPlugin.hooks.BlueMapHook;
 import org.ayosynk.landClaimPlugin.hooks.DynmapHook;
@@ -25,6 +28,9 @@ import java.util.List;
 public class LandClaimPlugin extends JavaPlugin {
 
     private ConfigManager configManager;
+    private DatabaseManager databaseManager;
+    private CacheManager cacheManager;
+    private RedisManager redisManager;
     private ClaimManager claimManager;
     private TrustManager trustManager;
     private VisualizationManager visualizationManager;
@@ -49,6 +55,18 @@ public class LandClaimPlugin extends JavaPlugin {
             }
 
             configManager = new ConfigManager(this);
+
+            // Initialize Database
+            databaseManager = new DatabaseManager(this);
+            databaseManager.init();
+
+            // Initialize Cache
+            cacheManager = new CacheManager();
+
+            // Initialize Redis
+            redisManager = new RedisManager(this);
+            redisManager.init();
+
             claimManager = new ClaimManager(this, configManager);
             trustManager = new TrustManager(this, claimManager, configManager);
 
@@ -165,6 +183,12 @@ public class LandClaimPlugin extends JavaPlugin {
                 visualizationManager.saveAllPlayerData();
                 getLogger().info("Saved visualization modes");
             }
+            if (databaseManager != null) {
+                databaseManager.shutdown();
+            }
+            if (redisManager != null) {
+                redisManager.shutdown();
+            }
             getLogger().info("LandClaim has been disabled!");
         } catch (Exception e) {
             getLogger().severe("Error while disabling LandClaim: " + e.getMessage());
@@ -173,6 +197,18 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    public CacheManager getCacheManager() {
+        return cacheManager;
+    }
+
+    public RedisManager getRedisManager() {
+        return redisManager;
     }
 
     public ClaimManager getClaimManager() {

@@ -47,6 +47,33 @@ public class PluginConfig extends OkaeriConfig {
     public boolean autoUnclaimDefault = false;
     public int chunkClaimLimit = 5;
 
+    @Comment("Database Settings (Supported: MYSQL, SQLITE)")
+    public DatabaseConfig database = new DatabaseConfig();
+
+    public static class DatabaseConfig extends OkaeriConfig {
+        public String type = "SQLITE";
+        public String host = "localhost";
+        public int port = 3306;
+        public String databaseName = "landclaim";
+        public String username = "root";
+        public String password = "password";
+        public String tablePrefix = "lc_";
+        public int maximumPoolSize = 10;
+        public int minimumIdle = 2;
+        public long connectionTimeout = 30000;
+    }
+
+    @Comment("Redis Cross-Server Sync Settings")
+    public RedisConfig redis = new RedisConfig();
+
+    public static class RedisConfig extends OkaeriConfig {
+        public boolean enabled = false;
+        public String host = "localhost";
+        public int port = 6379;
+        public String password = "";
+        public String channel = "landclaim:sync";
+    }
+
     public int worldguardGap = 0;
     public int minClaimGap = 0;
 

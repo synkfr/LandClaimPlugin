@@ -44,6 +44,30 @@
                                     <pattern>org.bstats</pattern>
                                     <shadedPattern>org.ayosynk.landClaimPlugin.bstats</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>eu.okaeri</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.okaeri</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>xyz.xenondevs.invui</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.invui</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>xyz.xenondevs.inventoryaccess</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.inventoryaccess</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.zaxxer.hikari</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.hikari</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.github.benmanes.caffeine</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.caffeine</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>redis.clients.jedis</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.jedis</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
@@ -116,6 +140,24 @@
             <artifactId>jspecify</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.1.8</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>5.1.0</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
