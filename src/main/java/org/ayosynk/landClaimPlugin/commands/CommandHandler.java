@@ -19,6 +19,8 @@ import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
 import org.incendo.cloud.parser.standard.StringParser;
 
+import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -87,7 +89,13 @@ public class CommandHandler {
         manager.command(claimBuilder.literal("menu")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    player.sendMessage(configManager.getMessage("menu-opened-stub", "<menu>", "Main Menu"));
+                    ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
+                    Claim claim = claimManager.getClaimAt(pos);
+                    if (claim == null) {
+                        player.sendMessage(configManager.getMessage("not-in-claim"));
+                        return;
+                    }
+                    MainMenuGUI.open(player, claim, plugin);
                 }));
 
         // /claim info
@@ -241,7 +249,13 @@ public class CommandHandler {
     }
 
     private void toggleVisibility(Player player) {
-        player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
+        boolean isVisible = visualizationManager.toggleVisualization(player);
+        if (isVisible) {
+            player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
+        } else {
+            // we probably don't have a messages.yml for disabled right now so just reuse it
+            player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
+        }
     }
 
     private void sendClaimInfo(Player player) {

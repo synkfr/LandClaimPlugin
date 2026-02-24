@@ -16,29 +16,18 @@ public class MainMenuGUI {
                 Gui.Builder<?, ?> guiBuilder = Gui.builder()
                                 .setStructure(
                                                 "# # # # # # # # #",
-                                                "# . S . . . M . #",
+                                                "# . . . X . . . #",
                                                 "# # # # B # # # #")
                                 .addIngredient('#',
                                                 Item.simple(new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE)
                                                                 .setLegacyName(" ")))
-                                .addIngredient('S',
-                                                Item.builder().setItemProvider(new ItemBuilder(Material.COMMAND_BLOCK)
-                                                                .setLegacyName("§aClaim Settings")
+                                .addIngredient('X',
+                                                Item.simple(new ItemBuilder(Material.BARRIER)
+                                                                .setLegacyName("§cComing Soon")
                                                                 .addLegacyLoreLines(
-                                                                                "§7Manage flags, rename, or delete claim"))
-                                                                .addClickHandler(click -> {
-                                                                        ClaimSettingsGUI.open(player, claim, plugin);
-                                                                }).build())
-                                .addIngredient('M',
-                                                Item.builder().setItemProvider(new ItemBuilder(Material.PLAYER_HEAD)
-                                                                .setLegacyName("§eMembers & Roles")
-                                                                .addLegacyLoreLines(
-                                                                                "§7Manage trusted players and assign roles"))
-                                                                .addClickHandler(click -> {
-                                                                        MemberListGUI.open(player, claim, plugin);
-                                                                }).build())
+                                                                                "§7More features will be added here!")))
                                 .addIngredient('B', Item.builder()
-                                                .setItemProvider(new ItemBuilder(Material.BARRIER)
+                                                .setItemProvider(new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
                                                                 .setLegacyName("§cClose"))
                                                 .addClickHandler(click -> click.player().closeInventory()).build());
 

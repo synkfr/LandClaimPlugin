@@ -96,6 +96,19 @@ public class VisualizationManager {
         spawnDisplays(player, edges, color);
     }
 
+    public boolean toggleVisualization(Player player) {
+        UUID playerId = player.getUniqueId();
+        if (visualizationModes.containsKey(playerId)) {
+            visualizationModes.remove(playerId);
+            clearDisplays(playerId);
+            return false;
+        } else {
+            visualizationModes.put(playerId, VisualizationMode.ALWAYS);
+            showPlayerClaims(player, VisualizationMode.ALWAYS);
+            return true;
+        }
+    }
+
     public void showTemporary(Player player) {
         UUID playerId = player.getUniqueId();
 
