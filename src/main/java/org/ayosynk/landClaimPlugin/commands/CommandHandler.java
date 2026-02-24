@@ -134,21 +134,21 @@ public class CommandHandler {
         manager.command(memberBuilder.literal("list")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    player.sendMessage("Member list functionality coming soon");
+                    player.sendMessage(configManager.getMessage("member-list-stub"));
                 }));
         manager.command(memberBuilder.literal("invite")
                 .required("player", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
-                    player.sendMessage("Invited " + targetName);
+                    player.sendMessage(configManager.getMessage("member-invited", "<player>", targetName));
                 }));
         manager.command(memberBuilder.literal("kick")
                 .required("player", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
-                    player.sendMessage("Kicked " + targetName);
+                    player.sendMessage(configManager.getMessage("member-kicked", "<player>", targetName));
                 }));
 
         // /claim trust <add/remove/list> <player>
@@ -156,21 +156,21 @@ public class CommandHandler {
         manager.command(trustBuilder.literal("list")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    player.sendMessage("Trust list functionality coming soon");
+                    player.sendMessage(configManager.getMessage("trust-list-stub"));
                 }));
         manager.command(trustBuilder.literal("add")
                 .required("player", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
-                    player.sendMessage("Added trust to " + targetName);
+                    player.sendMessage(configManager.getMessage("trust-added", "<player>", targetName));
                 }));
         manager.command(trustBuilder.literal("remove")
                 .required("player", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
-                    player.sendMessage("Removed trust from " + targetName);
+                    player.sendMessage(configManager.getMessage("trust-removed", "<player>", targetName));
                 }));
     }
 
@@ -216,7 +216,7 @@ public class CommandHandler {
         }
 
         if (claimManager.unclaimChunk(chunk)) {
-            player.sendMessage("<green>Bypassed ownership and unclaimed chunk.");
+            player.sendMessage(configManager.getMessage("admin-bypassed-unclaim"));
         }
     }
 
@@ -241,7 +241,7 @@ public class CommandHandler {
     }
 
     private void toggleVisibility(Player player) {
-        player.sendMessage("<green>Claim visibility toggled.");
+        player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
     }
 
     private void sendClaimInfo(Player player) {
@@ -269,9 +269,12 @@ public class CommandHandler {
             return;
         }
         String ownerName = Bukkit.getOfflinePlayer(claim.getOwnerId()).getName();
-        if (ownerName == null) ownerName = "Unknown";
-        
-        player.sendMessage("<red>[ADMIN] <green>Claim owned by: <gold>" + ownerName + " <gray>(" + claim.getOwnerId() + ")");
-        player.sendMessage("<green>Claim ID: <gray>" + claim.getId());
+        if (ownerName == null)
+            ownerName = "Unknown";
+
+        player.sendMessage(
+                configManager.getMessage("admin-claim-info-owned-by", "<owner>", ownerName, "<uuid>",
+                        claim.getOwnerId().toString()));
+        player.sendMessage(configManager.getMessage("admin-claim-info-id", "<id>", claim.getId().toString()));
     }
 }

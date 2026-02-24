@@ -1,7 +1,6 @@
 package org.ayosynk.landClaimPlugin;
 
 import org.ayosynk.landClaimPlugin.commands.CommandHandler;
-import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
 import org.ayosynk.landClaimPlugin.db.DatabaseManager;
 import org.ayosynk.landClaimPlugin.managers.CacheManager;
 import org.ayosynk.landClaimPlugin.managers.RedisManager;
@@ -92,25 +91,6 @@ public class LandClaimPlugin extends JavaPlugin {
                     this);
 
             // Legacy GUI Listener was removed here
-
-            // Register tab completers
-            ClaimTabCompleter tabCompleter = new ClaimTabCompleter();
-            if (getCommand("claim") != null) {
-                getCommand("claim").setTabCompleter(tabCompleter);
-            }
-            if (getCommand("unclaim") != null) {
-                getCommand("unclaim").setTabCompleter(tabCompleter);
-            }
-            if (getCommand("unclaimall") != null) {
-                getCommand("unclaimall").setTabCompleter(tabCompleter);
-            }
-
-            if (getCommand("c") != null) {
-                getCommand("c").setTabCompleter(tabCompleter);
-            }
-            if (getCommand("uc") != null) {
-                getCommand("uc").setTabCompleter(tabCompleter);
-            }
 
             reloadConfiguration();
 

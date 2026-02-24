@@ -69,4 +69,17 @@ public class MessagesConfig extends OkaeriConfig {
     public String autoClaimDisabled = "<red>Auto-claim disabled.";
     public String autoUnclaimEnabled = "<green>Auto-unclaim enabled.";
     public String autoUnclaimDisabled = "<red>Auto-unclaim disabled.";
+
+    // CommandHandler specifics
+    public String menuOpenedStub = "<green>Opened <menu>";
+    public String memberListStub = "<green>Member list functionality coming soon";
+    public String memberInvited = "<green>Invited <player>";
+    public String memberKicked = "<red>Kicked <player>";
+    public String trustListStub = "<green>Trust list functionality coming soon";
+    public String trustAdded = "<green>Added trust to <player>";
+    public String trustRemoved = "<red>Removed trust from <player>";
+    public String claimVisibilityToggled = "<green>Claim visibility toggled.";
+    public String adminBypassedUnclaim = "<green>Bypassed ownership and unclaimed chunk.";
+    public String adminClaimInfoOwnedBy = "<red>[ADMIN] <green>Claim owned by: <gold><owner> <gray>(<uuid>)";
+    public String adminClaimInfoId = "<green>Claim ID: <gray><id>";
 }
