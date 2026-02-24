@@ -16,8 +16,11 @@ public class MessagesConfig extends OkaeriConfig {
     public String reloaded = "<green>Configuration and messages reloaded successfully!";
 
     public String claimInfoOwner = "<gray>Claim Owner: <gold><owner>";
-    public String claimInfoTrusted = "<gray>Trusted: <green><players>";
     public String claimInfoManage = "\n<gray>[<green><click:run_command:'/claim member'><hover:show_text:'Click to manage claim members'>Manage Members</hover></click></green>] [<gold><click:run_command:'/claim'><hover:show_text:'Click to manage claim setings'>Manage Claim</hover></click></gold>]</gray>";
+
+    public String wandGiven = "<green>Claim Wand received! Left-click to set Position 1, Right-click to set Position 2.";
+    public String wandPos1 = "<green>Position 1 set to chunk <gold><x>, <z></gold> in <gold><world></gold>.";
+    public String wandPos2 = "<green>Position 2 set to chunk <gold><x>, <z></gold> in <gold><world></gold>.";
 
     public String actionbarWilderness = "<green>Wilderness";
     public String actionbarOwnedByYou = "<green>Your Claim";

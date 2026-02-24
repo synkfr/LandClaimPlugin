@@ -1,13 +1,15 @@
 package org.ayosynk.landClaimPlugin.models;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class Claim {
 
     private final UUID id;
-    private final ChunkPosition chunkPosition;
+    private final Set<ChunkPosition> chunks = new HashSet<>();
     private UUID ownerId;
 
     // Sub-zone functionality
@@ -21,9 +23,8 @@ public class Claim {
     // Role assignments: Player UUID -> Role Name
     private final Map<UUID, String> playerRoles = new HashMap<>();
 
-    public Claim(UUID id, ChunkPosition chunkPosition, UUID ownerId) {
+    public Claim(UUID id, UUID ownerId) {
         this.id = id;
-        this.chunkPosition = chunkPosition;
         this.ownerId = ownerId;
         this.claimedAt = System.currentTimeMillis();
     }
@@ -32,8 +33,16 @@ public class Claim {
         return id;
     }
 
-    public ChunkPosition getChunkPosition() {
-        return chunkPosition;
+    public Set<ChunkPosition> getChunks() {
+        return chunks;
+    }
+
+    public void addChunk(ChunkPosition position) {
+        this.chunks.add(position);
+    }
+
+    public void removeChunk(ChunkPosition position) {
+        this.chunks.remove(position);
     }
 
     public UUID getOwnerId() {

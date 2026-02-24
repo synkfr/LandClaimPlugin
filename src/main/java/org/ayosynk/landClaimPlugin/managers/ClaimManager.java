@@ -19,9 +19,12 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import org.ayosynk.landClaimPlugin.models.ChunkSelection;
+
 public class ClaimManager {
     private final LandClaimPlugin plugin;
     private final ConfigManager configManager;
+    private final Map<UUID, ChunkSelection> playerSelections = new HashMap<>();
 
     public ClaimManager(LandClaimPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
@@ -48,7 +51,16 @@ public class ClaimManager {
 
     public Claim getClaimAt(ChunkPosition pos) {
         for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
-            if (claim.getChunkPosition().equals(pos) && claim.getParentClaimId() == null) {
+            if (claim.getChunks().contains(pos) && claim.getParentClaimId() == null) {
+                return claim;
+            }
+        }
+        return null;
+    }
+
+    public Claim getSubClaimAt(ChunkPosition pos) {
+        for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
+            if (claim.getChunks().contains(pos) && claim.getParentClaimId() != null) {
                 return claim;
             }
         }
@@ -93,13 +105,14 @@ public class ClaimManager {
         UUID playerId = player.getUniqueId();
         int claimLimit = getClaimLimit(player);
         Set<Claim> claims = getPlayerClaims(playerId);
+        int currentTotalChunks = claims.stream().mapToInt(c -> c.getChunks().size()).sum();
 
-        if (claims.size() >= claimLimit) {
+        if (currentTotalChunks >= claimLimit) {
             player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
             return false;
         }
 
-        if (configManager.requireConnectedClaims() && !claims.isEmpty()) {
+        if (configManager.requireConnectedClaims() && currentTotalChunks > 0) {
             boolean isConnected = isConnectedToOwnClaims(pos, playerId);
             if (!isConnected) {
                 player.sendMessage(configManager.getMessage("not-connected"));
@@ -125,7 +138,8 @@ public class ClaimManager {
             }
         }
 
-        Claim newClaim = new Claim(UUID.randomUUID(), pos, playerId);
+        Claim newClaim = new Claim(UUID.randomUUID(), playerId);
+        newClaim.addChunk(pos);
         long expireDays = 30L; // TODO: Pull from config
         newClaim.setExpireAt(System.currentTimeMillis() + (expireDays * 24 * 60 * 60 * 1000));
 
@@ -145,23 +159,132 @@ public class ClaimManager {
         return true;
     }
 
+    public int claimChunks(Player player, Set<ChunkPosition> chunksToClaim) {
+        if (chunksToClaim.isEmpty())
+            return 0;
+
+        String worldName = chunksToClaim.iterator().next().world();
+        if (configManager.isWorldBlocked(worldName)) {
+            player.sendMessage(configManager.getMessage("world-blocked"));
+            return 0;
+        }
+
+        UUID playerId = player.getUniqueId();
+        int claimLimit = getClaimLimit(player);
+        Set<Claim> claims = getPlayerClaims(playerId);
+        int currentTotalChunks = claims.stream().mapToInt(c -> c.getChunks().size()).sum();
+
+        if (currentTotalChunks + chunksToClaim.size() > claimLimit) {
+            player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
+            return 0;
+        }
+
+        // Validate all chunks
+        for (ChunkPosition pos : chunksToClaim) {
+            if (!pos.world().equals(worldName))
+                return 0;
+
+            if (isChunkClaimed(pos)) {
+                UUID owner = getChunkOwner(pos);
+                String ownerName = plugin.getServer().getOfflinePlayer(owner).getName();
+                player.sendMessage(
+                        configManager.getMessage("already-claimed", "{owner}",
+                                ownerName != null ? ownerName : "Unknown"));
+                return 0;
+            }
+
+            int worldGuardGap = configManager.getWorldGuardGap();
+            if (worldGuardGap > 0) {
+                if (isTooCloseToWorldGuardRegion(pos, worldGuardGap)) {
+                    player.sendMessage(
+                            configManager.getMessage("too-close-to-worldguard", "{gap}",
+                                    String.valueOf(worldGuardGap)));
+                    return 0;
+                }
+            }
+
+            int minGap = configManager.getMinClaimGap();
+            if (minGap > 0) {
+                if (isTooCloseToOtherClaim(worldName, pos, playerId, minGap)) {
+                    player.sendMessage(
+                            configManager.getMessage("too-close-to-other-claim", "{gap}", String.valueOf(minGap)));
+                    return 0;
+                }
+            }
+        }
+
+        if (configManager.requireConnectedClaims() && currentTotalChunks > 0) {
+            boolean connected = false;
+            for (ChunkPosition pos : chunksToClaim) {
+                if (isConnectedToOwnClaims(pos, playerId)) {
+                    connected = true;
+                    break;
+                }
+            }
+            if (!connected) {
+                player.sendMessage(configManager.getMessage("not-connected"));
+                return 0;
+            }
+        }
+
+        Claim newClaim = new Claim(UUID.randomUUID(), playerId);
+        for (ChunkPosition pos : chunksToClaim) {
+            newClaim.addChunk(pos);
+        }
+        long expireDays = 30L; // TODO: Pull from config
+        newClaim.setExpireAt(System.currentTimeMillis() + (expireDays * 24 * 60 * 60 * 1000));
+
+        plugin.getCacheManager().getClaimCache().put(newClaim.getId(), newClaim);
+
+        plugin.getDatabaseManager().getClaimDao().saveClaim(newClaim).thenRun(() -> {
+            if (plugin.getRedisManager() != null) {
+                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", newClaim.getId());
+            }
+        });
+
+        plugin.getVisualizationManager().invalidateCache(playerId);
+        plugin.refreshMapHooks();
+        return chunksToClaim.size();
+    }
+
     public boolean unclaimChunk(Chunk chunk) {
         ChunkPosition pos = new ChunkPosition(chunk);
-        Claim claim = getClaimAt(pos);
+
+        Claim claim = getSubClaimAt(pos);
+        if (claim == null) {
+            claim = getClaimAt(pos);
+        }
+
         if (claim == null)
             return false;
 
         UUID owner = claim.getOwnerId();
+        UUID claimId = claim.getId();
+        UUID parentClaimId = claim.getParentClaimId();
 
         // Remove from cache
-        plugin.getCacheManager().getClaimCache().invalidate(claim.getId());
+        plugin.getCacheManager().getClaimCache().invalidate(claimId);
 
         // Delete from DB async
-        plugin.getDatabaseManager().getClaimDao().deleteClaim(claim.getId()).thenRun(() -> {
+        plugin.getDatabaseManager().getClaimDao().deleteClaim(claimId).thenRun(() -> {
             if (plugin.getRedisManager() != null) {
-                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", claim.getId());
+                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", claimId);
             }
         });
+
+        // Also if this is a parent claim, delete all sub-claims inside it
+        if (parentClaimId == null) {
+            for (Claim c : plugin.getCacheManager().getClaimCache().asMap().values()) {
+                if (claimId.equals(c.getParentClaimId())) {
+                    UUID subId = c.getId();
+                    plugin.getCacheManager().getClaimCache().invalidate(subId);
+                    plugin.getDatabaseManager().getClaimDao().deleteClaim(subId);
+                    if (plugin.getRedisManager() != null) {
+                        plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", subId);
+                    }
+                }
+            }
+        }
 
         plugin.getVisualizationManager().invalidateCache(owner);
         plugin.refreshMapHooks();
@@ -269,10 +392,29 @@ public class ClaimManager {
     public int getClaimLimit(Player player) {
         if (player.hasPermission("landclaim.admin"))
             return Integer.MAX_VALUE;
+
+        int limit = configManager.getPluginConfig().chunkClaimLimit;
         for (int i = 100; i > 0; i--) {
-            if (player.hasPermission("landclaim.limit." + i))
-                return i;
+            if (player.hasPermission("landclaim.limit." + i)) {
+                limit = i;
+                break;
+            }
         }
-        return configManager.getPluginConfig().chunkClaimLimit;
+
+        org.ayosynk.landClaimPlugin.models.ClaimPlayer cp = plugin.getCacheManager().getPlayerCache()
+                .getIfPresent(player.getUniqueId());
+        if (cp != null) {
+            limit += cp.getBonusClaimBlocks();
+        }
+        return limit;
+    }
+
+    public ChunkSelection getSelection(UUID playerId) {
+        return playerSelections.computeIfAbsent(playerId, k -> new ChunkSelection());
+    }
+
+    public void clearSelection(UUID playerId) {
+        playerSelections.remove(playerId);
+        plugin.getVisualizationManager().clearSelectionDisplays(playerId);
     }
 }

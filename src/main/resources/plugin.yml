@@ -3,7 +3,7 @@ version: '1.9'
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: '1.21'
 author: AyoSynk
-soft-depend: [WorldGuard, BlueMap, dynmap]
+soft-depend: [WorldGuard, BlueMap, dynmap, Vault]
 commands:
   claim:
     description: Main land claim command

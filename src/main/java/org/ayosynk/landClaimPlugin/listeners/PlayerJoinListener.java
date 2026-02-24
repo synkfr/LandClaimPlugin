@@ -21,6 +21,10 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         visualizationManager.handlePlayerJoin(event.getPlayer());
+        plugin.getDatabaseManager().getPlayerDao().getPlayer(event.getPlayer().getUniqueId())
+                .thenAccept(claimPlayer -> {
+                    plugin.getCacheManager().getPlayerCache().put(event.getPlayer().getUniqueId(), claimPlayer);
+                });
     }
 
     @EventHandler

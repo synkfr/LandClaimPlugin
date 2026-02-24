@@ -12,12 +12,11 @@ import xyz.xenondevs.invui.window.Window;
 public class MainMenuGUI {
 
         public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
-                boolean ecoEnabled = plugin.getConfigManager().getPluginConfig().economyEnabled;
 
                 Gui.Builder<?, ?> guiBuilder = Gui.builder()
                                 .setStructure(
                                                 "# # # # # # # # #",
-                                                "# . S . M . E . #",
+                                                "# . S . . . M . #",
                                                 "# # # # B # # # #")
                                 .addIngredient('#',
                                                 Item.simple(new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE)
@@ -38,15 +37,6 @@ public class MainMenuGUI {
                                                                 .addClickHandler(click -> {
                                                                         MemberListGUI.open(player, claim, plugin);
                                                                 }).build())
-                                .addIngredient('E', ecoEnabled ? Item.builder().setItemProvider(new ItemBuilder(
-                                                Material.GOLD_INGOT)
-                                                .setLegacyName("§6Economy Options")
-                                                .addLegacyLoreLines("§7Buy allowance, sell claim, pay taxes"))
-                                                .addClickHandler(click -> {
-                                                        EconomyGUI.open(player, claim, plugin);
-                                                }).build()
-                                                : Item.simple(new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE)
-                                                                .setLegacyName(" ")))
                                 .addIngredient('B', Item.builder()
                                                 .setItemProvider(new ItemBuilder(Material.BARRIER)
                                                                 .setLegacyName("§cClose"))

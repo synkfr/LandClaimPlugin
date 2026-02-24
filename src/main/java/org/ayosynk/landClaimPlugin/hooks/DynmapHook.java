@@ -79,7 +79,7 @@ public class DynmapHook {
 
             Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
             Set<ChunkPosition> claims = claimObjects.stream()
-                    .map(org.ayosynk.landClaimPlugin.models.Claim::getChunkPosition)
+                    .flatMap(claim -> claim.getChunks().stream())
                     .collect(java.util.stream.Collectors.toSet());
 
             Map<String, Set<ChunkPosition>> claimsByWorld = new HashMap<>();

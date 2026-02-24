@@ -8,11 +8,11 @@ import java.util.List;
 @Header("LandClaimPlugin - Main Configuration")
 public class PluginConfig extends OkaeriConfig {
 
-    @Comment("Toggles the economy features of the plugin.")
-    public boolean economyEnabled = false;
-
     @Comment("Messages Prefix (MiniMessage format)")
     public String prefix = "<dark_gray>[<gold>LandClaim<dark_gray>]</gold> ";
+
+    @Comment("The item used as the Claim Wand (Material name)")
+    public String claimWandItem = "GOLDEN_SHOVEL";
 
     public boolean requireConnectedClaims = false;
     public boolean allowDiagonalConnections = true;

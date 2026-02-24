@@ -7,7 +7,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
-import org.ayosynk.landClaimPlugin.config.EconomyConfig;
 import org.ayosynk.landClaimPlugin.config.MessagesConfig;
 import org.ayosynk.landClaimPlugin.config.PluginConfig;
 import org.bukkit.Color;
@@ -23,7 +22,6 @@ public class ConfigManager {
 
     private PluginConfig pluginConfig;
     private MessagesConfig messagesConfig;
-    private EconomyConfig economyConfig;
 
     // Legacy data configs (Will be moved to DB/Redis later)
     private FileConfiguration claimsConfig;
@@ -49,13 +47,6 @@ public class ConfigManager {
         this.messagesConfig = eu.okaeri.configs.ConfigManager.create(MessagesConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
             it.withBindFile(new File(plugin.getDataFolder(), "messages.yml"));
-            it.saveDefaults();
-            it.load(true);
-        });
-
-        this.economyConfig = eu.okaeri.configs.ConfigManager.create(EconomyConfig.class, (it) -> {
-            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
-            it.withBindFile(new File(plugin.getDataFolder(), "economy.yml"));
             it.saveDefaults();
             it.load(true);
         });
@@ -88,7 +79,6 @@ public class ConfigManager {
     public void reloadMainConfig() {
         pluginConfig.load();
         messagesConfig.load();
-        economyConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -97,10 +87,6 @@ public class ConfigManager {
 
     public MessagesConfig getMessagesConfig() {
         return messagesConfig;
-    }
-
-    public EconomyConfig getEconomyConfig() {
-        return economyConfig;
     }
 
     public FileConfiguration getClaimsConfig() {

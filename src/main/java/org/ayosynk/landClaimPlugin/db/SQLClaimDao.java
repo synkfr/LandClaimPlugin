@@ -30,14 +30,18 @@ public class SQLClaimDao implements ClaimDao {
 
         String claimsSql = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "claims (" +
                 "id VARCHAR(36) PRIMARY KEY," +
-                "chunk_world VARCHAR(64) NOT NULL," +
-                "chunk_x INT NOT NULL," +
-                "chunk_z INT NOT NULL," +
                 "owner_id VARCHAR(36) NOT NULL," +
                 "parent_id VARCHAR(36)," +
                 "name VARCHAR(64)," +
                 "claimed_at BIGINT NOT NULL," +
                 "expire_at BIGINT NOT NULL)";
+
+        String claimChunksSql = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "claim_chunks (" +
+                "claim_id VARCHAR(36) NOT NULL," +
+                "chunk_world VARCHAR(64) NOT NULL," +
+                "chunk_x INT NOT NULL," +
+                "chunk_z INT NOT NULL," +
+                "PRIMARY KEY (claim_id, chunk_world, chunk_x, chunk_z))";
 
         String claimRolesSql = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "claim_roles (" +
                 "claim_id VARCHAR(36) NOT NULL," +
@@ -47,9 +51,11 @@ public class SQLClaimDao implements ClaimDao {
 
         try (Connection conn = dbManager.getDatabase().getConnection();
                 PreparedStatement stmt1 = conn.prepareStatement(claimsSql);
-                PreparedStatement stmt2 = conn.prepareStatement(claimRolesSql)) {
+                PreparedStatement stmt2 = conn.prepareStatement(claimChunksSql);
+                PreparedStatement stmt3 = conn.prepareStatement(claimRolesSql)) {
             stmt1.executeUpdate();
             stmt2.executeUpdate();
+            stmt3.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to create claims tables.");
             e.printStackTrace();
@@ -63,13 +69,14 @@ public class SQLClaimDao implements ClaimDao {
             boolean isSqlite = plugin.getConfigManager().getPluginConfig().database.type.equalsIgnoreCase("SQLITE");
 
             String saveClaimSql = isSqlite ? "INSERT OR REPLACE INTO " + tablePrefix
-                    + "claims (id, chunk_world, chunk_x, chunk_z, owner_id, parent_id, name, claimed_at, expire_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    + "claims (id, owner_id, parent_id, name, claimed_at, expire_at) VALUES (?, ?, ?, ?, ?, ?)"
                     : "INSERT INTO " + tablePrefix
-                            + "claims (id, chunk_world, chunk_x, chunk_z, owner_id, parent_id, name, claimed_at, expire_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                            + "claims (id, owner_id, parent_id, name, claimed_at, expire_at) VALUES (?, ?, ?, ?, ?, ?) "
                             +
                             "ON DUPLICATE KEY UPDATE owner_id=VALUES(owner_id), parent_id=VALUES(parent_id), name=VALUES(name), expire_at=VALUES(expire_at)";
 
             String tryClearRolesSql = "DELETE FROM " + tablePrefix + "claim_roles WHERE claim_id = ?";
+            String tryClearChunksSql = "DELETE FROM " + tablePrefix + "claim_chunks WHERE claim_id = ?";
 
             String insertRoleSql = isSqlite
                     ? "INSERT OR REPLACE INTO " + tablePrefix
@@ -77,23 +84,32 @@ public class SQLClaimDao implements ClaimDao {
                     : "INSERT INTO " + tablePrefix + "claim_roles (claim_id, player_id, role_name) VALUES (?, ?, ?) " +
                             "ON DUPLICATE KEY UPDATE role_name=VALUES(role_name)";
 
+            String insertChunkSql = isSqlite
+                    ? "INSERT OR REPLACE INTO " + tablePrefix
+                            + "claim_chunks (claim_id, chunk_world, chunk_x, chunk_z) VALUES (?, ?, ?, ?)"
+                    : "INSERT INTO " + tablePrefix
+                            + "claim_chunks (claim_id, chunk_world, chunk_x, chunk_z) VALUES (?, ?, ?, ?) " +
+                            "ON DUPLICATE KEY UPDATE chunk_world=VALUES(chunk_world)";
+
             try (Connection conn = dbManager.getDatabase().getConnection()) {
                 conn.setAutoCommit(false);
 
                 try (PreparedStatement stmt = conn.prepareStatement(saveClaimSql)) {
                     stmt.setString(1, claim.getId().toString());
-                    stmt.setString(2, claim.getChunkPosition().world());
-                    stmt.setInt(3, claim.getChunkPosition().x());
-                    stmt.setInt(4, claim.getChunkPosition().z());
-                    stmt.setString(5, claim.getOwnerId().toString());
-                    stmt.setString(6, claim.getParentClaimId() != null ? claim.getParentClaimId().toString() : null);
-                    stmt.setString(7, claim.getName());
-                    stmt.setLong(8, claim.getClaimedAt());
-                    stmt.setLong(9, claim.getExpireAt());
+                    stmt.setString(2, claim.getOwnerId().toString());
+                    stmt.setString(3, claim.getParentClaimId() != null ? claim.getParentClaimId().toString() : null);
+                    stmt.setString(4, claim.getName());
+                    stmt.setLong(5, claim.getClaimedAt());
+                    stmt.setLong(6, claim.getExpireAt());
                     stmt.executeUpdate();
                 }
 
                 try (PreparedStatement stmt = conn.prepareStatement(tryClearRolesSql)) {
+                    stmt.setString(1, claim.getId().toString());
+                    stmt.executeUpdate();
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(tryClearChunksSql)) {
                     stmt.setString(1, claim.getId().toString());
                     stmt.executeUpdate();
                 }
@@ -104,6 +120,19 @@ public class SQLClaimDao implements ClaimDao {
                             stmt.setString(1, claim.getId().toString());
                             stmt.setString(2, entry.getKey().toString());
                             stmt.setString(3, entry.getValue());
+                            stmt.addBatch();
+                        }
+                        stmt.executeBatch();
+                    }
+                }
+
+                if (!claim.getChunks().isEmpty()) {
+                    try (PreparedStatement stmt = conn.prepareStatement(insertChunkSql)) {
+                        for (ChunkPosition pos : claim.getChunks()) {
+                            stmt.setString(1, claim.getId().toString());
+                            stmt.setString(2, pos.world());
+                            stmt.setInt(3, pos.x());
+                            stmt.setInt(4, pos.z());
                             stmt.addBatch();
                         }
                         stmt.executeBatch();
@@ -124,6 +153,7 @@ public class SQLClaimDao implements ClaimDao {
         return CompletableFuture.runAsync(() -> {
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
             String delRoles = "DELETE FROM " + tablePrefix + "claim_roles WHERE claim_id = ?";
+            String delChunks = "DELETE FROM " + tablePrefix + "claim_chunks WHERE claim_id = ?";
             String delClaim = "DELETE FROM " + tablePrefix + "claims WHERE id = ?";
 
             try (Connection conn = dbManager.getDatabase().getConnection()) {
@@ -134,9 +164,14 @@ public class SQLClaimDao implements ClaimDao {
                     stmt1.executeUpdate();
                 }
 
-                try (PreparedStatement stmt2 = conn.prepareStatement(delClaim)) {
+                try (PreparedStatement stmt2 = conn.prepareStatement(delChunks)) {
                     stmt2.setString(1, claimId.toString());
                     stmt2.executeUpdate();
+                }
+
+                try (PreparedStatement stmt3 = conn.prepareStatement(delClaim)) {
+                    stmt3.setString(1, claimId.toString());
+                    stmt3.executeUpdate();
                 }
 
                 conn.commit();
@@ -150,10 +185,9 @@ public class SQLClaimDao implements ClaimDao {
 
     private Claim constructClaim(ResultSet rs) throws SQLException {
         UUID id = UUID.fromString(rs.getString("id"));
-        ChunkPosition pos = new ChunkPosition(rs.getString("chunk_world"), rs.getInt("chunk_x"), rs.getInt("chunk_z"));
         UUID ownerId = UUID.fromString(rs.getString("owner_id"));
 
-        Claim claim = new Claim(id, pos, ownerId);
+        Claim claim = new Claim(id, ownerId);
         String parentId = rs.getString("parent_id");
         if (parentId != null)
             claim.setParentClaimId(UUID.fromString(parentId));
@@ -177,6 +211,20 @@ public class SQLClaimDao implements ClaimDao {
         }
     }
 
+    private void loadClaimChunks(Connection conn, Claim claim) throws SQLException {
+        String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
+        String sql = "SELECT chunk_world, chunk_x, chunk_z FROM " + tablePrefix + "claim_chunks WHERE claim_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, claim.getId().toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    claim.addChunk(
+                            new ChunkPosition(rs.getString("chunk_world"), rs.getInt("chunk_x"), rs.getInt("chunk_z")));
+                }
+            }
+        }
+    }
+
     @Override
     public CompletableFuture<Claim> getClaim(UUID claimId) {
         return CompletableFuture.supplyAsync(() -> {
@@ -190,6 +238,7 @@ public class SQLClaimDao implements ClaimDao {
                     if (rs.next()) {
                         Claim claim = constructClaim(rs);
                         loadClaimRoles(conn, claim);
+                        loadClaimChunks(conn, claim);
                         return claim;
                     }
                 }
@@ -216,6 +265,7 @@ public class SQLClaimDao implements ClaimDao {
                     while (rs.next()) {
                         Claim claim = constructClaim(rs);
                         loadClaimRoles(conn, claim);
+                        loadClaimChunks(conn, claim);
                         claims.add(claim);
                     }
                 }
@@ -241,6 +291,7 @@ public class SQLClaimDao implements ClaimDao {
                 while (rs.next()) {
                     Claim claim = constructClaim(rs);
                     loadClaimRoles(conn, claim);
+                    loadClaimChunks(conn, claim);
                     claims.add(claim);
                 }
             } catch (SQLException e) {

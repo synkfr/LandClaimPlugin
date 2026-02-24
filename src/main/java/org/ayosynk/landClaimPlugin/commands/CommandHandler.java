@@ -1,7 +1,5 @@
 package org.ayosynk.landClaimPlugin.commands;
 
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.HomeManager;
@@ -14,9 +12,11 @@ import org.ayosynk.landClaimPlugin.models.Claim;
 import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
 import org.ayosynk.landClaimPlugin.gui.MemberListGUI;
 import org.ayosynk.landClaimPlugin.gui.RoleSelectorGUI;
+import org.ayosynk.landClaimPlugin.utils.ChatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -145,6 +145,13 @@ public class CommandHandler implements CommandExecutor {
                     break;
                 case "homes":
                     handleHomesCommand(player);
+                    break;
+                case "wand":
+                    giveWand(player);
+                    break;
+                case "zone":
+                case "subclaim":
+                    createSubClaim(player);
                     break;
                 default:
                     sendMessage(player, "invalid-command");
@@ -441,18 +448,112 @@ public class CommandHandler implements CommandExecutor {
     }
 
     private void claimCurrentChunk(Player player) {
-        Chunk chunk = player.getLocation().getChunk();
+        org.ayosynk.landClaimPlugin.models.ChunkSelection selection = claimManager.getSelection(player.getUniqueId());
+        Set<ChunkPosition> chunksToClaim = selection.getSelectedChunks();
 
-        if (claimManager.claimChunk(player, chunk)) {
-            sendMessage(player, "chunk-claimed");
+        // If they have no valid selection, just claim the chunk they're standing in
+        if (chunksToClaim.isEmpty()) {
+            Chunk chunk = player.getLocation().getChunk();
+            if (claimManager.claimChunk(player, chunk)) {
+                sendMessage(player, "chunk-claimed");
+            }
+        } else {
+            // They have a selection. Try to claim all of them as one claim!
+            int claimed = plugin.getClaimManager().claimChunks(player, chunksToClaim);
+            if (claimed > 0) {
+                player.sendMessage(ChatUtils.parse("<green>Successfully claimed " + claimed + " chunks!"));
+                claimManager.clearSelection(player.getUniqueId());
+            } else {
+                player.sendMessage(ChatUtils.parse("<red>Failed to claim chunks. Limit reached or already claimed."));
+            }
         }
+    }
+
+    private void giveWand(Player player) {
+        String materialName = configManager.getPluginConfig().claimWandItem;
+        Material material = Material.matchMaterial(materialName);
+        if (material == null)
+            material = Material.GOLDEN_SHOVEL;
+
+        org.bukkit.inventory.ItemStack wand = new org.bukkit.inventory.ItemStack(material);
+        org.bukkit.inventory.meta.ItemMeta meta = wand.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(net.md_5.bungee.api.ChatColor.GOLD + "Claim Wand");
+            meta.setLore(List.of(
+                    net.md_5.bungee.api.ChatColor.GRAY + "Left-Click to set Position 1",
+                    net.md_5.bungee.api.ChatColor.GRAY + "Right-Click to set Position 2"));
+            wand.setItemMeta(meta);
+        }
+
+        player.getInventory().addItem(wand);
+        player.sendMessage(ChatUtils.parse(configManager.getMessage("wandGiven")));
+    }
+
+    private void createSubClaim(Player player) {
+        org.ayosynk.landClaimPlugin.models.ChunkSelection selection = claimManager.getSelection(player.getUniqueId());
+        Set<ChunkPosition> chunksToClaim = selection.getSelectedChunks();
+
+        if (chunksToClaim.isEmpty()) {
+            player.sendMessage(ChatUtils.parse("<red>You must make a selection first using the Claim Wand."));
+            return;
+        }
+
+        Claim parentClaim = null;
+        for (ChunkPosition pos : chunksToClaim) {
+            Claim claim = claimManager.getClaimAt(pos);
+            if (claim == null || !claim.getOwnerId().equals(player.getUniqueId())) {
+                player.sendMessage(ChatUtils.parse("<red>All chunks in a sub-claim must be within your own claim."));
+                return;
+            }
+            if (claimManager.getSubClaimAt(pos) != null) {
+                player.sendMessage(ChatUtils.parse("<red>A sub-claim already exists here."));
+                return;
+            }
+            if (parentClaim == null) {
+                parentClaim = claim;
+            } else if (!parentClaim.getId().equals(claim.getId())) {
+                player.sendMessage(ChatUtils.parse("<red>A sub-claim cannot overlap multiple different claims."));
+                return;
+            }
+        }
+
+        if (parentClaim == null)
+            return;
+
+        Claim subClaim = new Claim(UUID.randomUUID(), player.getUniqueId());
+        subClaim.setParentClaimId(parentClaim.getId());
+
+        for (ChunkPosition pos : chunksToClaim) {
+            subClaim.addChunk(pos);
+        }
+
+        subClaim.setExpireAt(parentClaim.getExpireAt());
+
+        plugin.getCacheManager().getClaimCache().put(subClaim.getId(), subClaim);
+
+        plugin.getDatabaseManager().getClaimDao().saveClaim(subClaim).thenRun(() -> {
+            if (plugin.getRedisManager() != null) {
+                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM", subClaim.getId());
+            }
+        });
+
+        plugin.getVisualizationManager().invalidateCache(player.getUniqueId());
+        plugin.refreshMapHooks();
+
+        player.sendMessage(ChatUtils
+                .parse("<green>Successfully created sub-claim/zone with " + chunksToClaim.size() + " chunks!"));
+        claimManager.clearSelection(player.getUniqueId());
     }
 
     private void unclaimCurrentChunk(Player player) {
         Chunk chunk = player.getLocation().getChunk();
         ChunkPosition pos = new ChunkPosition(chunk);
 
-        Claim claim = claimManager.getClaimAt(pos);
+        Claim claim = claimManager.getSubClaimAt(pos);
+        if (claim == null) {
+            claim = claimManager.getClaimAt(pos);
+        }
+
         if (claim == null) {
             sendMessage(player, "not-owner");
             return;
@@ -582,7 +683,7 @@ public class CommandHandler implements CommandExecutor {
         UUID playerId = player.getUniqueId();
         Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
         Set<ChunkPosition> claims = claimObjects.stream()
-                .map(org.ayosynk.landClaimPlugin.models.Claim::getChunkPosition)
+                .flatMap(claim -> claim.getChunks().stream())
                 .collect(java.util.stream.Collectors.toSet());
 
         if (claims.isEmpty()) {
