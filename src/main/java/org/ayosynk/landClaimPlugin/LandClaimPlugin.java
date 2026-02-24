@@ -165,10 +165,7 @@ public class LandClaimPlugin extends JavaPlugin {
                 homeManager.save();
                 getLogger().info("Saved home data");
             }
-            if (commandHandler != null) {
-                commandHandler.saveAllPlayerData();
-                getLogger().info("Saved player data (auto-claim states)");
-            }
+
             if (visualizationManager != null) {
                 visualizationManager.saveAllPlayerData();
                 getLogger().info("Saved visualization modes");

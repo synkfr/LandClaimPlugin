@@ -4,24 +4,6 @@ main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: '1.21'
 author: AyoSynk
 soft-depend: [WorldGuard, BlueMap, dynmap, Vault]
-commands:
-  claim:
-    description: Main land claim command
-    usage: /claim [auto|trust <player>|untrust <player>|unstuck|visible [always|off]|help|reload|admin|trustlist|info]
-  unclaim:
-    description: Unclaim land chunks
-    usage: /unclaim [auto|all [confirm]]
-  unclaimall:
-    description: Unclaims all your land
-    usage: /unclaimall [confirm]
-  c:
-    description: Alias for /claim
-    usage: /c
-    aliases: []
-  uc:
-    description: Alias for /unclaim
-    usage: /uc
-    aliases: []
 permissions:
   landclaim.*:
     description: All landclaim permissions
