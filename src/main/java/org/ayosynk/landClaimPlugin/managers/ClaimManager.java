@@ -415,6 +415,5 @@ public class ClaimManager {
 
     public void clearSelection(UUID playerId) {
         playerSelections.remove(playerId);
-        plugin.getVisualizationManager().clearSelectionDisplays(playerId);
     }
 }

@@ -3,8 +3,10 @@ package org.ayosynk.landClaimPlugin.managers;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Edge;
-import org.bukkit.*;
-import org.bukkit.block.data.BlockData;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -15,6 +17,7 @@ import org.joml.Vector3f;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class VisualizationManager {
     private final LandClaimPlugin plugin;
@@ -26,11 +29,9 @@ public class VisualizationManager {
     private final AtomicInteger cacheSize = new AtomicInteger(0);
 
     private final Map<UUID, VisualizationMode> visualizationModes = new ConcurrentHashMap<>();
-
-    // Store active block displays per player
-    private final Map<UUID, List<BlockDisplay>> activeDisplays = new ConcurrentHashMap<>();
-    private final Map<UUID, List<BlockDisplay>> selectionDisplays = new ConcurrentHashMap<>();
     private final Map<UUID, Long> temporaryTimers = new ConcurrentHashMap<>();
+
+    private final Map<UUID, List<BlockDisplay>> activeDisplays = new ConcurrentHashMap<>();
 
     public enum VisualizationMode {
         ALWAYS
@@ -44,56 +45,31 @@ public class VisualizationManager {
     }
 
     private void startVisualizationTask() {
-        // We only need to check for claim updates or temporary timer expiration now
+        // Run a task every 20 ticks (1 second) to check for expired temporary
+        // visualizations
+        // and spawn displays if they are missing.
         new BukkitRunnable() {
             @Override
             public void run() {
                 long now = System.currentTimeMillis();
-                for (UUID playerId : new ArrayList<>(activeDisplays.keySet())) {
-                    Player player = Bukkit.getPlayer(playerId);
-                    if (player == null || !player.isOnline()) {
-                        clearDisplays(playerId);
-                        continue;
-                    }
 
-                    // Check temporary timer
-                    if (temporaryTimers.containsKey(playerId)) {
-                        if (now > temporaryTimers.get(playerId)) {
-                            temporaryTimers.remove(playerId);
-                            clearDisplays(playerId);
-                            continue;
+                // Clean up expired temporary timers
+                for (Iterator<Map.Entry<UUID, Long>> it = temporaryTimers.entrySet().iterator(); it.hasNext();) {
+                    Map.Entry<UUID, Long> entry = it.next();
+                    if (now > entry.getValue()) {
+                        it.remove();
+                        // If player doesn't also have ALWAYS mode, clear displays
+                        if (!visualizationModes.containsKey(entry.getKey())) {
+                            clearDisplays(entry.getKey());
+                        } else {
+                            // Needs redraw because temporary material might be different from ALWAYS
+                            // material
+                            redrawDisplays(Bukkit.getPlayer(entry.getKey()));
                         }
                     }
-
-                    // For ALWAYS mode, ensure displays are valid
-                    if (!temporaryTimers.containsKey(playerId) && !visualizationModes.containsKey(playerId)) {
-                        clearDisplays(playerId);
-                        continue;
-                    }
-
-                    // Note: If claims update, invalidateCache handles the redraw
                 }
             }
-        }.runTaskTimer(plugin, 0, 20L); // Check every second
-    }
-
-    public void showPlayerClaims(Player player, VisualizationMode mode) {
-        UUID playerId = player.getUniqueId();
-
-        // If we already have displays and cache is valid, do nothing
-        if (activeDisplays.containsKey(playerId))
-            return;
-
-        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
-        Set<ChunkPosition> claims = claimObjects.stream()
-                .flatMap(claim -> claim.getChunks().stream())
-                .collect(java.util.stream.Collectors.toSet());
-        World world = player.getWorld();
-
-        Set<Edge> edges = getMergedEdges(playerId, world.getName(), claims);
-        Color color = configManager.getVisualizationColor("always-color");
-
-        spawnDisplays(player, edges, color);
+        }.runTaskTimer(plugin, 20L, 20L);
     }
 
     public boolean toggleVisualization(Player player) {
@@ -104,40 +80,75 @@ public class VisualizationManager {
             return false;
         } else {
             visualizationModes.put(playerId, VisualizationMode.ALWAYS);
-            showPlayerClaims(player, VisualizationMode.ALWAYS);
+            redrawDisplays(player);
             return true;
         }
     }
 
     public void showTemporary(Player player) {
         UUID playerId = player.getUniqueId();
-
-        clearDisplays(playerId); // Clear existing before showing temp
-
-        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
-        Set<ChunkPosition> claims = claimObjects.stream()
-                .flatMap(claim -> claim.getChunks().stream())
-                .collect(java.util.stream.Collectors.toSet());
-        World world = player.getWorld();
-
-        Set<Edge> edges = getMergedEdges(playerId, world.getName(), claims);
-        Color color = configManager.getVisualizationColor("temporary-color");
-
-        spawnDisplays(player, edges, color);
-        // Show for 10 seconds
         temporaryTimers.put(playerId, System.currentTimeMillis() + 10000);
+        redrawDisplays(player);
     }
 
-    private void spawnDisplays(Player player, Set<Edge> edges, Color color) {
+    public void invalidateCache(UUID playerId) {
+        if (mergedEdgesCache.remove(playerId) != null) {
+            cacheSize.decrementAndGet();
+        }
+        // If they currently have displays showing, redraw them
+        if (activeDisplays.containsKey(playerId)) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline()) {
+                redrawDisplays(player);
+            }
+        }
+    }
+
+    private void redrawDisplays(Player player) {
+        if (player == null || !player.isOnline())
+            return;
+        UUID playerId = player.getUniqueId();
+
+        clearDisplays(playerId);
+
+        // Determine material based on mode
+        Material material = temporaryTimers.containsKey(playerId) ? Material.ORANGE_STAINED_GLASS
+                : Material.LIME_STAINED_GLASS;
+
+        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = new HashSet<>(
+                claimManager.getPlayerClaims(playerId));
+
+        // Also include the claim the player is currently standing in, even if they
+        // don't own it
+        ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
+        org.ayosynk.landClaimPlugin.models.Claim currentClaim = claimManager.getClaimAt(currentChunk);
+        if (currentClaim != null) {
+            claimObjects.add(currentClaim);
+        }
+
+        Set<ChunkPosition> claims = claimObjects.stream()
+                .flatMap(claim -> claim.getChunks().stream())
+                .collect(Collectors.toSet());
+
+        if (claims.isEmpty()) {
+            player.sendMessage("§cDebug: No claims to visualize.");
+            return;
+        }
+
+        Set<Edge> edges = getMergedEdges(playerId, player.getWorld().getName(), claims);
+        if (edges.isEmpty()) {
+            player.sendMessage("§cDebug: No edges found.");
+            return;
+        }
+
+        player.sendMessage("§aDebug: Spawning " + edges.size() + " edges.");
+        spawnDisplays(player, edges, material);
+    }
+
+    private void spawnDisplays(Player player, Set<Edge> edges, Material material) {
         UUID playerId = player.getUniqueId();
         List<BlockDisplay> displays = new ArrayList<>();
         World world = player.getWorld();
-
-        // Use stained glass for the border, maybe match nearest color
-        // For simplicity, LIME_STAINED_GLASS or LIGHT_BLUE depending on the config
-        // color
-        Material borderMaterial = Material.LIME_STAINED_GLASS;
-        BlockData blockData = Bukkit.createBlockData(borderMaterial);
 
         for (Edge edge : edges) {
             double minX = Math.min(edge.x1(), edge.x2());
@@ -145,31 +156,27 @@ public class VisualizationManager {
             double lengthX = Math.abs(edge.x2() - edge.x1());
             double lengthZ = Math.abs(edge.z2() - edge.z1());
 
-            // Adjust length specifically for the border wall.
-            // If it's a north/south edge, lengthX is 16, lengthZ is 0.
-            if (lengthX == 0)
-                lengthX = 0.1f;
-            if (lengthZ == 0)
-                lengthZ = 0.1f;
-
-            // Spawn location (midpoint of the edge, y=-64 for a full height wall)
-            Location loc = new Location(world, minX, -64, minZ);
-
-            float scaleX = (float) lengthX;
+            float scaleX = (float) (lengthX == 0 ? 0.05f : lengthX);
+            float scaleZ = (float) (lengthZ == 0 ? 0.05f : lengthZ);
             float scaleY = 384f; // Build limit from -64 to 320
-            float scaleZ = (float) lengthZ;
+
+            double playerY = player.getLocation().getY();
+            Location loc = new Location(world, minX, playerY, minZ);
 
             BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
                 e.setPersistent(false);
                 e.setVisibleByDefault(false);
-                e.setBlock(blockData);
-                // Make it glow and visible slightly
-                e.setGlowing(true);
+                e.setBlock(Bukkit.createBlockData(material));
+                e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
                 e.setGravity(false);
 
-                // Transformation for scaling
+                // Adjust translation to center the extremely thin boundary block
+                float transX = lengthX == 0 ? -0.025f : 0f;
+                float transY = (float) (-64 - playerY); // shift origin back down to bedrock
+                float transZ = lengthZ == 0 ? -0.025f : 0f;
+
                 Transformation transform = new Transformation(
-                        new Vector3f(),
+                        new Vector3f(transX, transY, transZ),
                         new AxisAngle4f(),
                         new Vector3f(scaleX, scaleY, scaleZ),
                         new AxisAngle4f());
@@ -183,7 +190,7 @@ public class VisualizationManager {
         activeDisplays.put(playerId, displays);
     }
 
-    public void clearDisplays(UUID playerId) {
+    private void clearDisplays(UUID playerId) {
         List<BlockDisplay> displays = activeDisplays.remove(playerId);
         if (displays != null) {
             for (BlockDisplay display : displays) {
@@ -194,85 +201,7 @@ public class VisualizationManager {
         }
     }
 
-    public void clearSelectionDisplays(UUID playerId) {
-        List<BlockDisplay> displays = selectionDisplays.remove(playerId);
-        if (displays != null) {
-            for (BlockDisplay display : displays) {
-                if (display.isValid()) {
-                    display.remove();
-                }
-            }
-        }
-    }
-
-    public void visualizeSelection(Player player, org.ayosynk.landClaimPlugin.models.ChunkSelection selection) {
-        UUID playerId = player.getUniqueId();
-        clearSelectionDisplays(playerId);
-
-        Set<ChunkPosition> chunks = selection.getSelectedChunks();
-        if (chunks.isEmpty() && selection.getPos1() != null)
-            chunks.add(selection.getPos1());
-        if (chunks.isEmpty() && selection.getPos2() != null)
-            chunks.add(selection.getPos2());
-        if (chunks.isEmpty())
-            return;
-
-        World world = player.getWorld();
-        Set<Edge> edges = getMergedEdges(playerId, world.getName(), chunks);
-
-        List<BlockDisplay> displays = new ArrayList<>();
-        Material material = Material.LIME_STAINED_GLASS;
-        if (selection.isComplete())
-            material = Material.CYAN_STAINED_GLASS;
-
-        BlockData blockData = Bukkit.createBlockData(material);
-
-        for (Edge edge : edges) {
-            double startX = edge.x1() * 16 + (edge.z1() == edge.z2() && edge.x1() < edge.x2() ? 16 : 0);
-            double startZ = edge.z1() * 16 + (edge.x1() == edge.x2() && edge.z1() < edge.z2() ? 16 : 0);
-            double endX = edge.x2() * 16 + (edge.z1() == edge.z2() && edge.x1() > edge.x2() ? 16 : 0);
-            double endZ = edge.z2() * 16 + (edge.x1() == edge.x2() && edge.z1() > edge.z2() ? 16 : 0);
-
-            double minX = Math.min(startX, endX);
-            double minZ = Math.min(startZ, endZ);
-            double maxX = Math.max(startX, endX);
-            double maxZ = Math.max(startZ, endZ);
-
-            double lengthX = maxX - minX;
-            double lengthZ = maxZ - minZ;
-
-            if (lengthX == 0)
-                lengthX = 0.1f;
-            if (lengthZ == 0)
-                lengthZ = 0.1f;
-
-            Location loc = new Location(world, minX, -64, minZ);
-
-            float scaleX = (float) lengthX;
-            float scaleY = 384f;
-            float scaleZ = (float) lengthZ;
-
-            BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
-                e.setPersistent(false);
-                e.setVisibleByDefault(false);
-                e.setBlock(blockData);
-                e.setGlowing(true);
-                e.setGravity(false);
-
-                Transformation transform = new Transformation(
-                        new Vector3f(),
-                        new AxisAngle4f(),
-                        new Vector3f(scaleX, scaleY, scaleZ),
-                        new AxisAngle4f());
-                e.setTransformation(transform);
-            });
-
-            player.showEntity(plugin, display);
-            displays.add(display);
-        }
-
-        selectionDisplays.put(playerId, displays);
-    }
+    // --- Caching and Edge Merging ---
 
     private Set<Edge> getMergedEdges(UUID playerId, String worldName, Set<ChunkPosition> claims) {
         if (mergedEdgesCache.containsKey(playerId)) {
@@ -305,6 +234,7 @@ public class VisualizationManager {
         }
 
         Set<Edge> uniqueEdges = new HashSet<>();
+        // Simplify adjacent edges
         for (Map.Entry<Edge, Integer> entry : edgeCounts.entrySet()) {
             if (entry.getValue() == 1) {
                 uniqueEdges.add(entry.getKey());
@@ -339,23 +269,6 @@ public class VisualizationManager {
         }
     }
 
-    public void invalidateCache(UUID playerId) {
-        if (mergedEdgesCache.remove(playerId) != null) {
-            cacheSize.decrementAndGet();
-        }
-        // Force redraw by clearing displays
-        clearDisplays(playerId);
-
-        Player player = Bukkit.getPlayer(playerId);
-        if (player != null && player.isOnline()) {
-            if (visualizationModes.containsKey(playerId)) {
-                showPlayerClaims(player, visualizationModes.get(playerId));
-            } else if (temporaryTimers.containsKey(playerId)) {
-                showTemporary(player);
-            }
-        }
-    }
-
     public void setVisualizationMode(UUID playerId, VisualizationMode mode) {
         if (mode == null) {
             visualizationModes.remove(playerId);
@@ -363,8 +276,8 @@ public class VisualizationManager {
         } else {
             visualizationModes.put(playerId, mode);
             Player player = Bukkit.getPlayer(playerId);
-            if (player != null && player.isOnline()) {
-                showPlayerClaims(player, mode);
+            if (player != null) {
+                redrawDisplays(player);
             }
         }
     }
@@ -374,20 +287,14 @@ public class VisualizationManager {
     }
 
     public void handlePlayerJoin(Player player) {
-        if (!visualizationModes.containsKey(player.getUniqueId())) {
-            String defaultMode = configManager.getDefaultVisualizationMode();
-            if ("ALWAYS".equalsIgnoreCase(defaultMode)) {
-                visualizationModes.put(player.getUniqueId(), VisualizationMode.ALWAYS);
-            }
-        }
-
-        if (visualizationModes.containsKey(player.getUniqueId())) {
-            showPlayerClaims(player, visualizationModes.get(player.getUniqueId()));
+        String defaultMode = configManager.getDefaultVisualizationMode();
+        if ("ALWAYS".equalsIgnoreCase(defaultMode)) {
+            visualizationModes.put(player.getUniqueId(), VisualizationMode.ALWAYS);
+            redrawDisplays(player);
         }
     }
 
     public void handlePlayerQuit(UUID playerId) {
-        savePlayerState(playerId);
         visualizationModes.remove(playerId);
         temporaryTimers.remove(playerId);
         clearDisplays(playerId);
@@ -396,14 +303,7 @@ public class VisualizationManager {
         }
     }
 
-    private void loadPlayerData() {
-    }
-
-    private void savePlayerState(UUID playerId) {
-    }
-
-    public void saveAllPlayerData() {
-        // Also cleanup displays on disable
+    public void cleanupLocalDisplays() {
         for (UUID playerId : new ArrayList<>(activeDisplays.keySet())) {
             clearDisplays(playerId);
         }

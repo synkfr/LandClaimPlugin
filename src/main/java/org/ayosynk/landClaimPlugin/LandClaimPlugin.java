@@ -147,8 +147,8 @@ public class LandClaimPlugin extends JavaPlugin {
             }
 
             if (visualizationManager != null) {
-                visualizationManager.saveAllPlayerData();
-                getLogger().info("Saved visualization modes");
+                visualizationManager.cleanupLocalDisplays();
+                getLogger().info("Cleared active visualization displays");
             }
             if (databaseManager != null) {
                 databaseManager.shutdown();
