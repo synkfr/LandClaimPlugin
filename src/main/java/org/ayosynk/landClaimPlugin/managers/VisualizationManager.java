@@ -40,7 +40,6 @@ public class VisualizationManager {
         this.plugin = plugin;
         this.claimManager = claimManager;
         this.configManager = configManager;
-        loadPlayerData();
         startVisualizationTask();
     }
 
@@ -385,45 +384,12 @@ public class VisualizationManager {
     }
 
     private void loadPlayerData() {
-        var playerDataConfig = configManager.getPlayerDataConfig();
-        var vizSection = playerDataConfig.getConfigurationSection("visualization-modes");
-
-        if (vizSection != null) {
-            for (String uuidStr : vizSection.getKeys(false)) {
-                try {
-                    UUID playerId = UUID.fromString(uuidStr);
-                    String modeStr = vizSection.getString(uuidStr);
-                    if ("ALWAYS".equalsIgnoreCase(modeStr)) {
-                        visualizationModes.put(playerId, VisualizationMode.ALWAYS);
-                    }
-                } catch (IllegalArgumentException ignored) {
-                }
-            }
-        }
     }
 
     private void savePlayerState(UUID playerId) {
-        var playerDataConfig = configManager.getPlayerDataConfig();
-        String uuidStr = playerId.toString();
-
-        if (visualizationModes.containsKey(playerId)) {
-            playerDataConfig.set("visualization-modes." + uuidStr, visualizationModes.get(playerId).name());
-        } else {
-            playerDataConfig.set("visualization-modes." + uuidStr, null);
-        }
-
-        configManager.savePlayerData();
     }
 
     public void saveAllPlayerData() {
-        var playerDataConfig = configManager.getPlayerDataConfig();
-
-        for (Map.Entry<UUID, VisualizationMode> entry : visualizationModes.entrySet()) {
-            playerDataConfig.set("visualization-modes." + entry.getKey().toString(), entry.getValue().name());
-        }
-
-        configManager.savePlayerData();
-
         // Also cleanup displays on disable
         for (UUID playerId : new ArrayList<>(activeDisplays.keySet())) {
             clearDisplays(playerId);

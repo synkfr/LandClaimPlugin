@@ -213,38 +213,6 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        org.bukkit.inventory.ItemStack item = player.getInventory().getItemInMainHand();
-
-        // Claim Wand Logic
-        if (item.getType().name().equalsIgnoreCase(configManager.getPluginConfig().claimWandItem)) {
-            if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK ||
-                    event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
-
-                if (event.getClickedBlock() != null) {
-                    event.setCancelled(true);
-                    ChunkPosition pos = new ChunkPosition(event.getClickedBlock().getChunk());
-                    org.ayosynk.landClaimPlugin.models.ChunkSelection selection = claimManager
-                            .getSelection(player.getUniqueId());
-
-                    if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
-                        selection.setPos1(pos);
-                        player.sendMessage(configManager.getMessage("wandPos1",
-                                "<x>", String.valueOf(pos.x()),
-                                "<z>", String.valueOf(pos.z()),
-                                "<world>", pos.world()));
-                    } else {
-                        selection.setPos2(pos);
-                        player.sendMessage(configManager.getMessage("wandPos2",
-                                "<x>", String.valueOf(pos.x()),
-                                "<z>", String.valueOf(pos.z()),
-                                "<world>", pos.world()));
-                    }
-                    plugin.getVisualizationManager().visualizeSelection(player, selection);
-                    return;
-                }
-            }
-        }
 
         if (event.getClickedBlock() == null)
             return;

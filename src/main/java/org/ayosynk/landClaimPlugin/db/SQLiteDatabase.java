@@ -18,7 +18,11 @@ public class SQLiteDatabase implements Database {
 
     @Override
     public void connect() throws SQLException {
-        File dbFile = new File(plugin.getDataFolder(), "database.db");
+        File dataFolder = new File(plugin.getDataFolder(), "PlayerData");
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+        }
+        File dbFile = new File(dataFolder, "database.db");
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());

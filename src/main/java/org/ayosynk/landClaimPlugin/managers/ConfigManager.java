@@ -10,11 +10,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.MessagesConfig;
 import org.ayosynk.landClaimPlugin.config.PluginConfig;
 import org.bukkit.Color;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 public class ConfigManager {
@@ -22,14 +18,6 @@ public class ConfigManager {
 
     private PluginConfig pluginConfig;
     private MessagesConfig messagesConfig;
-
-    // Legacy data configs (Will be moved to DB/Redis later)
-    private FileConfiguration claimsConfig;
-    private File claimsFile;
-    private FileConfiguration trustConfig;
-    private File trustFile;
-    private FileConfiguration playerDataConfig;
-    private File playerDataFile;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -50,30 +38,6 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
-
-        claimsFile = new File(plugin.getDataFolder(), "claims.yml");
-        if (!claimsFile.exists())
-            createEmptyFile(claimsFile);
-        claimsConfig = YamlConfiguration.loadConfiguration(claimsFile);
-
-        trustFile = new File(plugin.getDataFolder(), "trust.yml");
-        if (!trustFile.exists())
-            createEmptyFile(trustFile);
-        trustConfig = YamlConfiguration.loadConfiguration(trustFile);
-
-        playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
-        if (!playerDataFile.exists())
-            createEmptyFile(playerDataFile);
-        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
-    }
-
-    private void createEmptyFile(File file) {
-        try {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to create file: " + file.getName());
-        }
     }
 
     public void reloadMainConfig() {
@@ -87,43 +51,6 @@ public class ConfigManager {
 
     public MessagesConfig getMessagesConfig() {
         return messagesConfig;
-    }
-
-    public FileConfiguration getClaimsConfig() {
-        return claimsConfig;
-    }
-
-    public FileConfiguration getTrustConfig() {
-        return trustConfig;
-    }
-
-    public FileConfiguration getPlayerDataConfig() {
-        return playerDataConfig;
-    }
-
-    public void savePlayerData() {
-        try {
-            playerDataConfig.save(playerDataFile);
-        } catch (IOException ignored) {
-        }
-    }
-
-    public void reloadPlayerData() {
-        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
-    }
-
-    public void saveClaimsConfig() {
-        try {
-            claimsConfig.save(claimsFile);
-        } catch (IOException ignored) {
-        }
-    }
-
-    public void saveTrustConfig() {
-        try {
-            trustConfig.save(trustFile);
-        } catch (IOException ignored) {
-        }
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
