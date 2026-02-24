@@ -16,7 +16,6 @@ import org.ayosynk.landClaimPlugin.managers.HomeManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.managers.SaveManager;
-import org.ayosynk.landClaimPlugin.utils.ConfigUpdater;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -144,7 +143,6 @@ public class LandClaimPlugin extends JavaPlugin {
     }
 
     public void reloadConfiguration() {
-        ConfigUpdater.updateConfig(this);
         configManager.reloadMainConfig();
 
         blockedCommands = configManager.getBlockedCommands();
