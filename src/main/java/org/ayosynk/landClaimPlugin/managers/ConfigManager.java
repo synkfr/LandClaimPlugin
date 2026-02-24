@@ -248,7 +248,25 @@ public class ConfigManager {
 
     private String getRawMessageString(String key) {
         try {
-            var field = messagesConfig.getClass().getField(key);
+            // Convert kebab-case to camelCase if needed
+            String camelCaseKey = key;
+            if (key.contains("-")) {
+                StringBuilder sb = new StringBuilder();
+                boolean nextUpper = false;
+                for (char c : key.toCharArray()) {
+                    if (c == '-') {
+                        nextUpper = true;
+                    } else if (nextUpper) {
+                        sb.append(Character.toUpperCase(c));
+                        nextUpper = false;
+                    } else {
+                        sb.append(c);
+                    }
+                }
+                camelCaseKey = sb.toString();
+            }
+
+            var field = messagesConfig.getClass().getField(camelCaseKey);
             return (String) field.get(messagesConfig);
         } catch (Exception e) {
             return "<red>Message not found: " + key;

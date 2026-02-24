@@ -8,7 +8,6 @@ import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Claim;
-import org.ayosynk.landClaimPlugin.utils.ChatUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -119,29 +118,29 @@ public class EventListener implements Listener {
                 String message;
 
                 if (playerId.equals(ownerId)) {
-                    message = configManager.getActionBarMessage("actionbar-own");
+                    message = configManager.getActionBarMessage("actionbar-owned-by-you");
                 } else if (trustManager.hasPermission(claimManager.getClaimAt(currentPos), player.getUniqueId(),
                         "INTERACT")) {
                     message = configManager.getActionBarMessage("actionbar-trusted")
-                            .replace("{owner}", ownerName);
+                            .replace("<owner>", ownerName);
                 } else if (player.hasPermission("landclaim.admin")) {
                     message = configManager.getActionBarMessage("actionbar-admin")
-                            .replace("{owner}", ownerName);
+                            .replace("<owner>", ownerName);
                 } else {
-                    message = configManager.getActionBarMessage("actionbar-owner")
-                            .replace("{owner}", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-owned-by-other")
+                            .replace("<owner>", ownerName);
                 }
 
-                sendActionBar(player, ChatUtils.colorize(message));
+                sendActionBar(player, message);
                 lastActionBarMap.put(playerId, message);
             } else {
                 String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
-                sendActionBar(player, ChatUtils.colorize(wildernessMsg));
+                sendActionBar(player, wildernessMsg);
                 lastActionBarMap.put(playerId, wildernessMsg);
             }
         } else if (!isClaimed) {
             String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
-            sendActionBar(player, ChatUtils.colorize(wildernessMsg));
+            sendActionBar(player, wildernessMsg);
         }
     }
 
@@ -230,18 +229,16 @@ public class EventListener implements Listener {
 
                     if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
                         selection.setPos1(pos);
-                        player.sendMessage(ChatUtils.parse(
-                                configManager.getMessage("wandPos1")
-                                        .replace("<x>", String.valueOf(pos.x()))
-                                        .replace("<z>", String.valueOf(pos.z()))
-                                        .replace("<world>", pos.world())));
+                        player.sendMessage(configManager.getMessage("wandPos1",
+                                "<x>", String.valueOf(pos.x()),
+                                "<z>", String.valueOf(pos.z()),
+                                "<world>", pos.world()));
                     } else {
                         selection.setPos2(pos);
-                        player.sendMessage(ChatUtils.parse(
-                                configManager.getMessage("wandPos2")
-                                        .replace("<x>", String.valueOf(pos.x()))
-                                        .replace("<z>", String.valueOf(pos.z()))
-                                        .replace("<world>", pos.world())));
+                        player.sendMessage(configManager.getMessage("wandPos2",
+                                "<x>", String.valueOf(pos.x()),
+                                "<z>", String.valueOf(pos.z()),
+                                "<world>", pos.world()));
                     }
                     plugin.getVisualizationManager().visualizeSelection(player, selection);
                     return;

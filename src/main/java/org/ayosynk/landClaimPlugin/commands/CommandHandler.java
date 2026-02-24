@@ -12,7 +12,6 @@ import org.ayosynk.landClaimPlugin.models.Claim;
 import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
 import org.ayosynk.landClaimPlugin.gui.MemberListGUI;
 import org.ayosynk.landClaimPlugin.gui.RoleSelectorGUI;
-import org.ayosynk.landClaimPlugin.utils.ChatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -461,10 +460,11 @@ public class CommandHandler implements CommandExecutor {
             // They have a selection. Try to claim all of them as one claim!
             int claimed = plugin.getClaimManager().claimChunks(player, chunksToClaim);
             if (claimed > 0) {
-                player.sendMessage(ChatUtils.parse("<green>Successfully claimed " + claimed + " chunks!"));
+                player.sendMessage(
+                        configManager.getMessage("chunks-claimed-success", "<count>", String.valueOf(claimed)));
                 claimManager.clearSelection(player.getUniqueId());
             } else {
-                player.sendMessage(ChatUtils.parse("<red>Failed to claim chunks. Limit reached or already claimed."));
+                player.sendMessage(configManager.getMessage("claim-failed"));
             }
         }
     }
@@ -486,7 +486,7 @@ public class CommandHandler implements CommandExecutor {
         }
 
         player.getInventory().addItem(wand);
-        player.sendMessage(ChatUtils.parse(configManager.getMessage("wandGiven")));
+        player.sendMessage(configManager.getMessage("wandGiven"));
     }
 
     private void createSubClaim(Player player) {
@@ -494,7 +494,7 @@ public class CommandHandler implements CommandExecutor {
         Set<ChunkPosition> chunksToClaim = selection.getSelectedChunks();
 
         if (chunksToClaim.isEmpty()) {
-            player.sendMessage(ChatUtils.parse("<red>You must make a selection first using the Claim Wand."));
+            player.sendMessage(configManager.getMessage("selection-required"));
             return;
         }
 
@@ -502,17 +502,17 @@ public class CommandHandler implements CommandExecutor {
         for (ChunkPosition pos : chunksToClaim) {
             Claim claim = claimManager.getClaimAt(pos);
             if (claim == null || !claim.getOwnerId().equals(player.getUniqueId())) {
-                player.sendMessage(ChatUtils.parse("<red>All chunks in a sub-claim must be within your own claim."));
+                player.sendMessage(configManager.getMessage("subclaim-must-be-owned"));
                 return;
             }
             if (claimManager.getSubClaimAt(pos) != null) {
-                player.sendMessage(ChatUtils.parse("<red>A sub-claim already exists here."));
+                player.sendMessage(configManager.getMessage("subclaim-already-exists"));
                 return;
             }
             if (parentClaim == null) {
                 parentClaim = claim;
             } else if (!parentClaim.getId().equals(claim.getId())) {
-                player.sendMessage(ChatUtils.parse("<red>A sub-claim cannot overlap multiple different claims."));
+                player.sendMessage(configManager.getMessage("subclaim-overlap"));
                 return;
             }
         }
@@ -540,8 +540,8 @@ public class CommandHandler implements CommandExecutor {
         plugin.getVisualizationManager().invalidateCache(player.getUniqueId());
         plugin.refreshMapHooks();
 
-        player.sendMessage(ChatUtils
-                .parse("<green>Successfully created sub-claim/zone with " + chunksToClaim.size() + " chunks!"));
+        player.sendMessage(
+                configManager.getMessage("subclaim-created", "<count>", String.valueOf(chunksToClaim.size())));
         claimManager.clearSelection(player.getUniqueId());
     }
 
