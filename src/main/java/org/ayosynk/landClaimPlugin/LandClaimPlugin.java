@@ -14,7 +14,6 @@ import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.WarpManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
-import org.ayosynk.landClaimPlugin.managers.SaveManager;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,7 +30,6 @@ public class LandClaimPlugin extends JavaPlugin {
     private ClaimManager claimManager;
     private TrustManager trustManager;
     private VisualizationManager visualizationManager;
-    private SaveManager saveManager;
     private WarpManager warpManager;
     private CommandHandler commandHandler;
     private EventListener eventListener;
@@ -73,8 +71,7 @@ public class LandClaimPlugin extends JavaPlugin {
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
 
             warpManager = new WarpManager(this, configManager); // Changed from homeManager = new HomeManager(...)
-
-            saveManager = new SaveManager(this, claimManager, trustManager, warpManager); // Changed from homeManager
+            warpManager.loadFromDatabase();
 
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager,
                     warpManager); // Changed from homeManager
@@ -93,8 +90,6 @@ public class LandClaimPlugin extends JavaPlugin {
             // Legacy GUI Listener was removed here
 
             reloadConfiguration();
-
-            saveManager.startAutoSave();
 
             Bukkit.getScheduler().runTask(this, () -> {
                 if (configManager.getPluginConfig().bluemap.enabled
@@ -137,14 +132,15 @@ public class LandClaimPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         try {
-            if (saveManager != null) {
-                saveManager.saveAll();
-                getLogger().info("Saved " + claimManager.getTotalClaims() + " claims.");
-            }
-            if (warpManager != null) {
-                warpManager.save();
-                getLogger().info("Saved warp data");
-            }
+            getServer().getScheduler().runTaskAsynchronously(this, () -> {
+                if (warpManager != null) {
+                    warpManager.save();
+                    getLogger().info("Saved warp data");
+                }
+                if (redisManager != null) {
+                    redisManager.shutdown();
+                }
+            });
 
             if (visualizationManager != null) {
                 visualizationManager.cleanupLocalDisplays();
@@ -188,10 +184,6 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public VisualizationManager getVisualizationManager() {
         return visualizationManager;
-    }
-
-    public SaveManager getSaveManager() {
-        return saveManager;
     }
 
     public WarpManager getWarpManager() {

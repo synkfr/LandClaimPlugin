@@ -2,6 +2,7 @@ package org.ayosynk.landClaimPlugin.db;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DatabaseManager {
@@ -10,6 +11,7 @@ public class DatabaseManager {
     private ClaimDao claimDao;
     private PlayerDao playerDao;
     private RoleDao roleDao;
+    private WarpDao warpDao;
 
     public DatabaseManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -31,10 +33,12 @@ public class DatabaseManager {
             this.claimDao = new SQLClaimDao(plugin, this);
             this.playerDao = new SQLPlayerDao(plugin, this);
             this.roleDao = new SQLRoleDao(plugin, this);
+            this.warpDao = new SQLWarpDao(plugin, this);
 
             this.claimDao.createTables();
             this.playerDao.createTables();
             this.roleDao.createTables();
+            this.warpDao.createTables();
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to connect to the database! Disabling plugin.");
             e.printStackTrace();
@@ -63,5 +67,18 @@ public class DatabaseManager {
 
     public RoleDao getRoleDao() {
         return roleDao;
+    }
+
+    public WarpDao getWarpDao() {
+        return warpDao;
+    }
+
+    public Connection getConnection() throws SQLException {
+        return database.getConnection();
+    }
+
+    public boolean isMySQL() {
+        String type = plugin.getConfigManager().getPluginConfig().database.type;
+        return type.equalsIgnoreCase("MYSQL") || type.equalsIgnoreCase("MARIADB");
     }
 }

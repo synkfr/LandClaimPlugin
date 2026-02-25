@@ -9,6 +9,12 @@ import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemBuilder;
 import xyz.xenondevs.invui.window.Window;
+import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainMenuGUI {
 
@@ -20,6 +26,9 @@ public class MainMenuGUI {
 
                 String claimName = claim.getName() != null ? claim.getName() : "Unnamed Claim";
 
+                MainMenuConfig config = plugin.getConfigManager().getMainMenuConfig();
+                MiniMessage mm = MiniMessage.miniMessage();
+
                 Gui.Builder<?, ?> guiBuilder = Gui.builder()
                                 .setStructure(
                                                 "F F F F F F F F F",
@@ -28,75 +37,81 @@ public class MainMenuGUI {
                                                 ". . . . . . . . .",
                                                 ". . . . . . . . .",
                                                 "F F F F F F F F X")
-                                .addIngredient('F',
-                                                Item.simple(new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE)
-                                                                .setLegacyName(" ")))
-                                .addIngredient('I', Item.simple(new ItemBuilder(Material.WRITTEN_BOOK)
-                                                .setLegacyName("§eClaim Information")
-                                                .addLegacyLoreLines(
-                                                                "§7Owner: §f" + ownerName,
-                                                                "§7Size: §f" + claim.getChunks().size() + " chunks",
-                                                                "§7Power usage: §f0", // Placeholder for when power is
-                                                                                      // implemented
-                                                                "§7Members count: §f" + claim.getPlayerRoles().size(),
-                                                                "",
-                                                                "§eClick to view details")))
-                                .addIngredient('M', Item.simple(new ItemBuilder(Material.FILLED_MAP)
-                                                .setLegacyName("§aClaim Map")
-                                                .addLegacyLoreLines(
-                                                                "§7Opens visual chunk overview",
-                                                                "§7Shows nearby claims & highlights borders",
-                                                                "",
-                                                                "§eClick to open map (Soon)")))
-                                .addIngredient('E', Item.simple(new ItemBuilder(Material.PLAYER_HEAD)
-                                                .setLegacyName("§bMembers")
-                                                .addLegacyLoreLines(
-                                                                "§7Shows all claim members",
-                                                                "",
-                                                                "§eClick to manage")))
-                                .addIngredient('T', Item.simple(new ItemBuilder(Material.TOTEM_OF_UNDYING)
-                                                .setLegacyName("§6Trusted Players")
-                                                .addLegacyLoreLines(
-                                                                "§7Players who bypass protections",
-                                                                "",
-                                                                "§eClick to manage")))
-                                .addIngredient('V', Item.simple(new ItemBuilder(Material.EMERALD)
-                                                .setLegacyName("§aVisitor Settings")
-                                                .addLegacyLoreLines(
-                                                                "§7Configure what visitors can do",
-                                                                "",
-                                                                "§eClick to configure")))
-                                .addIngredient('W', Item.simple(new ItemBuilder(Material.RECOVERY_COMPASS)
-                                                .setLegacyName("§dClaim Warps")
-                                                .addLegacyLoreLines(
-                                                                "§7Create and teleport to warps",
-                                                                "",
-                                                                "§eClick to manage warps")))
-                                .addIngredient('S', Item.simple(new ItemBuilder(Material.FLOWER_BANNER_PATTERN)
-                                                .setLegacyName("§eClaim Settings")
-                                                .addLegacyLoreLines(
-                                                                "§7Core configuration",
-                                                                "§7Durable system settings",
-                                                                "",
-                                                                "§eClick to open settings")))
-                                .addIngredient('C', Item.simple(new ItemBuilder(Material.GRASS_BLOCK)
-                                                .setLegacyName("§a" + claimName)
-                                                .addLegacyLoreLines(
-                                                                "§7World: §f" + player.getWorld().getName(),
-                                                                "§7Location: §f" + player.getLocation().getBlockX()
-                                                                                + ", "
-                                                                                + player.getLocation().getBlockZ(),
-                                                                "§7Chunk size: §f" + claim.getChunks().size())))
+                                .addIngredient('F', buildConfigItem(config.filler, claim, player, ownerName, claimName))
+                                .addIngredient('I',
+                                                buildConfigItem(config.claimInfo, claim, player, ownerName, claimName))
+                                .addIngredient('M',
+                                                buildConfigItem(config.claimMap, claim, player, ownerName, claimName))
+                                .addIngredient('E',
+                                                buildConfigItem(config.members, claim, player, ownerName, claimName))
+                                .addIngredient('T',
+                                                buildConfigItem(config.trusted, claim, player, ownerName, claimName))
+                                .addIngredient('V',
+                                                buildConfigItem(config.visitors, claim, player, ownerName, claimName))
+                                .addIngredient('W', buildConfigItem(config.warps, claim, player, ownerName, claimName))
+                                .addIngredient('S',
+                                                buildConfigItem(config.settings, claim, player, ownerName, claimName))
+                                .addIngredient('C',
+                                                buildConfigItem(config.claimAnchor, claim, player, ownerName,
+                                                                claimName))
                                 .addIngredient('X', Item.builder()
-                                                .setItemProvider(new ItemBuilder(Material.BARRIER)
-                                                                .setLegacyName("§cClose"))
+                                                .setItemProvider(buildConfigItemBuilder(config.close, claim, player,
+                                                                ownerName, claimName))
                                                 .addClickHandler(click -> click.player().closeInventory()).build());
 
                 Gui gui = guiBuilder.build();
 
+                String windowTitle = config.title.replace("{claim_name}", claimName);
+
                 Window.builder()
-                                .setTitle("Claim: " + claimName)
+                                .setTitle(mm.deserialize(windowTitle))
                                 .setUpperGui(gui)
                                 .open(player);
+        }
+
+        private static Item buildConfigItem(MainMenuConfig.ItemConfig itemConfig, Claim claim, Player player,
+                        String ownerName, String claimName) {
+                return Item.simple(buildConfigItemBuilder(itemConfig, claim, player, ownerName, claimName));
+        }
+
+        private static ItemBuilder buildConfigItemBuilder(MainMenuConfig.ItemConfig itemConfig, Claim claim,
+                        Player player, String ownerName, String claimName) {
+                Material mat = Material.matchMaterial(itemConfig.material.toUpperCase());
+                if (mat == null)
+                        mat = Material.STONE;
+
+                ItemBuilder builder = new ItemBuilder(mat);
+                MiniMessage mm = MiniMessage.miniMessage();
+                LegacyComponentSerializer legacy = LegacyComponentSerializer.legacySection();
+
+                if (itemConfig.name != null && !itemConfig.name.isEmpty()) {
+                        Component comp = mm.deserialize(
+                                        replacePlaceholders(itemConfig.name, claim, player, ownerName, claimName));
+                        builder.setLegacyName(legacy.serialize(comp));
+                }
+
+                if (itemConfig.lore != null && !itemConfig.lore.isEmpty()) {
+                        List<String> lore = new ArrayList<>();
+                        for (String line : itemConfig.lore) {
+                                Component comp = mm.deserialize(
+                                                replacePlaceholders(line, claim, player, ownerName, claimName));
+                                lore.add(legacy.serialize(comp));
+                        }
+                        builder.setLegacyLore(lore);
+                }
+
+                return builder;
+        }
+
+        private static String replacePlaceholders(String text, Claim claim, Player player, String ownerName,
+                        String claimName) {
+                return text.replace("{claim_name}", claimName)
+                                .replace("{owner}", ownerName)
+                                .replace("{size}", String.valueOf(claim.getChunks().size()))
+                                .replace("{power}", "0")
+                                .replace("{members}", String.valueOf(claim.getPlayerRoles().size()))
+                                .replace("{world}", player.getWorld().getName())
+                                .replace("{x}", String.valueOf(player.getLocation().getBlockX()))
+                                .replace("{z}", String.valueOf(player.getLocation().getBlockZ()));
         }
 }

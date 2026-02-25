@@ -9,6 +9,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.MessagesConfig;
 import org.ayosynk.landClaimPlugin.config.PluginConfig;
+import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -18,6 +19,7 @@ public class ConfigManager {
 
     private PluginConfig pluginConfig;
     private MessagesConfig messagesConfig;
+    private MainMenuConfig mainMenuConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -38,11 +40,19 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.mainMenuConfig = eu.okaeri.configs.ConfigManager.create(MainMenuConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/mainmenu.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
         pluginConfig.load();
         messagesConfig.load();
+        mainMenuConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -51,6 +61,10 @@ public class ConfigManager {
 
     public MessagesConfig getMessagesConfig() {
         return messagesConfig;
+    }
+
+    public MainMenuConfig getMainMenuConfig() {
+        return mainMenuConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
