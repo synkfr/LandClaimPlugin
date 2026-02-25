@@ -94,52 +94,43 @@ public class EventListener implements Listener {
         ChunkPosition lastPos = lastChunkMap.get(playerId);
 
         boolean isClaimed = claimManager.isChunkClaimed(currentPos);
-        Boolean wasClaimedBefore = lastClaimStatusMap.get(playerId);
+        boolean chunkChanged = lastPos == null || !currentPos.equals(lastPos);
 
-        boolean needsUpdate = false;
-
-        if (isClaimed) {
-            needsUpdate = (lastPos == null || !currentPos.equals(lastPos));
-        } else {
-            needsUpdate = (wasClaimedBefore == null || wasClaimedBefore);
-        }
-
-        if (needsUpdate) {
+        // If chunk changed, compute the new actionbar string and cache it
+        if (chunkChanged) {
             lastChunkMap.put(playerId, currentPos);
             lastClaimStatusMap.put(playerId, isClaimed);
 
+            String message;
             if (isClaimed) {
                 UUID ownerId = claimManager.getChunkOwner(currentPos);
                 String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
                 if (ownerName == null)
                     ownerName = "Unknown";
 
-                String message;
-
                 if (playerId.equals(ownerId)) {
                     message = configManager.getActionBarMessage("actionbar-owned-by-you");
                 } else if (trustManager.hasPermission(claimManager.getClaimAt(currentPos), player.getUniqueId(),
                         "INTERACT")) {
-                    message = configManager.getActionBarMessage("actionbar-trusted")
-                            .replace("<owner>", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
                 } else if (player.hasPermission("landclaim.admin")) {
-                    message = configManager.getActionBarMessage("actionbar-admin")
-                            .replace("<owner>", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
                 } else {
-                    message = configManager.getActionBarMessage("actionbar-owned-by-other")
-                            .replace("<owner>", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>",
+                            ownerName);
                 }
-
-                sendActionBar(player, message);
-                lastActionBarMap.put(playerId, message);
             } else {
-                String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
-                sendActionBar(player, wildernessMsg);
-                lastActionBarMap.put(playerId, wildernessMsg);
+                message = configManager.getActionBarMessage("actionbar-wilderness");
             }
-        } else if (!isClaimed) {
-            String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
-            sendActionBar(player, wildernessMsg);
+
+            lastActionBarMap.put(playerId, message);
+        }
+
+        // Always send the cached message to ensure persistence across all claims and
+        // wilderness
+        String cachedMessage = lastActionBarMap.get(playerId);
+        if (cachedMessage != null) {
+            sendActionBar(player, cachedMessage);
         }
     }
 
