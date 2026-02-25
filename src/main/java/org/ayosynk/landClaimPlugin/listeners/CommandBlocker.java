@@ -46,7 +46,7 @@ public class CommandBlocker implements Listener {
         UUID owner = claim.getOwnerId();
 
         if (player.getUniqueId().equals(owner) ||
-                trustManager.hasPermission(claim, player.getUniqueId(), "BUILD")) {
+                trustManager.hasPermission(claim, player.getUniqueId(), "MANAGE_SETTINGS")) {
             return;
         }
 

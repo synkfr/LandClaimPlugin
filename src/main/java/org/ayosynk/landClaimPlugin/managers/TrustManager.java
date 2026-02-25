@@ -198,8 +198,9 @@ public class TrustManager {
             return true;
 
         String roleName = claim.getPlayerRole(playerId);
-        if (roleName == null)
-            return false;
+        if (roleName == null) {
+            roleName = "Visitor";
+        }
 
         for (Role r : plugin.getCacheManager().getRoleCache().asMap().values()) {
             if (r.getName().equalsIgnoreCase(roleName)) {
@@ -216,42 +217,4 @@ public class TrustManager {
         return hasPermission(claim, player.getUniqueId(), "MANAGE_TRUST");
     }
 
-    // Backwards compatibility methods during refactoring.
-    // In v2, trust is purely claim-based, but we will leave these stubs for now to
-    // prevent massive compilation errors.
-
-    @Deprecated
-    public boolean addTrustedPlayer(Player owner, String targetName) {
-        return false;
-    }
-
-    @Deprecated
-    public boolean addTrustedPlayer(Player owner, UUID trustedId) {
-        return false;
-    }
-
-    @Deprecated
-    public boolean removeTrustedPlayer(Player owner, String targetName) {
-        return false;
-    }
-
-    @Deprecated
-    public boolean removeTrustedPlayer(Player owner, UUID trustedId) {
-        return false;
-    }
-
-    @Deprecated
-    public boolean isTrusted(UUID ownerId, Player player) {
-        return false;
-    }
-
-    @Deprecated
-    public boolean hasTrustPermission(UUID ownerId, UUID trustedId, String permission) {
-        return false;
-    }
-
-    @Deprecated
-    public boolean hasVisitorPermission(UUID ownerId, String permission) {
-        return false;
-    }
 }
