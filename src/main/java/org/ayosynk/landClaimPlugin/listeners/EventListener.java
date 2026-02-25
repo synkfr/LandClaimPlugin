@@ -1,7 +1,6 @@
 package org.ayosynk.landClaimPlugin.listeners;
 
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
@@ -145,7 +144,7 @@ public class EventListener implements Listener {
     }
 
     private void sendActionBar(Player player, String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+        player.sendActionBar(MiniMessage.miniMessage().deserialize(message));
     }
 
     @EventHandler

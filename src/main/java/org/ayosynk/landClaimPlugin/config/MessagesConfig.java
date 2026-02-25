@@ -22,11 +22,11 @@ public class MessagesConfig extends OkaeriConfig {
     public String wandPos1 = "<green>Position 1 set to chunk <gold><x>, <z></gold> in <gold><world></gold>.";
     public String wandPos2 = "<green>Position 2 set to chunk <gold><x>, <z></gold> in <gold><world></gold>.";
 
-    public String actionbarWilderness = "<green>Wilderness";
-    public String actionbarOwnedByYou = "<green>Your Claim";
-    public String actionbarOwnedByOther = "<red><owner>'s Claim";
-    public String actionbarTrusted = "<yellow><owner>'s Claim <gray>(Trusted)";
-    public String actionbarAdmin = "<red><owner>'s Claim <gray>(Admin Override)";
+    public String actionbarWilderness = "<gradient:#5ee7df:#b490ca>🌲 Wilderness 🌲</gradient>";
+    public String actionbarOwnedByYou = "<gradient:#a8ff78:#78ffd6>🏠 Your Claim 🏠</gradient>";
+    public String actionbarOwnedByOther = "<gradient:#ff416c:#ff4b2b>🔒 <owner>'s Claim 🔒</gradient>";
+    public String actionbarTrusted = "<gradient:#f6d365:#fda085>🤝 <owner>'s Claim 🤝</gradient> <gray>(Trusted)</gray>";
+    public String actionbarAdmin = "<gradient:#ff416c:#ff4b2b>🛡️ <owner>'s Claim 🛡️</gradient> <gray>(Admin Override)</gray>";
 
     @Comment("Variables: <player>, <count>, <limit>, <seconds>, <world>, <x>, <z>")
     public String homeSet = "<green>Home <gold><name></gold> has been set!";
