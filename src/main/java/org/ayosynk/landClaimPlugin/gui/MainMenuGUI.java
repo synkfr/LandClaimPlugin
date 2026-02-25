@@ -12,7 +12,6 @@ import xyz.xenondevs.invui.window.Window;
 import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,22 +81,21 @@ public class MainMenuGUI {
 
                 ItemBuilder builder = new ItemBuilder(mat);
                 MiniMessage mm = MiniMessage.miniMessage();
-                LegacyComponentSerializer legacy = LegacyComponentSerializer.legacySection();
 
                 if (itemConfig.name != null && !itemConfig.name.isEmpty()) {
                         Component comp = mm.deserialize(
                                         replacePlaceholders(itemConfig.name, claim, player, ownerName, claimName));
-                        builder.setLegacyName(legacy.serialize(comp));
+                        builder.setCustomName(comp);
                 }
 
                 if (itemConfig.lore != null && !itemConfig.lore.isEmpty()) {
-                        List<String> lore = new ArrayList<>();
+                        List<Component> lore = new ArrayList<>();
                         for (String line : itemConfig.lore) {
                                 Component comp = mm.deserialize(
                                                 replacePlaceholders(line, claim, player, ownerName, claimName));
-                                lore.add(legacy.serialize(comp));
+                                lore.add(comp);
                         }
-                        builder.setLegacyLore(lore);
+                        builder.setLore(lore);
                 }
 
                 return builder;
