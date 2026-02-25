@@ -1,0 +1,102 @@
+package org.ayosynk.landClaimPlugin.listeners.protections;
+
+import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.managers.ClaimManager;
+import org.ayosynk.landClaimPlugin.managers.ConfigManager;
+import org.ayosynk.landClaimPlugin.managers.TrustManager;
+import org.ayosynk.landClaimPlugin.models.ChunkPosition;
+import org.ayosynk.landClaimPlugin.models.Claim;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.minecart.HopperMinecart;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.vehicle.VehicleMoveEvent;
+
+import java.util.UUID;
+
+public class VehicleProtectionListener implements Listener {
+
+    private final ClaimManager claimManager;
+    private final TrustManager trustManager;
+    private final ConfigManager configManager;
+
+    public VehicleProtectionListener(LandClaimPlugin plugin, ClaimManager claimManager,
+            TrustManager trustManager, ConfigManager configManager) {
+        this.claimManager = claimManager;
+        this.trustManager = trustManager;
+        this.configManager = configManager;
+    }
+
+    private boolean checkPermission(Player player, ChunkPosition pos, org.bukkit.event.Cancellable event,
+            String permission) {
+        if (player.hasPermission("landclaim.admin"))
+            return true;
+
+        if (claimManager.isChunkClaimed(pos)) {
+            Claim claim = claimManager.getClaimAt(pos);
+            if (player.getUniqueId().equals(claim.getOwnerId()))
+                return true;
+
+            if (trustManager.hasPermission(claim, player.getUniqueId(), permission)) {
+                return true;
+            }
+
+            event.setCancelled(true);
+            player.sendMessage(configManager.getMessage("access-denied"));
+            return false;
+        }
+
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onVehicleDamage(VehicleDamageEvent event) {
+        if (event.getAttacker() instanceof Player) {
+            Player player = (Player) event.getAttacker();
+            ChunkPosition pos = new ChunkPosition(event.getVehicle().getLocation());
+            checkPermission(player, pos, event, "DESTROY_VEHICLES");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onVehicleDestroy(VehicleDestroyEvent event) {
+        if (event.getAttacker() instanceof Player) {
+            Player player = (Player) event.getAttacker();
+            ChunkPosition pos = new ChunkPosition(event.getVehicle().getLocation());
+            checkPermission(player, pos, event, "DESTROY_VEHICLES");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onPlayerEnterVehicle(PlayerInteractEntityEvent event) {
+        if (event.getRightClicked() instanceof Vehicle) {
+            Player player = event.getPlayer();
+            ChunkPosition pos = new ChunkPosition(event.getRightClicked().getLocation());
+            checkPermission(player, pos, event, "RIDE_VEHICLES");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onVehicleMove(VehicleMoveEvent event) {
+        // Prevent hopper minecarts from entering claims they didn't originate from
+        if (event.getVehicle() instanceof HopperMinecart) {
+            ChunkPosition fromChunk = new ChunkPosition(event.getFrom());
+            ChunkPosition toChunk = new ChunkPosition(event.getTo());
+
+            if (!fromChunk.equals(toChunk) && claimManager.isChunkClaimed(toChunk)) {
+                UUID toOwner = claimManager.getChunkOwner(toChunk);
+                UUID fromOwner = claimManager.isChunkClaimed(fromChunk) ? claimManager.getChunkOwner(fromChunk) : null;
+
+                if (fromOwner == null || !fromOwner.equals(toOwner)) {
+                    event.getVehicle().setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+                    event.getVehicle().teleport(event.getFrom());
+                }
+            }
+        }
+    }
+}
