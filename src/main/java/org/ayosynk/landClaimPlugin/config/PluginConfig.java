@@ -14,6 +14,9 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("The item used as the Claim Wand (Material name)")
     public String claimWandItem = "GOLDEN_SHOVEL";
 
+    @Comment("The default language file to load from the locales folder (e.g., en-US, es-ES)")
+    public String language = "en-US";
+
     public boolean requireConnectedClaims = false;
     public boolean allowDiagonalConnections = true;
 

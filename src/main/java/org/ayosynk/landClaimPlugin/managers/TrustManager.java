@@ -8,11 +8,14 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TrustManager {
     private final LandClaimPlugin plugin;
     private final ConfigManager configManager;
     private final ClaimManager claimManager;
+    private final Map<UUID, UUID> pendingInvites = new ConcurrentHashMap<>();
 
     public TrustManager(LandClaimPlugin plugin, ClaimManager claimManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -217,4 +220,52 @@ public class TrustManager {
         return hasPermission(claim, player.getUniqueId(), "MANAGE_TRUST");
     }
 
+    public void invitePlayer(Claim claim, Player target) {
+        pendingInvites.put(target.getUniqueId(), claim.getId());
+        OfflinePlayer owner = plugin.getServer().getOfflinePlayer(claim.getOwnerId());
+        String ownerName = owner.getName() != null ? owner.getName() : "Unknown";
+        target.sendMessage(configManager.getMessage("member-invite-received", "<owner>", ownerName));
+    }
+
+    public void acceptInvite(Player player) {
+        UUID claimId = pendingInvites.remove(player.getUniqueId());
+        if (claimId == null) {
+            player.sendMessage(configManager.getMessage("no-pending-invites"));
+            return;
+        }
+
+        Claim claim = plugin.getCacheManager().getClaimCache().getIfPresent(claimId);
+        if (claim == null) {
+            player.sendMessage(configManager.getMessage("not-in-claim"));
+            return;
+        }
+
+        addRoleToPlayer(claim, player.getUniqueId(), "Member");
+
+        OfflinePlayer owner = plugin.getServer().getOfflinePlayer(claim.getOwnerId());
+        String ownerName = owner.getName() != null ? owner.getName() : "Unknown";
+        player.sendMessage(configManager.getMessage("invite-accepted-target", "<owner>", ownerName));
+
+        if (owner.isOnline()) {
+            ((Player) owner)
+                    .sendMessage(configManager.getMessage("invite-accepted-owner", "<player>", player.getName()));
+        }
+    }
+
+    public void denyInvite(Player player) {
+        UUID claimId = pendingInvites.remove(player.getUniqueId());
+        if (claimId == null) {
+            player.sendMessage(configManager.getMessage("no-pending-invites"));
+            return;
+        }
+
+        Claim claim = plugin.getCacheManager().getClaimCache().getIfPresent(claimId);
+        String ownerName = "Unknown";
+        if (claim != null) {
+            OfflinePlayer owner = plugin.getServer().getOfflinePlayer(claim.getOwnerId());
+            ownerName = owner.getName() != null ? owner.getName() : "Unknown";
+        }
+
+        player.sendMessage(configManager.getMessage("invite-denied-target", "<owner>", ownerName));
+    }
 }

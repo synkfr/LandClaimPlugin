@@ -73,8 +73,15 @@ public class MessagesConfig extends OkaeriConfig {
     // CommandHandler specifics
     public String menuOpenedStub = "<green>Opened <menu>";
     public String memberListStub = "<green>Member list functionality coming soon";
-    public String memberInvited = "<green>Invited <player>";
-    public String memberKicked = "<red>Kicked <player>";
+    public String memberInvited = "<green>You have invited <gold><player></gold> to your claim.";
+    public String memberInviteReceived = "<green>You have been invited to <gold><owner></gold>'s claim!\n<gray>[<green><click:run_command:'/claim accept'><hover:show_text:'Click to accept the invite!'>Accept</hover></click></green>] [<red><click:run_command:'/claim deny'><hover:show_text:'Click to deny the invite'>Deny</hover></click></red>]</gray>";
+    public String memberKicked = "<red>You have kicked <gold><player></gold> from the claim.";
+    public String inviteAcceptedOwner = "<green><gold><player></gold> has accepted your invite and joined the claim!";
+    public String inviteAcceptedTarget = "<green>You joined <gold><owner></gold>'s claim!";
+    public String inviteDeniedTarget = "<red>You denied the invite to <gold><owner></gold>'s claim.";
+    public String noPendingInvites = "<red>You have no pending invites.";
+    public String playerNotOnline = "<red>That player is not currently online.";
+    public String alreadyInClaim = "<red>That player is already a member of this claim.";
     public String trustListStub = "<green>Trust list functionality coming soon";
     public String trustAdded = "<green>Added trust to <player>";
     public String trustRemoved = "<red>Removed trust from <player>";

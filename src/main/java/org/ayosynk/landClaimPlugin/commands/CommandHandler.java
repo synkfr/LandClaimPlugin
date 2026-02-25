@@ -29,6 +29,7 @@ public class CommandHandler {
 
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
+    private final TrustManager trustManager;
     private final ConfigManager configManager;
     private final VisualizationManager visualizationManager;
 
@@ -40,6 +41,7 @@ public class CommandHandler {
             VisualizationManager visualizationManager, WarpManager warpManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
+        this.trustManager = trustManager;
         this.configManager = configManager;
         this.visualizationManager = visualizationManager;
 
@@ -145,7 +147,43 @@ public class CommandHandler {
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
-                    player.sendMessage(configManager.getMessage("member-invited", "<player>", targetName));
+
+                    ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
+                    Claim claim = claimManager.getClaimAt(pos);
+                    if (claim == null) {
+                        player.sendMessage(configManager.getMessage("not-in-claim"));
+                        return;
+                    }
+                    if (!trustManager.canManageTrust(claim, player)) {
+                        player.sendMessage(configManager.getMessage("access-denied"));
+                        return;
+                    }
+
+                    Player target = plugin.getServer().getPlayer(targetName);
+                    if (target == null) {
+                        player.sendMessage(configManager.getMessage("player-not-online"));
+                        return;
+                    }
+                    if (claim.getPlayerRoles().containsKey(target.getUniqueId())
+                            || claim.getOwnerId().equals(target.getUniqueId())) {
+                        player.sendMessage(configManager.getMessage("already-in-claim"));
+                        return;
+                    }
+
+                    trustManager.invitePlayer(claim, target);
+                    player.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
+                }));
+
+        manager.command(claimBuilder.literal("accept")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    trustManager.acceptInvite(player);
+                }));
+
+        manager.command(claimBuilder.literal("deny")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    trustManager.denyInvite(player);
                 }));
         manager.command(memberBuilder.literal("kick")
                 .required("player", StringParser.stringParser())

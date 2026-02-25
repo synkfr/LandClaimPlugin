@@ -36,7 +36,7 @@ public class ConfigManager {
 
         this.messagesConfig = eu.okaeri.configs.ConfigManager.create(MessagesConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
-            it.withBindFile(new File(plugin.getDataFolder(), "messages.yml"));
+            it.withBindFile(new File(plugin.getDataFolder(), "locales/messages_" + pluginConfig.language + ".yml"));
             it.saveDefaults();
             it.load(true);
         });
