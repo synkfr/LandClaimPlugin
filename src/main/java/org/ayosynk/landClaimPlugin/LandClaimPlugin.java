@@ -11,7 +11,7 @@ import org.ayosynk.landClaimPlugin.listeners.EventListener;
 import org.ayosynk.landClaimPlugin.listeners.PlayerJoinListener;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.HomeManager;
+import org.ayosynk.landClaimPlugin.managers.WarpManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.managers.SaveManager;
@@ -32,7 +32,7 @@ public class LandClaimPlugin extends JavaPlugin {
     private TrustManager trustManager;
     private VisualizationManager visualizationManager;
     private SaveManager saveManager;
-    private HomeManager homeManager;
+    private WarpManager warpManager;
     private CommandHandler commandHandler;
     private EventListener eventListener;
     private BlueMapHook blueMapHook;
@@ -72,12 +72,12 @@ public class LandClaimPlugin extends JavaPlugin {
 
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
 
-            homeManager = new HomeManager(this, configManager);
+            warpManager = new WarpManager(this, configManager); // Changed from homeManager = new HomeManager(...)
 
-            saveManager = new SaveManager(this, claimManager, trustManager, homeManager);
+            saveManager = new SaveManager(this, claimManager, trustManager, warpManager); // Changed from homeManager
 
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager,
-                    homeManager);
+                    warpManager); // Changed from homeManager
 
             eventListener = new EventListener(this, claimManager, trustManager, configManager);
             getServer().getPluginManager().registerEvents(eventListener, this);
@@ -141,9 +141,9 @@ public class LandClaimPlugin extends JavaPlugin {
                 saveManager.saveAll();
                 getLogger().info("Saved " + claimManager.getTotalClaims() + " claims.");
             }
-            if (homeManager != null) {
-                homeManager.save();
-                getLogger().info("Saved home data");
+            if (warpManager != null) {
+                warpManager.save();
+                getLogger().info("Saved warp data");
             }
 
             if (visualizationManager != null) {
@@ -194,8 +194,8 @@ public class LandClaimPlugin extends JavaPlugin {
         return saveManager;
     }
 
-    public HomeManager getHomeManager() {
-        return homeManager;
+    public WarpManager getWarpManager() {
+        return warpManager;
     }
 
     public CommandHandler getCommandHandler() {

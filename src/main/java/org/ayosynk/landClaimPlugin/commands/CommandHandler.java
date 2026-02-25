@@ -3,7 +3,7 @@ package org.ayosynk.landClaimPlugin.commands;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.HomeManager;
+import org.ayosynk.landClaimPlugin.managers.WarpManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
@@ -32,20 +32,20 @@ public class CommandHandler {
     private final TrustManager trustManager;
     private final ConfigManager configManager;
     private final VisualizationManager visualizationManager;
-    private final HomeManager homeManager;
+    private final WarpManager warpManager;
 
     private final Map<UUID, Boolean> autoClaimPlayers = new HashMap<>();
     private final Map<UUID, Boolean> autoUnclaimPlayers = new HashMap<>();
 
     public CommandHandler(LandClaimPlugin plugin, ClaimManager claimManager,
             TrustManager trustManager, ConfigManager configManager,
-            VisualizationManager visualizationManager, HomeManager homeManager) {
+            VisualizationManager visualizationManager, WarpManager warpManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
         this.trustManager = trustManager;
         this.configManager = configManager;
         this.visualizationManager = visualizationManager;
-        this.homeManager = homeManager;
+        this.warpManager = warpManager;
 
         PaperCommandManager<Source> commandManager;
         try {

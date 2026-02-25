@@ -8,18 +8,18 @@ public class SaveManager {
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final TrustManager trustManager;
-    private final HomeManager homeManager;
+    private final WarpManager warpManager;
 
     private final AtomicBoolean homesDirty = new AtomicBoolean(false);
 
     private static final int SAVE_INTERVAL = 1200;
 
     public SaveManager(LandClaimPlugin plugin, ClaimManager claimManager, TrustManager trustManager,
-            HomeManager homeManager) {
+            WarpManager warpManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
         this.trustManager = trustManager;
-        this.homeManager = homeManager;
+        this.warpManager = warpManager;
     }
 
     public void startAutoSave() {
@@ -41,7 +41,7 @@ public class SaveManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    homeManager.save();
+                    warpManager.save();
                     if (plugin.getConfigManager().logAutoSaveMessage())
                         plugin.getLogger().info("Homes auto-saved.");
                 }
@@ -50,7 +50,7 @@ public class SaveManager {
     }
 
     public void saveAll() {
-        homeManager.save();
+        warpManager.save();
     }
 
     public void saveAllAsync() {

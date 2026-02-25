@@ -26,7 +26,7 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Blocked worlds for claiming")
     public List<String> blockWorld = List.of("world_nether", "world_the_end");
 
-    public List<String> blockCmd = List.of("sethome", "home");
+    public List<String> blockCmd = List.of("setwarp", "warp");
 
     public int cooldownUnstuck = 30;
 
@@ -81,6 +81,9 @@ public class PluginConfig extends OkaeriConfig {
 
     @Comment("Default trust permissions")
     public TrustPermissions defaultTrustPermissions = new TrustPermissions();
+
+    @Comment("Default maximum warps per player (bypass with landclaim.warps.limit.X)")
+    public int maxWarps = 3;
 
     @Comment("Default visitor permissions")
     public VisitorPermissions defaultVisitorPermissions = new VisitorPermissions();
