@@ -9,6 +9,7 @@ import org.ayosynk.landClaimPlugin.hooks.DynmapHook;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
 import org.ayosynk.landClaimPlugin.listeners.EventListener;
 import org.ayosynk.landClaimPlugin.listeners.PlayerJoinListener;
+import org.ayosynk.landClaimPlugin.listeners.protections.*;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.WarpManager;
@@ -78,6 +79,20 @@ public class LandClaimPlugin extends JavaPlugin {
 
             eventListener = new EventListener(this, claimManager, trustManager, configManager);
             getServer().getPluginManager().registerEvents(eventListener, this);
+
+            // Register Protections
+            getServer().getPluginManager()
+                    .registerEvents(new BlockProtectionListener(this, claimManager, trustManager, configManager), this);
+            getServer().getPluginManager().registerEvents(
+                    new EntityProtectionListener(this, claimManager, trustManager, configManager), this);
+            getServer().getPluginManager().registerEvents(
+                    new InteractProtectionListener(this, claimManager, trustManager, configManager), this);
+            getServer().getPluginManager().registerEvents(new ExplosionProtectionListener(this, claimManager), this);
+            getServer().getPluginManager().registerEvents(new PistonProtectionListener(this, claimManager), this);
+            getServer().getPluginManager()
+                    .registerEvents(new PvpProtectionListener(this, claimManager, trustManager, configManager), this);
+            getServer().getPluginManager().registerEvents(
+                    new VehicleProtectionListener(this, claimManager, trustManager, configManager), this);
 
             getServer().getPluginManager().registerEvents(
                     new CommandBlocker(this, claimManager, trustManager),

@@ -29,10 +29,8 @@ public class CommandHandler {
 
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
-    private final TrustManager trustManager;
     private final ConfigManager configManager;
     private final VisualizationManager visualizationManager;
-    private final WarpManager warpManager;
 
     private final Map<UUID, Boolean> autoClaimPlayers = new HashMap<>();
     private final Map<UUID, Boolean> autoUnclaimPlayers = new HashMap<>();
@@ -42,10 +40,8 @@ public class CommandHandler {
             VisualizationManager visualizationManager, WarpManager warpManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
-        this.trustManager = trustManager;
         this.configManager = configManager;
         this.visualizationManager = visualizationManager;
-        this.warpManager = warpManager;
 
         PaperCommandManager<Source> commandManager;
         try {

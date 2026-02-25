@@ -77,22 +77,6 @@ public class ConfigManager {
         return pluginConfig.allowDiagonalConnections;
     }
 
-    public boolean preventPvP() {
-        return pluginConfig.preventPvp;
-    }
-
-    public boolean preventMobGriefing() {
-        return pluginConfig.preventMobGriefing;
-    }
-
-    public boolean preventExplosionDamage() {
-        return pluginConfig.preventExplosionDamage;
-    }
-
-    public boolean preventHarmEntities() {
-        return pluginConfig.preventHarmEntities;
-    }
-
     public boolean isWorldBlocked(String worldName) {
         return pluginConfig.blockWorld.contains(worldName);
     }
@@ -116,31 +100,6 @@ public class ConfigManager {
     public int getVisualizationUpdateInterval() {
         return 20;
     } // Temporary stub
-
-    public boolean getDefaultTrustPermission(String permission) {
-        // In v2 we use custom Roles. Bridging for now:
-        if (permission.equals("build"))
-            return pluginConfig.defaultTrustPermissions.build;
-        if (permission.equals("interact"))
-            return pluginConfig.defaultTrustPermissions.interact;
-        if (permission.equals("container"))
-            return pluginConfig.defaultTrustPermissions.container;
-        if (permission.equals("teleport"))
-            return pluginConfig.defaultTrustPermissions.teleport;
-        return true;
-    }
-
-    public boolean getDefaultVisitorPermission(String permission) {
-        if (permission.equals("build"))
-            return pluginConfig.defaultVisitorPermissions.build;
-        if (permission.equals("interact"))
-            return pluginConfig.defaultVisitorPermissions.interact;
-        if (permission.equals("container"))
-            return pluginConfig.defaultVisitorPermissions.container;
-        if (permission.equals("teleport"))
-            return pluginConfig.defaultVisitorPermissions.teleport;
-        return false;
-    }
 
     public int getWorldGuardGap() {
         return pluginConfig.worldguardGap;

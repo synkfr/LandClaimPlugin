@@ -17,12 +17,6 @@ public class PluginConfig extends OkaeriConfig {
     public boolean requireConnectedClaims = false;
     public boolean allowDiagonalConnections = true;
 
-    @Comment("Protections")
-    public boolean preventPvp = true;
-    public boolean preventMobGriefing = true;
-    public boolean preventExplosionDamage = true;
-    public boolean preventHarmEntities = true;
-
     @Comment("Blocked worlds for claiming")
     public List<String> blockWorld = List.of("world_nether", "world_the_end");
 
@@ -79,26 +73,6 @@ public class PluginConfig extends OkaeriConfig {
 
     public int actionbarUpdateInterval = 20;
 
-    @Comment("Default trust permissions")
-    public TrustPermissions defaultTrustPermissions = new TrustPermissions();
-
     @Comment("Default maximum warps per player (bypass with landclaim.warps.limit.X)")
     public int maxWarps = 3;
-
-    @Comment("Default visitor permissions")
-    public VisitorPermissions defaultVisitorPermissions = new VisitorPermissions();
-
-    public static class TrustPermissions extends OkaeriConfig {
-        public boolean build = true;
-        public boolean interact = true;
-        public boolean container = true;
-        public boolean teleport = true;
-    }
-
-    public static class VisitorPermissions extends OkaeriConfig {
-        public boolean build = false;
-        public boolean interact = false;
-        public boolean container = false;
-        public boolean teleport = false;
-    }
 }
