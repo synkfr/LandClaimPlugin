@@ -64,13 +64,8 @@ public class DynmapHook {
             marker.deleteMarker();
         }
 
-        String fillColorHex = plugin.getConfigManager().getPluginConfig().dynmap.fillColor;
         double fillOpacity = plugin.getConfigManager().getPluginConfig().dynmap.fillOpacity;
-        String borderColorHex = plugin.getConfigManager().getPluginConfig().dynmap.borderColor;
         double borderOpacity = plugin.getConfigManager().getPluginConfig().dynmap.borderOpacity;
-
-        int fillColor = parseHexColor(fillColorHex);
-        int borderColor = parseHexColor(borderColorHex);
 
         for (UUID playerId : getAllPlayerIds()) {
             String playerName = Bukkit.getOfflinePlayer(playerId).getName();
@@ -81,6 +76,12 @@ public class DynmapHook {
             Set<ChunkPosition> claims = claimObjects.stream()
                     .flatMap(claim -> claim.getChunks().stream())
                     .collect(java.util.stream.Collectors.toSet());
+
+            Random rnd = new Random(playerId.getMostSignificantBits());
+            int r = rnd.nextInt(200) + 55;
+            int g = rnd.nextInt(200) + 55;
+            int b = rnd.nextInt(200) + 55;
+            int pColor = (r << 16) | (g << 8) | b;
 
             Map<String, Set<ChunkPosition>> claimsByWorld = new HashMap<>();
             for (ChunkPosition pos : claims) {
@@ -108,8 +109,8 @@ public class DynmapHook {
                             xCorners, zCorners, false);
 
                     if (marker != null) {
-                        marker.setFillStyle(fillOpacity, fillColor);
-                        marker.setLineStyle(2, borderOpacity, borderColor);
+                        marker.setFillStyle(fillOpacity, pColor);
+                        marker.setLineStyle(2, borderOpacity, pColor);
                         marker.setDescription("<b>" + playerName + "'s Claim</b>");
                     }
 
@@ -197,14 +198,6 @@ public class DynmapHook {
             }
         }
         return polygons;
-    }
-
-    private int parseHexColor(String hex) {
-        try {
-            return Integer.parseInt(hex, 16);
-        } catch (NumberFormatException e) {
-            return 0x3366FF;
-        }
     }
 
     private Set<UUID> getAllPlayerIds() {

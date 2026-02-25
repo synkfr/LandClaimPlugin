@@ -30,6 +30,8 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Map Integration")
     public MapConfig dynmap = new MapConfig();
     public MapConfig bluemap = new MapConfig();
+    public MapConfig squaremap = new MapConfig();
+    public MapConfig pl3xmap = new MapConfig();
 
     public static class MapConfig extends OkaeriConfig {
         public boolean enabled = true;

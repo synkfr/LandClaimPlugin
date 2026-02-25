@@ -6,6 +6,8 @@ import org.ayosynk.landClaimPlugin.managers.CacheManager;
 import org.ayosynk.landClaimPlugin.managers.RedisManager;
 import org.ayosynk.landClaimPlugin.hooks.BlueMapHook;
 import org.ayosynk.landClaimPlugin.hooks.DynmapHook;
+import org.ayosynk.landClaimPlugin.hooks.SquaremapHook;
+import org.ayosynk.landClaimPlugin.hooks.Pl3xMapHook;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
 import org.ayosynk.landClaimPlugin.listeners.EventListener;
 import org.ayosynk.landClaimPlugin.listeners.PlayerJoinListener;
@@ -36,6 +38,8 @@ public class LandClaimPlugin extends JavaPlugin {
     private EventListener eventListener;
     private BlueMapHook blueMapHook;
     private DynmapHook dynmapHook;
+    private SquaremapHook squaremapHook;
+    private Pl3xMapHook pl3xmapHook;
     private List<String> blockedCommands = new ArrayList<>();
     private List<String> blockedWorlds = new ArrayList<>();
     private boolean worldGuardEnabled = false;
@@ -116,6 +120,16 @@ public class LandClaimPlugin extends JavaPlugin {
                         && Bukkit.getPluginManager().getPlugin("dynmap") != null) {
                     dynmapHook = new DynmapHook(LandClaimPlugin.this, claimManager);
                     getLogger().info("Dynmap detected. Enabling map integration.");
+                }
+                if (configManager.getPluginConfig().squaremap.enabled
+                        && Bukkit.getPluginManager().getPlugin("squaremap") != null) {
+                    squaremapHook = new SquaremapHook(LandClaimPlugin.this, claimManager);
+                    getLogger().info("Squaremap detected. Enabling map integration.");
+                }
+                if (configManager.getPluginConfig().pl3xmap.enabled
+                        && Bukkit.getPluginManager().getPlugin("Pl3xMap") != null) {
+                    pl3xmapHook = new Pl3xMapHook(LandClaimPlugin.this, claimManager);
+                    getLogger().info("Pl3xMap detected. Enabling map integration.");
                 }
             });
 

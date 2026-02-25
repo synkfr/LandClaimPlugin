@@ -65,7 +65,13 @@ public class BlueMapHook {
                 Map<UUID, Set<ChunkPosition>> playerClaimsInWorld = null;
                 for (Map.Entry<String, Map<UUID, Set<ChunkPosition>>> entry : worldPlayerClaims.entrySet()) {
                     String worldName = entry.getKey();
-                    if (worldId.contains(worldName) || worldName.equals(worldId)) {
+                    if (worldId.equals(worldName)
+                            || worldId.endsWith("/" + worldName)
+                            || worldId.endsWith("\\" + worldName)
+                            || worldId.endsWith(":" + worldName)
+                            || (worldName.equals("world") && worldId.contains("overworld"))
+                            || (worldName.equals("world_nether") && worldId.contains("the_nether"))
+                            || (worldName.equals("world_the_end") && worldId.contains("the_end"))) {
                         playerClaimsInWorld = entry.getValue();
                         break;
                     }
