@@ -1,4 +1,4 @@
-package org.ayosynk.landClaimPlugin.hooks;
+package org.ayosynk.landClaimPlugin.hooks.map;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;

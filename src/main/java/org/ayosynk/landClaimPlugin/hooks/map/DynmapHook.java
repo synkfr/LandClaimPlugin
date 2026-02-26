@@ -1,4 +1,4 @@
-package org.ayosynk.landClaimPlugin.hooks;
+package org.ayosynk.landClaimPlugin.hooks.map;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
