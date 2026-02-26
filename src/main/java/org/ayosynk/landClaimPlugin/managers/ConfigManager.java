@@ -156,8 +156,7 @@ public class ConfigManager {
     }
 
     public String getActionBarMessage(String key) {
-        Component comp = MiniMessage.miniMessage().deserialize(getRawMessageString(key));
-        return LegacyComponentSerializer.legacySection().serialize(comp);
+        return getRawMessageString(key);
     }
 
     private String getRawMessageString(String key) {
