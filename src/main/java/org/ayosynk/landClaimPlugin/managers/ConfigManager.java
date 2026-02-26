@@ -10,6 +10,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.MessagesConfig;
 import org.ayosynk.landClaimPlugin.config.PluginConfig;
 import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ClaimSettingsConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -20,6 +21,7 @@ public class ConfigManager {
     private PluginConfig pluginConfig;
     private MessagesConfig messagesConfig;
     private MainMenuConfig mainMenuConfig;
+    private ClaimSettingsConfig claimSettingsConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -47,12 +49,20 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.claimSettingsConfig = eu.okaeri.configs.ConfigManager.create(ClaimSettingsConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimSettings.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
         pluginConfig.load();
         messagesConfig.load();
         mainMenuConfig.load();
+        claimSettingsConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -65,6 +75,10 @@ public class ConfigManager {
 
     public MainMenuConfig getMainMenuConfig() {
         return mainMenuConfig;
+    }
+
+    public ClaimSettingsConfig getClaimSettingsConfig() {
+        return claimSettingsConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---

@@ -48,8 +48,13 @@ public class MainMenuGUI {
                                 .addIngredient('V',
                                                 buildConfigItem(config.visitors, claim, player, ownerName, claimName))
                                 .addIngredient('W', buildConfigItem(config.warps, claim, player, ownerName, claimName))
-                                .addIngredient('S',
-                                                buildConfigItem(config.settings, claim, player, ownerName, claimName))
+                                .addIngredient('S', Item.builder()
+                                                .setItemProvider(buildConfigItemBuilder(config.settings, claim, player,
+                                                                ownerName, claimName))
+                                                .addClickHandler(click -> {
+                                                        player.closeInventory();
+                                                        ClaimSettingsGUI.open(player, claim, plugin);
+                                                }).build())
                                 .addIngredient('C',
                                                 buildConfigItem(config.claimAnchor, claim, player, ownerName,
                                                                 claimName))
