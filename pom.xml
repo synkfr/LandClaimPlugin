@@ -123,6 +123,10 @@
             <id>CodeMC</id>
             <url>https://repo.codemc.org/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>eternalcode</id>
+            <url>https://repo.eternalcode.pl/releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -222,6 +226,12 @@
             <groupId>me.chancesd.pvpmanager</groupId>
             <artifactId>pvpmanager</artifactId>
             <version>4.0.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.eternalcode</groupId>
+            <artifactId>eternalcombat-api</artifactId>
+            <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
