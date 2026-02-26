@@ -115,6 +115,10 @@
             <id>modrinth-repo</id>
             <url>https://api.modrinth.com/maven/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -202,6 +206,12 @@
             <groupId>maven.modrinth</groupId>
             <artifactId>pl3xmap</artifactId>
             <version>1.21.5-527</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.timderspieler</groupId>
+            <artifactId>DeluxeCombat-API</artifactId>
+            <version>1.5.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

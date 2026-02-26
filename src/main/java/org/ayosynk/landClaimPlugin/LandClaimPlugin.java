@@ -16,6 +16,7 @@ import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.WarpManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
+import org.ayosynk.landClaimPlugin.managers.CombatManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -32,6 +33,7 @@ public class LandClaimPlugin extends JavaPlugin {
     private RedisManager redisManager;
     private ClaimManager claimManager;
     private TrustManager trustManager;
+    private CombatManager combatManager;
     private VisualizationManager visualizationManager;
     private WarpManager warpManager;
     private CommandHandler commandHandler;
@@ -66,6 +68,8 @@ public class LandClaimPlugin extends JavaPlugin {
             // Initialize Redis
             redisManager = new RedisManager(this);
             redisManager.init();
+
+            combatManager = new CombatManager(this);
 
             claimManager = new ClaimManager(this, configManager);
             trustManager = new TrustManager(this, claimManager, configManager);
@@ -189,6 +193,10 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public CombatManager getCombatManager() {
+        return combatManager;
     }
 
     public DatabaseManager getDatabaseManager() {

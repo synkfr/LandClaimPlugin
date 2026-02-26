@@ -18,7 +18,9 @@ import org.incendo.cloud.paper.util.sender.PaperSimpleSenderMapper;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
 import org.incendo.cloud.parser.standard.StringParser;
+import org.incendo.cloud.exception.handling.ExceptionContext;
 
+import org.ayosynk.landClaimPlugin.exceptions.CombatBlockedException;
 import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
 
 import java.util.HashMap;
@@ -54,6 +56,23 @@ public class CommandHandler {
             plugin.getLogger().severe("Failed to initialize Cloud Command Manager: " + e.getMessage());
             return;
         }
+
+        commandManager.registerCommandPreProcessor(ctx -> {
+            if (ctx.commandContext().sender() instanceof PlayerSource source) {
+                Player player = source.source();
+                if (plugin.getCombatManager().isInCombat(player)) {
+                    throw new CombatBlockedException();
+                }
+            }
+        });
+
+        commandManager.exceptionController().registerHandler(CombatBlockedException.class,
+                (ExceptionContext<Source, CombatBlockedException> ctx) -> {
+                    if (ctx.context().sender() instanceof PlayerSource source) {
+                        Player player = source.source();
+                        player.sendMessage(configManager.getMessage("in-combat"));
+                    }
+                });
 
         registerCommands(commandManager);
     }
