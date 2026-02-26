@@ -3,6 +3,7 @@ package org.ayosynk.landClaimPlugin.managers;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.hooks.combat.CombatHook;
 import org.ayosynk.landClaimPlugin.hooks.combat.DeluxeCombatHook;
+import org.ayosynk.landClaimPlugin.hooks.combat.PvPManagerHook;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -21,6 +22,10 @@ public class CombatManager {
         if (plugin.getServer().getPluginManager().getPlugin("DeluxeCombat") != null) {
             activeHooks.add(new DeluxeCombatHook());
             plugin.getLogger().info("Hooked into DeluxeCombat for combat tagging!");
+        }
+        if (plugin.getServer().getPluginManager().getPlugin("PvPManager") != null) {
+            activeHooks.add(new PvPManagerHook());
+            plugin.getLogger().info("Hooked into PvPManager for combat tagging!");
         }
     }
 

@@ -119,6 +119,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>CodeMC</id>
+            <url>https://repo.codemc.org/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -212,6 +216,12 @@
             <groupId>com.github.timderspieler</groupId>
             <artifactId>DeluxeCombat-API</artifactId>
             <version>1.5.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.chancesd.pvpmanager</groupId>
+            <artifactId>pvpmanager</artifactId>
+            <version>4.0.4</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
