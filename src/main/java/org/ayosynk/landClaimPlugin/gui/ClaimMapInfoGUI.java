@@ -8,42 +8,37 @@ import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemBuilder;
 import xyz.xenondevs.invui.window.Window;
-import org.ayosynk.landClaimPlugin.config.menus.ClaimMapConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ClaimMapInfoConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClaimMapGUI {
+public class ClaimMapInfoGUI {
 
     public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
-        ClaimMapConfig config = plugin.getConfigManager().getClaimMapConfig();
+        ClaimMapInfoConfig config = plugin.getConfigManager().getClaimMapInfoConfig();
         MiniMessage mm = MiniMessage.miniMessage();
 
         Gui.Builder<?, ?> guiBuilder = Gui.builder()
                 .setStructure(
-                        "W F F F F F F F F",
                         "F F F F F F F F F",
+                        "F F O A P E W F F",
                         "F F F F F F F F F",
-                        "F F F F F F F F F",
-                        "F F F F F F F F F",
-                        "B B R B X B I B B")
+                        "F F F 1 B 1 F F F")
+                .addIngredient('F', buildConfigItem(config.filler))
+                .addIngredient('1', buildConfigItem(config.filler1))
+                .addIngredient('O', buildConfigItem(config.owned))
+                .addIngredient('A', buildConfigItem(config.ally))
+                .addIngredient('P', buildConfigItem(config.other))
+                .addIngredient('E', buildConfigItem(config.enemy))
                 .addIngredient('W', buildConfigItem(config.wilderness))
-                .addIngredient('F', buildConfigItem(config.mapFill))
-                .addIngredient('B', buildConfigItem(config.bottomFill))
-                .addIngredient('R', buildConfigItem(config.refresh))
-                .addIngredient('X', Item.builder()
+                .addIngredient('B', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.back))
                         .addClickHandler(click -> {
                             player.closeInventory();
-                            MainMenuGUI.open(player, claim, plugin);
-                        }).build())
-                .addIngredient('I', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.info))
-                        .addClickHandler(click -> {
-                            player.closeInventory();
-                            ClaimMapInfoGUI.open(player, claim, plugin);
+                            ClaimMapGUI.open(player, claim, plugin);
                         }).build());
 
         Gui gui = guiBuilder.build();
@@ -56,11 +51,11 @@ public class ClaimMapGUI {
                 .open(player);
     }
 
-    private static Item buildConfigItem(ClaimMapConfig.ItemConfig itemConfig) {
+    private static Item buildConfigItem(ClaimMapInfoConfig.ItemConfig itemConfig) {
         return Item.simple(buildConfigItemBuilder(itemConfig));
     }
 
-    private static ItemBuilder buildConfigItemBuilder(ClaimMapConfig.ItemConfig itemConfig) {
+    private static ItemBuilder buildConfigItemBuilder(ClaimMapInfoConfig.ItemConfig itemConfig) {
         Material mat = Material.matchMaterial(itemConfig.material.toUpperCase());
         if (mat == null)
             mat = Material.STONE;
