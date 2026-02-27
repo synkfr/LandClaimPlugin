@@ -12,7 +12,6 @@ import xyz.xenondevs.invui.window.Window;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimSettingsConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import io.papermc.paper.datacomponent.DataComponentTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,14 +74,16 @@ public class ClaimSettingsGUI {
             mat = Material.STONE;
 
         ItemBuilder builder = new ItemBuilder(mat);
-        builder.hideTooltip(
-                DataComponentTypes.ATTRIBUTE_MODIFIERS,
-                DataComponentTypes.ENCHANTMENTS,
-                DataComponentTypes.UNBREAKABLE,
-                DataComponentTypes.STORED_ENCHANTMENTS,
-                DataComponentTypes.POTION_CONTENTS,
-                DataComponentTypes.DYED_COLOR,
-                DataComponentTypes.TRIM);
+        builder.addModifier(item -> {
+            item.editMeta(meta -> {
+                meta.addItemFlags(org.bukkit.inventory.ItemFlag.values());
+                try {
+                    meta.setAttributeModifiers(com.google.common.collect.LinkedListMultimap.create());
+                } catch (Exception ignored) {
+                }
+            });
+            return item;
+        });
         MiniMessage mm = MiniMessage.miniMessage();
 
         if (itemConfig.name != null && !itemConfig.name.isEmpty()) {
