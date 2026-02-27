@@ -30,24 +30,18 @@ public class MainMenuGUI {
 
                 Gui.Builder<?, ?> guiBuilder = Gui.builder()
                                 .setStructure(
-                                                "F F F F F F F F F",
-                                                ". I M E T V . . .",
-                                                ". W S . C . . . .",
-                                                ". . . . . . . . .",
-                                                ". . . . . . . . .",
-                                                "F F F F F F F F X")
-                                .addIngredient('F', buildConfigItem(config.filler, claim, player, ownerName, claimName))
-                                .addIngredient('I',
-                                                buildConfigItem(config.claimInfo, claim, player, ownerName, claimName))
+                                                "1 1 2 2 2 2 2 1 1",
+                                                "1 M W A S T E V 1",
+                                                "2 2 2 2 2 2 2 2 2",
+                                                "2 2 2 1 X 1 2 2 2")
+                                .addIngredient('1',
+                                                buildConfigItem(config.filler1, claim, player, ownerName, claimName))
+                                .addIngredient('2',
+                                                buildConfigItem(config.filler2, claim, player, ownerName, claimName))
                                 .addIngredient('M',
                                                 buildConfigItem(config.claimMap, claim, player, ownerName, claimName))
-                                .addIngredient('E',
-                                                buildConfigItem(config.members, claim, player, ownerName, claimName))
-                                .addIngredient('T',
-                                                buildConfigItem(config.trusted, claim, player, ownerName, claimName))
-                                .addIngredient('V',
-                                                buildConfigItem(config.visitors, claim, player, ownerName, claimName))
                                 .addIngredient('W', buildConfigItem(config.warps, claim, player, ownerName, claimName))
+                                .addIngredient('A', buildConfigItem(config.allies, claim, player, ownerName, claimName))
                                 .addIngredient('S', Item.builder()
                                                 .setItemProvider(buildConfigItemBuilder(config.settings, claim, player,
                                                                 ownerName, claimName))
@@ -55,9 +49,12 @@ public class MainMenuGUI {
                                                         player.closeInventory();
                                                         ClaimSettingsGUI.open(player, claim, plugin);
                                                 }).build())
-                                .addIngredient('C',
-                                                buildConfigItem(config.claimAnchor, claim, player, ownerName,
-                                                                claimName))
+                                .addIngredient('T',
+                                                buildConfigItem(config.trusted, claim, player, ownerName, claimName))
+                                .addIngredient('E',
+                                                buildConfigItem(config.members, claim, player, ownerName, claimName))
+                                .addIngredient('V',
+                                                buildConfigItem(config.visitors, claim, player, ownerName, claimName))
                                 .addIngredient('X', Item.builder()
                                                 .setItemProvider(buildConfigItemBuilder(config.close, claim, player,
                                                                 ownerName, claimName))
