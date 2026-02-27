@@ -11,6 +11,7 @@ import org.ayosynk.landClaimPlugin.config.MessagesConfig;
 import org.ayosynk.landClaimPlugin.config.PluginConfig;
 import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimSettingsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ClaimMapConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -22,6 +23,7 @@ public class ConfigManager {
     private MessagesConfig messagesConfig;
     private MainMenuConfig mainMenuConfig;
     private ClaimSettingsConfig claimSettingsConfig;
+    private ClaimMapConfig claimMapConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -56,6 +58,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.claimMapConfig = eu.okaeri.configs.ConfigManager.create(ClaimMapConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimMap.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -63,6 +72,7 @@ public class ConfigManager {
         messagesConfig.load();
         mainMenuConfig.load();
         claimSettingsConfig.load();
+        claimMapConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -79,6 +89,10 @@ public class ConfigManager {
 
     public ClaimSettingsConfig getClaimSettingsConfig() {
         return claimSettingsConfig;
+    }
+
+    public ClaimMapConfig getClaimMapConfig() {
+        return claimMapConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---

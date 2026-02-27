@@ -38,8 +38,13 @@ public class MainMenuGUI {
                                                 buildConfigItem(config.filler1, claim, player, ownerName, claimName))
                                 .addIngredient('2',
                                                 buildConfigItem(config.filler2, claim, player, ownerName, claimName))
-                                .addIngredient('M',
-                                                buildConfigItem(config.claimMap, claim, player, ownerName, claimName))
+                                .addIngredient('M', Item.builder()
+                                                .setItemProvider(buildConfigItemBuilder(config.claimMap, claim, player,
+                                                                ownerName, claimName))
+                                                .addClickHandler(click -> {
+                                                        player.closeInventory();
+                                                        ClaimMapGUI.open(player, claim, plugin);
+                                                }).build())
                                 .addIngredient('W', buildConfigItem(config.warps, claim, player, ownerName, claimName))
                                 .addIngredient('A', buildConfigItem(config.allies, claim, player, ownerName, claimName))
                                 .addIngredient('S', Item.builder()
