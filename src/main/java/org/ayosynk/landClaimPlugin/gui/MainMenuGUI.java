@@ -12,6 +12,7 @@ import xyz.xenondevs.invui.window.Window;
 import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,8 +59,13 @@ public class MainMenuGUI {
                                                 buildConfigItem(config.trusted, claim, player, ownerName, claimName))
                                 .addIngredient('E',
                                                 buildConfigItem(config.members, claim, player, ownerName, claimName))
-                                .addIngredient('V',
-                                                buildConfigItem(config.visitors, claim, player, ownerName, claimName))
+                                .addIngredient('V', Item.builder()
+                                                .setItemProvider(buildConfigItemBuilder(config.visitors, claim, player,
+                                                                ownerName, claimName))
+                                                .addClickHandler(click -> {
+                                                        player.closeInventory();
+                                                        VisitorSettingsGUI.open(player, claim, plugin);
+                                                }).build())
                                 .addIngredient('X', Item.builder()
                                                 .setItemProvider(buildConfigItemBuilder(config.close, claim, player,
                                                                 ownerName, claimName))
@@ -87,10 +93,14 @@ public class MainMenuGUI {
                         mat = Material.STONE;
 
                 ItemBuilder builder = new ItemBuilder(mat);
-                builder.addModifier(item -> {
-                        item.editMeta(meta -> meta.addItemFlags(org.bukkit.inventory.ItemFlag.values()));
-                        return item;
-                });
+                builder.hideTooltip(
+                                DataComponentTypes.ATTRIBUTE_MODIFIERS,
+                                DataComponentTypes.ENCHANTMENTS,
+                                DataComponentTypes.UNBREAKABLE,
+                                DataComponentTypes.STORED_ENCHANTMENTS,
+                                DataComponentTypes.POTION_CONTENTS,
+                                DataComponentTypes.DYED_COLOR,
+                                DataComponentTypes.TRIM);
                 MiniMessage mm = MiniMessage.miniMessage();
 
                 if (itemConfig.name != null && !itemConfig.name.isEmpty()) {
