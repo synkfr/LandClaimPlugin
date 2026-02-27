@@ -87,6 +87,10 @@ public class MainMenuGUI {
                         mat = Material.STONE;
 
                 ItemBuilder builder = new ItemBuilder(mat);
+                builder.addModifier(item -> {
+                        item.editMeta(meta -> meta.addItemFlags(org.bukkit.inventory.ItemFlag.values()));
+                        return item;
+                });
                 MiniMessage mm = MiniMessage.miniMessage();
 
                 if (itemConfig.name != null && !itemConfig.name.isEmpty()) {
