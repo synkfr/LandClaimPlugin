@@ -54,8 +54,13 @@ public class MainMenuGUI {
                                                         player.closeInventory();
                                                         ClaimSettingsGUI.open(player, claim, plugin);
                                                 }).build())
-                                .addIngredient('T',
-                                                buildConfigItem(config.trusted, claim, player, ownerName, claimName))
+                                .addIngredient('T', Item.builder()
+                                                .setItemProvider(buildConfigItemBuilder(config.trusted, claim, player,
+                                                                ownerName, claimName))
+                                                .addClickHandler(click -> {
+                                                        player.closeInventory();
+                                                        TrustManagementGUI.open(player, claim, plugin);
+                                                }).build())
                                 .addIngredient('E',
                                                 buildConfigItem(config.members, claim, player, ownerName, claimName))
                                 .addIngredient('V', Item.builder()
