@@ -24,7 +24,12 @@ public class MemberManagementGUI {
         MemberManagementConfig config = plugin.getConfigManager().getMemberManagementConfig();
         MiniMessage mm = MiniMessage.miniMessage();
 
-        List<Item> contentItems = new ArrayList<>(); // Empty backend logic for members later
+        List<Item> contentItems = new ArrayList<>();
+        // Backend logic for members later:
+        // When iterating over members, build an Item for each PLAYER_HEAD.
+        // - Left Click -> Opens future MemberActionGUI
+        // - Right Click -> PlayerControlPanelGUI.open(player, claim, plugin,
+        // memberUuid, memberName);
 
         BoundItem backBtn = BoundItem.pagedBuilder()
                 .setItemProvider((p, gui) -> {
