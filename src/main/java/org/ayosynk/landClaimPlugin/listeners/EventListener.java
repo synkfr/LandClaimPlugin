@@ -42,7 +42,10 @@ public class EventListener implements Listener {
 
     // Container blocks - require CONTAINER permission
     private static final Set<Material> CONTAINER_BLOCKS = new HashSet<>(Arrays.asList(
-            Material.CHEST, Material.TRAPPED_CHEST, Material.ENDER_CHEST, Material.BARREL,
+            Material.CHEST, Material.TRAPPED_CHEST, Material.ENDER_CHEST, Material.COPPER_CHEST,
+            Material.EXPOSED_COPPER_CHEST, Material.WEATHERED_COPPER_CHEST, Material.OXIDIZED_COPPER_CHEST,
+            Material.WAXED_COPPER_CHEST, Material.WAXED_EXPOSED_COPPER_CHEST, Material.WAXED_WEATHERED_COPPER_CHEST,
+            Material.WAXED_OXIDIZED_COPPER_CHEST, Material.BARREL,
             Material.FURNACE, Material.BLAST_FURNACE, Material.SMOKER, Material.HOPPER,
             Material.DROPPER, Material.DISPENSER, Material.BREWING_STAND,
             Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
@@ -56,11 +59,11 @@ public class EventListener implements Listener {
     private static final Set<Material> INTERACTABLE_BLOCKS = new HashSet<>(Arrays.asList(
             Material.ACACIA_DOOR, Material.BIRCH_DOOR, Material.DARK_OAK_DOOR, Material.JUNGLE_DOOR,
             Material.OAK_DOOR, Material.SPRUCE_DOOR, Material.CHERRY_DOOR, Material.PALE_OAK_DOOR, Material.BAMBOO_DOOR,
-            Material.CRIMSON_DOOR, Material.WARPED_DOOR,
+            Material.CRIMSON_DOOR, Material.WARPED_DOOR, Material.MANGROVE_DOOR,
             Material.ACACIA_TRAPDOOR, Material.BIRCH_TRAPDOOR, Material.CHERRY_TRAPDOOR, Material.BAMBOO_TRAPDOOR,
-            Material.PALE_OAK_TRAPDOOR,
+            Material.PALE_OAK_TRAPDOOR, Material.MANGROVE_TRAPDOOR,
             Material.CRIMSON_TRAPDOOR, Material.WARPED_TRAPDOOR, Material.BAMBOO_BUTTON, Material.CHERRY_BUTTON,
-            Material.PALE_OAK_BUTTON,
+            Material.PALE_OAK_BUTTON, Material.MANGROVE_BUTTON,
             Material.DARK_OAK_TRAPDOOR, Material.JUNGLE_TRAPDOOR, Material.OAK_TRAPDOOR, Material.SPRUCE_TRAPDOOR,
             Material.IRON_DOOR, Material.IRON_TRAPDOOR, Material.LEVER, Material.STONE_BUTTON, Material.OAK_BUTTON,
             Material.SPRUCE_BUTTON, Material.BIRCH_BUTTON, Material.JUNGLE_BUTTON, Material.ACACIA_BUTTON,
