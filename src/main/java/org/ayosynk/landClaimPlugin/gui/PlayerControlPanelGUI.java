@@ -34,7 +34,8 @@ public class PlayerControlPanelGUI {
                 .addIngredient('C', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.changeRole, targetPlayerName))
                         .addClickHandler(click -> {
-                            // Opens future RoleSelectionGUI
+                            player.closeInventory();
+                            RoleSelectionGUI.open(player, claim, plugin, targetPlayerId, targetPlayerName);
                         }).build())
                 .addIngredient('T', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.transferOwnership, targetPlayerName))
