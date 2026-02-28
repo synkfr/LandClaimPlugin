@@ -15,6 +15,7 @@ import org.ayosynk.landClaimPlugin.config.menus.ClaimMapConfig;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimMapInfoConfig;
 import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TrustManagementConfig;
+import org.ayosynk.landClaimPlugin.config.menus.PlayerTrustPermissionConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -30,6 +31,7 @@ public class ConfigManager {
     private ClaimMapInfoConfig claimMapInfoConfig;
     private VisitorSettingsConfig visitorSettingsConfig;
     private TrustManagementConfig trustManagementConfig;
+    private PlayerTrustPermissionConfig playerTrustPermissionConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -92,6 +94,14 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.playerTrustPermissionConfig = eu.okaeri.configs.ConfigManager.create(PlayerTrustPermissionConfig.class,
+                (it) -> {
+                    it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+                    it.withBindFile(new File(plugin.getDataFolder(), "menus/PlayerTrustPermission.yml"));
+                    it.saveDefaults();
+                    it.load(true);
+                });
     }
 
     public void reloadMainConfig() {
@@ -103,6 +113,7 @@ public class ConfigManager {
         claimMapInfoConfig.load();
         visitorSettingsConfig.load();
         trustManagementConfig.load();
+        playerTrustPermissionConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -135,6 +146,10 @@ public class ConfigManager {
 
     public TrustManagementConfig getTrustManagementConfig() {
         return trustManagementConfig;
+    }
+
+    public PlayerTrustPermissionConfig getPlayerTrustPermissionConfig() {
+        return playerTrustPermissionConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
