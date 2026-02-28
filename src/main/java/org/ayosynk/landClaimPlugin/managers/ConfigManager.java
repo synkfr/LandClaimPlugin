@@ -20,6 +20,7 @@ import org.ayosynk.landClaimPlugin.config.menus.MemberManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.PlayerControlPanelConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSelectionConfig;
 import org.ayosynk.landClaimPlugin.config.menus.WarpManagementConfig;
+import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -40,6 +41,7 @@ public class ConfigManager {
     private PlayerControlPanelConfig playerControlPanelConfig;
     private RoleSelectionConfig roleSelectionConfig;
     private WarpManagementConfig warpManagementConfig;
+    private WarpControlPanelConfig warpControlPanelConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -138,6 +140,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.warpControlPanelConfig = eu.okaeri.configs.ConfigManager.create(WarpControlPanelConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/WarpControlPanel.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -154,6 +163,7 @@ public class ConfigManager {
         playerControlPanelConfig.load();
         roleSelectionConfig.load();
         warpManagementConfig.load();
+        warpControlPanelConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -206,6 +216,10 @@ public class ConfigManager {
 
     public WarpManagementConfig getWarpManagementConfig() {
         return warpManagementConfig;
+    }
+
+    public WarpControlPanelConfig getWarpControlPanelConfig() {
+        return warpControlPanelConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---

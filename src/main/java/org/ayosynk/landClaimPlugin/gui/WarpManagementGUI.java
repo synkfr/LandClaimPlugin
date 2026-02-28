@@ -24,7 +24,11 @@ public class WarpManagementGUI {
         WarpManagementConfig config = plugin.getConfigManager().getWarpManagementConfig();
         MiniMessage mm = MiniMessage.miniMessage();
 
-        List<Item> contentItems = new ArrayList<>(); // Empty backend logic for warps later
+        List<Item> contentItems = new ArrayList<>();
+        // Backend logic for warps later:
+        // When iterating over warps, build an Item for each warp.
+        // - Left Click -> Teleport to warp
+        // - Right Click -> WarpControlPanelGUI.open(player, claim, plugin);
 
         BoundItem backBtn = BoundItem.pagedBuilder()
                 .setItemProvider((p, gui) -> {
