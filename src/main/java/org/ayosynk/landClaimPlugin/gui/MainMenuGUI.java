@@ -61,8 +61,13 @@ public class MainMenuGUI {
                                                         player.closeInventory();
                                                         TrustManagementGUI.open(player, claim, plugin);
                                                 }).build())
-                                .addIngredient('E',
-                                                buildConfigItem(config.members, claim, player, ownerName, claimName))
+                                .addIngredient('E', Item.builder()
+                                                .setItemProvider(buildConfigItemBuilder(config.members, claim, player,
+                                                                ownerName, claimName))
+                                                .addClickHandler(click -> {
+                                                        player.closeInventory();
+                                                        MemberManagementGUI.open(player, claim, plugin);
+                                                }).build())
                                 .addIngredient('V', Item.builder()
                                                 .setItemProvider(buildConfigItemBuilder(config.visitors, claim, player,
                                                                 ownerName, claimName))

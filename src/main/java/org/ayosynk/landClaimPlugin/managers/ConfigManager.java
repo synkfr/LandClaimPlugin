@@ -16,6 +16,7 @@ import org.ayosynk.landClaimPlugin.config.menus.ClaimMapInfoConfig;
 import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TrustManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.PlayerTrustPermissionConfig;
+import org.ayosynk.landClaimPlugin.config.menus.MemberManagementConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -32,6 +33,7 @@ public class ConfigManager {
     private VisitorSettingsConfig visitorSettingsConfig;
     private TrustManagementConfig trustManagementConfig;
     private PlayerTrustPermissionConfig playerTrustPermissionConfig;
+    private MemberManagementConfig memberManagementConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -102,6 +104,13 @@ public class ConfigManager {
                     it.saveDefaults();
                     it.load(true);
                 });
+
+        this.memberManagementConfig = eu.okaeri.configs.ConfigManager.create(MemberManagementConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/MemberManagement.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -114,6 +123,7 @@ public class ConfigManager {
         visitorSettingsConfig.load();
         trustManagementConfig.load();
         playerTrustPermissionConfig.load();
+        memberManagementConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -150,6 +160,10 @@ public class ConfigManager {
 
     public PlayerTrustPermissionConfig getPlayerTrustPermissionConfig() {
         return playerTrustPermissionConfig;
+    }
+
+    public MemberManagementConfig getMemberManagementConfig() {
+        return memberManagementConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
