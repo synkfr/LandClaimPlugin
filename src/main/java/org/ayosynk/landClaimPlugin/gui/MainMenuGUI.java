@@ -45,7 +45,13 @@ public class MainMenuGUI {
                                                         player.closeInventory();
                                                         ClaimMapGUI.open(player, claim, plugin);
                                                 }).build())
-                                .addIngredient('W', buildConfigItem(config.warps, claim, player, ownerName, claimName))
+                                .addIngredient('W', Item.builder()
+                                                .setItemProvider(buildConfigItemBuilder(config.warps, claim, player,
+                                                                ownerName, claimName))
+                                                .addClickHandler(click -> {
+                                                        player.closeInventory();
+                                                        WarpManagementGUI.open(player, claim, plugin);
+                                                }).build())
                                 .addIngredient('A', buildConfigItem(config.allies, claim, player, ownerName, claimName))
                                 .addIngredient('S', Item.builder()
                                                 .setItemProvider(buildConfigItemBuilder(config.settings, claim, player,
