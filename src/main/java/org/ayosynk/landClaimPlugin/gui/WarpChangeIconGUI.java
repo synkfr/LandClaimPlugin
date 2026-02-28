@@ -5,52 +5,73 @@ import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.gui.PagedGui;
+import xyz.xenondevs.invui.gui.Markers;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemBuilder;
+import xyz.xenondevs.invui.item.BoundItem;
 import xyz.xenondevs.invui.window.Window;
-import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
+import org.ayosynk.landClaimPlugin.config.menus.WarpChangeIconConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class WarpControlPanelGUI {
+public class WarpChangeIconGUI {
 
     public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
-        WarpControlPanelConfig config = plugin.getConfigManager().getWarpControlPanelConfig();
+        WarpChangeIconConfig config = plugin.getConfigManager().getWarpChangeIconConfig();
         MiniMessage mm = MiniMessage.miniMessage();
 
-        Gui gui = Gui.builder()
+        List<Item> contentItems = new ArrayList<>(); // Empty backend logic for icon items
+
+        BoundItem backBtn = BoundItem.pagedBuilder()
+                .setItemProvider((p, gui) -> {
+                    if (gui.getPage() > 0) {
+                        return buildConfigItemBuilder(config.previousPage);
+                    } else {
+                        return buildConfigItemBuilder(config.navFill);
+                    }
+                })
+                .addClickHandler((item, gui, click) -> {
+                    if (gui.getPage() > 0)
+                        gui.setPage(gui.getPage() - 1);
+                })
+                .build();
+
+        BoundItem forwardBtn = BoundItem.pagedBuilder()
+                .setItemProvider((p, gui) -> {
+                    if (gui.getPage() < gui.getPageCount() - 1) {
+                        return buildConfigItemBuilder(config.nextPage);
+                    } else {
+                        return buildConfigItemBuilder(config.navFill);
+                    }
+                })
+                .addClickHandler((item, gui, click) -> {
+                    if (gui.getPage() < gui.getPageCount() - 1)
+                        gui.setPage(gui.getPage() + 1);
+                })
+                .build();
+
+        Gui gui = PagedGui.itemsBuilder()
                 .setStructure(
-                        "F F F F F F F F F",
-                        "F F L F I F D F F",
-                        "F F F F F F F F F",
-                        "S S S S < S S S S")
-                .addIngredient('F', buildConfigItem(config.frame))
+                        "x x x x x x x x x",
+                        "x x x x x x x x x",
+                        "x x x x x x x x x",
+                        "P F F S < S F F N")
+                .addIngredient('x', Markers.CONTENT_LIST_SLOT_HORIZONTAL)
+                .addIngredient('F', buildConfigItem(config.navFill))
                 .addIngredient('S', buildConfigItem(config.spacer))
-                .addIngredient('L', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.changeLocation))
-                        .addClickHandler(click -> {
-                            // Reserved: Update warp to current location
-                        }).build())
-                .addIngredient('I', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.changeIcon))
-                        .addClickHandler(click -> {
-                            player.closeInventory();
-                            WarpChangeIconGUI.open(player, claim, plugin);
-                        }).build())
-                .addIngredient('D', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.deleteWarp))
-                        .addClickHandler(click -> {
-                            // Reserved: Opens confirmation GUI
-                        }).build())
                 .addIngredient('<', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.back))
                         .addClickHandler(click -> {
                             player.closeInventory();
-                            WarpManagementGUI.open(player, claim, plugin);
+                            WarpControlPanelGUI.open(player, claim, plugin);
                         }).build())
+                .addIngredient('P', backBtn)
+                .addIngredient('N', forwardBtn)
+                .setContent(contentItems)
                 .build();
 
         String windowTitle = config.title;
@@ -61,11 +82,11 @@ public class WarpControlPanelGUI {
                 .open(player);
     }
 
-    private static Item buildConfigItem(WarpControlPanelConfig.ItemConfig itemConfig) {
+    private static Item buildConfigItem(WarpChangeIconConfig.ItemConfig itemConfig) {
         return Item.simple(buildConfigItemBuilder(itemConfig));
     }
 
-    private static ItemBuilder buildConfigItemBuilder(WarpControlPanelConfig.ItemConfig itemConfig) {
+    private static ItemBuilder buildConfigItemBuilder(WarpChangeIconConfig.ItemConfig itemConfig) {
         Material mat = Material.matchMaterial(itemConfig.material.toUpperCase());
         if (mat == null)
             mat = Material.STONE;
