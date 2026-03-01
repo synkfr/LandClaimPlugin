@@ -29,6 +29,7 @@ import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TitleSettingsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -58,6 +59,7 @@ public class ConfigManager {
     private RoleSetupConfig roleSetupConfig;
     private TitleSettingsConfig titleSettingsConfig;
     private RenameClaimConfig renameClaimConfig;
+    private ChangeClaimColorConfig changeClaimColorConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -219,6 +221,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.changeClaimColorConfig = eu.okaeri.configs.ConfigManager.create(ChangeClaimColorConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/ChangeClaimColor.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -244,6 +253,7 @@ public class ConfigManager {
         roleSetupConfig.load();
         titleSettingsConfig.load();
         renameClaimConfig.load();
+        changeClaimColorConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -332,6 +342,10 @@ public class ConfigManager {
 
     public RenameClaimConfig getRenameClaimConfig() {
         return renameClaimConfig;
+    }
+
+    public ChangeClaimColorConfig getChangeClaimColorConfig() {
+        return changeClaimColorConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
