@@ -103,10 +103,12 @@ public class ClaimCommand implements LandClaimCommand {
     // --- Private Helpers ---
 
     private void claimCurrentChunk(Player player) {
-        Chunk chunk = player.getLocation().getChunk();
-        if (claimManager.claimChunk(player, chunk)) {
-            player.sendMessage(configManager.getMessage("chunk-claimed"));
-        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Chunk chunk = player.getLocation().getChunk();
+            if (claimManager.claimChunk(player, chunk)) {
+                player.sendMessage(configManager.getMessage("chunk-claimed"));
+            }
+        });
     }
 
     private void toggleAutoClaim(Player player) {
@@ -117,12 +119,14 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void toggleVisibility(Player player) {
-        boolean isVisible = visualizationManager.toggleVisualization(player);
-        if (isVisible) {
-            player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
-        } else {
-            player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
-        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            boolean isVisible = visualizationManager.toggleVisualization(player);
+            if (isVisible) {
+                player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
+            } else {
+                player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
+            }
+        });
     }
 
     private void sendClaimInfo(Player player) {

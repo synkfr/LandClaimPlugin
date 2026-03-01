@@ -105,8 +105,8 @@ public class CommandHandler {
 
         List<LandClaimCommand> commands = List.of(
                 claimCommand,
-                new UnclaimCommand(claimManager, configManager),
-                new AdminCommand(claimManager, configManager),
+                new UnclaimCommand(plugin, claimManager, configManager),
+                new AdminCommand(plugin, claimManager, configManager),
                 new MemberCommand(plugin, claimManager, trustManager, configManager),
                 new TrustCommand(configManager));
 

@@ -1,9 +1,11 @@
 package org.ayosynk.landClaimPlugin.commands;
 
+import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Claim;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
@@ -16,10 +18,12 @@ import org.incendo.cloud.paper.util.sender.Source;
  */
 public class UnclaimCommand implements LandClaimCommand {
 
+    private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
 
-    public UnclaimCommand(ClaimManager claimManager, ConfigManager configManager) {
+    public UnclaimCommand(LandClaimPlugin plugin, ClaimManager claimManager, ConfigManager configManager) {
+        this.plugin = plugin;
         this.claimManager = claimManager;
         this.configManager = configManager;
     }
@@ -45,26 +49,28 @@ public class UnclaimCommand implements LandClaimCommand {
     }
 
     private void unclaimCurrentChunk(Player player) {
-        Chunk chunk = player.getLocation().getChunk();
-        ChunkPosition pos = new ChunkPosition(chunk);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Chunk chunk = player.getLocation().getChunk();
+            ChunkPosition pos = new ChunkPosition(chunk);
 
-        Claim claim = claimManager.getSubClaimAt(pos);
-        if (claim == null) {
-            claim = claimManager.getClaimAt(pos);
-        }
+            Claim claim = claimManager.getSubClaimAt(pos);
+            if (claim == null) {
+                claim = claimManager.getClaimAt(pos);
+            }
 
-        if (claim == null) {
-            player.sendMessage(configManager.getMessage("not-in-claim"));
-            return;
-        }
+            if (claim == null) {
+                player.sendMessage(configManager.getMessage("not-in-claim"));
+                return;
+            }
 
-        if (!claim.getOwnerId().equals(player.getUniqueId())) {
-            player.sendMessage(configManager.getMessage("not-owner"));
-            return;
-        }
+            if (!claim.getOwnerId().equals(player.getUniqueId())) {
+                player.sendMessage(configManager.getMessage("not-owner"));
+                return;
+            }
 
-        if (claimManager.unclaimChunk(chunk)) {
-            player.sendMessage(configManager.getMessage("chunk-unclaimed"));
-        }
+            if (claimManager.unclaimChunk(chunk)) {
+                player.sendMessage(configManager.getMessage("chunk-unclaimed"));
+            }
+        });
     }
 }

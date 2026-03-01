@@ -150,55 +150,58 @@ public class VisualizationManager {
         List<BlockDisplay> displays = new ArrayList<>();
         World world = player.getWorld();
 
-        for (Edge edge : edges) {
-            double minX = Math.min(edge.x1(), edge.x2());
-            double minZ = Math.min(edge.z1(), edge.z2());
-            double lengthX = Math.abs(edge.x2() - edge.x1());
-            double lengthZ = Math.abs(edge.z2() - edge.z1());
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            for (Edge edge : edges) {
+                double minX = Math.min(edge.x1(), edge.x2());
+                double minZ = Math.min(edge.z1(), edge.z2());
+                double lengthX = Math.abs(edge.x2() - edge.x1());
+                double lengthZ = Math.abs(edge.z2() - edge.z1());
 
-            float scaleX = (float) (lengthX == 0 ? 0.05f : lengthX);
-            float scaleZ = (float) (lengthZ == 0 ? 0.05f : lengthZ);
-            float scaleY = 384f; // Build limit from -64 to 320
+                float scaleX = (float) (lengthX == 0 ? 0.05f : lengthX);
+                float scaleZ = (float) (lengthZ == 0 ? 0.05f : lengthZ);
+                float scaleY = 384f; // Build limit from -64 to 320
 
-            double playerY = player.getLocation().getY();
-            Location loc = new Location(world, minX, playerY, minZ);
+                double playerY = player.getLocation().getY();
+                Location loc = new Location(world, minX, playerY, minZ);
 
-            BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
-                e.setPersistent(false);
-                e.setVisibleByDefault(false);
-                e.setBlock(Bukkit.createBlockData(material));
-                e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
-                e.setGravity(false);
+                BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
+                    e.setPersistent(false);
+                    e.setVisibleByDefault(false);
+                    e.setBlock(Bukkit.createBlockData(material));
+                    e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
+                    e.setGravity(false);
 
-                // Adjust translation to center the extremely thin boundary block
-                float transX = lengthX == 0 ? -0.025f : 0f;
-                float transY = (float) (-64 - playerY); // shift origin back down to bedrock
-                float transZ = lengthZ == 0 ? -0.025f : 0f;
+                    // Adjust translation to center the extremely thin boundary block
+                    float transX = lengthX == 0 ? -0.025f : 0f;
+                    float transY = (float) (-64 - playerY); // shift origin back down to bedrock
+                    float transZ = lengthZ == 0 ? -0.025f : 0f;
 
-                Transformation transform = new Transformation(
-                        new Vector3f(transX, transY, transZ),
-                        new AxisAngle4f(),
-                        new Vector3f(scaleX, scaleY, scaleZ),
-                        new AxisAngle4f());
-                e.setTransformation(transform);
-            });
+                    Transformation transform = new Transformation(
+                            new Vector3f(transX, transY, transZ),
+                            new AxisAngle4f(),
+                            new Vector3f(scaleX, scaleY, scaleZ),
+                            new AxisAngle4f());
+                    e.setTransformation(transform);
+                });
 
-            player.showEntity(plugin, display);
-            displays.add(display);
-        }
-
-        activeDisplays.put(playerId, displays);
+                player.showEntity(plugin, display);
+                displays.add(display);
+            }
+            activeDisplays.put(playerId, displays);
+        });
     }
 
     private void clearDisplays(UUID playerId) {
-        List<BlockDisplay> displays = activeDisplays.remove(playerId);
-        if (displays != null) {
-            for (BlockDisplay display : displays) {
-                if (display.isValid()) {
-                    display.remove();
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            List<BlockDisplay> displays = activeDisplays.remove(playerId);
+            if (displays != null) {
+                for (BlockDisplay display : displays) {
+                    if (display.isValid()) {
+                        display.remove();
+                    }
                 }
             }
-        }
+        });
     }
 
     // --- Caching and Edge Merging ---
