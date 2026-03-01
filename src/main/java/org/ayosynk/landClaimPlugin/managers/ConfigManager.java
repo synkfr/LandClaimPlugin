@@ -24,6 +24,7 @@ import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
 import org.ayosynk.landClaimPlugin.config.menus.WarpChangeIconConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyControlPanelConfig;
+import org.ayosynk.landClaimPlugin.config.menus.AllyPremissionsConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -48,6 +49,7 @@ public class ConfigManager {
     private WarpChangeIconConfig warpChangeIconConfig;
     private AllyManagementConfig allyManagementConfig;
     private AllyControlPanelConfig allyControlPanelConfig;
+    private AllyPremissionsConfig allyPremissionsConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -174,6 +176,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.allyPremissionsConfig = eu.okaeri.configs.ConfigManager.create(AllyPremissionsConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/AllyPremissions.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -194,6 +203,7 @@ public class ConfigManager {
         warpChangeIconConfig.load();
         allyManagementConfig.load();
         allyControlPanelConfig.load();
+        allyPremissionsConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -262,6 +272,10 @@ public class ConfigManager {
 
     public AllyControlPanelConfig getAllyControlPanelConfig() {
         return allyControlPanelConfig;
+    }
+
+    public AllyPremissionsConfig getAllyPremissionsConfig() {
+        return allyPremissionsConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---

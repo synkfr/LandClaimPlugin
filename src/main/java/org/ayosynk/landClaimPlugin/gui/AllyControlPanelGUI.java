@@ -32,7 +32,8 @@ public class AllyControlPanelGUI {
                 .addIngredient('P', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.allyPermissions))
                         .addClickHandler(click -> {
-                            // Opens AllyPermissionsGUI (future)
+                            player.closeInventory();
+                            AllyPremissionsGUI.open(player, claim, plugin);
                         }).build())
                 .addIngredient('W', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.allyWarps))
