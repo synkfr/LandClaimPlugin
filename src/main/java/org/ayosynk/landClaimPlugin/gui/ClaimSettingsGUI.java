@@ -48,7 +48,13 @@ public class ClaimSettingsGUI {
                         }).build())
                 .addIngredient('W', buildConfigItem(config.warps, claim, player, ownerName, claimName))
                 .addIngredient('V', buildConfigItem(config.visibility, claim, player, ownerName, claimName))
-                .addIngredient('T', buildConfigItem(config.titleToggle, claim, player, ownerName, claimName))
+                .addIngredient('T', Item.builder()
+                        .setItemProvider(
+                                buildConfigItemBuilder(config.titleToggle, claim, player, ownerName, claimName))
+                        .addClickHandler(click -> {
+                            player.closeInventory();
+                            TitleToggleGUI.open(player, claim, plugin);
+                        }).build())
                 .addIngredient('A', buildConfigItem(config.abandonAll, claim, player, ownerName, claimName))
                 .addIngredient('B', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.back, claim, player, ownerName, claimName))
