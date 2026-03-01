@@ -1,15 +1,13 @@
 package org.ayosynk.landClaimPlugin.commands;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.exceptions.CombatBlockedException;
+import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.WarpManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
-import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
+import org.ayosynk.landClaimPlugin.managers.WarpManager;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.execution.ExecutionCoordinator;
@@ -17,46 +15,63 @@ import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PaperSimpleSenderMapper;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
-import org.incendo.cloud.parser.standard.StringParser;
 import org.incendo.cloud.exception.handling.ExceptionContext;
 
-import org.ayosynk.landClaimPlugin.exceptions.CombatBlockedException;
-import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Central command registry and coordinator.
+ *
+ * Uses a custom ExecutionCoordinator.builder() with per-phase thread isolation:
+ * - Parsing: nonSchedulingExecutor (calling thread) — lightweight tokenization
+ * - Suggestions: nonSchedulingExecutor (calling thread) — prevents deadlocks
+ * - Execution: dedicated daemon thread pool — heavy I/O, DB, GUI building off
+ * main thread
+ *
+ * Each command group is a separate LandClaimCommand implementation registered
+ * modularly.
+ */
 public class CommandHandler {
 
-    private final LandClaimPlugin plugin;
-    private final ClaimManager claimManager;
-    private final TrustManager trustManager;
-    private final ConfigManager configManager;
-    private final VisualizationManager visualizationManager;
-
-    private final Map<UUID, Boolean> autoClaimPlayers = new HashMap<>();
-    private final Map<UUID, Boolean> autoUnclaimPlayers = new HashMap<>();
+    private final ClaimCommand claimCommand;
+    private final ExecutorService commandExecutor;
 
     public CommandHandler(LandClaimPlugin plugin, ClaimManager claimManager,
             TrustManager trustManager, ConfigManager configManager,
             VisualizationManager visualizationManager, WarpManager warpManager) {
-        this.plugin = plugin;
-        this.claimManager = claimManager;
-        this.trustManager = trustManager;
-        this.configManager = configManager;
-        this.visualizationManager = visualizationManager;
+
+        // Dedicated thread pool for async command execution (4 daemon threads)
+        commandExecutor = Executors.newFixedThreadPool(4, r -> {
+            Thread t = new Thread(r, "LandClaim-Command-Worker");
+            t.setDaemon(true);
+            return t;
+        });
+
+        // Custom ExecutionCoordinator — the critical optimization
+        // Parsing & suggestions stay on calling thread (prevents deadlocks)
+        // Execution routes to our dedicated worker pool (off main thread)
+        ExecutionCoordinator<Source> coordinator = ExecutionCoordinator.<Source>builder()
+                .parsingExecutor(ExecutionCoordinator.nonSchedulingExecutor())
+                .suggestionsExecutor(ExecutionCoordinator.nonSchedulingExecutor())
+                .executionSchedulingExecutor(commandExecutor)
+                .build();
 
         PaperCommandManager<Source> commandManager;
         try {
             commandManager = PaperCommandManager.builder(PaperSimpleSenderMapper.simpleSenderMapper())
-                    .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
+                    .executionCoordinator(coordinator)
                     .buildOnEnable(plugin);
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to initialize Cloud Command Manager: " + e.getMessage());
-            return;
+            claimCommand = null;
+            throw new RuntimeException("Failed to initialize Cloud Command Manager", e);
         }
 
+        // Combat preprocessor — shared across all commands
         commandManager.registerCommandPreProcessor(ctx -> {
             if (ctx.commandContext().sender() instanceof PlayerSource source) {
                 Player player = source.source();
@@ -66,6 +81,7 @@ public class CommandHandler {
             }
         });
 
+        // Combat exception handler
         commandManager.exceptionController().registerHandler(CombatBlockedException.class,
                 (ExceptionContext<Source, CombatBlockedException> ctx) -> {
                     if (ctx.context().sender() instanceof PlayerSource source) {
@@ -74,274 +90,64 @@ public class CommandHandler {
                     }
                 });
 
-        registerCommands(commandManager);
-    }
+        // Eager class preloading — force JVM ClassLoader to resolve heavy classes at
+        // startup,
+        // eliminating first-execution lag spikes when a player runs a command for the
+        // first time
+        try {
+            Class.forName(MainMenuGUI.class.getName());
+        } catch (ClassNotFoundException ignored) {
+            // Should never happen — class is in same JAR
+        }
 
-    private void registerCommands(PaperCommandManager<Source> manager) {
-        Command.Builder<PlayerSource> claimBuilder = manager.commandBuilder("claim", "c")
+        // Instantiate modular command groups
+        claimCommand = new ClaimCommand(plugin, claimManager, configManager, visualizationManager);
+
+        List<LandClaimCommand> commands = List.of(
+                claimCommand,
+                new UnclaimCommand(claimManager, configManager),
+                new AdminCommand(claimManager, configManager),
+                new MemberCommand(plugin, claimManager, trustManager, configManager),
+                new TrustCommand(configManager));
+
+        // Register all commands via the shared /claim builder
+        Command.Builder<PlayerSource> claimBuilder = commandManager.commandBuilder("claim", "c")
                 .senderType(PlayerSource.class);
 
-        // /claim
-        manager.command(claimBuilder
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    claimCurrentChunk(player);
-                }));
-
-        // /claim auto
-        manager.command(claimBuilder.literal("auto")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    toggleAutoClaim(player);
-                }));
-
-        // /claim visible
-        manager.command(claimBuilder.literal("visible")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    toggleVisibility(player);
-                }));
-
-        // /claim menu
-        manager.command(claimBuilder.literal("menu")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-                    Claim claim = claimManager.getClaimAt(pos);
-                    if (claim == null) {
-                        player.sendMessage(configManager.getMessage("not-in-claim"));
-                        return;
-                    }
-                    MainMenuGUI.open(player, claim, plugin);
-                }));
-
-        // /claim info
-        manager.command(claimBuilder.literal("info")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    sendClaimInfo(player);
-                }));
-
-        // /unclaim
-        Command.Builder<PlayerSource> unclaimBuilder = manager.commandBuilder("unclaim", "uc")
-                .senderType(PlayerSource.class);
-
-        manager.command(unclaimBuilder
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    unclaimCurrentChunk(player);
-                }));
-
-        // /unclaim all
-        manager.command(unclaimBuilder.literal("all")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
-                }));
-
-        // /claim admin <check/unclaim>
-        manager.command(claimBuilder.literal("admin").literal("check")
-                .permission("landclaim.admin")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    sendAdminClaimInfo(player);
-                }));
-
-        manager.command(claimBuilder.literal("admin").literal("unclaim")
-                .permission("landclaim.admin")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    adminUnclaimCurrentChunk(player);
-                }));
-
-        // /claim member <invite/kick/list> <player>
-        Command.Builder<PlayerSource> memberBuilder = claimBuilder.literal("member");
-        manager.command(memberBuilder.literal("list")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    player.sendMessage(configManager.getMessage("member-list-stub"));
-                }));
-        manager.command(memberBuilder.literal("invite")
-                .required("player", StringParser.stringParser())
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    String targetName = context.get("player");
-
-                    ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-                    Claim claim = claimManager.getClaimAt(pos);
-                    if (claim == null) {
-                        player.sendMessage(configManager.getMessage("not-in-claim"));
-                        return;
-                    }
-                    if (!trustManager.canManageTrust(claim, player)) {
-                        player.sendMessage(configManager.getMessage("access-denied"));
-                        return;
-                    }
-
-                    Player target = plugin.getServer().getPlayer(targetName);
-                    if (target == null) {
-                        player.sendMessage(configManager.getMessage("player-not-online"));
-                        return;
-                    }
-                    if (claim.getPlayerRoles().containsKey(target.getUniqueId())
-                            || claim.getOwnerId().equals(target.getUniqueId())) {
-                        player.sendMessage(configManager.getMessage("already-in-claim"));
-                        return;
-                    }
-
-                    trustManager.invitePlayer(claim, target);
-                    player.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
-                }));
-
-        manager.command(claimBuilder.literal("accept")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    trustManager.acceptInvite(player);
-                }));
-
-        manager.command(claimBuilder.literal("deny")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    trustManager.denyInvite(player);
-                }));
-        manager.command(memberBuilder.literal("kick")
-                .required("player", StringParser.stringParser())
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    String targetName = context.get("player");
-                    player.sendMessage(configManager.getMessage("member-kicked", "<player>", targetName));
-                }));
-
-        // /claim trust <add/remove/list> <player>
-        Command.Builder<PlayerSource> trustBuilder = claimBuilder.literal("trust");
-        manager.command(trustBuilder.literal("list")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    player.sendMessage(configManager.getMessage("trust-list-stub"));
-                }));
-        manager.command(trustBuilder.literal("add")
-                .required("player", StringParser.stringParser())
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    String targetName = context.get("player");
-                    player.sendMessage(configManager.getMessage("trust-added", "<player>", targetName));
-                }));
-        manager.command(trustBuilder.literal("remove")
-                .required("player", StringParser.stringParser())
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    String targetName = context.get("player");
-                    player.sendMessage(configManager.getMessage("trust-removed", "<player>", targetName));
-                }));
-    }
-
-    private void claimCurrentChunk(Player player) {
-        Chunk chunk = player.getLocation().getChunk();
-        if (claimManager.claimChunk(player, chunk)) {
-            player.sendMessage(configManager.getMessage("chunk-claimed"));
+        for (LandClaimCommand cmd : commands) {
+            cmd.register(commandManager, claimBuilder);
         }
     }
 
-    private void unclaimCurrentChunk(Player player) {
-        Chunk chunk = player.getLocation().getChunk();
-        ChunkPosition pos = new ChunkPosition(chunk);
-
-        Claim claim = claimManager.getSubClaimAt(pos);
-        if (claim == null) {
-            claim = claimManager.getClaimAt(pos);
-        }
-
-        if (claim == null) {
-            player.sendMessage(configManager.getMessage("not-in-claim"));
-            return;
-        }
-
-        if (!claim.getOwnerId().equals(player.getUniqueId())) {
-            player.sendMessage(configManager.getMessage("not-owner"));
-            return;
-        }
-
-        if (claimManager.unclaimChunk(chunk)) {
-            player.sendMessage(configManager.getMessage("chunk-unclaimed"));
-        }
-    }
-
-    private void adminUnclaimCurrentChunk(Player player) {
-        Chunk chunk = player.getLocation().getChunk();
-        ChunkPosition pos = new ChunkPosition(chunk);
-
-        Claim claim = claimManager.getClaimAt(pos);
-        if (claim == null) {
-            player.sendMessage(configManager.getMessage("not-in-claim"));
-            return;
-        }
-
-        if (claimManager.unclaimChunk(chunk)) {
-            player.sendMessage(configManager.getMessage("admin-bypassed-unclaim"));
-        }
-    }
-
-    private void toggleAutoClaim(Player player) {
-        boolean current = autoClaimPlayers.getOrDefault(player.getUniqueId(), false);
-        boolean newValue = !current;
-        autoClaimPlayers.put(player.getUniqueId(), newValue);
-        player.sendMessage(configManager.getMessage(newValue ? "auto-claim-enabled" : "auto-claim-disabled"));
-    }
+    // --- Delegates to ClaimCommand for auto-claim state ---
 
     public boolean isAutoClaimEnabled(UUID playerId) {
-        return autoClaimPlayers.getOrDefault(playerId, false);
+        return claimCommand.isAutoClaimEnabled(playerId);
     }
 
     public boolean isAutoUnclaimEnabled(UUID playerId) {
-        return autoUnclaimPlayers.getOrDefault(playerId, false);
+        return claimCommand.isAutoUnclaimEnabled(playerId);
     }
 
     public void cleanupPlayer(UUID playerId) {
-        autoClaimPlayers.remove(playerId);
-        autoUnclaimPlayers.remove(playerId);
+        claimCommand.cleanupPlayer(playerId);
     }
 
-    private void toggleVisibility(Player player) {
-        boolean isVisible = visualizationManager.toggleVisualization(player);
-        if (isVisible) {
-            player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
-        } else {
-            // we probably don't have a messages.yml for disabled right now so just reuse it
-            player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
+    /**
+     * Gracefully shuts down the command executor thread pool.
+     * Call this from LandClaimPlugin.onDisable().
+     */
+    public void shutdown() {
+        if (commandExecutor != null && !commandExecutor.isShutdown()) {
+            commandExecutor.shutdown();
+            try {
+                if (!commandExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    commandExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                commandExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
-    }
-
-    private void sendClaimInfo(Player player) {
-        ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-        Claim claim = claimManager.getClaimAt(pos);
-
-        if (claim == null) {
-            player.sendMessage(configManager.getMessage("not-in-claim"));
-            return;
-        }
-
-        String ownerName = Bukkit.getOfflinePlayer(claim.getOwnerId()).getName();
-        if (ownerName == null)
-            ownerName = "Unknown";
-
-        player.sendMessage(configManager.getMessage("claim-info-owner", "<owner>", ownerName));
-    }
-
-    private void sendAdminClaimInfo(Player player) {
-        ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-        Claim claim = claimManager.getClaimAt(pos);
-
-        if (claim == null) {
-            player.sendMessage(configManager.getMessage("not-in-claim"));
-            return;
-        }
-        String ownerName = Bukkit.getOfflinePlayer(claim.getOwnerId()).getName();
-        if (ownerName == null)
-            ownerName = "Unknown";
-
-        player.sendMessage(
-                configManager.getMessage("admin-claim-info-owned-by", "<owner>", ownerName, "<uuid>",
-                        claim.getOwnerId().toString()));
-        player.sendMessage(configManager.getMessage("admin-claim-info-id", "<id>", claim.getId().toString()));
     }
 }

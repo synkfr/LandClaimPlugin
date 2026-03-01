@@ -165,6 +165,11 @@ public class LandClaimPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         try {
+            // Gracefully shut down the command executor thread pool
+            if (commandHandler != null) {
+                commandHandler.shutdown();
+            }
+
             getServer().getScheduler().runTaskAsynchronously(this, () -> {
                 if (warpManager != null) {
                     warpManager.save();
