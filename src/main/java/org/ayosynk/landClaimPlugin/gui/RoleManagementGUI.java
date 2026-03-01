@@ -71,7 +71,7 @@ public class RoleManagementGUI {
                         .setItemProvider(buildConfigItemBuilder(config.createRole))
                         .addClickHandler(click -> {
                             player.closeInventory();
-                            // RoleCreationGUI.open(player, claim, plugin);
+                            RoleSetupGUI.open(player, claim, plugin);
                         }).build())
                 .addIngredient('<', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.back))
