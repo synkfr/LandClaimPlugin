@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.gui.PagedGui;
-import xyz.xenondevs.invui.gui.Markers;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.BoundItem;
 import xyz.xenondevs.invui.window.Window;
@@ -85,7 +84,6 @@ public class MemberManagementGUI {
                                 "x x x x x x x x x",
                                 "x x x x x x x x x",
                                 "P B B B < B B B N")
-                        .addIngredient('x', Markers.CONTENT_LIST_SLOT_HORIZONTAL)
                         .addIngredient('B', GuiHelper.buildItem(config.bottomFill.material, config.bottomFill.name,
                                 config.bottomFill.lore))
                         .addIngredient('<', Item.builder()

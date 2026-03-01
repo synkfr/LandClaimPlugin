@@ -1,6 +1,7 @@
 package org.ayosynk.landClaimPlugin;
 
 import org.ayosynk.landClaimPlugin.commands.CommandHandler;
+import org.ayosynk.landClaimPlugin.gui.GuiGlobalSetup;
 import org.ayosynk.landClaimPlugin.db.DatabaseManager;
 import org.ayosynk.landClaimPlugin.managers.CacheManager;
 import org.ayosynk.landClaimPlugin.managers.RedisManager;
@@ -81,6 +82,9 @@ public class LandClaimPlugin extends JavaPlugin {
 
             warpManager = new WarpManager(this, configManager); // Changed from homeManager = new HomeManager(...)
             warpManager.loadFromDatabase();
+
+            // Register global InvUI ingredients once — auto-applied to all GUI builders
+            GuiGlobalSetup.init();
 
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager,
                     warpManager); // Changed from homeManager

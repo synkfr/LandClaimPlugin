@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.gui.PagedGui;
-import xyz.xenondevs.invui.gui.Markers;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.BoundItem;
 import xyz.xenondevs.invui.window.Window;
@@ -62,7 +61,6 @@ public class RoleManagementGUI {
                             "F x x x x x x x F",
                             "F x x x x x x x F",
                             "P N N < C N N N V")
-                    .addIngredient('x', Markers.CONTENT_LIST_SLOT_HORIZONTAL)
                     .addIngredient('F',
                             GuiHelper.buildItem(config.frame.material, config.frame.name, config.frame.lore))
                     .addIngredient('N',
