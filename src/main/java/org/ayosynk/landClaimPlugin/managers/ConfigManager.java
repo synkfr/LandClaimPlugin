@@ -25,6 +25,7 @@ import org.ayosynk.landClaimPlugin.config.menus.WarpChangeIconConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyControlPanelConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyPremissionsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -50,6 +51,7 @@ public class ConfigManager {
     private AllyManagementConfig allyManagementConfig;
     private AllyControlPanelConfig allyControlPanelConfig;
     private AllyPremissionsConfig allyPremissionsConfig;
+    private RoleManagementConfig roleManagementConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -183,6 +185,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.roleManagementConfig = eu.okaeri.configs.ConfigManager.create(RoleManagementConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RoleManagement.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -204,6 +213,7 @@ public class ConfigManager {
         allyManagementConfig.load();
         allyControlPanelConfig.load();
         allyPremissionsConfig.load();
+        roleManagementConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -276,6 +286,10 @@ public class ConfigManager {
 
     public AllyPremissionsConfig getAllyPremissionsConfig() {
         return allyPremissionsConfig;
+    }
+
+    public RoleManagementConfig getRoleManagementConfig() {
+        return roleManagementConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
