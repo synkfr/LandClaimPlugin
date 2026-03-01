@@ -5,6 +5,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemBuilder;
 
@@ -13,13 +14,16 @@ import java.util.List;
 
 /**
  * Shared GUI utility class — eliminates duplicated item-building boilerplate
- * across all 21 GUI files. Caches MiniMessage singleton to avoid repeated
+ * across all GUI files. Caches MiniMessage singleton to avoid repeated
  * allocations on every item construction.
  */
 public final class GuiHelper {
 
     /** Cached MiniMessage singleton — avoids re-creation per call. */
     public static final MiniMessage MM = MiniMessage.miniMessage();
+
+    /** Pre-allocated ItemFlag array — avoids ItemFlag.values() clone per item. */
+    private static final ItemFlag[] ALL_FLAGS = ItemFlag.values();
 
     private GuiHelper() {
     }
@@ -74,7 +78,27 @@ public final class GuiHelper {
             mat = Material.STONE;
 
         ItemBuilder builder = new ItemBuilder(mat);
-        builder.hideTooltip(true);
+
+        // PERFORMANCE OPTIMIZATION:
+        // We use addModifier with empty AttributeModifiers instead of
+        // builder.hideTooltip(true).
+        // Why? hideTooltip() leaves default item attributes (like attack damage) in the
+        // NMS DataComponent map.
+        // Stripping attributes entirely shrinks the component map, drastically speeding
+        // up
+        // net.minecraft.network.HashedPatchMap.matches() during InvUI's per-tick
+        // updateAndFlush()!
+        builder.addModifier(item -> {
+            item.editMeta(meta -> {
+                meta.addItemFlags(ALL_FLAGS);
+                try {
+                    meta.setAttributeModifiers(
+                            com.google.common.collect.LinkedListMultimap.create());
+                } catch (Exception ignored) {
+                }
+            });
+            return item;
+        });
 
         if (name != null && !name.isEmpty()) {
             Component comp = MM.deserialize(name);
