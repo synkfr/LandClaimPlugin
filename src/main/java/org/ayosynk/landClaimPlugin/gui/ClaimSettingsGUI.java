@@ -38,7 +38,12 @@ public class ClaimSettingsGUI {
                 .addIngredient('1', buildConfigItem(config.filler1, claim, player, ownerName, claimName))
                 .addIngredient('2', buildConfigItem(config.filler2, claim, player, ownerName, claimName))
                 .addIngredient('O', buildConfigItem(config.overview, claim, player, ownerName, claimName))
-                .addIngredient('N', buildConfigItem(config.rename, claim, player, ownerName, claimName))
+                .addIngredient('N', Item.builder()
+                        .setItemProvider(buildConfigItemBuilder(config.rename, claim, player, ownerName, claimName))
+                        .addClickHandler(click -> {
+                            player.closeInventory();
+                            RenameClaimGUI.open(player, claim, plugin);
+                        }).build())
                 .addIngredient('C', buildConfigItem(config.color, claim, player, ownerName, claimName))
                 .addIngredient('R', Item.builder()
                         .setItemProvider(buildConfigItemBuilder(config.roles, claim, player, ownerName, claimName))

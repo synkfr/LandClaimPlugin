@@ -28,6 +28,7 @@ import org.ayosynk.landClaimPlugin.config.menus.AllyPremissionsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TitleSettingsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
 import org.bukkit.Color;
 import java.io.File;
 import java.util.List;
@@ -56,6 +57,7 @@ public class ConfigManager {
     private RoleManagementConfig roleManagementConfig;
     private RoleSetupConfig roleSetupConfig;
     private TitleSettingsConfig titleSettingsConfig;
+    private RenameClaimConfig renameClaimConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -210,6 +212,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.renameClaimConfig = eu.okaeri.configs.ConfigManager.create(RenameClaimConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RenameClaim.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -234,6 +243,7 @@ public class ConfigManager {
         roleManagementConfig.load();
         roleSetupConfig.load();
         titleSettingsConfig.load();
+        renameClaimConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -318,6 +328,10 @@ public class ConfigManager {
 
     public TitleSettingsConfig getTitleSettingsConfig() {
         return titleSettingsConfig;
+    }
+
+    public RenameClaimConfig getRenameClaimConfig() {
+        return renameClaimConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
