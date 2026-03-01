@@ -2,15 +2,13 @@ package org.ayosynk.landClaimPlugin.gui;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.Claim;
-import org.bukkit.Material;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
-import xyz.xenondevs.invui.item.ItemBuilder;
 import xyz.xenondevs.invui.window.Window;
 import org.ayosynk.landClaimPlugin.config.menus.PlayerControlPanelConfig;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,88 +18,74 @@ public class PlayerControlPanelGUI {
 
     public static void open(Player player, Claim claim, LandClaimPlugin plugin, UUID targetPlayerId,
             String targetPlayerName) {
-        PlayerControlPanelConfig config = plugin.getConfigManager().getPlayerControlPanelConfig();
-        MiniMessage mm = MiniMessage.miniMessage();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            PlayerControlPanelConfig config = plugin.getConfigManager().getPlayerControlPanelConfig();
 
-        Gui gui = Gui.builder()
-                .setStructure(
-                        "F F F F F F F F F",
-                        "F F C F T F K F F",
-                        "F F F F F F F F F",
-                        ". . . A B A . . .")
-                .addIngredient('F', buildConfigItem(config.frame, targetPlayerName))
-                .addIngredient('A', buildConfigItem(config.accent, targetPlayerName))
-                .addIngredient('C', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.changeRole, targetPlayerName))
-                        .addClickHandler(click -> {
-                            player.closeInventory();
-                            RoleSelectionGUI.open(player, claim, plugin, targetPlayerId, targetPlayerName);
-                        }).build())
-                .addIngredient('T', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.transferOwnership, targetPlayerName))
-                        .addClickHandler(click -> {
-                            // Backend logic for ownership transfer to follow
-                        }).build())
-                .addIngredient('K', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.kickPlayer, targetPlayerName))
-                        .addClickHandler(click -> {
-                            // Opens later confirmation to remove member
-                        }).build())
-                .addIngredient('B', Item.builder()
-                        .setItemProvider(buildConfigItemBuilder(config.back, targetPlayerName))
-                        .addClickHandler(click -> {
-                            player.closeInventory();
-                            MemberManagementGUI.open(player, claim, plugin);
-                        }).build())
-                .build();
+            Gui gui = Gui.builder()
+                    .setStructure(
+                            "F F F F F F F F F",
+                            "F F C F T F K F F",
+                            "F F F F F F F F F",
+                            ". . . A B A . . .")
+                    .addIngredient('F', buildPlayerItem(config.frame, targetPlayerName))
+                    .addIngredient('A', buildPlayerItem(config.accent, targetPlayerName))
+                    .addIngredient('C', Item.builder()
+                            .setItemProvider(buildPlayerItemBuilder(config.changeRole, targetPlayerName))
+                            .addClickHandler(click -> {
+                                player.closeInventory();
+                                RoleSelectionGUI.open(player, claim, plugin, targetPlayerId, targetPlayerName);
+                            }).build())
+                    .addIngredient('T', Item.builder()
+                            .setItemProvider(buildPlayerItemBuilder(config.transferOwnership, targetPlayerName))
+                            .addClickHandler(click -> {
+                                // Backend logic for ownership transfer to follow
+                            }).build())
+                    .addIngredient('K', Item.builder()
+                            .setItemProvider(buildPlayerItemBuilder(config.kickPlayer, targetPlayerName))
+                            .addClickHandler(click -> {
+                                // Opens later confirmation to remove member
+                            }).build())
+                    .addIngredient('B', Item.builder()
+                            .setItemProvider(buildPlayerItemBuilder(config.back, targetPlayerName))
+                            .addClickHandler(click -> {
+                                player.closeInventory();
+                                MemberManagementGUI.open(player, claim, plugin);
+                            }).build())
+                    .build();
 
-        String windowTitle = config.title.replace("<Player>", targetPlayerName);
+            String windowTitle = config.title.replace("<Player>", targetPlayerName);
+            Component title = GuiHelper.MM.deserialize(windowTitle);
 
-        Window.builder()
-                .setTitle(mm.deserialize(windowTitle))
-                .setUpperGui(gui)
-                .open(player);
-    }
-
-    private static Item buildConfigItem(PlayerControlPanelConfig.ItemConfig itemConfig, String targetName) {
-        return Item.simple(buildConfigItemBuilder(itemConfig, targetName));
-    }
-
-    private static ItemBuilder buildConfigItemBuilder(PlayerControlPanelConfig.ItemConfig itemConfig,
-            String targetName) {
-        Material mat = Material.matchMaterial(itemConfig.material.toUpperCase());
-        if (mat == null)
-            mat = Material.STONE;
-
-        ItemBuilder builder = new ItemBuilder(mat);
-        builder.addModifier(item -> {
-            item.editMeta(meta -> {
-                meta.addItemFlags(org.bukkit.inventory.ItemFlag.values());
-                try {
-                    meta.setAttributeModifiers(com.google.common.collect.LinkedListMultimap.create());
-                } catch (Exception ignored) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (player.isOnline()) {
+                    Window.builder().setTitle(title).setUpperGui(gui).open(player);
                 }
             });
-            return item;
         });
-        MiniMessage mm = MiniMessage.miniMessage();
+    }
 
-        if (itemConfig.name != null && !itemConfig.name.isEmpty()) {
-            String updatedName = itemConfig.name.replace("<Player>", targetName);
-            Component comp = mm.deserialize(updatedName);
-            builder.setCustomName(comp);
-        }
-
+    private static Item buildPlayerItem(PlayerControlPanelConfig.ItemConfig itemConfig, String targetName) {
+        String name = itemConfig.name != null ? itemConfig.name.replace("<Player>", targetName) : null;
+        List<String> lore = null;
         if (itemConfig.lore != null && !itemConfig.lore.isEmpty()) {
-            List<Component> lore = new ArrayList<>();
+            lore = new ArrayList<>(itemConfig.lore.size());
             for (String line : itemConfig.lore) {
-                String updatedLine = line.replace("<Player>", targetName);
-                Component comp = mm.deserialize(updatedLine);
-                lore.add(comp);
+                lore.add(line.replace("<Player>", targetName));
             }
-            builder.setLore(lore);
         }
+        return GuiHelper.buildItem(itemConfig.material, name, lore);
+    }
 
-        return builder;
+    private static xyz.xenondevs.invui.item.ItemBuilder buildPlayerItemBuilder(
+            PlayerControlPanelConfig.ItemConfig itemConfig, String targetName) {
+        String name = itemConfig.name != null ? itemConfig.name.replace("<Player>", targetName) : null;
+        List<String> lore = null;
+        if (itemConfig.lore != null && !itemConfig.lore.isEmpty()) {
+            lore = new ArrayList<>(itemConfig.lore.size());
+            for (String line : itemConfig.lore) {
+                lore.add(line.replace("<Player>", targetName));
+            }
+        }
+        return GuiHelper.buildItemBuilder(itemConfig.material, name, lore);
     }
 }

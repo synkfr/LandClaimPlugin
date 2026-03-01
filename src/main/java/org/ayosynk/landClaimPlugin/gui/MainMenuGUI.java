@@ -3,158 +3,129 @@ package org.ayosynk.landClaimPlugin.gui;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
-import xyz.xenondevs.invui.item.ItemBuilder;
 import xyz.xenondevs.invui.window.Window;
 import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainMenuGUI {
 
         public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
-                String ownerName = claim.getOwnerId() != null ? Bukkit.getOfflinePlayer(claim.getOwnerId()).getName()
-                                : "Unknown";
-                if (ownerName == null)
-                        ownerName = "Unknown";
+                // Phase 1+2: Async Construction & Binding — offload heavy ItemBuilder +
+                // MiniMessage allocation
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                        String ownerName = claim.getOwnerId() != null
+                                        ? Bukkit.getOfflinePlayer(claim.getOwnerId()).getName()
+                                        : "Unknown";
+                        if (ownerName == null)
+                                ownerName = "Unknown";
+                        String claimName = claim.getName() != null ? claim.getName() : "Unnamed Claim";
 
-                String claimName = claim.getName() != null ? claim.getName() : "Unnamed Claim";
+                        MainMenuConfig config = plugin.getConfigManager().getMainMenuConfig();
 
-                MainMenuConfig config = plugin.getConfigManager().getMainMenuConfig();
-                MiniMessage mm = MiniMessage.miniMessage();
+                        Gui gui = Gui.builder()
+                                        .setStructure(
+                                                        "1 1 2 2 2 2 2 1 1",
+                                                        "1 M W A S T E V 1",
+                                                        "2 2 2 2 2 2 2 2 2",
+                                                        "2 2 2 1 X 1 2 2 2")
+                                        .addIngredient('1',
+                                                        GuiHelper.buildItem(config.filler1.material,
+                                                                        config.filler1.name, config.filler1.lore,
+                                                                        claim, player, ownerName, claimName))
+                                        .addIngredient('2',
+                                                        GuiHelper.buildItem(config.filler2.material,
+                                                                        config.filler2.name, config.filler2.lore,
+                                                                        claim, player, ownerName, claimName))
+                                        .addIngredient('M', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.claimMap.material, config.claimMap.name,
+                                                                        config.claimMap.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(click -> {
+                                                                player.closeInventory();
+                                                                ClaimMapGUI.open(player, claim, plugin);
+                                                        }).build())
+                                        .addIngredient('W', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.warps.material, config.warps.name,
+                                                                        config.warps.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(click -> {
+                                                                player.closeInventory();
+                                                                WarpManagementGUI.open(player, claim, plugin);
+                                                        }).build())
+                                        .addIngredient('A', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.allies.material, config.allies.name,
+                                                                        config.allies.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(click -> {
+                                                                player.closeInventory();
+                                                                AllyManagementGUI.open(player, claim, plugin);
+                                                        }).build())
+                                        .addIngredient('S', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.settings.material,
+                                                                        config.settings.name,
+                                                                        config.settings.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(click -> {
+                                                                player.closeInventory();
+                                                                ClaimSettingsGUI.open(player, claim, plugin);
+                                                        }).build())
+                                        .addIngredient('T', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.trusted.material, config.trusted.name,
+                                                                        config.trusted.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(click -> {
+                                                                player.closeInventory();
+                                                                TrustManagementGUI.open(player, claim, plugin);
+                                                        }).build())
+                                        .addIngredient('E', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.members.material, config.members.name,
+                                                                        config.members.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(click -> {
+                                                                player.closeInventory();
+                                                                MemberManagementGUI.open(player, claim, plugin);
+                                                        }).build())
+                                        .addIngredient('V', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.visitors.material,
+                                                                        config.visitors.name,
+                                                                        config.visitors.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(click -> {
+                                                                player.closeInventory();
+                                                                VisitorSettingsGUI.open(player, claim, plugin);
+                                                        }).build())
+                                        .addIngredient('X', Item.builder()
+                                                        .setItemProvider(GuiHelper.buildItemBuilder(
+                                                                        config.close.material, config.close.name,
+                                                                        config.close.lore,
+                                                                        claim, player, ownerName, claimName))
+                                                        .addClickHandler(
+                                                                        click -> click.player().closeInventory())
+                                                        .build())
+                                        .build();
 
-                Gui.Builder<?, ?> guiBuilder = Gui.builder()
-                                .setStructure(
-                                                "1 1 2 2 2 2 2 1 1",
-                                                "1 M W A S T E V 1",
-                                                "2 2 2 2 2 2 2 2 2",
-                                                "2 2 2 1 X 1 2 2 2")
-                                .addIngredient('1',
-                                                buildConfigItem(config.filler1, claim, player, ownerName, claimName))
-                                .addIngredient('2',
-                                                buildConfigItem(config.filler2, claim, player, ownerName, claimName))
-                                .addIngredient('M', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.claimMap, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> {
-                                                        player.closeInventory();
-                                                        ClaimMapGUI.open(player, claim, plugin);
-                                                }).build())
-                                .addIngredient('W', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.warps, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> {
-                                                        player.closeInventory();
-                                                        WarpManagementGUI.open(player, claim, plugin);
-                                                }).build())
-                                .addIngredient('A', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.allies, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> {
-                                                        player.closeInventory();
-                                                        AllyManagementGUI.open(player, claim, plugin);
-                                                }).build())
-                                .addIngredient('S', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.settings, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> {
-                                                        player.closeInventory();
-                                                        ClaimSettingsGUI.open(player, claim, plugin);
-                                                }).build())
-                                .addIngredient('T', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.trusted, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> {
-                                                        player.closeInventory();
-                                                        TrustManagementGUI.open(player, claim, plugin);
-                                                }).build())
-                                .addIngredient('E', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.members, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> {
-                                                        player.closeInventory();
-                                                        MemberManagementGUI.open(player, claim, plugin);
-                                                }).build())
-                                .addIngredient('V', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.visitors, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> {
-                                                        player.closeInventory();
-                                                        VisitorSettingsGUI.open(player, claim, plugin);
-                                                }).build())
-                                .addIngredient('X', Item.builder()
-                                                .setItemProvider(buildConfigItemBuilder(config.close, claim, player,
-                                                                ownerName, claimName))
-                                                .addClickHandler(click -> click.player().closeInventory()).build());
+                        String windowTitle = config.title.replace("{claim_name}", claimName);
+                        Component title = GuiHelper.MM.deserialize(windowTitle);
 
-                Gui gui = guiBuilder.build();
-
-                String windowTitle = config.title.replace("{claim_name}", claimName);
-
-                Window.builder()
-                                .setTitle(mm.deserialize(windowTitle))
-                                .setUpperGui(gui)
-                                .open(player);
-        }
-
-        private static Item buildConfigItem(MainMenuConfig.ItemConfig itemConfig, Claim claim, Player player,
-                        String ownerName, String claimName) {
-                return Item.simple(buildConfigItemBuilder(itemConfig, claim, player, ownerName, claimName));
-        }
-
-        private static ItemBuilder buildConfigItemBuilder(MainMenuConfig.ItemConfig itemConfig, Claim claim,
-                        Player player, String ownerName, String claimName) {
-                Material mat = Material.matchMaterial(itemConfig.material.toUpperCase());
-                if (mat == null)
-                        mat = Material.STONE;
-
-                ItemBuilder builder = new ItemBuilder(mat);
-                builder.addModifier(item -> {
-                        item.editMeta(meta -> {
-                                meta.addItemFlags(org.bukkit.inventory.ItemFlag.values());
-                                try {
-                                        meta.setAttributeModifiers(
-                                                        com.google.common.collect.LinkedListMultimap.create());
-                                } catch (Exception ignored) {
+                        // Phase 3: Sync Delivery — only window.open() on main thread
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                if (player.isOnline()) {
+                                        Window.builder()
+                                                        .setTitle(title)
+                                                        .setUpperGui(gui)
+                                                        .open(player);
                                 }
                         });
-                        return item;
                 });
-                MiniMessage mm = MiniMessage.miniMessage();
-
-                if (itemConfig.name != null && !itemConfig.name.isEmpty()) {
-                        Component comp = mm.deserialize(
-                                        replacePlaceholders(itemConfig.name, claim, player, ownerName, claimName));
-                        builder.setCustomName(comp);
-                }
-
-                if (itemConfig.lore != null && !itemConfig.lore.isEmpty()) {
-                        List<Component> lore = new ArrayList<>();
-                        for (String line : itemConfig.lore) {
-                                Component comp = mm.deserialize(
-                                                replacePlaceholders(line, claim, player, ownerName, claimName));
-                                lore.add(comp);
-                        }
-                        builder.setLore(lore);
-                }
-
-                return builder;
-        }
-
-        private static String replacePlaceholders(String text, Claim claim, Player player, String ownerName,
-                        String claimName) {
-                return text.replace("{claim_name}", claimName)
-                                .replace("{owner}", ownerName)
-                                .replace("{size}", String.valueOf(claim.getChunks().size()))
-                                .replace("{power}", "0")
-                                .replace("{members}", String.valueOf(claim.getPlayerRoles().size()))
-                                .replace("{world}", player.getWorld().getName())
-                                .replace("{x}", String.valueOf(player.getLocation().getBlockX()))
-                                .replace("{z}", String.valueOf(player.getLocation().getBlockZ()));
         }
 }

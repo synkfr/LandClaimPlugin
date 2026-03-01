@@ -2,7 +2,7 @@ package org.ayosynk.landClaimPlugin.commands;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.exceptions.CombatBlockedException;
-import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
+import org.ayosynk.landClaimPlugin.gui.*;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.TrustManager;
@@ -95,9 +95,32 @@ public class CommandHandler {
         // eliminating first-execution lag spikes when a player runs a command for the
         // first time
         try {
+            // Force JVM to resolve all GUI classes at startup — eliminates first-execution
+            // lag
+            Class.forName(GuiHelper.class.getName());
             Class.forName(MainMenuGUI.class.getName());
+            Class.forName(ClaimSettingsGUI.class.getName());
+            Class.forName(ClaimMapGUI.class.getName());
+            Class.forName(ClaimMapInfoGUI.class.getName());
+            Class.forName(AllyControlPanelGUI.class.getName());
+            Class.forName(AllyManagementGUI.class.getName());
+            Class.forName(AllyPremissionsGUI.class.getName());
+            Class.forName(ChangeClaimColorGUI.class.getName());
+            Class.forName(MemberManagementGUI.class.getName());
+            Class.forName(PlayerControlPanelGUI.class.getName());
+            Class.forName(PlayerTrustPermissionGUI.class.getName());
+            Class.forName(RenameClaimGUI.class.getName());
+            Class.forName(RoleManagementGUI.class.getName());
+            Class.forName(RoleSelectionGUI.class.getName());
+            Class.forName(RoleSetupGUI.class.getName());
+            Class.forName(TitleToggleGUI.class.getName());
+            Class.forName(TrustManagementGUI.class.getName());
+            Class.forName(VisitorSettingsGUI.class.getName());
+            Class.forName(WarpChangeIconGUI.class.getName());
+            Class.forName(WarpControlPanelGUI.class.getName());
+            Class.forName(WarpManagementGUI.class.getName());
         } catch (ClassNotFoundException ignored) {
-            // Should never happen — class is in same JAR
+            // Should never happen — classes are in same JAR
         }
 
         // Instantiate modular command groups
