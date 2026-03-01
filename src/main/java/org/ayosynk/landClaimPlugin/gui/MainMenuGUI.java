@@ -52,7 +52,13 @@ public class MainMenuGUI {
                                                         player.closeInventory();
                                                         WarpManagementGUI.open(player, claim, plugin);
                                                 }).build())
-                                .addIngredient('A', buildConfigItem(config.allies, claim, player, ownerName, claimName))
+                                .addIngredient('A', Item.builder()
+                                                .setItemProvider(buildConfigItemBuilder(config.allies, claim, player,
+                                                                ownerName, claimName))
+                                                .addClickHandler(click -> {
+                                                        player.closeInventory();
+                                                        AllyManagementGUI.open(player, claim, plugin);
+                                                }).build())
                                 .addIngredient('S', Item.builder()
                                                 .setItemProvider(buildConfigItemBuilder(config.settings, claim, player,
                                                                 ownerName, claimName))
