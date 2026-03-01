@@ -11,7 +11,7 @@ import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
+
 import org.joml.Vector3f;
 
 import java.util.*;
@@ -151,6 +151,11 @@ public class VisualizationManager {
         World world = player.getWorld();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
+            // PERFORMANCE OPTIMIZATION: Create BlockData and reusable JOML objects ONCE
+            // before the loop
+            final org.bukkit.block.data.BlockData blockData = Bukkit.createBlockData(material);
+            final org.joml.AxisAngle4f emptyRotation = new org.joml.AxisAngle4f();
+
             for (Edge edge : edges) {
                 double minX = Math.min(edge.x1(), edge.x2());
                 double minZ = Math.min(edge.z1(), edge.z2());
@@ -167,7 +172,7 @@ public class VisualizationManager {
                 BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
                     e.setPersistent(false);
                     e.setVisibleByDefault(false);
-                    e.setBlock(Bukkit.createBlockData(material));
+                    e.setBlock(blockData);
                     e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
                     e.setGravity(false);
 
@@ -178,9 +183,9 @@ public class VisualizationManager {
 
                     Transformation transform = new Transformation(
                             new Vector3f(transX, transY, transZ),
-                            new AxisAngle4f(),
+                            emptyRotation,
                             new Vector3f(scaleX, scaleY, scaleZ),
-                            new AxisAngle4f());
+                            emptyRotation);
                     e.setTransformation(transform);
                 });
 
