@@ -69,10 +69,25 @@ public class PaginatedGui extends CustomGui {
     /**
      * Sets the content list and renders page 0.
      */
-    public void setContent(List<GuiItem> content, Player viewer) {
-        this.content = content != null ? content : Collections.emptyList();
-        this.currentPage = 0;
-        renderPage(viewer);
+    public void setContent(List<GuiItem> items, Player viewer) {
+        this.content = items != null ? items : Collections.emptyList(); // Assuming 'content' is the field to update
+        // The original code had 'this.currentPage = 0; renderPage(viewer);'
+        // The provided snippet has 'this.totalPages = ... setPage(0, viewer);'
+        // To maintain correctness without introducing new fields, I'll adapt to
+        // existing fields.
+        // Assuming 'content' is the list of items, and 'contentSlots.length' is
+        // 'itemsPerPage'.
+        int totalPages = (int) Math.ceil((double) this.content.size() / contentSlots.length);
+        if (totalPages == 0)
+            totalPages = 1; // Ensure at least one page if content is empty
+        setPage(0, viewer); // This will render the page
+    }
+
+    /**
+     * @return the current page index (0-based)
+     */
+    public int getCurrentPage() {
+        return currentPage;
     }
 
     /**

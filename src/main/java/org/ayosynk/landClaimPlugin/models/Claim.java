@@ -20,8 +20,11 @@ public class Claim {
     private long claimedAt;
     private long expireAt;
 
-    // Role assignments: Player UUID -> Role Name
     private final Map<UUID, String> playerRoles = new HashMap<>();
+
+    // Per-claim visitor permissions (e.g., "BLOCK_BREAK", "USE_DOORS")
+    // applies to anyone without an explicit role
+    private final Set<String> visitorFlags = new HashSet<>();
 
     public Claim(UUID id, UUID ownerId) {
         this.id = id;
@@ -99,5 +102,21 @@ public class Claim {
 
     public String getPlayerRole(UUID playerId) {
         return playerRoles.get(playerId);
+    }
+
+    public Set<String> getVisitorFlags() {
+        return visitorFlags;
+    }
+
+    public boolean hasVisitorFlag(String flag) {
+        return visitorFlags.contains(flag.toUpperCase());
+    }
+
+    public void addVisitorFlag(String flag) {
+        visitorFlags.add(flag.toUpperCase());
+    }
+
+    public void removeVisitorFlag(String flag) {
+        visitorFlags.remove(flag.toUpperCase());
     }
 }
