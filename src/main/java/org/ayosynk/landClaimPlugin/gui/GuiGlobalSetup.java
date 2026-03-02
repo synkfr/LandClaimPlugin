@@ -1,12 +1,12 @@
 package org.ayosynk.landClaimPlugin.gui;
 
-import xyz.xenondevs.invui.gui.Markers;
-import xyz.xenondevs.invui.gui.Structure;
+import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
+import org.ayosynk.landClaimPlugin.gui.framework.GuiListener;
 
 /**
- * Registers global InvUI ingredients at plugin startup.
- * Global ingredients are automatically applied to every Gui builder,
- * eliminating per-GUI addIngredient() calls and reducing object allocation.
+ * Registers the custom GUI framework at plugin startup.
+ * Must be called once during {@code onEnable()}, before any GUI is opened.
  */
 public final class GuiGlobalSetup {
 
@@ -14,10 +14,16 @@ public final class GuiGlobalSetup {
     }
 
     /**
-     * Call once during plugin enable (before any GUI is opened).
-     * Registers content list slot marker as a global ingredient.
+     * Initialize the GUI framework.
+     * <ul>
+     * <li>Sets the plugin reference for scheduler access</li>
+     * <li>Registers the global {@link GuiListener}</li>
+     * </ul>
+     *
+     * @param plugin the main plugin instance
      */
-    public static void init() {
-        Structure.addGlobalIngredient('x', Markers.CONTENT_LIST_SLOT_HORIZONTAL);
+    public static void init(LandClaimPlugin plugin) {
+        CustomGui.setPlugin(plugin);
+        plugin.getServer().getPluginManager().registerEvents(new GuiListener(), plugin);
     }
 }

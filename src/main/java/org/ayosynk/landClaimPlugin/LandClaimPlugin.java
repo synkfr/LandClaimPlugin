@@ -83,8 +83,8 @@ public class LandClaimPlugin extends JavaPlugin {
             warpManager = new WarpManager(this, configManager); // Changed from homeManager = new HomeManager(...)
             warpManager.loadFromDatabase();
 
-            // Register global InvUI ingredients once — auto-applied to all GUI builders
-            GuiGlobalSetup.init();
+            // Initialize custom GUI framework (listener + scheduler)
+            GuiGlobalSetup.init(this);
 
             commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager,
                     warpManager); // Changed from homeManager

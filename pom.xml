@@ -48,14 +48,7 @@
                                     <pattern>eu.okaeri</pattern>
                                     <shadedPattern>org.ayosynk.landClaimPlugin.lib.okaeri</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>xyz.xenondevs.invui</pattern>
-                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.invui</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>xyz.xenondevs.inventoryaccess</pattern>
-                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.inventoryaccess</shadedPattern>
-                                </relocation>
+
                                 <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>org.ayosynk.landClaimPlugin.lib.hikari</shadedPattern>
@@ -107,10 +100,7 @@
             <id>okaeri-releases</id>
             <url>https://repo.okaeri.cloud/releases</url>
         </repository>
-        <repository>
-            <id>xenondevs</id>
-            <url>https://repo.xenondevs.xyz/releases</url>
-        </repository>
+
         <repository>
             <id>modrinth-repo</id>
             <url>https://api.modrinth.com/maven/</url>
@@ -146,11 +136,7 @@
             <artifactId>okaeri-configs-serdes-bukkit</artifactId>
             <version>6.1.0-beta.1</version>
         </dependency>
-        <dependency>
-            <groupId>xyz.xenondevs.invui</groupId>
-            <artifactId>invui</artifactId>
-            <version>2.0.0-beta.3</version>
-        </dependency>
+
         <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>

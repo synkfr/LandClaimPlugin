@@ -2,20 +2,21 @@ package org.ayosynk.landClaimPlugin.gui;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.ayosynk.landClaimPlugin.gui.framework.ClickAction;
+import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
-import xyz.xenondevs.invui.item.Item;
-import xyz.xenondevs.invui.item.ItemBuilder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Shared GUI utility class — eliminates duplicated item-building boilerplate
- * across all GUI files. Caches MiniMessage singleton to avoid repeated
- * allocations on every item construction.
+ * across all GUI files. Returns plain Bukkit {@link ItemStack} instances.
  */
 public final class GuiHelper {
 
@@ -30,22 +31,13 @@ public final class GuiHelper {
 
     // --- Non-placeholder variants ---
 
-    public static Item buildItem(String material, String name, List<String> lore) {
-        return Item.simple(buildItemBuilder(material, name, lore));
-    }
-
-    public static ItemBuilder buildItemBuilder(String material, String name, List<String> lore) {
-        return buildItemBuilderInternal(material, name, lore);
+    public static ItemStack buildItemStack(String material, String name, List<String> lore) {
+        return buildItemStackInternal(material, name, lore);
     }
 
     // --- Placeholder variants (for GUIs that inject claim/player data) ---
 
-    public static Item buildItem(String material, String name, List<String> lore,
-            Claim claim, Player player, String ownerName, String claimName) {
-        return Item.simple(buildItemBuilder(material, name, lore, claim, player, ownerName, claimName));
-    }
-
-    public static ItemBuilder buildItemBuilder(String material, String name, List<String> lore,
+    public static ItemStack buildItemStack(String material, String name, List<String> lore,
             Claim claim, Player player, String ownerName, String claimName) {
         String resolvedName = name != null ? replacePlaceholders(name, claim, player, ownerName, claimName) : null;
         List<String> resolvedLore = null;
@@ -55,8 +47,30 @@ public final class GuiHelper {
                 resolvedLore.add(replacePlaceholders(line, claim, player, ownerName, claimName));
             }
         }
-        return buildItemBuilderInternal(material, resolvedName, resolvedLore);
+        return buildItemStackInternal(material, resolvedName, resolvedLore);
     }
+
+    // --- SlotDefinition convenience builders ---
+
+    public static SlotDefinition buildSlot(String material, String name, List<String> lore) {
+        return new SlotDefinition(buildItemStack(material, name, lore));
+    }
+
+    public static SlotDefinition buildSlot(String material, String name, List<String> lore, ClickAction action) {
+        return new SlotDefinition(buildItemStack(material, name, lore), action);
+    }
+
+    public static SlotDefinition buildSlot(String material, String name, List<String> lore,
+            Claim claim, Player player, String ownerName, String claimName) {
+        return new SlotDefinition(buildItemStack(material, name, lore, claim, player, ownerName, claimName));
+    }
+
+    public static SlotDefinition buildSlot(String material, String name, List<String> lore,
+            Claim claim, Player player, String ownerName, String claimName, ClickAction action) {
+        return new SlotDefinition(buildItemStack(material, name, lore, claim, player, ownerName, claimName), action);
+    }
+
+    // --- Placeholder resolution ---
 
     public static String replacePlaceholders(String text, Claim claim, Player player,
             String ownerName, String claimName) {
@@ -72,37 +86,29 @@ public final class GuiHelper {
 
     // --- Core builder logic ---
 
-    private static ItemBuilder buildItemBuilderInternal(String materialName, String name, List<String> lore) {
+    private static ItemStack buildItemStackInternal(String materialName, String name, List<String> lore) {
         Material mat = Material.matchMaterial(materialName.toUpperCase());
         if (mat == null)
             mat = Material.STONE;
 
-        ItemBuilder builder = new ItemBuilder(mat);
-
-        // PERFORMANCE OPTIMIZATION:
-        // We use addModifier with empty AttributeModifiers instead of
-        // builder.hideTooltip(true).
-        // Why? hideTooltip() leaves default item attributes (like attack damage) in the
-        // NMS DataComponent map.
-        // Stripping attributes entirely shrinks the component map, drastically speeding
-        // up
-        // net.minecraft.network.HashedPatchMap.matches() during InvUI's per-tick
-        // updateAndFlush()!
-        builder.addModifier(item -> {
-            item.editMeta(meta -> {
-                meta.addItemFlags(ALL_FLAGS);
-                try {
-                    meta.setAttributeModifiers(
-                            com.google.common.collect.LinkedListMultimap.create());
-                } catch (Exception ignored) {
-                }
-            });
+        ItemStack item = new ItemStack(mat);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null)
             return item;
-        });
+
+        // Hide all default tooltip attributes
+        meta.addItemFlags(ALL_FLAGS);
+
+        // Strip default attributes to shrink the NMS component map
+        try {
+            meta.setAttributeModifiers(
+                    com.google.common.collect.LinkedListMultimap.create());
+        } catch (Exception ignored) {
+        }
 
         if (name != null && !name.isEmpty()) {
             Component comp = MM.deserialize(name);
-            builder.setCustomName(comp);
+            meta.displayName(comp);
         }
 
         if (lore != null && !lore.isEmpty()) {
@@ -110,9 +116,10 @@ public final class GuiHelper {
             for (String line : lore) {
                 loreComponents.add(MM.deserialize(line));
             }
-            builder.setLore(loreComponents);
+            meta.lore(loreComponents);
         }
 
-        return builder;
+        item.setItemMeta(meta);
+        return item;
     }
 }

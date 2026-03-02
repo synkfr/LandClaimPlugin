@@ -1,79 +1,74 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
+import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
+import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import xyz.xenondevs.invui.gui.Gui;
-import xyz.xenondevs.invui.item.Item;
-import xyz.xenondevs.invui.window.Window;
-import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
-import net.kyori.adventure.text.Component;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ChangeClaimColorGUI {
 
-    public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            ChangeClaimColorConfig config = plugin.getConfigManager().getChangeClaimColorConfig();
+        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                        ChangeClaimColorConfig config = plugin.getConfigManager().getChangeClaimColorConfig();
 
-            Gui gui = Gui.builder()
-                    .setStructure(
-                            "F F F F F F F F F",
-                            "F 0 1 2 3 4 5 6 F",
-                            "F 7 8 9 A B C D F",
-                            "F F F E X Y F F F",
-                            "F F F N < N F F F")
-                    .addIngredient('F', GuiHelper.buildItem(config.frameFill.material, config.frameFill.name,
-                            config.frameFill.lore))
-                    .addIngredient('N', GuiHelper.buildItem(config.navFrame.material, config.navFrame.name,
-                            config.navFrame.lore))
-                    .addIngredient('<', Item.builder()
-                            .setItemProvider(GuiHelper.buildItemBuilder(config.back.material, config.back.name,
-                                    config.back.lore))
-                            .addClickHandler(click -> {
-                                player.closeInventory();
-                                ClaimSettingsGUI.open(player, claim, plugin);
-                            }).build())
-                    .addIngredient('X', Item.builder()
-                            .setItemProvider(GuiHelper.buildItemBuilder(config.customColor.material,
-                                    config.customColor.name, config.customColor.lore))
-                            .addClickHandler(click -> {
-                                // Reserved: Opens chat/anvil HEX input
-                            }).build())
-                    .addIngredient('0', buildColorItem(config.colorBlack))
-                    .addIngredient('1', buildColorItem(config.colorBlue))
-                    .addIngredient('2', buildColorItem(config.colorBrown))
-                    .addIngredient('3', buildColorItem(config.colorCyan))
-                    .addIngredient('4', buildColorItem(config.colorGray))
-                    .addIngredient('5', buildColorItem(config.colorGreen))
-                    .addIngredient('6', buildColorItem(config.colorLightBlue))
-                    .addIngredient('7', buildColorItem(config.colorLime))
-                    .addIngredient('8', buildColorItem(config.colorLightGray))
-                    .addIngredient('9', buildColorItem(config.colorMagenta))
-                    .addIngredient('A', buildColorItem(config.colorOrange))
-                    .addIngredient('B', buildColorItem(config.colorPink))
-                    .addIngredient('C', buildColorItem(config.colorPurple))
-                    .addIngredient('D', buildColorItem(config.colorRed))
-                    .addIngredient('E', buildColorItem(config.colorWhite))
-                    .addIngredient('Y', buildColorItem(config.colorYellow))
-                    .build();
+                        String[] structure = {
+                                        "F F F F F F F F F",
+                                        "F 0 1 2 3 4 5 6 F",
+                                        "F 7 8 9 A B C D F",
+                                        "F F F E X Y F F F",
+                                        "F F F N < N F F F"
+                        };
 
-            Component title = GuiHelper.MM.deserialize(config.title);
+                        Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                        ingredients.put('F', GuiHelper.buildSlot(config.frameFill.material, config.frameFill.name,
+                                        config.frameFill.lore));
+                        ingredients.put('N', GuiHelper.buildSlot(config.navFrame.material, config.navFrame.name,
+                                        config.navFrame.lore));
+                        ingredients.put('<',
+                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                                        (p, e) -> {
+                                                                p.closeInventory();
+                                                                ClaimSettingsGUI.open(p, claim, plugin);
+                                                        }));
+                        ingredients.put('X', GuiHelper.buildSlot(config.customColor.material, config.customColor.name,
+                                        config.customColor.lore, (p, e) -> {
+                                                // Reserved: Opens chat/anvil HEX input
+                                        }));
+                        ingredients.put('0', buildColorSlot(config.colorBlack));
+                        ingredients.put('1', buildColorSlot(config.colorBlue));
+                        ingredients.put('2', buildColorSlot(config.colorBrown));
+                        ingredients.put('3', buildColorSlot(config.colorCyan));
+                        ingredients.put('4', buildColorSlot(config.colorGray));
+                        ingredients.put('5', buildColorSlot(config.colorGreen));
+                        ingredients.put('6', buildColorSlot(config.colorLightBlue));
+                        ingredients.put('7', buildColorSlot(config.colorLime));
+                        ingredients.put('8', buildColorSlot(config.colorLightGray));
+                        ingredients.put('9', buildColorSlot(config.colorMagenta));
+                        ingredients.put('A', buildColorSlot(config.colorOrange));
+                        ingredients.put('B', buildColorSlot(config.colorPink));
+                        ingredients.put('C', buildColorSlot(config.colorPurple));
+                        ingredients.put('D', buildColorSlot(config.colorRed));
+                        ingredients.put('E', buildColorSlot(config.colorWhite));
+                        ingredients.put('Y', buildColorSlot(config.colorYellow));
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (player.isOnline()) {
-                    Window.builder().setTitle(title).setUpperGui(gui).open(player);
-                }
-            });
-        });
-    }
+                        Component title = GuiHelper.MM.deserialize(config.title);
+                        CustomGui gui = new CustomGui(title, 5);
+                        gui.fillFromStructure(structure, ingredients);
+                        gui.open(player);
+                });
+        }
 
-    private static Item buildColorItem(ChangeClaimColorConfig.ItemConfig itemConfig) {
-        return Item.builder()
-                .setItemProvider(
-                        GuiHelper.buildItemBuilder(itemConfig.material, itemConfig.name, itemConfig.lore))
-                .addClickHandler(click -> {
-                    // Reserved: Instantly selects color
-                }).build();
-    }
+        private static SlotDefinition buildColorSlot(ChangeClaimColorConfig.ItemConfig itemConfig) {
+                return GuiHelper.buildSlot(itemConfig.material, itemConfig.name, itemConfig.lore, (p, e) -> {
+                        // Reserved: Instantly selects color
+                });
+        }
 }

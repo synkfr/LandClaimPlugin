@@ -1,87 +1,67 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
+import org.ayosynk.landClaimPlugin.gui.framework.GuiItem;
+import org.ayosynk.landClaimPlugin.gui.framework.PaginatedGui;
+import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import xyz.xenondevs.invui.gui.Gui;
-import xyz.xenondevs.invui.gui.PagedGui;
-import xyz.xenondevs.invui.item.Item;
-import xyz.xenondevs.invui.item.BoundItem;
-import xyz.xenondevs.invui.window.Window;
-import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
-import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class VisitorSettingsGUI {
 
-    public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            VisitorSettingsConfig config = plugin.getConfigManager().getVisitorSettingsConfig();
+        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                        VisitorSettingsConfig config = plugin.getConfigManager().getVisitorSettingsConfig();
 
-            List<Item> contentItems = new ArrayList<>();
+                        List<GuiItem> contentItems = new ArrayList<>();
 
-            BoundItem backBtn = BoundItem.pagedBuilder()
-                    .setItemProvider((p, gui) -> {
-                        if (gui.getPage() > 0) {
-                            return GuiHelper.buildItemBuilder(config.previousPage.material,
-                                    config.previousPage.name, config.previousPage.lore);
-                        } else {
-                            return GuiHelper.buildItemBuilder(config.bottomFill.material, config.bottomFill.name,
-                                    config.bottomFill.lore);
-                        }
-                    })
-                    .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() - 1))
-                    .build();
+                        String[] structure = {
+                                        "F F F F I F F F F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "P B B B X B B B N"
+                        };
 
-            BoundItem forwardBtn = BoundItem.pagedBuilder()
-                    .setItemProvider((p, gui) -> {
-                        if (gui.getPage() < gui.getPageCount() - 1) {
-                            return GuiHelper.buildItemBuilder(config.nextPage.material, config.nextPage.name,
-                                    config.nextPage.lore);
-                        } else {
-                            return GuiHelper.buildItemBuilder(config.bottomFill.material, config.bottomFill.name,
-                                    config.bottomFill.lore);
-                        }
-                    })
-                    .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
-                    .build();
+                        Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name,
+                                        config.frame.lore));
+                        ingredients.put('B', GuiHelper.buildSlot(config.bottomFill.material, config.bottomFill.name,
+                                        config.bottomFill.lore));
+                        ingredients.put('I',
+                                        GuiHelper.buildSlot(config.info.material, config.info.name, config.info.lore));
+                        ingredients.put('X',
+                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                                        (p, e) -> {
+                                                                p.closeInventory();
+                                                                MainMenuGUI.open(p, claim, plugin);
+                                                        }));
 
-            Gui gui = PagedGui.itemsBuilder()
-                    .setStructure(
-                            "F F F F I F F F F",
-                            "F x x x x x x x F",
-                            "F x x x x x x x F",
-                            "F x x x x x x x F",
-                            "F x x x x x x x F",
-                            "P B B B X B B B N")
-                    .addIngredient('F',
-                            GuiHelper.buildItem(config.frame.material, config.frame.name, config.frame.lore))
-                    .addIngredient('B', GuiHelper.buildItem(config.bottomFill.material, config.bottomFill.name,
-                            config.bottomFill.lore))
-                    .addIngredient('I',
-                            GuiHelper.buildItem(config.info.material, config.info.name, config.info.lore))
-                    .addIngredient('P', backBtn)
-                    .addIngredient('N', forwardBtn)
-                    .addIngredient('X', Item.builder()
-                            .setItemProvider(GuiHelper.buildItemBuilder(config.back.material, config.back.name,
-                                    config.back.lore))
-                            .addClickHandler(click -> {
-                                player.closeInventory();
-                                MainMenuGUI.open(player, claim, plugin);
-                            }).build())
-                    .setContent(contentItems)
-                    .build();
+                        Component title = GuiHelper.MM.deserialize(config.title);
+                        PaginatedGui gui = new PaginatedGui(title, 6, structure, ingredients, 'x');
 
-            Component title = GuiHelper.MM.deserialize(config.title);
+                        gui.setPrevButton(45,
+                                        GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name,
+                                                        config.previousPage.lore),
+                                        GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
+                                                        config.bottomFill.lore));
+                        gui.setNextButton(53,
+                                        GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name,
+                                                        config.nextPage.lore),
+                                        GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
+                                                        config.bottomFill.lore));
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (player.isOnline()) {
-                    Window.builder().setTitle(title).setUpperGui(gui).open(player);
-                }
-            });
-        });
-    }
+                        gui.setContent(contentItems, player);
+                        gui.open(player);
+                });
+        }
 }

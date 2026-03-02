@@ -1,66 +1,60 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
+import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
+import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import xyz.xenondevs.invui.gui.Gui;
-import xyz.xenondevs.invui.item.Item;
-import xyz.xenondevs.invui.window.Window;
-import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
-import net.kyori.adventure.text.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class WarpControlPanelGUI {
 
-    public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            WarpControlPanelConfig config = plugin.getConfigManager().getWarpControlPanelConfig();
+        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                        WarpControlPanelConfig config = plugin.getConfigManager().getWarpControlPanelConfig();
 
-            Gui gui = Gui.builder()
-                    .setStructure(
-                            "F F F F F F F F F",
-                            "F F L F I F D F F",
-                            "F F F F F F F F F",
-                            "S S S S < S S S S")
-                    .addIngredient('F',
-                            GuiHelper.buildItem(config.frame.material, config.frame.name, config.frame.lore))
-                    .addIngredient('S',
-                            GuiHelper.buildItem(config.spacer.material, config.spacer.name, config.spacer.lore))
-                    .addIngredient('L', Item.builder()
-                            .setItemProvider(GuiHelper.buildItemBuilder(config.changeLocation.material,
-                                    config.changeLocation.name, config.changeLocation.lore))
-                            .addClickHandler(click -> {
-                                // Reserved: Update warp to current location
-                            }).build())
-                    .addIngredient('I', Item.builder()
-                            .setItemProvider(GuiHelper.buildItemBuilder(config.changeIcon.material,
-                                    config.changeIcon.name, config.changeIcon.lore))
-                            .addClickHandler(click -> {
-                                player.closeInventory();
-                                WarpChangeIconGUI.open(player, claim, plugin);
-                            }).build())
-                    .addIngredient('D', Item.builder()
-                            .setItemProvider(GuiHelper.buildItemBuilder(config.deleteWarp.material,
-                                    config.deleteWarp.name, config.deleteWarp.lore))
-                            .addClickHandler(click -> {
-                                // Reserved: Opens confirmation GUI
-                            }).build())
-                    .addIngredient('<', Item.builder()
-                            .setItemProvider(GuiHelper.buildItemBuilder(config.back.material, config.back.name,
-                                    config.back.lore))
-                            .addClickHandler(click -> {
-                                player.closeInventory();
-                                WarpManagementGUI.open(player, claim, plugin);
-                            }).build())
-                    .build();
+                        String[] structure = {
+                                        "F F F F F F F F F",
+                                        "F F L F I F D F F",
+                                        "F F F F F F F F F",
+                                        "S S S S < S S S S"
+                        };
 
-            Component title = GuiHelper.MM.deserialize(config.title);
+                        Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name,
+                                        config.frame.lore));
+                        ingredients.put('S', GuiHelper.buildSlot(config.spacer.material, config.spacer.name,
+                                        config.spacer.lore));
+                        ingredients.put('L',
+                                        GuiHelper.buildSlot(config.changeLocation.material, config.changeLocation.name,
+                                                        config.changeLocation.lore, (p, e) -> {
+                                                                // Reserved: Update warp to current location
+                                                        }));
+                        ingredients.put('I', GuiHelper.buildSlot(config.changeIcon.material, config.changeIcon.name,
+                                        config.changeIcon.lore, (p, e) -> {
+                                                p.closeInventory();
+                                                WarpChangeIconGUI.open(p, claim, plugin);
+                                        }));
+                        ingredients.put('D', GuiHelper.buildSlot(config.deleteWarp.material, config.deleteWarp.name,
+                                        config.deleteWarp.lore, (p, e) -> {
+                                                // Reserved: Opens confirmation GUI
+                                        }));
+                        ingredients.put('<',
+                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                                        (p, e) -> {
+                                                                p.closeInventory();
+                                                                WarpManagementGUI.open(p, claim, plugin);
+                                                        }));
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (player.isOnline()) {
-                    Window.builder().setTitle(title).setUpperGui(gui).open(player);
-                }
-            });
-        });
-    }
+                        Component title = GuiHelper.MM.deserialize(config.title);
+                        CustomGui gui = new CustomGui(title, 4);
+                        gui.fillFromStructure(structure, ingredients);
+                        gui.open(player);
+                });
+        }
 }
