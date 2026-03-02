@@ -94,7 +94,7 @@ public class VisitorSettingsGUI {
                                         "F x x x x x x x F",
                                         "F x x x x x x x F",
                                         "F x x x x x x x F",
-                                        "F B F F P F N F F",
+                                        "P F F F B F F F N",
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
