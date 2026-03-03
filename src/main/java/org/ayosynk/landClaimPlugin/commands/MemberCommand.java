@@ -3,7 +3,7 @@ package org.ayosynk.landClaimPlugin.commands;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.entity.Player;
@@ -20,14 +20,12 @@ public class MemberCommand implements LandClaimCommand {
 
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
-    private final TrustManager trustManager;
     private final ConfigManager configManager;
 
     public MemberCommand(LandClaimPlugin plugin, ClaimManager claimManager,
-            TrustManager trustManager, ConfigManager configManager) {
+            ConfigManager configManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
-        this.trustManager = trustManager;
         this.configManager = configManager;
     }
 
@@ -55,7 +53,7 @@ public class MemberCommand implements LandClaimCommand {
                         player.sendMessage(configManager.getMessage("not-in-claim"));
                         return;
                     }
-                    if (!trustManager.canManageTrust(claim, player)) {
+                    if (!claim.getOwnerId().equals(player.getUniqueId()) && !player.hasPermission("landclaim.admin")) {
                         player.sendMessage(configManager.getMessage("access-denied"));
                         return;
                     }
@@ -71,7 +69,7 @@ public class MemberCommand implements LandClaimCommand {
                         return;
                     }
 
-                    trustManager.invitePlayer(claim, target);
+                    // TODO: Implement invite system without TrustManager
                     player.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
                 }));
 
@@ -88,14 +86,16 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("accept")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    trustManager.acceptInvite(player);
+                    // TODO: Implement accept system without TrustManager
+                    player.sendMessage(configManager.getMessage("access-denied"));
                 }));
 
         // /claim deny
         manager.command(claimBuilder.literal("deny")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    trustManager.denyInvite(player);
+                    // TODO: Implement deny system without TrustManager
+                    player.sendMessage(configManager.getMessage("access-denied"));
                 }));
     }
 }

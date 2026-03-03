@@ -4,7 +4,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.bukkit.*;
 import org.bukkit.entity.*;
@@ -19,17 +19,15 @@ public class EventListener implements Listener {
 
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
-    private final TrustManager trustManager;
     private final ConfigManager configManager;
     private final Map<UUID, ChunkPosition> lastChunkMap = new HashMap<>();
     private final Map<UUID, String> lastActionBarMap = new HashMap<>();
     private final Map<UUID, Boolean> lastClaimStatusMap = new HashMap<>();
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
-            TrustManager trustManager, ConfigManager configManager) {
+            ConfigManager configManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
-        this.trustManager = trustManager;
         this.configManager = configManager;
 
         startActionBarTask();
@@ -69,8 +67,7 @@ public class EventListener implements Listener {
 
                 if (playerId.equals(ownerId)) {
                     message = configManager.getActionBarMessage("actionbar-owned-by-you");
-                } else if (trustManager.hasPermission(claimManager.getClaimAt(currentPos), player.getUniqueId(),
-                        "INTERACT")) {
+                } else if (claimManager.getClaimAt(currentPos).getPlayerRoles().containsKey(playerId)) {
                     message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
                 } else if (player.hasPermission("landclaim.admin")) {
                     message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);

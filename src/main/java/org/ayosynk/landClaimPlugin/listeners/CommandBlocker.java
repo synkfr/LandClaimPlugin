@@ -2,7 +2,7 @@ package org.ayosynk.landClaimPlugin.listeners;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.entity.Player;
@@ -16,12 +16,10 @@ import java.util.UUID;
 public class CommandBlocker implements Listener {
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
-    private final TrustManager trustManager;
 
-    public CommandBlocker(LandClaimPlugin plugin, ClaimManager claimManager, TrustManager trustManager) {
+    public CommandBlocker(LandClaimPlugin plugin, ClaimManager claimManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
-        this.trustManager = trustManager;
     }
 
     @EventHandler
@@ -46,7 +44,7 @@ public class CommandBlocker implements Listener {
         UUID owner = claim.getOwnerId();
 
         if (player.getUniqueId().equals(owner) ||
-                trustManager.hasPermission(claim, player.getUniqueId(), "MANAGE_SETTINGS")) {
+                claim.hasVisitorFlag("MANAGE_SETTINGS")) {
             return;
         }
 

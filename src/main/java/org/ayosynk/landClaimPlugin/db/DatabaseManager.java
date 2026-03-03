@@ -10,7 +10,6 @@ public class DatabaseManager {
     private Database database;
     private ClaimDao claimDao;
     private PlayerDao playerDao;
-    private RoleDao roleDao;
     private WarpDao warpDao;
 
     public DatabaseManager(LandClaimPlugin plugin) {
@@ -32,12 +31,10 @@ public class DatabaseManager {
 
             this.claimDao = new SQLClaimDao(plugin, this);
             this.playerDao = new SQLPlayerDao(plugin, this);
-            this.roleDao = new SQLRoleDao(plugin, this);
             this.warpDao = new SQLWarpDao(plugin, this);
 
             this.claimDao.createTables();
             this.playerDao.createTables();
-            this.roleDao.createTables();
             this.warpDao.createTables();
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to connect to the database! Disabling plugin.");
@@ -63,10 +60,6 @@ public class DatabaseManager {
 
     public PlayerDao getPlayerDao() {
         return playerDao;
-    }
-
-    public RoleDao getRoleDao() {
-        return roleDao;
     }
 
     public WarpDao getWarpDao() {

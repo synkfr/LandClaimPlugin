@@ -3,7 +3,7 @@ package org.ayosynk.landClaimPlugin.listeners.protections;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -21,7 +21,7 @@ public class PvpProtectionListener implements Listener {
     private final ConfigManager configManager;
 
     public PvpProtectionListener(LandClaimPlugin plugin, ClaimManager claimManager,
-            TrustManager trustManager, ConfigManager configManager) {
+            ConfigManager configManager) {
         this.claimManager = claimManager;
         this.configManager = configManager;
     }

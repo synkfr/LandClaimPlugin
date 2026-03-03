@@ -16,7 +16,6 @@ import org.ayosynk.landClaimPlugin.listeners.protections.*;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.WarpManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
 import org.ayosynk.landClaimPlugin.managers.CombatManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.bstats.bukkit.Metrics;
@@ -33,7 +32,6 @@ public class LandClaimPlugin extends JavaPlugin {
     private CacheManager cacheManager;
     private RedisManager redisManager;
     private ClaimManager claimManager;
-    private TrustManager trustManager;
     private CombatManager combatManager;
     private VisualizationManager visualizationManager;
     private WarpManager warpManager;
@@ -73,10 +71,8 @@ public class LandClaimPlugin extends JavaPlugin {
             combatManager = new CombatManager(this);
 
             claimManager = new ClaimManager(this, configManager);
-            trustManager = new TrustManager(this, claimManager, configManager);
 
             claimManager.initialize();
-            trustManager.initialize();
 
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
 
@@ -86,28 +82,28 @@ public class LandClaimPlugin extends JavaPlugin {
             // Initialize custom GUI framework (listener + scheduler)
             GuiGlobalSetup.init(this);
 
-            commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager,
+            commandHandler = new CommandHandler(this, claimManager, configManager, visualizationManager,
                     warpManager); // Changed from homeManager
 
-            eventListener = new EventListener(this, claimManager, trustManager, configManager);
+            eventListener = new EventListener(this, claimManager, configManager);
             getServer().getPluginManager().registerEvents(eventListener, this);
 
             // Register Protections
             getServer().getPluginManager()
-                    .registerEvents(new BlockProtectionListener(this, claimManager, trustManager, configManager), this);
+                    .registerEvents(new BlockProtectionListener(this, claimManager, configManager), this);
             getServer().getPluginManager().registerEvents(
-                    new EntityProtectionListener(this, claimManager, trustManager, configManager), this);
+                    new EntityProtectionListener(this, claimManager, configManager), this);
             getServer().getPluginManager().registerEvents(
-                    new InteractProtectionListener(this, claimManager, trustManager, configManager), this);
+                    new InteractProtectionListener(this, claimManager, configManager), this);
             getServer().getPluginManager().registerEvents(new ExplosionProtectionListener(this, claimManager), this);
             getServer().getPluginManager().registerEvents(new PistonProtectionListener(this, claimManager), this);
             getServer().getPluginManager()
-                    .registerEvents(new PvpProtectionListener(this, claimManager, trustManager, configManager), this);
+                    .registerEvents(new PvpProtectionListener(this, claimManager, configManager), this);
             getServer().getPluginManager().registerEvents(
-                    new VehicleProtectionListener(this, claimManager, trustManager, configManager), this);
+                    new VehicleProtectionListener(this, claimManager, configManager), this);
 
             getServer().getPluginManager().registerEvents(
-                    new CommandBlocker(this, claimManager, trustManager),
+                    new CommandBlocker(this, claimManager),
                     this);
 
             getServer().getPluginManager().registerEvents(
@@ -222,10 +218,6 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public ClaimManager getClaimManager() {
         return claimManager;
-    }
-
-    public TrustManager getTrustManager() {
-        return trustManager;
     }
 
     public VisualizationManager getVisualizationManager() {

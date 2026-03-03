@@ -3,7 +3,7 @@ package org.ayosynk.landClaimPlugin.listeners.protections;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Material;
@@ -23,13 +23,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 public class BlockProtectionListener implements Listener {
 
     private final ClaimManager claimManager;
-    private final TrustManager trustManager;
     private final ConfigManager configManager;
 
     public BlockProtectionListener(LandClaimPlugin plugin, ClaimManager claimManager,
-            TrustManager trustManager, ConfigManager configManager) {
+            ConfigManager configManager) {
         this.claimManager = claimManager;
-        this.trustManager = trustManager;
         this.configManager = configManager;
     }
 
@@ -43,8 +41,8 @@ public class BlockProtectionListener implements Listener {
             if (player.getUniqueId().equals(claim.getOwnerId()))
                 return true; // Owner
 
-            if (trustManager.hasPermission(claim, player.getUniqueId(), permission)) {
-                return true; // Has explicit required flag
+            if (claim.hasVisitorFlag(permission)) {
+                return true; // Visitor flag is allowed for this claim
             }
 
             event.setCancelled(true);

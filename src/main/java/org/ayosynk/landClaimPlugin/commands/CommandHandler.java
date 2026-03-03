@@ -5,7 +5,7 @@ import org.ayosynk.landClaimPlugin.exceptions.CombatBlockedException;
 import org.ayosynk.landClaimPlugin.gui.*;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.managers.WarpManager;
 import org.bukkit.entity.Player;
@@ -41,7 +41,7 @@ public class CommandHandler {
     private final ExecutorService commandExecutor;
 
     public CommandHandler(LandClaimPlugin plugin, ClaimManager claimManager,
-            TrustManager trustManager, ConfigManager configManager,
+            ConfigManager configManager,
             VisualizationManager visualizationManager, WarpManager warpManager) {
 
         // Dedicated thread pool for async command execution (4 daemon threads)
@@ -130,7 +130,7 @@ public class CommandHandler {
                 claimCommand,
                 new UnclaimCommand(plugin, claimManager, configManager),
                 new AdminCommand(plugin, claimManager, configManager),
-                new MemberCommand(plugin, claimManager, trustManager, configManager),
+                new MemberCommand(plugin, claimManager, configManager),
                 new TrustCommand(configManager));
 
         // Register all commands via the shared /claim builder

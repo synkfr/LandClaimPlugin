@@ -3,7 +3,7 @@ package org.ayosynk.landClaimPlugin.listeners.protections;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.bukkit.Material;
@@ -19,13 +19,11 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 public class EntityProtectionListener implements Listener {
 
     private final ClaimManager claimManager;
-    private final TrustManager trustManager;
     private final ConfigManager configManager;
 
     public EntityProtectionListener(LandClaimPlugin plugin, ClaimManager claimManager,
-            TrustManager trustManager, ConfigManager configManager) {
+            ConfigManager configManager) {
         this.claimManager = claimManager;
-        this.trustManager = trustManager;
         this.configManager = configManager;
     }
 
@@ -39,7 +37,7 @@ public class EntityProtectionListener implements Listener {
             if (player.getUniqueId().equals(claim.getOwnerId()))
                 return true;
 
-            if (trustManager.hasPermission(claim, player.getUniqueId(), permission)) {
+            if (claim.hasVisitorFlag(permission)) {
                 return true;
             }
 
