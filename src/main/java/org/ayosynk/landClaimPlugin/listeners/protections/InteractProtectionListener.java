@@ -3,9 +3,10 @@ package org.ayosynk.landClaimPlugin.listeners.protections;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
+import org.ayosynk.landClaimPlugin.managers.PermissionResolver;
 
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -77,12 +78,9 @@ public class InteractProtectionListener implements Listener {
             return true;
 
         ChunkPosition pos = new ChunkPosition(block);
-        if (claimManager.isChunkClaimed(pos)) {
-            Claim claim = claimManager.getClaimAt(pos);
-            if (player.getUniqueId().equals(claim.getOwnerId()))
-                return true;
-
-            if (claim.hasVisitorFlag(permission)) {
+        ClaimProfile profile = claimManager.getProfileAt(pos);
+        if (profile != null) {
+            if (PermissionResolver.hasPermission(profile, player.getUniqueId(), permission)) {
                 return true;
             }
 

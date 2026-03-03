@@ -5,7 +5,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.AllyControlPanelConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class AllyControlPanelGUI {
 
-        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+        public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         AllyControlPanelConfig config = plugin.getConfigManager().getAllyControlPanelConfig();
 
@@ -35,7 +35,7 @@ public class AllyControlPanelGUI {
                                                         config.allyPermissions.name,
                                                         config.allyPermissions.lore, (p, e) -> {
                                                                 p.closeInventory();
-                                                                AllyPremissionsGUI.open(p, claim, plugin);
+                                                                AllyPremissionsGUI.open(p, profile, plugin);
                                                         }));
                         ingredients.put('W', GuiHelper.buildSlot(config.allyWarps.material, config.allyWarps.name,
                                         config.allyWarps.lore, (p, e) -> {
@@ -49,7 +49,7 @@ public class AllyControlPanelGUI {
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                                                         (p, e) -> {
                                                                 p.closeInventory();
-                                                                AllyManagementGUI.open(p, claim, plugin);
+                                                                AllyManagementGUI.open(p, profile, plugin);
                                                         }));
 
                         Component title = GuiHelper.MM.deserialize(config.title);

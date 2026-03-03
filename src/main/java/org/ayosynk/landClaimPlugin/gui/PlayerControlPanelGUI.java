@@ -5,7 +5,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.PlayerControlPanelConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public class PlayerControlPanelGUI {
 
-    public static void open(Player player, Claim claim, LandClaimPlugin plugin, UUID targetPlayerId,
+    public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, UUID targetPlayerId,
             String targetPlayerName) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             PlayerControlPanelConfig config = plugin.getConfigManager().getPlayerControlPanelConfig();
@@ -35,7 +35,7 @@ public class PlayerControlPanelGUI {
             ingredients.put('A', buildPlayerSlot(config.accent, targetPlayerName));
             ingredients.put('C', buildPlayerSlotWithAction(config.changeRole, targetPlayerName, (p, e) -> {
                 p.closeInventory();
-                RoleSelectionGUI.open(p, claim, plugin, targetPlayerId, targetPlayerName);
+                RoleSelectionGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName);
             }));
             ingredients.put('T', buildPlayerSlotWithAction(config.transferOwnership, targetPlayerName, (p, e) -> {
                 // Backend logic for ownership transfer to follow
@@ -45,7 +45,7 @@ public class PlayerControlPanelGUI {
             }));
             ingredients.put('B', buildPlayerSlotWithAction(config.back, targetPlayerName, (p, e) -> {
                 p.closeInventory();
-                MemberManagementGUI.open(p, claim, plugin);
+                MemberManagementGUI.open(p, profile, plugin);
             }));
 
             String windowTitle = config.title.replace("<Player>", targetPlayerName);

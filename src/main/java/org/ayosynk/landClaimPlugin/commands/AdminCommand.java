@@ -4,7 +4,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
@@ -50,20 +50,20 @@ public class AdminCommand implements LandClaimCommand {
 
     private void sendAdminClaimInfo(Player player) {
         ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-        Claim claim = claimManager.getClaimAt(pos);
+        ClaimProfile profile = claimManager.getProfileAt(pos);
 
-        if (claim == null) {
+        if (profile == null) {
             player.sendMessage(configManager.getMessage("not-in-claim"));
             return;
         }
-        String ownerName = Bukkit.getOfflinePlayer(claim.getOwnerId()).getName();
+        String ownerName = Bukkit.getOfflinePlayer(profile.getOwnerId()).getName();
         if (ownerName == null)
             ownerName = "Unknown";
 
         player.sendMessage(
                 configManager.getMessage("admin-claim-info-owned-by", "<owner>", ownerName, "<uuid>",
-                        claim.getOwnerId().toString()));
-        player.sendMessage(configManager.getMessage("admin-claim-info-id", "<id>", claim.getId().toString()));
+                        profile.getOwnerId().toString()));
+        player.sendMessage(configManager.getMessage("admin-claim-info-id", "<id>", profile.getName()));
     }
 
     private void adminUnclaimCurrentChunk(Player player) {
@@ -71,8 +71,8 @@ public class AdminCommand implements LandClaimCommand {
             Chunk chunk = player.getLocation().getChunk();
             ChunkPosition pos = new ChunkPosition(chunk);
 
-            Claim claim = claimManager.getClaimAt(pos);
-            if (claim == null) {
+            ClaimProfile profile = claimManager.getProfileAt(pos);
+            if (profile == null) {
                 player.sendMessage(configManager.getMessage("not-in-claim"));
                 return;
             }

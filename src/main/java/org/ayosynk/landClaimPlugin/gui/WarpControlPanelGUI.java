@@ -5,7 +5,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class WarpControlPanelGUI {
 
-        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+        public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         WarpControlPanelConfig config = plugin.getConfigManager().getWarpControlPanelConfig();
 
@@ -38,7 +38,7 @@ public class WarpControlPanelGUI {
                         ingredients.put('I', GuiHelper.buildSlot(config.changeIcon.material, config.changeIcon.name,
                                         config.changeIcon.lore, (p, e) -> {
                                                 p.closeInventory();
-                                                WarpChangeIconGUI.open(p, claim, plugin);
+                                                WarpChangeIconGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('D', GuiHelper.buildSlot(config.deleteWarp.material, config.deleteWarp.name,
                                         config.deleteWarp.lore, (p, e) -> {
@@ -48,7 +48,7 @@ public class WarpControlPanelGUI {
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                                                         (p, e) -> {
                                                                 p.closeInventory();
-                                                                WarpManagementGUI.open(p, claim, plugin);
+                                                                WarpManagementGUI.open(p, profile, plugin);
                                                         }));
 
                         Component title = GuiHelper.MM.deserialize(config.title);

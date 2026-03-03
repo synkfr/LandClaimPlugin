@@ -6,7 +6,7 @@ import org.ayosynk.landClaimPlugin.config.menus.RoleSelectionConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.GuiItem;
 import org.ayosynk.landClaimPlugin.gui.framework.PaginatedGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public class RoleSelectionGUI {
 
-    public static void open(Player player, Claim claim, LandClaimPlugin plugin, UUID targetPlayerId,
+    public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, UUID targetPlayerId,
             String targetPlayerName) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             RoleSelectionConfig config = plugin.getConfigManager().getRoleSelectionConfig();
@@ -39,7 +39,7 @@ public class RoleSelectionGUI {
             ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                     (p, e) -> {
                         p.closeInventory();
-                        PlayerControlPanelGUI.open(p, claim, plugin, targetPlayerId, targetPlayerName);
+                        PlayerControlPanelGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName);
                     }));
 
             Component title = GuiHelper.MM.deserialize(config.title);

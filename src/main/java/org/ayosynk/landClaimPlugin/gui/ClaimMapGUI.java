@@ -5,7 +5,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimMapConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class ClaimMapGUI {
 
-        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+        public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         ClaimMapConfig config = plugin.getConfigManager().getClaimMapConfig();
 
@@ -39,12 +39,12 @@ public class ClaimMapGUI {
                         ingredients.put('X', GuiHelper.buildSlot(config.back.material, config.back.name,
                                         config.back.lore, (p, e) -> {
                                                 p.closeInventory();
-                                                MainMenuGUI.open(p, claim, plugin);
+                                                MainMenuGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('I', GuiHelper.buildSlot(config.info.material, config.info.name,
                                         config.info.lore, (p, e) -> {
                                                 p.closeInventory();
-                                                ClaimMapInfoGUI.open(p, claim, plugin);
+                                                ClaimMapInfoGUI.open(p, profile, plugin);
                                         }));
 
                         Component title = GuiHelper.MM.deserialize(config.title);

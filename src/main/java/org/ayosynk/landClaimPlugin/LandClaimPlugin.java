@@ -159,7 +159,6 @@ public class LandClaimPlugin extends JavaPlugin {
         blockedCommands = blockedCommands.stream().map(String::toLowerCase).toList();
         blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();
 
-        claimManager.loadClaims();
     }
 
     @Override

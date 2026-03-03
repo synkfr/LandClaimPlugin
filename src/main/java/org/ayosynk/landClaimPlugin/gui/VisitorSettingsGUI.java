@@ -6,7 +6,7 @@ import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.GuiItem;
 import org.ayosynk.landClaimPlugin.gui.framework.PaginatedGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class VisitorSettingsGUI {
 
-        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+        public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         VisitorSettingsConfig config = plugin.getConfigManager().getVisitorSettingsConfig();
 
@@ -32,7 +32,7 @@ public class VisitorSettingsGUI {
                                 contentItems.add(new GuiItem() {
                                         @Override
                                         public ItemStack render(Player viewer) {
-                                                boolean hasFlag = claim.hasVisitorFlag(flagId);
+                                                boolean hasFlag = profile.hasVisitorFlag(flagId);
                                                 ItemStack item = GuiHelper.buildItemStack(flagConfig.material,
                                                                 flagConfig.name, flagConfig.lore);
                                                 ItemMeta meta = item.getItemMeta();
@@ -62,19 +62,19 @@ public class VisitorSettingsGUI {
                                         @Override
                                         public org.ayosynk.landClaimPlugin.gui.framework.ClickAction clickAction() {
                                                 return (p, e) -> {
-                                                        if (claim.hasVisitorFlag(flagId)) {
-                                                                claim.removeVisitorFlag(flagId);
+                                                        if (profile.hasVisitorFlag(flagId)) {
+                                                                profile.removeVisitorFlag(flagId);
                                                         } else {
-                                                                claim.addVisitorFlag(flagId);
+                                                                profile.addVisitorFlag(flagId);
                                                         }
 
                                                         // Save asynchronously and invalidate cache
-                                                        plugin.getDatabaseManager().getClaimDao().saveClaim(claim)
+                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
                                                                         .thenRun(() -> {
                                                                                 if (plugin.getRedisManager() != null) {
                                                                                         plugin.getRedisManager()
                                                                                                         .publishUpdate("INVALIDATE_CLAIM",
-                                                                                                                        claim.getId());
+                                                                                                                        profile.getOwnerId());
                                                                                 }
                                                                         });
 
@@ -104,7 +104,7 @@ public class VisitorSettingsGUI {
                         ingredients.put('B', new SlotDefinition(
                                         GuiHelper.buildItemStack(config.back.material, config.back.name,
                                                         config.back.lore),
-                                        (p, e) -> MainMenuGUI.open(p, claim, plugin)));
+                                        (p, e) -> MainMenuGUI.open(p, profile, plugin)));
 
                         Component title = GuiHelper.MM.deserialize(config.title);
                         PaginatedGui gui = new PaginatedGui(title, 6, structure, ingredients, 'x');

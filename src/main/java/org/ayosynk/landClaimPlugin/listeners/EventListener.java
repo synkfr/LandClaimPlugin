@@ -4,8 +4,10 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
+import org.ayosynk.landClaimPlugin.managers.PermissionResolver;
 
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -67,13 +69,17 @@ public class EventListener implements Listener {
 
                 if (playerId.equals(ownerId)) {
                     message = configManager.getActionBarMessage("actionbar-owned-by-you");
-                } else if (claimManager.getClaimAt(currentPos).getPlayerRoles().containsKey(playerId)) {
-                    message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
-                } else if (player.hasPermission("landclaim.admin")) {
-                    message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
                 } else {
-                    message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>",
-                            ownerName);
+                    ClaimProfile profile = claimManager.getProfileAt(currentPos);
+                    String status = PermissionResolver.getPlayerStatus(profile, playerId);
+                    if (status.equals("member") || status.equals("trusted")) {
+                        message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
+                    } else if (player.hasPermission("landclaim.admin")) {
+                        message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
+                    } else {
+                        message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>",
+                                ownerName);
+                    }
                 }
             } else {
                 message = configManager.getActionBarMessage("actionbar-wilderness");
@@ -133,10 +139,10 @@ public class EventListener implements Listener {
         if (!configManager.requireConnectedClaims())
             return false;
 
-        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
-        Set<ChunkPosition> claims = claimObjects.stream()
-                .flatMap(claim -> claim.getChunks().stream())
-                .collect(java.util.stream.Collectors.toSet());
+        ClaimProfile profile = claimManager.getProfile(playerId);
+        if (profile == null)
+            return false;
+        Set<ChunkPosition> claims = profile.getOwnedChunks();
         if (claims.isEmpty())
             return false;
 

@@ -2,16 +2,16 @@ package org.ayosynk.landClaimPlugin.listeners;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
+import org.ayosynk.landClaimPlugin.managers.PermissionResolver;
 
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.util.List;
-import java.util.UUID;
 
 public class CommandBlocker implements Listener {
     private final LandClaimPlugin plugin;
@@ -40,11 +40,12 @@ public class CommandBlocker implements Listener {
             return;
         }
 
-        Claim claim = claimManager.getClaimAt(pos);
-        UUID owner = claim.getOwnerId();
+        ClaimProfile profile = claimManager.getProfileAt(pos);
+        if (profile == null) {
+            return;
+        }
 
-        if (player.getUniqueId().equals(owner) ||
-                claim.hasVisitorFlag("MANAGE_SETTINGS")) {
+        if (PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS")) {
             return;
         }
 

@@ -5,7 +5,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class RoleSetupGUI {
 
-        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+        public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         RoleSetupConfig config = plugin.getConfigManager().getRoleSetupConfig();
 
@@ -37,7 +37,7 @@ public class RoleSetupGUI {
                         ingredients.put('P', GuiHelper.buildSlot(config.permissions.material, config.permissions.name,
                                         config.permissions.lore, (p, e) -> {
                                                 p.closeInventory();
-                                                // RoleEditGUI.open(player, claim, plugin);
+                                                // RoleEditGUI.open(player, profile, plugin);
                                         }));
                         ingredients.put('T', GuiHelper.buildSlot(config.setPriority.material, config.setPriority.name,
                                         config.setPriority.lore, (p, e) -> {
@@ -47,13 +47,13 @@ public class RoleSetupGUI {
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                                                         (p, e) -> {
                                                                 p.closeInventory();
-                                                                RoleManagementGUI.open(p, claim, plugin);
+                                                                RoleManagementGUI.open(p, profile, plugin);
                                                         }));
                         ingredients.put('S', GuiHelper.buildSlot(config.saveExit.material, config.saveExit.name,
                                         config.saveExit.lore, (p, e) -> {
                                                 // Reserved: Create role and close setup
                                                 p.closeInventory();
-                                                RoleManagementGUI.open(p, claim, plugin);
+                                                RoleManagementGUI.open(p, profile, plugin);
                                         }));
 
                         Component title = GuiHelper.MM.deserialize(config.title);

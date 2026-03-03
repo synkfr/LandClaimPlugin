@@ -4,8 +4,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 
-import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
@@ -37,6 +36,11 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(memberBuilder.literal("list")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    if (profile == null) {
+                        player.sendMessage(configManager.getMessage("no-profile"));
+                        return;
+                    }
                     player.sendMessage(configManager.getMessage("member-list-stub"));
                 }));
 
@@ -47,13 +51,12 @@ public class MemberCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
 
-                    ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-                    Claim claim = claimManager.getClaimAt(pos);
-                    if (claim == null) {
-                        player.sendMessage(configManager.getMessage("not-in-claim"));
+                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    if (profile == null) {
+                        player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
-                    if (!claim.getOwnerId().equals(player.getUniqueId()) && !player.hasPermission("landclaim.admin")) {
+                    if (!profile.isOwner(player.getUniqueId()) && !player.hasPermission("landclaim.admin")) {
                         player.sendMessage(configManager.getMessage("access-denied"));
                         return;
                     }
@@ -63,13 +66,13 @@ public class MemberCommand implements LandClaimCommand {
                         player.sendMessage(configManager.getMessage("player-not-online"));
                         return;
                     }
-                    if (claim.getPlayerRoles().containsKey(target.getUniqueId())
-                            || claim.getOwnerId().equals(target.getUniqueId())) {
+                    if (profile.isMember(target.getUniqueId())
+                            || profile.isOwner(target.getUniqueId())) {
                         player.sendMessage(configManager.getMessage("already-in-claim"));
                         return;
                     }
 
-                    // TODO: Implement invite system without TrustManager
+                    // TODO: Implement invite system
                     player.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
                 }));
 
@@ -86,7 +89,7 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("accept")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    // TODO: Implement accept system without TrustManager
+                    // TODO: Implement accept system
                     player.sendMessage(configManager.getMessage("access-denied"));
                 }));
 
@@ -94,7 +97,7 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("deny")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    // TODO: Implement deny system without TrustManager
+                    // TODO: Implement deny system
                     player.sendMessage(configManager.getMessage("access-denied"));
                 }));
     }

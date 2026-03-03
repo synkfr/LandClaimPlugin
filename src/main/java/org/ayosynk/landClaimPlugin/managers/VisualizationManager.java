@@ -2,6 +2,7 @@ package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.ayosynk.landClaimPlugin.models.Edge;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,7 +18,6 @@ import org.joml.Vector3f;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class VisualizationManager {
     private final LandClaimPlugin plugin;
@@ -115,20 +115,20 @@ public class VisualizationManager {
         Material material = temporaryTimers.containsKey(playerId) ? Material.ORANGE_STAINED_GLASS
                 : Material.LIME_STAINED_GLASS;
 
-        Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = new HashSet<>(
-                claimManager.getPlayerClaims(playerId));
+        // Collect chunks from player's own profile
+        Set<ChunkPosition> claims = new HashSet<>();
+        ClaimProfile ownProfile = claimManager.getProfile(playerId);
+        if (ownProfile != null) {
+            claims.addAll(ownProfile.getOwnedChunks());
+        }
 
         // Also include the claim the player is currently standing in, even if they
         // don't own it
         ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
-        org.ayosynk.landClaimPlugin.models.Claim currentClaim = claimManager.getClaimAt(currentChunk);
-        if (currentClaim != null) {
-            claimObjects.add(currentClaim);
+        ClaimProfile currentProfile = claimManager.getProfileAt(currentChunk);
+        if (currentProfile != null) {
+            claims.addAll(currentProfile.getOwnedChunks());
         }
-
-        Set<ChunkPosition> claims = claimObjects.stream()
-                .flatMap(claim -> claim.getChunks().stream())
-                .collect(Collectors.toSet());
 
         if (claims.isEmpty()) {
             player.sendMessage("§cDebug: No claims to visualize.");

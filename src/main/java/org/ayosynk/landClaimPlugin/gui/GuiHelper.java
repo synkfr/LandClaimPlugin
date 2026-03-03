@@ -4,7 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.gui.framework.ClickAction;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -38,13 +38,13 @@ public final class GuiHelper {
     // --- Placeholder variants (for GUIs that inject claim/player data) ---
 
     public static ItemStack buildItemStack(String material, String name, List<String> lore,
-            Claim claim, Player player, String ownerName, String claimName) {
-        String resolvedName = name != null ? replacePlaceholders(name, claim, player, ownerName, claimName) : null;
+            ClaimProfile profile, Player player, String ownerName, String claimName) {
+        String resolvedName = name != null ? replacePlaceholders(name, profile, player, ownerName, claimName) : null;
         List<String> resolvedLore = null;
         if (lore != null && !lore.isEmpty()) {
             resolvedLore = new ArrayList<>(lore.size());
             for (String line : lore) {
-                resolvedLore.add(replacePlaceholders(line, claim, player, ownerName, claimName));
+                resolvedLore.add(replacePlaceholders(line, profile, player, ownerName, claimName));
             }
         }
         return buildItemStackInternal(material, resolvedName, resolvedLore);
@@ -61,24 +61,24 @@ public final class GuiHelper {
     }
 
     public static SlotDefinition buildSlot(String material, String name, List<String> lore,
-            Claim claim, Player player, String ownerName, String claimName) {
-        return new SlotDefinition(buildItemStack(material, name, lore, claim, player, ownerName, claimName));
+            ClaimProfile profile, Player player, String ownerName, String claimName) {
+        return new SlotDefinition(buildItemStack(material, name, lore, profile, player, ownerName, claimName));
     }
 
     public static SlotDefinition buildSlot(String material, String name, List<String> lore,
-            Claim claim, Player player, String ownerName, String claimName, ClickAction action) {
-        return new SlotDefinition(buildItemStack(material, name, lore, claim, player, ownerName, claimName), action);
+            ClaimProfile profile, Player player, String ownerName, String claimName, ClickAction action) {
+        return new SlotDefinition(buildItemStack(material, name, lore, profile, player, ownerName, claimName), action);
     }
 
     // --- Placeholder resolution ---
 
-    public static String replacePlaceholders(String text, Claim claim, Player player,
+    public static String replacePlaceholders(String text, ClaimProfile profile, Player player,
             String ownerName, String claimName) {
         return text.replace("{claim_name}", claimName)
                 .replace("{owner}", ownerName)
-                .replace("{size}", String.valueOf(claim.getChunks().size()))
+                .replace("{size}", String.valueOf(profile.getOwnedChunks().size()))
                 .replace("{power}", "0")
-                .replace("{members}", String.valueOf(claim.getPlayerRoles().size()))
+                .replace("{members}", String.valueOf(profile.getMemberRoles().size()))
                 .replace("{world}", player.getWorld().getName())
                 .replace("{x}", String.valueOf(player.getLocation().getBlockX()))
                 .replace("{z}", String.valueOf(player.getLocation().getBlockZ()));

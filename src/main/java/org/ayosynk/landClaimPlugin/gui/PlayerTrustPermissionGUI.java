@@ -6,7 +6,7 @@ import org.ayosynk.landClaimPlugin.config.menus.PlayerTrustPermissionConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.GuiItem;
 import org.ayosynk.landClaimPlugin.gui.framework.PaginatedGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class PlayerTrustPermissionGUI {
 
-    public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+    public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             PlayerTrustPermissionConfig config = plugin.getConfigManager().getPlayerTrustPermissionConfig();
 
@@ -40,7 +40,7 @@ public class PlayerTrustPermissionGUI {
             ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                     (p, e) -> {
                         p.closeInventory();
-                        TrustManagementGUI.open(p, claim, plugin);
+                        TrustManagementGUI.open(p, profile, plugin);
                     }));
 
             Component title = GuiHelper.MM.deserialize(config.title);

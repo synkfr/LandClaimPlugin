@@ -4,7 +4,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
@@ -53,17 +53,13 @@ public class UnclaimCommand implements LandClaimCommand {
             Chunk chunk = player.getLocation().getChunk();
             ChunkPosition pos = new ChunkPosition(chunk);
 
-            Claim claim = claimManager.getSubClaimAt(pos);
-            if (claim == null) {
-                claim = claimManager.getClaimAt(pos);
-            }
-
-            if (claim == null) {
+            ClaimProfile profile = claimManager.getProfileAt(pos);
+            if (profile == null) {
                 player.sendMessage(configManager.getMessage("not-in-claim"));
                 return;
             }
 
-            if (!claim.getOwnerId().equals(player.getUniqueId())) {
+            if (!profile.getOwnerId().equals(player.getUniqueId())) {
                 player.sendMessage(configManager.getMessage("not-owner"));
                 return;
             }

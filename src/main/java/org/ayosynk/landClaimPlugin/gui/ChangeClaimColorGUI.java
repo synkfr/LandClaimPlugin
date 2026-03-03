@@ -5,7 +5,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class ChangeClaimColorGUI {
 
-        public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+        public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         ChangeClaimColorConfig config = plugin.getConfigManager().getChangeClaimColorConfig();
 
@@ -36,7 +36,7 @@ public class ChangeClaimColorGUI {
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                                                         (p, e) -> {
                                                                 p.closeInventory();
-                                                                ClaimSettingsGUI.open(p, claim, plugin);
+                                                                ClaimSettingsGUI.open(p, profile, plugin);
                                                         }));
                         ingredients.put('X', GuiHelper.buildSlot(config.customColor.material, config.customColor.name,
                                         config.customColor.lore, (p, e) -> {

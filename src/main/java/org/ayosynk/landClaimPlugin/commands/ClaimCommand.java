@@ -6,7 +6,7 @@ import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
@@ -68,13 +68,13 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-                    Claim claim = claimManager.getClaimAt(pos);
-                    if (claim == null) {
+                    ClaimProfile profile = claimManager.getProfileAt(pos);
+                    if (profile == null) {
                         player.sendMessage(configManager.getMessage("not-in-claim"));
                         return;
                     }
                     // Dispatch GUI opening to main thread — async handler cannot open inventories
-                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, claim, plugin));
+                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profile, plugin));
                 }));
 
         // /claim info
@@ -131,14 +131,14 @@ public class ClaimCommand implements LandClaimCommand {
 
     private void sendClaimInfo(Player player) {
         ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-        Claim claim = claimManager.getClaimAt(pos);
+        ClaimProfile profile = claimManager.getProfileAt(pos);
 
-        if (claim == null) {
+        if (profile == null) {
             player.sendMessage(configManager.getMessage("not-in-claim"));
             return;
         }
 
-        String ownerName = Bukkit.getOfflinePlayer(claim.getOwnerId()).getName();
+        String ownerName = Bukkit.getOfflinePlayer(profile.getOwnerId()).getName();
         if (ownerName == null)
             ownerName = "Unknown";
 

@@ -6,7 +6,7 @@ import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.GuiItem;
 import org.ayosynk.landClaimPlugin.gui.framework.PaginatedGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.models.Claim;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class RoleManagementGUI {
 
-    public static void open(Player player, Claim claim, LandClaimPlugin plugin) {
+    public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             RoleManagementConfig config = plugin.getConfigManager().getRoleManagementConfig();
 
@@ -37,12 +37,12 @@ public class RoleManagementGUI {
             ingredients.put('C', GuiHelper.buildSlot(config.createRole.material, config.createRole.name,
                     config.createRole.lore, (p, e) -> {
                         p.closeInventory();
-                        RoleSetupGUI.open(p, claim, plugin);
+                        RoleSetupGUI.open(p, profile, plugin);
                     }));
             ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                     (p, e) -> {
                         p.closeInventory();
-                        ClaimSettingsGUI.open(p, claim, plugin);
+                        ClaimSettingsGUI.open(p, profile, plugin);
                     }));
 
             Component title = GuiHelper.MM.deserialize(config.title);
