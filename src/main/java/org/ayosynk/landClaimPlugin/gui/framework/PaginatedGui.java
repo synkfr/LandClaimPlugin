@@ -96,12 +96,8 @@ public class PaginatedGui extends CustomGui {
     public void setPage(int page, Player viewer) {
         if (page < 0 || page >= getPageCount())
             return;
-        int oldPage = this.currentPage;
         this.currentPage = page;
-
-        if (oldPage != page) {
-            renderPage(viewer);
-        }
+        renderPage(viewer);
     }
 
     /**
