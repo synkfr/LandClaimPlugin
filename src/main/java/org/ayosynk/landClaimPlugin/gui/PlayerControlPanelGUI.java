@@ -8,7 +8,6 @@ import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,26 +26,50 @@ public class PlayerControlPanelGUI {
                     "F F F F F F F F F",
                     "F F C F T F K F F",
                     "F F F F F F F F F",
-                    ". . . A B A . . ."
+                    ". . . B B B . . ."
             };
 
             Map<Character, SlotDefinition> ingredients = new HashMap<>();
             ingredients.put('F', buildPlayerSlot(config.frame, targetPlayerName));
-            ingredients.put('A', buildPlayerSlot(config.accent, targetPlayerName));
             ingredients.put('C', buildPlayerSlotWithAction(config.changeRole, targetPlayerName, (p, e) -> {
                 p.closeInventory();
                 RoleSelectionGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName);
             }));
             ingredients.put('T', buildPlayerSlotWithAction(config.transferOwnership, targetPlayerName, (p, e) -> {
-                // Backend logic for ownership transfer to follow
+                // Transfer Ownership
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    ConfirmationGUI.open(p, "<red>Transfer to " + targetPlayerName + "?",
+                            () -> {
+                                plugin.getClaimManager().transferOwnership(profile.getOwnerId(), targetPlayerId);
+                                p.sendMessage(GuiHelper.MM
+                                        .deserialize("<green>Ownership transferred to " + targetPlayerName + "."));
+                            },
+                            () -> PlayerControlPanelGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName));
+                });
             }));
             ingredients.put('K', buildPlayerSlotWithAction(config.kickPlayer, targetPlayerName, (p, e) -> {
-                // Opens later confirmation to remove member
+                // Kick Member
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    ConfirmationGUI.open(p, "<red>Kick " + targetPlayerName + " from claim?",
+                            () -> {
+                                profile.removeMember(targetPlayerId);
+                                plugin.getCacheManager().getProfileCache().put(profile.getOwnerId(), profile);
+                                plugin.getClaimManager().saveAndSync(profile);
+                                p.sendMessage(GuiHelper.MM
+                                        .deserialize("<yellow>Kicked " + targetPlayerName + " from the claim."));
+                                MemberManagementGUI.open(p, profile, plugin);
+                            },
+                            () -> PlayerControlPanelGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName));
+                });
             }));
             ingredients.put('B', buildPlayerSlotWithAction(config.back, targetPlayerName, (p, e) -> {
                 p.closeInventory();
                 MemberManagementGUI.open(p, profile, plugin);
             }));
+
+            // Handle the A slots that were removed in structure mapping by filling them
+            // with F
+            ingredients.put('.', buildPlayerSlot(config.frame, targetPlayerName));
 
             String windowTitle = config.title.replace("<Player>", targetPlayerName);
             Component title = GuiHelper.MM.deserialize(windowTitle);

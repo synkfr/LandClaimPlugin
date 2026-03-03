@@ -25,6 +25,35 @@ public class ClaimProfile {
     public ClaimProfile(UUID ownerId, String name) {
         this.ownerId = ownerId;
         this.name = name;
+        setupDefaultRoles();
+    }
+
+    private void setupDefaultRoles() {
+        // Default Member Role (Basic Interact)
+        Role memberRole = new Role(UUID.randomUUID(), this.ownerId, "Member", 100);
+        memberRole.addFlag("USE_DOORS");
+        memberRole.addFlag("USE_TRAPDOORS");
+        memberRole.addFlag("USE_FENCE_GATES");
+        memberRole.addFlag("USE_CONTAINERS");
+        memberRole.addFlag("USE_WORKSTATIONS");
+        memberRole.addFlag("USE_BEDS");
+        memberRole.addFlag("USE_REDSTONE");
+        this.roles.put(memberRole.getId().toString(), memberRole);
+
+        // Default CoOwner Role (All Permissions)
+        Role coOwnerRole = new Role(UUID.randomUUID(), this.ownerId, "CoOwner", 10);
+        String[] allFlags = {
+                "USE_DOORS", "USE_TRAPDOORS", "USE_FENCE_GATES", "USE_CONTAINERS",
+                "USE_WORKSTATIONS", "USE_BEDS", "USE_REDSTONE", "USE_LECTERNS", "USE_BELLS",
+                "DAMAGE_ANIMALS", "DAMAGE_MONSTERS", "BREED_ANIMALS", "SHEAR_ENTITIES",
+                "TRADE_VILLAGERS", "FEED_ANIMALS", "LEASH_ENTITIES", "MODIFY_ARMOR_STANDS",
+                "MODIFY_ITEM_FRAMES", "RIDE_VEHICLES", "PLACE_VEHICLES", "DESTROY_VEHICLES",
+                "USE_ENDER_PEARLS", "USE_CHORUS_FRUIT", "PICKUP_ITEMS", "DROP_ITEMS"
+        };
+        for (String flag : allFlags) {
+            coOwnerRole.addFlag(flag);
+        }
+        this.roles.put(coOwnerRole.getId().toString(), coOwnerRole);
     }
 
     // --- Owner ---

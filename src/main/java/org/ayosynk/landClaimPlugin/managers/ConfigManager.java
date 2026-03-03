@@ -27,6 +27,7 @@ import org.ayosynk.landClaimPlugin.config.menus.AllyControlPanelConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyPremissionsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RoleEditConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TitleSettingsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
 import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
@@ -60,6 +61,7 @@ public class ConfigManager {
     private TitleSettingsConfig titleSettingsConfig;
     private RenameClaimConfig renameClaimConfig;
     private ChangeClaimColorConfig changeClaimColorConfig;
+    private RoleEditConfig roleEditConfig;
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -228,6 +230,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.roleEditConfig = eu.okaeri.configs.ConfigManager.create(RoleEditConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RoleEdit.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -254,6 +263,7 @@ public class ConfigManager {
         titleSettingsConfig.load();
         renameClaimConfig.load();
         changeClaimColorConfig.load();
+        roleEditConfig.load();
     }
 
     public PluginConfig getPluginConfig() {
@@ -346,6 +356,10 @@ public class ConfigManager {
 
     public ChangeClaimColorConfig getChangeClaimColorConfig() {
         return changeClaimColorConfig;
+    }
+
+    public RoleEditConfig getRoleEditConfig() {
+        return roleEditConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---
