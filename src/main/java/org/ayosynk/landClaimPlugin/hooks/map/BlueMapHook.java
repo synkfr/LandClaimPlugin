@@ -39,10 +39,10 @@ public class BlueMapHook {
             Map<String, Map<UUID, Set<ChunkPosition>>> worldPlayerClaims = new HashMap<>();
 
             for (UUID playerId : getAllPlayerIds()) {
-                Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
-                Set<ChunkPosition> claims = claimObjects.stream()
-                        .flatMap(claim -> claim.getChunks().stream())
-                        .collect(java.util.stream.Collectors.toSet());
+                org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
+                if (profile == null)
+                    continue;
+                Set<ChunkPosition> claims = profile.getOwnedChunks();
                 for (ChunkPosition pos : claims) {
                     worldPlayerClaims
                             .computeIfAbsent(pos.world(), k -> new HashMap<>())
@@ -225,7 +225,7 @@ public class BlueMapHook {
         for (var offlinePlayer : Bukkit.getOfflinePlayers()) {
             if (offlinePlayer.hasPlayedBefore()) {
                 UUID playerId = offlinePlayer.getUniqueId();
-                if (!claimManager.getPlayerClaims(playerId).isEmpty()) {
+                if (claimManager.getProfile(playerId) != null) {
                     playerIds.add(playerId);
                 }
             }

@@ -55,9 +55,10 @@ public class SquaremapHook {
                 if (playerName == null)
                     playerName = "Unknown";
 
-                Set<org.ayosynk.landClaimPlugin.models.Claim> claimObjects = claimManager.getPlayerClaims(playerId);
-                Set<ChunkPosition> claims = claimObjects.stream()
-                        .flatMap(claim -> claim.getChunks().stream())
+                org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
+                if (profile == null)
+                    continue;
+                Set<ChunkPosition> claims = profile.getOwnedChunks().stream()
                         .filter(pos -> pos.world().equals(mapWorld.identifier().asString()))
                         .collect(java.util.stream.Collectors.toSet());
 
@@ -184,7 +185,7 @@ public class SquaremapHook {
         for (var offlinePlayer : Bukkit.getOfflinePlayers()) {
             if (offlinePlayer.hasPlayedBefore()) {
                 UUID playerId = offlinePlayer.getUniqueId();
-                if (!claimManager.getPlayerClaims(playerId).isEmpty()) {
+                if (claimManager.getProfile(playerId) != null) {
                     playerIds.add(playerId);
                 }
             }
