@@ -14,6 +14,15 @@
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
+        <!-- Dependency Versions -->
+        <paper.version>1.21.4-R0.1-SNAPSHOT</paper.version>
+        <okaeri.version>6.1.0-beta.1</okaeri.version>
+        <cloud.version>2.0.0-beta.10</cloud.version>
+        <hikari.version>5.1.0</hikari.version>
+        <jedis.version>5.1.0</jedis.version>
+        <caffeine.version>3.1.8</caffeine.version>
+        <bstats.version>3.0.2</bstats.version>
     </properties>
 
     <build>
@@ -48,7 +57,6 @@
                                     <pattern>eu.okaeri</pattern>
                                     <shadedPattern>org.ayosynk.landClaimPlugin.lib.okaeri</shadedPattern>
                                 </relocation>
-
                                 <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>org.ayosynk.landClaimPlugin.lib.hikari</shadedPattern>
@@ -100,7 +108,6 @@
             <id>okaeri-releases</id>
             <url>https://repo.okaeri.cloud/releases</url>
         </repository>
-
         <repository>
             <id>modrinth-repo</id>
             <url>https://api.modrinth.com/maven/</url>
@@ -120,59 +127,60 @@
     </repositories>
 
     <dependencies>
+        <!-- API Dependencies -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.4-R0.1-SNAPSHOT</version>
+            <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>eu.okaeri</groupId>
-            <artifactId>okaeri-configs-yaml-bukkit</artifactId>
-            <version>6.1.0-beta.1</version>
-        </dependency>
-        <dependency>
-            <groupId>eu.okaeri</groupId>
-            <artifactId>okaeri-configs-serdes-bukkit</artifactId>
-            <version>6.1.0-beta.1</version>
-        </dependency>
-
         <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Okaeri Configs -->
+        <dependency>
+            <groupId>eu.okaeri</groupId>
+            <artifactId>okaeri-configs-yaml-bukkit</artifactId>
+            <version>${okaeri.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.okaeri</groupId>
+            <artifactId>okaeri-configs-serdes-bukkit</artifactId>
+            <version>${okaeri.version}</version>
+        </dependency>
+
+        <!-- Command Framework -->
+        <dependency>
+            <groupId>org.incendo</groupId>
+            <artifactId>cloud-paper</artifactId>
+            <version>${cloud.version}</version>
+        </dependency>
+
+        <!-- Database & Caching -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>5.1.0</version>
+            <version>${hikari.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
-            <version>3.1.8</version>
+            <version>${caffeine.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>5.1.0</version>
+            <version>${jedis.version}</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.sk89q.worldguard</groupId>
-            <artifactId>worldguard-bukkit</artifactId>
-            <version>7.0.9</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.bstats</groupId>
-            <artifactId>bstats-bukkit</artifactId>
-            <version>3.0.2</version>
-            <scope>compile</scope>
-        </dependency>
+
+        <!-- Map Hooks -->
         <dependency>
             <groupId>de.bluecolored</groupId>
             <artifactId>bluemap-api</artifactId>
@@ -186,11 +194,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.incendo</groupId>
-            <artifactId>cloud-paper</artifactId>
-            <version>2.0.0-beta.10</version>
-        </dependency>
-        <dependency>
             <groupId>xyz.jpenilla</groupId>
             <artifactId>squaremap-api</artifactId>
             <version>1.3.11</version>
@@ -200,6 +203,14 @@
             <groupId>maven.modrinth</groupId>
             <artifactId>pl3xmap</artifactId>
             <version>1.21.5-527</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Combat & Protection Hooks -->
+        <dependency>
+            <groupId>com.sk89q.worldguard</groupId>
+            <artifactId>worldguard-bukkit</artifactId>
+            <version>7.0.9</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -219,6 +230,14 @@
             <artifactId>eternalcombat-api</artifactId>
             <version>2.4.0</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Utility -->
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>${bstats.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>
