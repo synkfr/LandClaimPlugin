@@ -14,6 +14,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
+import org.incendo.cloud.parser.standard.StringParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,17 +64,24 @@ public class ClaimCommand implements LandClaimCommand {
                     toggleVisibility(player);
                 }));
 
-        // /claim menu — GUI must open on main thread
+        // /claim create <name>
+        manager.command(claimBuilder.literal("create")
+                .required("name", StringParser.greedyStringParser())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String name = context.get("name");
+                    createProfile(player, name);
+                }));
+
+        // /claim menu — accessible from anywhere, uses player's own profile
         manager.command(claimBuilder.literal("menu")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-                    ClaimProfile profile = claimManager.getProfileAt(pos);
+                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
                     if (profile == null) {
-                        player.sendMessage(configManager.getMessage("not-in-claim"));
+                        player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
-                    // Dispatch GUI opening to main thread — async handler cannot open inventories
                     Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profile, plugin));
                 }));
 
@@ -109,6 +117,26 @@ public class ClaimCommand implements LandClaimCommand {
                 player.sendMessage(configManager.getMessage("chunk-claimed"));
             }
         });
+    }
+
+    private void createProfile(Player player, String name) {
+        UUID playerId = player.getUniqueId();
+
+        if (!claimManager.canCreateProfile(playerId)) {
+            player.sendMessage(configManager.getMessage("cannot-claim-as-member"));
+            return;
+        }
+
+        ClaimProfile existing = claimManager.getProfile(playerId);
+        if (existing != null) {
+            player.sendMessage(configManager.getMessage("already-has-profile"));
+            return;
+        }
+
+        ClaimProfile profile = new ClaimProfile(playerId, name);
+        plugin.getCacheManager().getProfileCache().put(playerId, profile);
+        claimManager.saveAndSync(profile);
+        player.sendMessage(configManager.getMessage("profile-created", "<name>", name));
     }
 
     private void toggleAutoClaim(Player player) {

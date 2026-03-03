@@ -422,7 +422,7 @@ public class ClaimManager {
 
     // ========== Internal helpers ==========
 
-    private void saveAndSync(ClaimProfile profile) {
+    public void saveAndSync(ClaimProfile profile) {
         plugin.getDatabaseManager().getProfileDao().saveProfile(profile).thenRun(() -> {
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE", profile.getOwnerId());
