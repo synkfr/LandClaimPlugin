@@ -6,18 +6,24 @@ import java.util.UUID;
 
 public class Role {
     private final UUID id;
+    private final UUID ownerId;
     private String name;
     private int priority;
     private final Set<String> flags = new HashSet<>();
 
-    public Role(UUID id, String name, int priority) {
+    public Role(UUID id, UUID ownerId, String name, int priority) {
         this.id = id;
+        this.ownerId = ownerId;
         this.name = name;
         this.priority = priority;
     }
 
     public UUID getId() {
         return id;
+    }
+
+    public UUID getOwnerId() {
+        return ownerId;
     }
 
     public String getName() {

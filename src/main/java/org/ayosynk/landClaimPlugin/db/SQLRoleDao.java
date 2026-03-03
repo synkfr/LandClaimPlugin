@@ -92,7 +92,7 @@ public class SQLRoleDao implements RoleDao {
                 stmt.setString(1, roleId.toString());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        Role role = new Role(roleId, rs.getString("name"), rs.getInt("priority"));
+                        Role role = new Role(roleId, null, rs.getString("name"), rs.getInt("priority"));
                         String flagsStr = rs.getString("flags");
                         if (flagsStr != null && !flagsStr.isEmpty()) {
                             for (String flag : flagsStr.split(",")) {
@@ -122,7 +122,7 @@ public class SQLRoleDao implements RoleDao {
 
                 while (rs.next()) {
                     UUID roleId = UUID.fromString(rs.getString("id"));
-                    Role role = new Role(roleId, rs.getString("name"), rs.getInt("priority"));
+                    Role role = new Role(roleId, null, rs.getString("name"), rs.getInt("priority"));
                     String flagsStr = rs.getString("flags");
                     if (flagsStr != null && !flagsStr.isEmpty()) {
                         for (String flag : flagsStr.split(",")) {
