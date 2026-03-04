@@ -34,11 +34,13 @@ public class ClaimMapGUI {
 
                                         ClaimProfile ownerProfile = claimManager.getProfileAt(pos);
                                         SlotDefinition slot;
+                                        java.util.List<String> currentLore;
 
                                         if (ownerProfile == null) {
                                                 // Wilderness
+                                                currentLore = config.wilderness.lore;
                                                 slot = GuiHelper.buildSlot(config.wilderness.material,
-                                                                config.wilderness.name, config.wilderness.lore,
+                                                                config.wilderness.name, currentLore,
                                                                 (p, e) -> {
                                                                         org.bukkit.World w = Bukkit.getWorld(world);
                                                                         if (w != null) {
@@ -53,8 +55,9 @@ public class ClaimMapGUI {
                                                                 });
                                         } else if (ownerProfile.getOwnerId().equals(player.getUniqueId())) {
                                                 // Your Claim
+                                                currentLore = config.yourClaim.lore;
                                                 slot = GuiHelper.buildSlot(config.yourClaim.material,
-                                                                config.yourClaim.name, config.yourClaim.lore,
+                                                                config.yourClaim.name, currentLore,
                                                                 (p, e) -> {
                                                                         org.bukkit.World w = Bukkit.getWorld(world);
                                                                         if (w != null) {
@@ -72,30 +75,29 @@ public class ClaimMapGUI {
                                                 // Member/Trusted
                                                 String ownerName = Bukkit.getOfflinePlayer(ownerProfile.getOwnerId())
                                                                 .getName();
+                                                currentLore = processLore(config.memberClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.memberClaim.material,
-                                                                config.memberClaim.name,
-                                                                processLore(config.memberClaim.lore, ownerName));
+                                                                config.memberClaim.name, currentLore);
                                         } else if (profile != null && profile.hasAlly(ownerProfile.getOwnerId())) {
                                                 // Ally
                                                 String ownerName = Bukkit.getOfflinePlayer(ownerProfile.getOwnerId())
                                                                 .getName();
+                                                currentLore = processLore(config.allyClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.allyClaim.material,
-                                                                config.allyClaim.name,
-                                                                processLore(config.allyClaim.lore, ownerName));
+                                                                config.allyClaim.name, currentLore);
                                         } else {
                                                 // Other
                                                 String ownerName = Bukkit.getOfflinePlayer(ownerProfile.getOwnerId())
                                                                 .getName();
+                                                currentLore = processLore(config.otherClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.otherClaim.material,
-                                                                config.otherClaim.name,
-                                                                processLore(config.otherClaim.lore, ownerName));
+                                                                config.otherClaim.name, currentLore);
                                         }
 
                                         // If this is the player's current chunk, highlight it or add indicator
                                         if (chunkX == centerX && chunkZ == centerZ) {
                                                 slot = GuiHelper.buildSlot(config.currentPos.material,
-                                                                config.currentPos.name,
-                                                                slot.item().getItemMeta().getLore(),
+                                                                config.currentPos.name, currentLore,
                                                                 slot.action());
                                         }
 
