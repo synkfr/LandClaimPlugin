@@ -62,15 +62,13 @@ public class WarpManagementGUI {
                         }
 
                         String[] structure = {
-                                        "f f f f f f f f f",
-                                        "f f f f f f f f f",
-                                        "f f f f f f f f f",
+                                        "x x x x x x x x x",
+                                        "x x x x x x x x x",
+                                        "x x x x x x x x x",
                                         "P n n n < n n n N"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('f', GuiHelper.buildSlot(config.frame.material, config.frame.name,
-                                        config.frame.lore));
                         ingredients.put('n', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
                                         config.navFill.lore));
                         ingredients.put('<',
