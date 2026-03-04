@@ -19,6 +19,7 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 
 import java.util.*;
+import java.util.Collection;
 
 import org.ayosynk.landClaimPlugin.models.ChunkSelection;
 
@@ -60,6 +61,13 @@ public class ClaimManager {
             }
             plugin.getLogger().info("Loaded " + profiles.size() + " claim profiles.");
         });
+    }
+
+    /**
+     * Get all cached profiles.
+     */
+    public Collection<ClaimProfile> getAllProfiles() {
+        return plugin.getCacheManager().getProfileCache().asMap().values();
     }
 
     /**

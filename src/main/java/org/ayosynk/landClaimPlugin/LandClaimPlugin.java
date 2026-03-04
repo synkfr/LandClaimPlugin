@@ -83,6 +83,7 @@ public class LandClaimPlugin extends JavaPlugin {
 
             // Initialize custom GUI framework (listener + scheduler)
             GuiGlobalSetup.init(this);
+            org.ayosynk.landClaimPlugin.listeners.ChatInputListener.init(this);
 
             commandHandler = new CommandHandler(this, claimManager, configManager, visualizationManager,
                     warpManager); // Changed from homeManager
@@ -265,6 +266,12 @@ public class LandClaimPlugin extends JavaPlugin {
         }
         if (dynmapHook != null && dynmapHook.isActive()) {
             dynmapHook.update();
+        }
+        if (squaremapHook != null && squaremapHook.isActive()) {
+            squaremapHook.update();
+        }
+        if (pl3xmapHook != null && pl3xmapHook.isActive()) {
+            pl3xmapHook.update();
         }
     }
 }
