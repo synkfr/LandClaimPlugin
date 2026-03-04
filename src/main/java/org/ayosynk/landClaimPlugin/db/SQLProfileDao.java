@@ -300,6 +300,14 @@ public class SQLProfileDao implements ProfileDao {
                 loadMemberRoles(conn, p, profile);
                 loadAllyFlags(conn, p, profile);
 
+                // Load warps from WarpManager to keep ClaimProfile in sync
+                Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager().getWarps(ownerId);
+                if (!warps.isEmpty()) {
+                    for (org.ayosynk.landClaimPlugin.models.Warp warp : warps.values()) {
+                        profile.addWarp(warp);
+                    }
+                }
+
                 return profile;
             } catch (SQLException e) {
                 plugin.getLogger().severe("Failed to load profile for " + ownerId);
@@ -328,6 +336,16 @@ public class SQLProfileDao implements ProfileDao {
                     loadRoles(conn, p, profile);
                     loadMemberRoles(conn, p, profile);
                     loadAllyFlags(conn, p, profile);
+
+                    // Load warps from WarpManager to keep ClaimProfile in sync
+                    Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager()
+                            .getWarps(ownerId);
+                    if (!warps.isEmpty()) {
+                        for (org.ayosynk.landClaimPlugin.models.Warp warp : warps.values()) {
+                            profile.addWarp(warp);
+                        }
+                    }
+
                     profiles.add(profile);
                 }
             } catch (SQLException e) {

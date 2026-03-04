@@ -18,11 +18,12 @@ public class WarpManager {
         this.configManager = configManager;
     }
 
-    public void loadFromDatabase() {
-        plugin.getDatabaseManager().getWarpDao().loadAllWarps().thenAccept(warps -> {
+    public java.util.concurrent.CompletableFuture<Map<UUID, Map<String, Warp>>> loadFromDatabase() {
+        return plugin.getDatabaseManager().getWarpDao().loadAllWarps().thenApply(warps -> {
             playerWarps.clear();
             playerWarps.putAll(warps);
             plugin.getLogger().info("Loaded " + warps.size() + " players' warps from database.");
+            return warps;
         });
     }
 

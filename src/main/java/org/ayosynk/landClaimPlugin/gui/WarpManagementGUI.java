@@ -94,8 +94,10 @@ public class WarpManagementGUI {
                                         GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
                                                         config.navFill.lore));
 
-                        gui.setContent(contentItems, player);
-                        gui.open(player);
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                gui.setContent(contentItems, player);
+                                gui.open(player);
+                        });
                 });
         }
 }

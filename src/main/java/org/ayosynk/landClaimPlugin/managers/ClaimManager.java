@@ -4,6 +4,7 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
+import org.ayosynk.landClaimPlugin.models.Warp;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -18,7 +19,6 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 import org.ayosynk.landClaimPlugin.models.ChunkSelection;
 
@@ -49,6 +49,13 @@ public class ClaimManager {
         plugin.getLogger().info("Loading claim profiles from database...");
         plugin.getDatabaseManager().getProfileDao().getAllProfiles().thenAccept(profiles -> {
             for (ClaimProfile profile : profiles) {
+                // Populate warps from WarpManager
+                Map<String, Warp> profileWarps = plugin.getWarpManager().getWarps(profile.getOwnerId());
+                if (!profileWarps.isEmpty()) {
+                    for (Warp warp : profileWarps.values()) {
+                        profile.addWarp(warp);
+                    }
+                }
                 plugin.getCacheManager().getProfileCache().put(profile.getOwnerId(), profile);
             }
             plugin.getLogger().info("Loaded " + profiles.size() + " claim profiles.");

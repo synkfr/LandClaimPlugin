@@ -73,13 +73,13 @@ public class LandClaimPlugin extends JavaPlugin {
             combatManager = new CombatManager(this);
 
             claimManager = new ClaimManager(this, configManager);
-
-            claimManager.initialize();
-
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
+            warpManager = new WarpManager(this, configManager);
 
-            warpManager = new WarpManager(this, configManager); // Changed from homeManager = new HomeManager(...)
-            warpManager.loadFromDatabase();
+            warpManager.loadFromDatabase().thenRun(() -> {
+                claimManager.initialize();
+                getLogger().info("Warp and Claim systems initialized.");
+            });
 
             // Initialize custom GUI framework (listener + scheduler)
             GuiGlobalSetup.init(this);

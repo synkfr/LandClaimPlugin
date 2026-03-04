@@ -70,9 +70,11 @@ public class WarpControlPanelGUI {
                                         java.util.List.of("<gray>Coming Soon...")));
 
                         Component title = GuiHelper.MM.deserialize(config.title.replace("{name}", warp.getName()));
-                        CustomGui gui = new CustomGui(title, 3);
-                        gui.fillFromStructure(structure, ingredients);
-                        gui.open(player);
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                CustomGui gui = new CustomGui(title, 3);
+                                gui.fillFromStructure(structure, ingredients);
+                                gui.open(player);
+                        });
                 });
         }
 }
