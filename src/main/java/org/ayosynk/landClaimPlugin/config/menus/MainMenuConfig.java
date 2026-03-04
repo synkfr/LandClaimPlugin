@@ -25,7 +25,7 @@ public class MainMenuConfig extends OkaeriConfig {
         public ItemConfig warps = new ItemConfig("RED_BED", "Warps", List.of());
 
         @Comment("Allies Button")
-        public ItemConfig allies = new ItemConfig("END_CHEST", "Allies", List.of());
+        public ItemConfig allies = new ItemConfig("ENDER_CHEST", "Allies", List.of());
 
         @Comment("Claim Settings Button")
         public ItemConfig settings = new ItemConfig("EMERALD", "Settings", List.of());
