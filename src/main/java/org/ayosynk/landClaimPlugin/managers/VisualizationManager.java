@@ -5,8 +5,10 @@ import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.ayosynk.landClaimPlugin.models.Edge;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
@@ -28,14 +30,29 @@ public class VisualizationManager {
     private final Map<UUID, Map<String, Set<Edge>>> mergedEdgesCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheSize = new AtomicInteger(0);
 
-    private final Map<UUID, VisualizationMode> visualizationModes = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> visualizationActive = new ConcurrentHashMap<>();
     private final Map<UUID, Long> temporaryTimers = new ConcurrentHashMap<>();
 
     private final Map<UUID, List<BlockDisplay>> activeDisplays = new ConcurrentHashMap<>();
 
-    public enum VisualizationMode {
-        ALWAYS
-    }
+    // Hex → stained glass mapping for Display Entity mode
+    private static final Map<String, Material> HEX_TO_GLASS = Map.ofEntries(
+            Map.entry("#1D1D21", Material.BLACK_STAINED_GLASS),
+            Map.entry("#3C44AA", Material.BLUE_STAINED_GLASS),
+            Map.entry("#835432", Material.BROWN_STAINED_GLASS),
+            Map.entry("#169C9C", Material.CYAN_STAINED_GLASS),
+            Map.entry("#474F52", Material.GRAY_STAINED_GLASS),
+            Map.entry("#5E7C16", Material.GREEN_STAINED_GLASS),
+            Map.entry("#3AB3DA", Material.LIGHT_BLUE_STAINED_GLASS),
+            Map.entry("#80C71F", Material.LIME_STAINED_GLASS),
+            Map.entry("#9D9D97", Material.LIGHT_GRAY_STAINED_GLASS),
+            Map.entry("#C74EBD", Material.MAGENTA_STAINED_GLASS),
+            Map.entry("#F9801D", Material.ORANGE_STAINED_GLASS),
+            Map.entry("#F38BAA", Material.PINK_STAINED_GLASS),
+            Map.entry("#8932B8", Material.PURPLE_STAINED_GLASS),
+            Map.entry("#B02E26", Material.RED_STAINED_GLASS),
+            Map.entry("#F9FFFE", Material.WHITE_STAINED_GLASS),
+            Map.entry("#FED83D", Material.YELLOW_STAINED_GLASS));
 
     public VisualizationManager(LandClaimPlugin plugin, ClaimManager claimManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -45,9 +62,6 @@ public class VisualizationManager {
     }
 
     private void startVisualizationTask() {
-        // Run a task every 20 ticks (1 second) to check for expired temporary
-        // visualizations
-        // and spawn displays if they are missing.
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -58,14 +72,38 @@ public class VisualizationManager {
                     Map.Entry<UUID, Long> entry = it.next();
                     if (now > entry.getValue()) {
                         it.remove();
-                        // If player doesn't also have ALWAYS mode, clear displays
-                        if (!visualizationModes.containsKey(entry.getKey())) {
+                        if (!visualizationActive.containsKey(entry.getKey())) {
                             clearDisplays(entry.getKey());
                         } else {
-                            // Needs redraw because temporary material might be different from ALWAYS
-                            // material
                             redrawDisplays(Bukkit.getPlayer(entry.getKey()));
                         }
+                    }
+                }
+
+                // Respawn particles for players using PARTICLE mode
+                for (Map.Entry<UUID, Boolean> entry : visualizationActive.entrySet()) {
+                    Player player = Bukkit.getPlayer(entry.getKey());
+                    if (player == null || !player.isOnline())
+                        continue;
+
+                    ClaimProfile profile = claimManager.getProfile(entry.getKey());
+                    if (profile == null)
+                        continue;
+
+                    if ("PARTICLE".equals(profile.getVisualizationMode())) {
+                        spawnParticles(player, profile);
+                    }
+                }
+
+                // Also respawn particles for temporary timers
+                for (UUID playerId : temporaryTimers.keySet()) {
+                    Player player = Bukkit.getPlayer(playerId);
+                    if (player == null || !player.isOnline())
+                        continue;
+
+                    ClaimProfile profile = claimManager.getProfile(playerId);
+                    if (profile != null && "PARTICLE".equals(profile.getVisualizationMode())) {
+                        spawnParticles(player, profile);
                     }
                 }
             }
@@ -74,12 +112,12 @@ public class VisualizationManager {
 
     public boolean toggleVisualization(Player player) {
         UUID playerId = player.getUniqueId();
-        if (visualizationModes.containsKey(playerId)) {
-            visualizationModes.remove(playerId);
+        if (visualizationActive.containsKey(playerId)) {
+            visualizationActive.remove(playerId);
             clearDisplays(playerId);
             return false;
         } else {
-            visualizationModes.put(playerId, VisualizationMode.ALWAYS);
+            visualizationActive.put(playerId, true);
             redrawDisplays(player);
             return true;
         }
@@ -95,7 +133,6 @@ public class VisualizationManager {
         if (mergedEdgesCache.remove(playerId) != null) {
             cacheSize.decrementAndGet();
         }
-        // If they currently have displays showing, redraw them
         if (activeDisplays.containsKey(playerId)) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
@@ -111,10 +148,6 @@ public class VisualizationManager {
 
         clearDisplays(playerId);
 
-        // Determine material based on mode
-        Material material = temporaryTimers.containsKey(playerId) ? Material.ORANGE_STAINED_GLASS
-                : Material.LIME_STAINED_GLASS;
-
         // Collect chunks from player's own profile
         Set<ChunkPosition> claims = new HashSet<>();
         ClaimProfile ownProfile = claimManager.getProfile(playerId);
@@ -122,27 +155,170 @@ public class VisualizationManager {
             claims.addAll(ownProfile.getOwnedChunks());
         }
 
-        // Also include the claim the player is currently standing in, even if they
-        // don't own it
+        // Also include the claim the player is currently standing in
         ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
         ClaimProfile currentProfile = claimManager.getProfileAt(currentChunk);
         if (currentProfile != null) {
             claims.addAll(currentProfile.getOwnedChunks());
         }
 
-        if (claims.isEmpty()) {
-            player.sendMessage("§cDebug: No claims to visualize.");
+        if (claims.isEmpty())
             return;
-        }
 
         Set<Edge> edges = getMergedEdges(playerId, player.getWorld().getName(), claims);
-        if (edges.isEmpty()) {
-            player.sendMessage("§cDebug: No edges found.");
+        if (edges.isEmpty())
+            return;
+
+        // Determine visualization mode from profile
+        String visMode = ownProfile != null ? ownProfile.getVisualizationMode() : "DISPLAY_ENTITY";
+        if (visMode == null)
+            visMode = "DISPLAY_ENTITY";
+
+        if ("PARTICLE".equals(visMode)) {
+            // Particles are spawned by the repeating task; just ensure edges are cached
             return;
         }
 
-        player.sendMessage("§aDebug: Spawning " + edges.size() + " edges.");
+        // Display Entity mode
+        Material material = resolveMaterial(ownProfile, playerId);
         spawnDisplays(player, edges, material);
+    }
+
+    /**
+     * Resolve the stained glass Material from the profile's claim color.
+     */
+    private Material resolveMaterial(ClaimProfile profile, UUID playerId) {
+        // Temporary mode uses orange
+        if (temporaryTimers.containsKey(playerId)) {
+            return Material.ORANGE_STAINED_GLASS;
+        }
+
+        if (profile != null && profile.getClaimColor() != null) {
+            Material mapped = HEX_TO_GLASS.get(profile.getClaimColor().toUpperCase());
+            if (mapped != null)
+                return mapped;
+
+            // For custom hex colors, find the closest stained glass
+            return findClosestGlass(profile.getClaimColor());
+        }
+
+        return Material.LIME_STAINED_GLASS; // default
+    }
+
+    /**
+     * Find the closest stained glass color to a given hex string.
+     */
+    private Material findClosestGlass(String hex) {
+        Color target = hexToColor(hex);
+        if (target == null)
+            return Material.LIME_STAINED_GLASS;
+
+        double bestDistance = Double.MAX_VALUE;
+        Material bestMaterial = Material.LIME_STAINED_GLASS;
+
+        for (Map.Entry<String, Material> entry : HEX_TO_GLASS.entrySet()) {
+            Color c = hexToColor(entry.getKey());
+            if (c == null)
+                continue;
+            double dist = colorDistance(target, c);
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestMaterial = entry.getValue();
+            }
+        }
+        return bestMaterial;
+    }
+
+    private static double colorDistance(Color a, Color b) {
+        int dr = a.getRed() - b.getRed();
+        int dg = a.getGreen() - b.getGreen();
+        int db = a.getBlue() - b.getBlue();
+        return dr * dr + dg * dg + db * db;
+    }
+
+    /**
+     * Spawn Particle.DUST along claim edges at the player's Y level.
+     */
+    private void spawnParticles(Player player, ClaimProfile profile) {
+        UUID playerId = player.getUniqueId();
+
+        Set<ChunkPosition> claims = new HashSet<>();
+        if (profile != null) {
+            claims.addAll(profile.getOwnedChunks());
+        }
+        ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
+        ClaimProfile currentProfile = claimManager.getProfileAt(currentChunk);
+        if (currentProfile != null) {
+            claims.addAll(currentProfile.getOwnedChunks());
+        }
+        if (claims.isEmpty())
+            return;
+
+        Set<Edge> edges = getMergedEdges(playerId, player.getWorld().getName(), claims);
+        if (edges.isEmpty())
+            return;
+
+        Color color = Color.LIME; // default
+        if (temporaryTimers.containsKey(playerId)) {
+            color = Color.ORANGE;
+        } else if (profile != null && profile.getClaimColor() != null) {
+            Color parsed = hexToColor(profile.getClaimColor());
+            if (parsed != null)
+                color = parsed;
+        }
+
+        Particle.DustOptions dustOptions = new Particle.DustOptions(color, 1.0f);
+        World world = player.getWorld();
+        double y = player.getLocation().getY() + 0.5;
+
+        // Only render particles near the player (within 64 blocks)
+        double px = player.getLocation().getX();
+        double pz = player.getLocation().getZ();
+        double maxDistSq = 64 * 64;
+
+        for (Edge edge : edges) {
+            double x1 = edge.x1();
+            double z1 = edge.z1();
+            double x2 = edge.x2();
+            double z2 = edge.z2();
+
+            double len = Math.sqrt((x2 - x1) * (x2 - x1) + (z2 - z1) * (z2 - z1));
+            if (len < 0.1)
+                continue;
+
+            int steps = (int) Math.ceil(len / 0.5); // particle every 0.5 blocks
+            double dx = (x2 - x1) / steps;
+            double dz = (z2 - z1) / steps;
+
+            for (int i = 0; i <= steps; i++) {
+                double x = x1 + dx * i;
+                double z = z1 + dz * i;
+
+                // Distance check
+                double distSq = (x - px) * (x - px) + (z - pz) * (z - pz);
+                if (distSq > maxDistSq)
+                    continue;
+
+                world.spawnParticle(Particle.DUST, x, y, z, 1, 0, 0, 0, 0, dustOptions);
+            }
+        }
+    }
+
+    /**
+     * Parse a hex color string to a Bukkit Color.
+     */
+    static Color hexToColor(String hex) {
+        if (hex == null || hex.length() < 7)
+            return null;
+        try {
+            String clean = hex.startsWith("#") ? hex.substring(1) : hex;
+            int r = Integer.parseInt(clean.substring(0, 2), 16);
+            int g = Integer.parseInt(clean.substring(2, 4), 16);
+            int b = Integer.parseInt(clean.substring(4, 6), 16);
+            return Color.fromRGB(r, g, b);
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     private void spawnDisplays(Player player, Set<Edge> edges, Material material) {
@@ -151,8 +327,6 @@ public class VisualizationManager {
         World world = player.getWorld();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
-            // PERFORMANCE OPTIMIZATION: Create BlockData and reusable JOML objects ONCE
-            // before the loop
             final org.bukkit.block.data.BlockData blockData = Bukkit.createBlockData(material);
             final org.joml.AxisAngle4f emptyRotation = new org.joml.AxisAngle4f();
 
@@ -164,7 +338,7 @@ public class VisualizationManager {
 
                 float scaleX = (float) (lengthX == 0 ? 0.05f : lengthX);
                 float scaleZ = (float) (lengthZ == 0 ? 0.05f : lengthZ);
-                float scaleY = 384f; // Build limit from -64 to 320
+                float scaleY = 384f;
 
                 double playerY = player.getLocation().getY();
                 Location loc = new Location(world, minX, playerY, minZ);
@@ -176,9 +350,8 @@ public class VisualizationManager {
                     e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
                     e.setGravity(false);
 
-                    // Adjust translation to center the extremely thin boundary block
                     float transX = lengthX == 0 ? -0.025f : 0f;
-                    float transY = (float) (-64 - playerY); // shift origin back down to bedrock
+                    float transY = (float) (-64 - playerY);
                     float transZ = lengthZ == 0 ? -0.025f : 0f;
 
                     Transformation transform = new Transformation(
@@ -242,7 +415,6 @@ public class VisualizationManager {
         }
 
         Set<Edge> uniqueEdges = new HashSet<>();
-        // Simplify adjacent edges
         for (Map.Entry<Edge, Integer> entry : edgeCounts.entrySet()) {
             if (entry.getValue() == 1) {
                 uniqueEdges.add(entry.getKey());
@@ -277,33 +449,16 @@ public class VisualizationManager {
         }
     }
 
-    public void setVisualizationMode(UUID playerId, VisualizationMode mode) {
-        if (mode == null) {
-            visualizationModes.remove(playerId);
-            clearDisplays(playerId);
-        } else {
-            visualizationModes.put(playerId, mode);
-            Player player = Bukkit.getPlayer(playerId);
-            if (player != null) {
-                redrawDisplays(player);
-            }
-        }
-    }
-
-    public VisualizationMode getVisualizationMode(UUID playerId) {
-        return visualizationModes.get(playerId);
-    }
-
     public void handlePlayerJoin(Player player) {
         String defaultMode = configManager.getDefaultVisualizationMode();
         if ("ALWAYS".equalsIgnoreCase(defaultMode)) {
-            visualizationModes.put(player.getUniqueId(), VisualizationMode.ALWAYS);
+            visualizationActive.put(player.getUniqueId(), true);
             redrawDisplays(player);
         }
     }
 
     public void handlePlayerQuit(UUID playerId) {
-        visualizationModes.remove(playerId);
+        visualizationActive.remove(playerId);
         temporaryTimers.remove(playerId);
         clearDisplays(playerId);
         if (mergedEdgesCache.remove(playerId) != null) {
