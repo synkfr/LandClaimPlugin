@@ -85,6 +85,19 @@ public class SQLProfileDao implements ProfileDao {
                     stmt.executeUpdate();
                 }
             }
+
+            // Migration: add claim_color and vis_mode columns if missing
+            String[] alters = {
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN claim_color VARCHAR(16)",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN vis_mode VARCHAR(32) DEFAULT 'DISPLAY_ENTITY'"
+            };
+            for (String alter : alters) {
+                try (PreparedStatement stmt = conn.prepareStatement(alter)) {
+                    stmt.executeUpdate();
+                } catch (SQLException ignored) {
+                    // Column already exists
+                }
+            }
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to create profile tables.");
             e.printStackTrace();
@@ -98,9 +111,10 @@ public class SQLProfileDao implements ProfileDao {
             boolean sqlite = isSqlite();
 
             String upsertProfile = sqlite
-                    ? "INSERT OR REPLACE INTO " + p + "claim_profiles (owner_id, name) VALUES (?, ?)"
+                    ? "INSERT OR REPLACE INTO " + p
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode) VALUES (?, ?, ?, ?)"
                     : "INSERT INTO " + p
-                            + "claim_profiles (owner_id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name)";
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode)";
 
             try (Connection conn = dbManager.getDatabase().getConnection()) {
                 conn.setAutoCommit(false);
@@ -109,6 +123,8 @@ public class SQLProfileDao implements ProfileDao {
                 try (PreparedStatement stmt = conn.prepareStatement(upsertProfile)) {
                     stmt.setString(1, profile.getOwnerId().toString());
                     stmt.setString(2, profile.getName());
+                    stmt.setString(3, profile.getClaimColor());
+                    stmt.setString(4, profile.getVisualizationMode());
                     stmt.executeUpdate();
                 }
 
@@ -282,17 +298,24 @@ public class SQLProfileDao implements ProfileDao {
                 }
 
                 String name;
+                String claimColor;
+                String visMode;
                 try (PreparedStatement stmt = conn
-                        .prepareStatement("SELECT name FROM " + p + "claim_profiles WHERE owner_id = ?")) {
+                        .prepareStatement(
+                                "SELECT name, claim_color, vis_mode FROM " + p + "claim_profiles WHERE owner_id = ?")) {
                     stmt.setString(1, ownerId.toString());
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (!rs.next())
                             return null;
                         name = rs.getString("name");
+                        claimColor = rs.getString("claim_color");
+                        visMode = rs.getString("vis_mode");
                     }
                 }
 
                 ClaimProfile profile = new ClaimProfile(ownerId, name);
+                profile.setClaimColor(claimColor);
+                profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
                 loadChunks(conn, p, profile);
                 loadVisitorFlags(conn, p, profile);
                 loadTrustedPlayers(conn, p, profile);
@@ -329,7 +352,11 @@ public class SQLProfileDao implements ProfileDao {
                 while (rs.next()) {
                     UUID ownerId = UUID.fromString(rs.getString("owner_id"));
                     String name = rs.getString("name");
+                    String claimColor = rs.getString("claim_color");
+                    String visMode = rs.getString("vis_mode");
                     ClaimProfile profile = new ClaimProfile(ownerId, name);
+                    profile.setClaimColor(claimColor);
+                    profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
                     loadChunks(conn, p, profile);
                     loadVisitorFlags(conn, p, profile);
                     loadTrustedPlayers(conn, p, profile);

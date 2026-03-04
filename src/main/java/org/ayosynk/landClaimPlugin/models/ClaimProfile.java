@@ -23,6 +23,8 @@ public class ClaimProfile {
     private final Map<UUID, String> memberRoles = new HashMap<>();
     private final Map<UUID, Set<String>> allyFlags = new HashMap<>();
     private final Map<String, Warp> warps = new HashMap<>();
+    private String claimColor; // Hex color string, e.g. "#00FF00", nullable (falls back to default)
+    private String visualizationMode = "DISPLAY_ENTITY"; // "DISPLAY_ENTITY" or "PARTICLE"
 
     public ClaimProfile(UUID ownerId, String name) {
         this.ownerId = ownerId;
@@ -228,5 +230,25 @@ public class ClaimProfile {
 
     public void removeWarp(String name) {
         warps.remove(name.toLowerCase());
+    }
+
+    // --- Claim Color ---
+
+    public String getClaimColor() {
+        return claimColor;
+    }
+
+    public void setClaimColor(String claimColor) {
+        this.claimColor = claimColor;
+    }
+
+    // --- Visualization Mode ---
+
+    public String getVisualizationMode() {
+        return visualizationMode;
+    }
+
+    public void setVisualizationMode(String visualizationMode) {
+        this.visualizationMode = visualizationMode;
     }
 }
