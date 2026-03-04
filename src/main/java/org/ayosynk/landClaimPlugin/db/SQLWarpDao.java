@@ -47,6 +47,22 @@ public class SQLWarpDao implements WarpDao {
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to create warps table: " + e.getMessage());
         }
+
+        // Migration step: rename player_id to owner_id if upgrading from pre-v2
+        try (Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn
+                        .prepareStatement("ALTER TABLE " + tablePrefix + "warps RENAME COLUMN player_id TO owner_id")) {
+            stmt.execute();
+        } catch (SQLException ignored) {
+        }
+
+        // Migration step: add icon column if upgrading from pre-v2
+        try (Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(
+                        "ALTER TABLE " + tablePrefix + "warps ADD COLUMN icon VARCHAR(64) DEFAULT 'ENDER_PEARL'")) {
+            stmt.execute();
+        } catch (SQLException ignored) {
+        }
     }
 
     @Override

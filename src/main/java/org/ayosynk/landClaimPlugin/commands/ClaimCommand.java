@@ -73,7 +73,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     String name = context.get("name");
-                    createProfile(player, name);
+                    Bukkit.getScheduler().runTask(plugin, () -> createProfile(player, name));
                 }));
 
         // /claim menu — accessible from anywhere, uses player's own profile
@@ -92,7 +92,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("info")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    sendClaimInfo(player);
+                    Bukkit.getScheduler().runTask(plugin, () -> sendClaimInfo(player));
                 }));
 
         // /claim setwarp <name>
@@ -101,7 +101,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     String name = context.get("name");
-                    setWarp(player, name);
+                    Bukkit.getScheduler().runTask(plugin, () -> setWarp(player, name));
                 }));
 
         // /claim delwarp <name>
@@ -110,7 +110,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     String name = context.get("name");
-                    delWarp(player, name);
+                    Bukkit.getScheduler().runTask(plugin, () -> delWarp(player, name));
                 }));
 
         // /claim warp <name>
@@ -119,7 +119,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     String name = context.get("name");
-                    teleportToWarp(player, name);
+                    Bukkit.getScheduler().runTask(plugin, () -> teleportToWarp(player, name));
                 }));
 
         // /claim warps
