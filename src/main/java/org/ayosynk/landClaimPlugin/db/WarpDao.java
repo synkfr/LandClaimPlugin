@@ -1,6 +1,6 @@
 package org.ayosynk.landClaimPlugin.db;
 
-import org.bukkit.Location;
+import org.ayosynk.landClaimPlugin.models.Warp;
 
 import java.util.Map;
 import java.util.UUID;
@@ -10,9 +10,9 @@ public interface WarpDao {
 
     void createTables();
 
-    CompletableFuture<Map<UUID, Map<String, Location>>> loadAllWarps();
+    CompletableFuture<Map<UUID, Map<String, Warp>>> loadAllWarps();
 
-    void saveWarp(UUID playerId, String name, Location location);
+    void saveWarp(UUID ownerId, Warp warp);
 
-    void deleteWarp(UUID playerId, String name);
+    void deleteWarp(UUID ownerId, String name);
 }

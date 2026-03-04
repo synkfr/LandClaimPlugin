@@ -1,7 +1,9 @@
 package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.models.Warp;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WarpManager {
     private final LandClaimPlugin plugin;
     private final ConfigManager configManager;
-    private final Map<UUID, Map<String, Location>> playerWarps = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<String, Warp>> playerWarps = new ConcurrentHashMap<>();
 
     public WarpManager(LandClaimPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
@@ -28,34 +30,35 @@ public class WarpManager {
         // No longer needed, changes are saved to DB instantly
     }
 
-    public boolean setWarp(UUID playerId, String name, Location location) {
-        Map<String, Location> warps = playerWarps.computeIfAbsent(playerId, k -> new HashMap<>());
-        warps.put(name.toLowerCase(), location);
-        plugin.getDatabaseManager().getWarpDao().saveWarp(playerId, name.toLowerCase(), location);
+    public boolean setWarp(UUID ownerId, String name, Location location, Material icon) {
+        Map<String, Warp> warps = playerWarps.computeIfAbsent(ownerId, k -> new HashMap<>());
+        Warp warp = new Warp(name, location, icon);
+        warps.put(name.toLowerCase(), warp);
+        plugin.getDatabaseManager().getWarpDao().saveWarp(ownerId, warp);
         return true;
     }
 
-    public boolean deleteWarp(UUID playerId, String name) {
-        Map<String, Location> warps = playerWarps.get(playerId);
+    public boolean deleteWarp(UUID ownerId, String name) {
+        Map<String, Warp> warps = playerWarps.get(ownerId);
         if (warps == null)
             return false;
 
         boolean removed = warps.remove(name.toLowerCase()) != null;
         if (removed) {
-            plugin.getDatabaseManager().getWarpDao().deleteWarp(playerId, name.toLowerCase());
+            plugin.getDatabaseManager().getWarpDao().deleteWarp(ownerId, name.toLowerCase());
         }
         return removed;
     }
 
-    public Location getWarp(UUID playerId, String name) {
-        Map<String, Location> warps = playerWarps.get(playerId);
+    public Warp getWarp(UUID ownerId, String name) {
+        Map<String, Warp> warps = playerWarps.get(ownerId);
         if (warps == null)
             return null;
         return warps.get(name.toLowerCase());
     }
 
-    public Map<String, Location> getWarps(UUID playerId) {
-        return playerWarps.getOrDefault(playerId, Collections.emptyMap());
+    public Map<String, Warp> getWarps(UUID ownerId) {
+        return playerWarps.getOrDefault(ownerId, Collections.emptyMap());
     }
 
     public int getWarpLimit(Player player) {
@@ -68,8 +71,8 @@ public class WarpManager {
         return configManager.getPluginConfig().maxWarps;
     }
 
-    public int getWarpCount(UUID playerId) {
-        Map<String, Location> warps = playerWarps.get(playerId);
+    public int getWarpCount(UUID ownerId) {
+        Map<String, Warp> warps = playerWarps.get(ownerId);
         return warps != null ? warps.size() : 0;
     }
 }

@@ -2,13 +2,16 @@ package org.ayosynk.landClaimPlugin.commands;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
+import org.ayosynk.landClaimPlugin.gui.WarpManagementGUI;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
+import org.ayosynk.landClaimPlugin.models.Warp;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
@@ -90,6 +93,45 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     sendClaimInfo(player);
+                }));
+
+        // /claim setwarp <name>
+        manager.command(claimBuilder.literal("setwarp")
+                .required("name", StringParser.stringParser())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String name = context.get("name");
+                    setWarp(player, name);
+                }));
+
+        // /claim delwarp <name>
+        manager.command(claimBuilder.literal("delwarp")
+                .required("name", StringParser.stringParser())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String name = context.get("name");
+                    delWarp(player, name);
+                }));
+
+        // /claim warp <name>
+        manager.command(claimBuilder.literal("warp")
+                .required("name", StringParser.stringParser())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String name = context.get("name");
+                    teleportToWarp(player, name);
+                }));
+
+        // /claim warps
+        manager.command(claimBuilder.literal("warps")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    if (profile == null) {
+                        player.sendMessage(configManager.getMessage("no-profile"));
+                        return;
+                    }
+                    Bukkit.getScheduler().runTask(plugin, () -> WarpManagementGUI.open(player, profile, plugin));
                 }));
     }
 
@@ -176,5 +218,63 @@ public class ClaimCommand implements LandClaimCommand {
             ownerName = "Unknown";
 
         player.sendMessage(configManager.getMessage("claim-info-owner", "<owner>", ownerName));
+    }
+
+    private void setWarp(Player player, String name) {
+        ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return;
+        }
+
+        ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
+        ClaimProfile atLoc = claimManager.getProfileAt(pos);
+
+        if (atLoc == null || !atLoc.getOwnerId().equals(player.getUniqueId())) {
+            player.sendMessage(configManager.getMessage("not-in-own-claim"));
+            return;
+        }
+
+        if (plugin.getWarpManager().getWarpCount(player.getUniqueId()) >= plugin.getWarpManager()
+                .getWarpLimit(player)) {
+            player.sendMessage(configManager.getMessage("warp-limit-reached"));
+            return;
+        }
+
+        plugin.getWarpManager().setWarp(player.getUniqueId(), name, player.getLocation(), Material.ENDER_PEARL);
+        profile.addWarp(new Warp(name, player.getLocation(), Material.ENDER_PEARL));
+        player.sendMessage(configManager.getMessage("warp-set", "<name>", name));
+    }
+
+    private void delWarp(Player player, String name) {
+        ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return;
+        }
+
+        if (plugin.getWarpManager().deleteWarp(player.getUniqueId(), name)) {
+            profile.removeWarp(name);
+            player.sendMessage(configManager.getMessage("warp-deleted", "<name>", name));
+        } else {
+            player.sendMessage(configManager.getMessage("warp-not-found", "<name>", name));
+        }
+    }
+
+    private void teleportToWarp(Player player, String name) {
+        ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return;
+        }
+
+        Warp warp = profile.getWarp(name);
+        if (warp == null) {
+            player.sendMessage(configManager.getMessage("warp-not-found", "<name>", name));
+            return;
+        }
+
+        player.teleport(warp.getLocation());
+        player.sendMessage(configManager.getMessage("warp-teleport", "<name>", name));
     }
 }

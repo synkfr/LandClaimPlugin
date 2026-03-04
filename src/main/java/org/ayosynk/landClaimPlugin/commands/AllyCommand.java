@@ -12,8 +12,6 @@ import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
 import org.incendo.cloud.parser.standard.StringParser;
 
-import java.util.UUID;
-
 public class AllyCommand implements LandClaimCommand {
 
     private final LandClaimPlugin plugin;

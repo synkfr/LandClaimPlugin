@@ -14,6 +14,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.ayosynk.landClaimPlugin.gui.framework.*;
+import org.ayosynk.landClaimPlugin.models.Warp;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.inventory.ItemStack;
 
 public class WarpManagementGUI {
 
@@ -22,16 +26,45 @@ public class WarpManagementGUI {
                         WarpManagementConfig config = plugin.getConfigManager().getWarpManagementConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();
+                        for (Warp warp : profile.getWarps().values()) {
+                                contentItems.add(new GuiItem() {
+                                        @Override
+                                        public ItemStack render(Player viewer) {
+                                                return GuiHelper.buildItemStack(warp.getIcon().name(),
+                                                                "<yellow>" + warp.getName(),
+                                                                List.of("<gray>Left-Click to teleport",
+                                                                                "<gray>Right-Click to manage"));
+                                        }
+
+                                        @Override
+                                        public ClickAction clickAction() {
+                                                return (p, e) -> {
+                                                        if (e.getClick() == ClickType.RIGHT) {
+                                                                p.closeInventory();
+                                                                WarpControlPanelGUI.open(p, profile, plugin, warp);
+                                                        } else {
+                                                                p.closeInventory();
+                                                                p.teleport(warp.getLocation());
+                                                                p.sendMessage(plugin.getConfigManager().getMessage(
+                                                                                "warp-teleport",
+                                                                                "<name>", warp.getName()));
+                                                        }
+                                                };
+                                        }
+                                });
+                        }
 
                         String[] structure = {
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "P B B B < B B B N"
+                                        "f f f f f f f f f",
+                                        "f f f f f f f f f",
+                                        "f f f f f f f f f",
+                                        "P n n n < n n n N"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('B', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
+                        ingredients.put('f', GuiHelper.buildSlot(config.frame.material, config.frame.name,
+                                        config.frame.lore));
+                        ingredients.put('n', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
                                         config.navFill.lore));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,

@@ -22,6 +22,7 @@ public class ClaimProfile {
     private final Map<String, Role> roles = new HashMap<>();
     private final Map<UUID, String> memberRoles = new HashMap<>();
     private final Map<UUID, Set<String>> allyFlags = new HashMap<>();
+    private final Map<String, Warp> warps = new HashMap<>();
 
     public ClaimProfile(UUID ownerId, String name) {
         this.ownerId = ownerId;
@@ -209,5 +210,23 @@ public class ClaimProfile {
 
     public void removeAlly(UUID allyOwnerId) {
         allyFlags.remove(allyOwnerId);
+    }
+
+    // --- Warps ---
+
+    public Map<String, Warp> getWarps() {
+        return warps;
+    }
+
+    public Warp getWarp(String name) {
+        return warps.get(name.toLowerCase());
+    }
+
+    public void addWarp(Warp warp) {
+        warps.put(warp.getName().toLowerCase(), warp);
+    }
+
+    public void removeWarp(String name) {
+        warps.remove(name.toLowerCase());
     }
 }

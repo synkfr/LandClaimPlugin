@@ -1,8 +1,10 @@
 package org.ayosynk.landClaimPlugin.db;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
+import org.ayosynk.landClaimPlugin.models.Warp;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,7 +30,7 @@ public class SQLWarpDao implements WarpDao {
         String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
 
         String sql = "CREATE TABLE IF NOT EXISTS " + tablePrefix + "warps (" +
-                "player_id VARCHAR(36) NOT NULL," +
+                "owner_id VARCHAR(36) NOT NULL," +
                 "name VARCHAR(64) NOT NULL," +
                 "world VARCHAR(64) NOT NULL," +
                 "x DOUBLE NOT NULL," +
@@ -36,7 +38,8 @@ public class SQLWarpDao implements WarpDao {
                 "z DOUBLE NOT NULL," +
                 "yaw FLOAT NOT NULL," +
                 "pitch FLOAT NOT NULL," +
-                "PRIMARY KEY (player_id, name))";
+                "icon VARCHAR(64) NOT NULL," +
+                "PRIMARY KEY (owner_id, name))";
 
         try (Connection conn = dbManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -47,9 +50,9 @@ public class SQLWarpDao implements WarpDao {
     }
 
     @Override
-    public CompletableFuture<Map<UUID, Map<String, Location>>> loadAllWarps() {
+    public CompletableFuture<Map<UUID, Map<String, Warp>>> loadAllWarps() {
         return CompletableFuture.supplyAsync(() -> {
-            Map<UUID, Map<String, Location>> allWarps = new HashMap<>();
+            Map<UUID, Map<String, Warp>> allWarps = new HashMap<>();
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
             String sql = "SELECT * FROM " + tablePrefix + "warps";
 
@@ -58,7 +61,7 @@ public class SQLWarpDao implements WarpDao {
                     ResultSet rs = stmt.executeQuery()) {
 
                 while (rs.next()) {
-                    UUID playerId = UUID.fromString(rs.getString("player_id"));
+                    UUID ownerId = UUID.fromString(rs.getString("owner_id"));
                     String name = rs.getString("name");
                     String worldName = rs.getString("world");
                     double x = rs.getDouble("x");
@@ -66,42 +69,49 @@ public class SQLWarpDao implements WarpDao {
                     double z = rs.getDouble("z");
                     float yaw = rs.getFloat("yaw");
                     float pitch = rs.getFloat("pitch");
+                    String iconName = rs.getString("icon");
+                    Material icon = Material.valueOf(iconName);
 
                     Location loc = new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch);
+                    Warp warp = new Warp(name, loc, icon);
 
-                    allWarps.computeIfAbsent(playerId, k -> new HashMap<>()).put(name, loc);
+                    allWarps.computeIfAbsent(ownerId, k -> new HashMap<>()).put(name, warp);
                 }
             } catch (SQLException e) {
                 plugin.getLogger().severe("Failed to load warps from database: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().severe("Failed to parse material for warp icon: " + e.getMessage());
             }
             return allWarps;
         });
     }
 
     @Override
-    public void saveWarp(UUID playerId, String name, Location location) {
+    public void saveWarp(UUID ownerId, Warp warp) {
         CompletableFuture.runAsync(() -> {
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
-            String sql = "REPLACE INTO " + tablePrefix + "warps (player_id, name, world, x, y, z, yaw, pitch) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "REPLACE INTO " + tablePrefix + "warps (owner_id, name, world, x, y, z, yaw, pitch, icon) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             if (dbManager.isMySQL()) {
-                sql = "INSERT INTO " + tablePrefix + "warps (player_id, name, world, x, y, z, yaw, pitch) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE world=VALUES(world), x=VALUES(x), y=VALUES(y), z=VALUES(z), yaw=VALUES(yaw), pitch=VALUES(pitch)";
+                sql = "INSERT INTO " + tablePrefix + "warps (owner_id, name, world, x, y, z, yaw, pitch, icon) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE world=VALUES(world), x=VALUES(x), y=VALUES(y), z=VALUES(z), yaw=VALUES(yaw), pitch=VALUES(pitch), icon=VALUES(icon)";
             }
 
             try (Connection conn = dbManager.getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                stmt.setString(1, playerId.toString());
-                stmt.setString(2, name);
+                stmt.setString(1, ownerId.toString());
+                stmt.setString(2, warp.getName());
+                Location location = warp.getLocation();
                 stmt.setString(3, location.getWorld().getName());
                 stmt.setDouble(4, location.getX());
                 stmt.setDouble(5, location.getY());
                 stmt.setDouble(6, location.getZ());
                 stmt.setFloat(7, location.getYaw());
                 stmt.setFloat(8, location.getPitch());
+                stmt.setString(9, warp.getIcon().name());
                 stmt.executeUpdate();
 
             } catch (SQLException e) {
@@ -111,15 +121,15 @@ public class SQLWarpDao implements WarpDao {
     }
 
     @Override
-    public void deleteWarp(UUID playerId, String name) {
+    public void deleteWarp(UUID ownerId, String name) {
         CompletableFuture.runAsync(() -> {
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
-            String sql = "DELETE FROM " + tablePrefix + "warps WHERE player_id = ? AND name = ?";
+            String sql = "DELETE FROM " + tablePrefix + "warps WHERE owner_id = ? AND name = ?";
 
             try (Connection conn = dbManager.getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                stmt.setString(1, playerId.toString());
+                stmt.setString(1, ownerId.toString());
                 stmt.setString(2, name);
                 stmt.executeUpdate();
 

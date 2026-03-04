@@ -33,6 +33,14 @@ public class MessagesConfig extends OkaeriConfig {
     public String homeSet = "<green>Home <gold><name></gold> has been set!";
     public String homeTeleported = "<green>Teleported to home <gold><name></gold>.";
     public String homeNotFound = "<red>Home <gold><name></gold> not found.";
+    public String warpSet = "<green>Warp <gold><name></gold> has been set!";
+    public String warpDeleted = "<red>Warp <gold><name></gold> has been deleted.";
+    public String warpTeleport = "<green>Teleported to warp <gold><name></gold>.";
+    public String warpNotFound = "<red>Warp <gold><name></gold> not found.";
+    public String warpLimitReached = "<red>You have reached your warp limit.";
+    public String warpLocationUpdated = "<green>Warp <gold><name></gold> location updated!";
+    public String warpIconUpdated = "<green>Warp <gold><name></gold> icon updated!";
+    public String notInOwnClaim = "<red>You must be in your own claim to set a warp.";
     public String unstuckCooldown = "<red>You must wait <seconds> seconds before using unstuck again.";
     public String unstuckSuccess = "<green>You have been safely unstuck.";
 
