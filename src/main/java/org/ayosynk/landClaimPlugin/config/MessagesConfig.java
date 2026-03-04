@@ -114,4 +114,48 @@ public class MessagesConfig extends OkaeriConfig {
     public String adminBypassedUnclaim = "<green>Bypassed ownership and unclaimed chunk.";
     public String adminClaimInfoOwnedBy = "<red>[ADMIN] <green>Claim owned by: <gold><owner> <gray>(<uuid>)";
     public String adminClaimInfoId = "<green>Claim ID: <gray><id>";
+
+    // --- Profile Lifecycle ---
+    public String noProfile = "<red>You don't have a claim profile yet. Claim some land first!";
+    public String cannotClaimAsMember = "<red>You cannot claim land while you are a member of another claim.";
+    public String profileCreated = "<green>Your claim profile has been created!";
+    public String alreadyHasProfile = "<red>You already have a claim profile.";
+    public String profileAbandoned = "<red>All your claims have been abandoned.";
+    public String unclaimAllConfirm = "<yellow>Are you sure? Type /claim abandon confirm to proceed.";
+
+    // --- Trust / Member ---
+    public String notAMember = "<red>That player is not a member of this claim.";
+    public String notTrusted = "<red>That player is not trusted in this claim.";
+    public String alreadyTrusted = "<red>That player is already trusted.";
+    public String cannotTrustSelf = "<red>You cannot trust yourself.";
+    public String targetAlreadyInClaim = "<red>That player is already in another claim.";
+    public String youWereKicked = "<red>You have been kicked from the claim.";
+
+    // --- Invite Flow ---
+    public String inviteExpired = "<red>That invite has expired.";
+    public String inviteReceived = "<green>You have been invited to join a claim!";
+    public String inviteAccepted = "<green>You have accepted the invite!";
+    public String inviteDenied = "<red>You have denied the invite.";
+    public String inviteWasDenied = "<red>Your invite was denied.";
+    public String memberJoined = "<green><player> has joined your claim!";
+    public String memberListHeader = "<gold>Members:";
+    public String memberListEntry = "<gray>- <gold><player> <gray>(<role>)";
+    public String memberListEmpty = "<gray>No members.";
+    public String trustListHeader = "<gold>Trusted Players:";
+    public String trustListEntry = "<gray>- <gold><player>";
+    public String trustListEmpty = "<gray>No trusted players.";
+
+    // --- Rename ---
+    public String claimRenamed = "<green>Claim renamed to <gold><name></gold>.";
+    public String claimNameInvalid = "<red>Invalid name. Use 3-32 characters (letters, numbers, spaces).";
+    public String renamePrompt = "<yellow>Type the new claim name in chat (or 'cancel' to abort):";
+    public String renameCancelled = "<gray>Rename cancelled.";
+
+    // --- Color ---
+    public String claimColorChanged = "<green>Claim color changed!";
+    public String claimColorInvalid = "<red>Invalid hex color. Use format: #RRGGBB";
+    public String colorHexPrompt = "<yellow>Type a hex color code in chat (e.g. #FF5500, or 'cancel'):";
+
+    // --- Visibility ---
+    public String visibilityModeChanged = "<green>Visualization mode set to <gold><mode></gold>.";
 }

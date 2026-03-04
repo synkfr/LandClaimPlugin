@@ -56,16 +56,38 @@ public class ClaimSettingsGUI {
                                                 RoleManagementGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('W', GuiHelper.buildSlot(config.warps.material, config.warps.name,
-                                        config.warps.lore, profile, player, ownerName, claimName));
+                                        config.warps.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                p.closeInventory();
+                                                WarpManagementGUI.open(p, profile, plugin);
+                                        }));
                         ingredients.put('V', GuiHelper.buildSlot(config.visibility.material, config.visibility.name,
-                                        config.visibility.lore, profile, player, ownerName, claimName));
+                                        config.visibility.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                String currentMode = profile.getVisualizationMode();
+                                                String newMode = "DISPLAY_ENTITY".equals(currentMode) ? "PARTICLE"
+                                                                : "DISPLAY_ENTITY";
+                                                profile.setVisualizationMode(newMode);
+                                                plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                                                plugin.getVisualizationManager().invalidateCache(profile.getOwnerId());
+                                                p.sendMessage(plugin.getConfigManager().getMessage(
+                                                                "visibility-mode-changed", "<mode>", newMode));
+                                                p.closeInventory();
+                                                ClaimSettingsGUI.open(p, profile, plugin);
+                                        }));
                         ingredients.put('T', GuiHelper.buildSlot(config.titleToggle.material, config.titleToggle.name,
                                         config.titleToggle.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 TitleToggleGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('A', GuiHelper.buildSlot(config.abandonAll.material, config.abandonAll.name,
-                                        config.abandonAll.lore, profile, player, ownerName, claimName));
+                                        config.abandonAll.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                p.closeInventory();
+                                                ConfirmationGUI.open(p, "<red>Abandon ALL claims?", () -> {
+                                                        plugin.getClaimManager().abandonProfile(profile.getOwnerId());
+                                                        p.sendMessage(plugin.getConfigManager()
+                                                                        .getMessage("profile-abandoned"));
+                                                        plugin.refreshMapHooks();
+                                                }, () -> ClaimSettingsGUI.open(p, profile, plugin));
+                                        }));
                         ingredients.put('B', GuiHelper.buildSlot(config.back.material, config.back.name,
                                         config.back.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
