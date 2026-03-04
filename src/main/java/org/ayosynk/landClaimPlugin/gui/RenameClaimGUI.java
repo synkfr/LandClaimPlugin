@@ -26,7 +26,7 @@ public class RenameClaimGUI {
                                         "O O B B B B B O O",
                                         "O B B C B R B B O",
                                         "B B B B B B B B B",
-                                        "O S < S B B B B B"
+                                        "O B B S < S B B B"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
