@@ -101,6 +101,8 @@ public class LandClaimPlugin extends JavaPlugin {
                     .registerEvents(new PvpProtectionListener(this, claimManager, configManager), this);
             getServer().getPluginManager().registerEvents(
                     new VehicleProtectionListener(this, claimManager, configManager), this);
+            getServer().getPluginManager().registerEvents(
+                    new ItemProtectionListener(this, claimManager, configManager), this);
 
             getServer().getPluginManager().registerEvents(
                     new CommandBlocker(this, claimManager),

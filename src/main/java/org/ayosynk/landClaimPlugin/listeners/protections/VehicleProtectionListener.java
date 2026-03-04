@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
@@ -93,6 +94,25 @@ public class VehicleProtectionListener implements Listener {
                     event.getVehicle().teleport(event.getFrom());
                 }
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onPlayerPlaceVehicle(PlayerInteractEvent event) {
+        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK)
+            return;
+
+        if (event.getItem() == null)
+            return;
+
+        String materialName = event.getItem().getType().name();
+        if (materialName.endsWith("_BOAT") || materialName.endsWith("_MINECART") || materialName.equals("MINECART")) {
+            Player player = event.getPlayer();
+            // Check the block adjacent to the clicked block face (where the vehicle would
+            // spawn)
+            org.bukkit.block.Block placedBlock = event.getClickedBlock().getRelative(event.getBlockFace());
+            ChunkPosition pos = new ChunkPosition(placedBlock.getLocation());
+            checkPermission(player, pos, event, "PLACE_VEHICLES");
         }
     }
 }
