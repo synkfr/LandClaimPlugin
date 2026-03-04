@@ -84,10 +84,29 @@ public class BlueMapHook {
                         if (playerName == null)
                             playerName = "Unknown";
 
-                        Random rnd = new Random(playerId.getMostSignificantBits());
-                        int r = rnd.nextInt(200) + 55;
-                        int g = rnd.nextInt(200) + 55;
-                        int b = rnd.nextInt(200) + 55;
+                        int r, g, b;
+                        org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
+                        if (profile != null && profile.getClaimColor() != null
+                                && profile.getClaimColor().length() >= 7) {
+                            try {
+                                String hex = profile.getClaimColor().startsWith("#")
+                                        ? profile.getClaimColor().substring(1)
+                                        : profile.getClaimColor();
+                                r = Integer.parseInt(hex.substring(0, 2), 16);
+                                g = Integer.parseInt(hex.substring(2, 4), 16);
+                                b = Integer.parseInt(hex.substring(4, 6), 16);
+                            } catch (NumberFormatException ex) {
+                                Random rnd = new Random(playerId.getMostSignificantBits());
+                                r = rnd.nextInt(200) + 55;
+                                g = rnd.nextInt(200) + 55;
+                                b = rnd.nextInt(200) + 55;
+                            }
+                        } else {
+                            Random rnd = new Random(playerId.getMostSignificantBits());
+                            r = rnd.nextInt(200) + 55;
+                            g = rnd.nextInt(200) + 55;
+                            b = rnd.nextInt(200) + 55;
+                        }
                         Color pFill = new Color(r, g, b, (float) fillOpacity);
                         Color pBorder = new Color(r, g, b, (float) borderOpacity);
 

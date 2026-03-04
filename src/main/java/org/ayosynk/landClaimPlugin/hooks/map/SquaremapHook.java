@@ -65,10 +65,26 @@ public class SquaremapHook {
                 if (claims.isEmpty())
                     continue;
 
-                Random rnd = new Random(playerId.getMostSignificantBits());
-                int r = rnd.nextInt(200) + 55;
-                int g = rnd.nextInt(200) + 55;
-                int b = rnd.nextInt(200) + 55;
+                int r, g, b;
+                if (profile.getClaimColor() != null && profile.getClaimColor().length() >= 7) {
+                    try {
+                        String hex = profile.getClaimColor().startsWith("#") ? profile.getClaimColor().substring(1)
+                                : profile.getClaimColor();
+                        r = Integer.parseInt(hex.substring(0, 2), 16);
+                        g = Integer.parseInt(hex.substring(2, 4), 16);
+                        b = Integer.parseInt(hex.substring(4, 6), 16);
+                    } catch (NumberFormatException ex) {
+                        Random rnd = new Random(playerId.getMostSignificantBits());
+                        r = rnd.nextInt(200) + 55;
+                        g = rnd.nextInt(200) + 55;
+                        b = rnd.nextInt(200) + 55;
+                    }
+                } else {
+                    Random rnd = new Random(playerId.getMostSignificantBits());
+                    r = rnd.nextInt(200) + 55;
+                    g = rnd.nextInt(200) + 55;
+                    b = rnd.nextInt(200) + 55;
+                }
                 Color pColor = new Color(r, g, b);
 
                 List<double[][]> polygons = createPolygons(claims);
