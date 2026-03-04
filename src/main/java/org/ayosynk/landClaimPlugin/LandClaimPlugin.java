@@ -27,6 +27,7 @@ import java.util.List;
 
 public class LandClaimPlugin extends JavaPlugin {
 
+    private static LandClaimPlugin instance;
     private ConfigManager configManager;
     private DatabaseManager databaseManager;
     private CacheManager cacheManager;
@@ -47,6 +48,7 @@ public class LandClaimPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
         try {
             new Metrics(this, 28407);
 
@@ -239,6 +241,10 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public List<String> getBlockedWorlds() {
         return blockedWorlds;
+    }
+
+    public static LandClaimPlugin getInstance() {
+        return instance;
     }
 
     public EventListener getEventListener() {

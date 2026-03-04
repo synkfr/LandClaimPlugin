@@ -27,6 +27,10 @@ public class ClaimManager {
     private final ConfigManager configManager;
     private final Map<UUID, ChunkSelection> playerSelections = new HashMap<>();
 
+    // Map of <ReceiverProfileOwnerId, Set<SenderProfileOwnerId>> for pending ally
+    // invites
+    private final Map<UUID, Set<UUID>> pendingAllyInvites = new HashMap<>();
+
     public ClaimManager(LandClaimPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
         this.configManager = configManager;
@@ -71,6 +75,25 @@ public class ClaimManager {
     }
 
     /**
+     * Get a profile by its global name.
+     */
+    public ClaimProfile getProfileByName(String name) {
+        for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
+            if (profile.getName().equalsIgnoreCase(name)) {
+                return profile;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check if a claim name is globally unique.
+     */
+    public boolean isClaimNameUnique(String name) {
+        return getProfileByName(name) == null;
+    }
+
+    /**
      * Check if a chunk is claimed by any profile.
      */
     public boolean isChunkClaimed(ChunkPosition pos) {
@@ -94,6 +117,27 @@ public class ClaimManager {
             total += profile.getOwnedChunks().size();
         }
         return total;
+    }
+
+    // ========== Ally Invites ==========
+
+    public void addAllyInvite(UUID receiverOwnerId, UUID senderOwnerId) {
+        pendingAllyInvites.computeIfAbsent(receiverOwnerId, k -> new HashSet<>()).add(senderOwnerId);
+    }
+
+    public void removeAllyInvite(UUID receiverOwnerId, UUID senderOwnerId) {
+        Set<UUID> senders = pendingAllyInvites.get(receiverOwnerId);
+        if (senders != null) {
+            senders.remove(senderOwnerId);
+            if (senders.isEmpty()) {
+                pendingAllyInvites.remove(receiverOwnerId);
+            }
+        }
+    }
+
+    public boolean hasAllyInvite(UUID receiverOwnerId, UUID senderOwnerId) {
+        Set<UUID> senders = pendingAllyInvites.get(receiverOwnerId);
+        return senders != null && senders.contains(senderOwnerId);
     }
 
     /**

@@ -21,6 +21,7 @@ public class ClaimProfile {
     private final Map<UUID, Set<String>> trustedPlayerFlags = new HashMap<>();
     private final Map<String, Role> roles = new HashMap<>();
     private final Map<UUID, String> memberRoles = new HashMap<>();
+    private final Map<UUID, Set<String>> allyFlags = new HashMap<>();
 
     public ClaimProfile(UUID ownerId, String name) {
         this.ownerId = ownerId;
@@ -182,5 +183,31 @@ public class ClaimProfile {
 
     public void removeMember(UUID playerId) {
         memberRoles.remove(playerId);
+    }
+
+    // --- Allies (inter-claim permissions) ---
+
+    public Map<UUID, Set<String>> getAllyFlags() {
+        return allyFlags;
+    }
+
+    public boolean hasAlly(UUID allyOwnerId) {
+        return allyFlags.containsKey(allyOwnerId);
+    }
+
+    public Set<String> getAllyFlags(UUID allyOwnerId) {
+        return allyFlags.get(allyOwnerId);
+    }
+
+    public void setAllyFlags(UUID allyOwnerId, Set<String> flags) {
+        allyFlags.put(allyOwnerId, flags);
+    }
+
+    public void addAlly(UUID allyOwnerId) {
+        allyFlags.putIfAbsent(allyOwnerId, new HashSet<>());
+    }
+
+    public void removeAlly(UUID allyOwnerId) {
+        allyFlags.remove(allyOwnerId);
     }
 }

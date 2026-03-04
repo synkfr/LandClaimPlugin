@@ -133,6 +133,11 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
+        if (!claimManager.isClaimNameUnique(name)) {
+            player.sendMessage(configManager.getMessage("name-already-in-use"));
+            return;
+        }
+
         ClaimProfile profile = new ClaimProfile(playerId, name);
         plugin.getCacheManager().getProfileCache().put(playerId, profile);
         claimManager.saveAndSync(profile);

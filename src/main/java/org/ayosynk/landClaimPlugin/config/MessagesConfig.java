@@ -44,6 +44,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String pvpDenied = "<red>PvP is disabled in this claim.";
     public String worldBlocked = "<red>You cannot claim land in this world.";
     public String alreadyClaimed = "<red>This chunk is already claimed by <owner>.";
+    public String nameAlreadyInUse = "<red>That claim name is already taken. Please choose another one.";
     public String claimLimitReached = "<red>You have reached your claim limit of <limit>.";
     public String notConnected = "<red>Your claims must be connected.";
     public String tooCloseToWorldguard = "<red>You are too close to a WorldGuard region. Minimum gap: <gap>";
@@ -83,6 +84,21 @@ public class MessagesConfig extends OkaeriConfig {
     public String noPendingInvites = "<red>You have no pending invites.";
     public String playerNotOnline = "<red>That player is not currently online.";
     public String alreadyInClaim = "<red>That player is already a member of this claim.";
+
+    // Ally Messages
+    public String claimNotFound = "<red>Could not find a claim with that name.";
+    public String cannotAllySelf = "<red>You cannot ally your own claim.";
+    public String alreadyAllied = "<red>You are already allied with that claim.";
+    public String allyInviteSent = "<green>Ally invite sent to <gold><name></gold>.";
+    public String allyInviteReceived = "<green>Your claim has received an ally invite from <gold><name></gold>!\n<gray>[<green><click:run_command:'/claim ally accept <name>'><hover:show_text:'Accept'>Accept</hover></click></green>] [<red><click:run_command:'/claim ally deny <name>'><hover:show_text:'Deny'>Deny</hover></click></red>]</gray>";
+    public String noAllyInviteFrom = "<red>No pending ally invite from claim <gold><name></gold>.";
+    public String specifyAllyName = "<red>Please specify the claim name: /claim ally accept <name>";
+    public String allyAccepted = "<green>You are now allied with <gold><name></gold>!";
+    public String allyAcceptedTarget = "<green><gold><name></gold> accepted your ally invite!";
+    public String allyDenied = "<red>Ally invite from <gold><name></gold> was denied.";
+    public String notAllied = "<red>You are not allied with that claim.";
+    public String allyRemoved = "<red>Alliance with <gold><name></gold> has been removed.";
+
     public String trustListStub = "<green>Trust list functionality coming soon";
     public String trustAdded = "<green>Added trust to <player>";
     public String trustRemoved = "<red>Removed trust from <player>";

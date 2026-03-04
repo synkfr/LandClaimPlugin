@@ -70,7 +70,13 @@ public class SQLProfileDao implements ProfileDao {
                         + "owner_id VARCHAR(36) NOT NULL,"
                         + "player_id VARCHAR(36) NOT NULL,"
                         + "role_name VARCHAR(64) NOT NULL,"
-                        + "PRIMARY KEY (owner_id, player_id))"
+                        + "PRIMARY KEY (owner_id, player_id))",
+
+                "CREATE TABLE IF NOT EXISTS " + p + "profile_ally_flags ("
+                        + "owner_id VARCHAR(36) NOT NULL,"
+                        + "ally_id VARCHAR(36) NOT NULL,"
+                        + "flags TEXT NOT NULL,"
+                        + "PRIMARY KEY (owner_id, ally_id))"
         };
 
         try (Connection conn = dbManager.getDatabase().getConnection()) {
@@ -201,6 +207,25 @@ public class SQLProfileDao implements ProfileDao {
                     }
                 }
 
+                // 7. Clear and re-insert allied claims
+                clearTable(conn, p + "profile_ally_flags", "owner_id", oid);
+                if (!profile.getAllyFlags().isEmpty()) {
+                    String insertAlly = sqlite
+                            ? "INSERT OR REPLACE INTO " + p
+                                    + "profile_ally_flags (owner_id, ally_id, flags) VALUES (?, ?, ?)"
+                            : "INSERT INTO " + p
+                                    + "profile_ally_flags (owner_id, ally_id, flags) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE flags=VALUES(flags)";
+                    try (PreparedStatement stmt = conn.prepareStatement(insertAlly)) {
+                        for (Map.Entry<UUID, Set<String>> entry : profile.getAllyFlags().entrySet()) {
+                            stmt.setString(1, oid);
+                            stmt.setString(2, entry.getKey().toString());
+                            stmt.setString(3, String.join(",", entry.getValue()));
+                            stmt.addBatch();
+                        }
+                        stmt.executeBatch();
+                    }
+                }
+
                 conn.commit();
                 conn.setAutoCommit(true);
             } catch (SQLException e) {
@@ -219,6 +244,7 @@ public class SQLProfileDao implements ProfileDao {
             try (Connection conn = dbManager.getDatabase().getConnection()) {
                 conn.setAutoCommit(false);
 
+                clearTable(conn, p + "profile_ally_flags", "owner_id", oid);
                 clearTable(conn, p + "profile_member_roles", "owner_id", oid);
                 clearTable(conn, p + "profile_roles", "owner_id", oid);
                 clearTable(conn, p + "profile_trusted_players", "owner_id", oid);
@@ -272,6 +298,7 @@ public class SQLProfileDao implements ProfileDao {
                 loadTrustedPlayers(conn, p, profile);
                 loadRoles(conn, p, profile);
                 loadMemberRoles(conn, p, profile);
+                loadAllyFlags(conn, p, profile);
 
                 return profile;
             } catch (SQLException e) {
@@ -300,6 +327,7 @@ public class SQLProfileDao implements ProfileDao {
                     loadTrustedPlayers(conn, p, profile);
                     loadRoles(conn, p, profile);
                     loadMemberRoles(conn, p, profile);
+                    loadAllyFlags(conn, p, profile);
                     profiles.add(profile);
                 }
             } catch (SQLException e) {
@@ -428,6 +456,26 @@ public class SQLProfileDao implements ProfileDao {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     profile.setMemberRole(UUID.fromString(rs.getString("player_id")), rs.getString("role_name"));
+                }
+            }
+        }
+    }
+
+    private void loadAllyFlags(Connection conn, String p, ClaimProfile profile) throws SQLException {
+        try (PreparedStatement stmt = conn
+                .prepareStatement("SELECT ally_id, flags FROM " + p + "profile_ally_flags WHERE owner_id = ?")) {
+            stmt.setString(1, profile.getOwnerId().toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    UUID allyId = UUID.fromString(rs.getString("ally_id"));
+                    String flagsStr = rs.getString("flags");
+                    Set<String> flags = new HashSet<>();
+                    if (flagsStr != null && !flagsStr.isEmpty()) {
+                        for (String flag : flagsStr.split(",")) {
+                            flags.add(flag.trim().toUpperCase());
+                        }
+                    }
+                    profile.setAllyFlags(allyId, flags);
                 }
             }
         }

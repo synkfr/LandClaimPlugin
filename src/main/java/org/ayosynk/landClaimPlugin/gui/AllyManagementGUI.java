@@ -10,10 +10,16 @@ import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.ayosynk.landClaimPlugin.gui.framework.ClickAction;
+import org.bukkit.Material;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class AllyManagementGUI {
 
@@ -22,6 +28,48 @@ public class AllyManagementGUI {
                         AllyManagementConfig config = plugin.getConfigManager().getAllyManagementConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();
+
+                        for (UUID allyOwnerId : profile.getAllyFlags().keySet()) {
+                                ClaimProfile allyProfile = plugin.getClaimManager().getProfile(allyOwnerId);
+                                if (allyProfile == null)
+                                        continue;
+
+                                String allyName = allyProfile.getName();
+                                String ownerName = Bukkit.getOfflinePlayer(allyOwnerId).getName();
+                                if (ownerName == null)
+                                        ownerName = "Unknown";
+                                final String finalOwnerName = ownerName;
+
+                                contentItems.add(new GuiItem() {
+                                        @Override
+                                        public ItemStack render(Player viewer) {
+                                                ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+                                                SkullMeta meta = (SkullMeta) skull.getItemMeta();
+                                                if (meta != null) {
+                                                        meta.setOwningPlayer(Bukkit.getOfflinePlayer(allyOwnerId));
+                                                        meta.displayName(GuiHelper.MM.deserialize("<gold>" + allyName));
+
+                                                        List<Component> lore = new ArrayList<>();
+                                                        lore.add(GuiHelper.MM.deserialize(
+                                                                        "<gray>Owner: <white>" + finalOwnerName));
+                                                        lore.add(Component.empty());
+                                                        lore.add(GuiHelper.MM.deserialize(
+                                                                        "<yellow>Click to manage permissions"));
+                                                        meta.lore(lore);
+                                                        skull.setItemMeta(meta);
+                                                }
+                                                return skull;
+                                        }
+
+                                        @Override
+                                        public ClickAction clickAction() {
+                                                return (p, e) -> {
+                                                        p.closeInventory();
+                                                        AllyControlPanelGUI.open(p, profile, plugin, allyProfile);
+                                                };
+                                        }
+                                });
+                        }
 
                         String[] structure = {
                                         "x x x x x x x x x",
