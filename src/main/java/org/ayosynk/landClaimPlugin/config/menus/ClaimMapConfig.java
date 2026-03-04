@@ -13,13 +13,34 @@ public class ClaimMapConfig extends OkaeriConfig {
     public String title = "Claim Map";
 
     @Comment("Wilderness Legend Tile")
-    public ItemConfig wilderness = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    public ItemConfig wilderness = new ItemConfig("WHITE_STAINED_GLASS_PANE", "<gray>Wilderness",
+            List.of("<gray>Click to claim this chunk"));
 
-    @Comment("Map Display Background")
+    @Comment("Your Claim Tile")
+    public ItemConfig yourClaim = new ItemConfig("LIME_STAINED_GLASS_PANE", "<green>Your Claim",
+            List.of("<gray>Click to unclaim this chunk"));
+
+    @Comment("Other Player's Claim Tile")
+    public ItemConfig otherClaim = new ItemConfig("RED_STAINED_GLASS_PANE", "<red>Other Claim",
+            List.of("<gray>Owned by <owner>"));
+
+    @Comment("Ally's Claim Tile")
+    public ItemConfig allyClaim = new ItemConfig("YELLOW_STAINED_GLASS_PANE", "<gold>Ally Claim",
+            List.of("<gray>Owned by <owner>"));
+
+    @Comment("Member/Trusted Claim Tile")
+    public ItemConfig memberClaim = new ItemConfig("CYAN_STAINED_GLASS_PANE", "<aqua>Member Claim",
+            List.of("<gray>Owned by <owner>"));
+
+    @Comment("Map Display Background (Fallback)")
     public ItemConfig mapFill = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Bottom Control Bar Background")
     public ItemConfig bottomFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
+
+    @Comment("Current Position Marker")
+    public ItemConfig currentPos = new ItemConfig("MAGENTA_STAINED_GLASS_PANE", "<light_purple>You are here",
+            List.of());
 
     @Comment("Refresh Map View Button")
     public ItemConfig refresh = new ItemConfig("FLOW_POTTERY_SHERD", "Refresh", List.of());

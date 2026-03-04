@@ -20,7 +20,7 @@ public class ClaimMapInfoGUI {
 
                         String[] structure = {
                                         "F F F F F F F F F",
-                                        "F F O A P E W F F",
+                                        "F F O A P M W F F",
                                         "F F F F F F F F F",
                                         "F F F 1 B 1 F F F"
                         };
@@ -36,8 +36,8 @@ public class ClaimMapInfoGUI {
                                         GuiHelper.buildSlot(config.ally.material, config.ally.name, config.ally.lore));
                         ingredients.put('P', GuiHelper.buildSlot(config.other.material, config.other.name,
                                         config.other.lore));
-                        ingredients.put('E', GuiHelper.buildSlot(config.enemy.material, config.enemy.name,
-                                        config.enemy.lore));
+                        ingredients.put('M', GuiHelper.buildSlot(config.member.material, config.member.name,
+                                        config.member.lore));
                         ingredients.put('W', GuiHelper.buildSlot(config.wilderness.material, config.wilderness.name,
                                         config.wilderness.lore));
                         ingredients.put('B',
