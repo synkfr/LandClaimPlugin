@@ -91,7 +91,7 @@ public class VehicleProtectionListener implements Listener {
 
                 if (fromOwner == null || !fromOwner.equals(toOwner)) {
                     event.getVehicle().setVelocity(new org.bukkit.util.Vector(0, 0, 0));
-                    event.getVehicle().teleport(event.getFrom());
+                    event.getVehicle().teleportAsync(event.getFrom());
                 }
             }
         }

@@ -44,10 +44,17 @@ public class WarpManagementGUI {
                                                                 WarpControlPanelGUI.open(p, profile, plugin, warp);
                                                         } else {
                                                                 p.closeInventory();
-                                                                p.teleport(warp.getLocation());
-                                                                p.sendMessage(plugin.getConfigManager().getMessage(
-                                                                                "warp-teleport",
-                                                                                "<name>", warp.getName()));
+                                                                p.teleportAsync(warp.getLocation())
+                                                                                .thenAccept(success -> {
+                                                                                        if (success) {
+                                                                                                p.sendMessage(plugin
+                                                                                                                .getConfigManager()
+                                                                                                                .getMessage(
+                                                                                                                                "warp-teleport",
+                                                                                                                                "<name>",
+                                                                                                                                warp.getName()));
+                                                                                        }
+                                                                                });
                                                         }
                                                 };
                                         }

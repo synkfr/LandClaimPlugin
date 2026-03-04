@@ -274,7 +274,10 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        player.teleport(warp.getLocation());
-        player.sendMessage(configManager.getMessage("warp-teleport", "<name>", name));
+        player.teleportAsync(warp.getLocation()).thenAccept(success -> {
+            if (success) {
+                player.sendMessage(configManager.getMessage("warp-teleport", "<name>", name));
+            }
+        });
     }
 }
