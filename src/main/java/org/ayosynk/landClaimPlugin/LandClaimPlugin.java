@@ -36,6 +36,9 @@ public class LandClaimPlugin extends JavaPlugin {
             // 1. Enable bStats metrics
             new Metrics(this, 28407);
 
+            // Run V1 legacy file cleanup BEFORE Okaeri ConfigManager writes defaults
+            org.ayosynk.landClaimPlugin.migration.V1LegacyMigrator.preConfigCleanup(this);
+
             // 2. Initialize core configs
             configManager = new ConfigManager(this);
 
@@ -48,8 +51,8 @@ public class LandClaimPlugin extends JavaPlugin {
             redisManager = new RedisManager(this);
             redisManager.init();
 
-            // 5. Run V1 → V2 legacy migration (runs once if claims.yml exists)
-            org.ayosynk.landClaimPlugin.migration.V1LegacyMigrator.migrate(this);
+            // 5. Run V1 → V2 SQL legacy migration from the backed-up claims file
+            org.ayosynk.landClaimPlugin.migration.V1LegacyMigrator.migrateClaims(this);
 
             // 6. Initialize business logic managers
             combatManager = new CombatManager(this);

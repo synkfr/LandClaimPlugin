@@ -9,37 +9,97 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * One-shot migrator for V1 claims.yml → V2 SQL ClaimProfile system.
- *
- * V1 format (claims.yml):
- * claims:
- * <UUID>:
- * - "world,chunkX,chunkZ"
- *
- * After migration, claims.yml is renamed to claims.yml.v1-backup
- * to prevent re-execution.
+ * Two-step migrator for V1.
+ * Step 1: preConfigCleanup - runs before Okaeri generates new configs to back
+ * up V1 files.
+ * Step 2: migrateClaims - runs after DatabaseManager init to move claims into
+ * SQL.
  */
 public class V1LegacyMigrator {
 
-    public static void migrate(LandClaimPlugin plugin) {
-        File claimsFile = new File(plugin.getDataFolder(), "claims.yml");
+    // The file we read claims from during step 2
+    private static final String BACKUP_CLAIMS_FILE = "old_claims.yml.v1-backup";
+
+    /**
+     * Call BEFORE ConfigManager initialization.
+     * Backs up V1 config/messages/claims yml files, deletes all other yml files in
+     * the data folder root.
+     */
+    public static void preConfigCleanup(LandClaimPlugin plugin) {
+        File dataFolder = plugin.getDataFolder();
+        File claimsFile = new File(dataFolder, "claims.yml");
+
+        // If claims.yml doesn't exist, we assume V1 migration is not required (or
+        // already done)
         if (!claimsFile.exists()) {
-            return; // No V1 data — nothing to migrate
+            return;
         }
 
-        plugin.getLogger().info("=== V1 → V2 Migration ===");
-        plugin.getLogger().info("Found claims.yml — starting legacy migration...");
+        plugin.getLogger().info("=== V1 Legacy Data Cleanup ===");
+        plugin.getLogger().info("Found claims.yml — preparing V1 file backups...");
 
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(claimsFile);
+        // Files we want to rename instead of delete
+        Set<String> filesToBackup = Set.of("claims.yml", "config.yml", "messages.yml");
+
+        File[] files = dataFolder.listFiles();
+        if (files == null)
+            return;
+
+        int deletedCount = 0;
+        for (File file : files) {
+            // We only care about .yml files in the root folder, not directories (like
+            // /locales or /menus)
+            if (file.isFile() && file.getName().endsWith(".yml")) {
+                String name = file.getName();
+                if (filesToBackup.contains(name)) {
+                    File backup = new File(dataFolder, "old_" + name + ".v1-backup");
+                    if (file.renameTo(backup)) {
+                        plugin.getLogger().info("Backed up: " + name + " -> " + backup.getName());
+                    } else {
+                        plugin.getLogger().warning("Failed to backup: " + name);
+                    }
+                } else {
+                    if (file.delete()) {
+                        deletedCount++;
+                    } else {
+                        plugin.getLogger().warning("Failed to delete unused V1 config: " + name);
+                    }
+                }
+            }
+        }
+
+        if (deletedCount > 0) {
+            plugin.getLogger().info("Deleted " + deletedCount + " obsolete V1 root .yml files to prevent conflicts.");
+        }
+    }
+
+    /**
+     * Call AFTER DatabaseManager initialization.
+     * Reads claims from old_claims.yml.v1-backup and saves to SQL.
+     */
+    public static void migrateClaims(LandClaimPlugin plugin) {
+        File claimsBackup = new File(plugin.getDataFolder(), BACKUP_CLAIMS_FILE);
+
+        // If the backup doesn't exist, migration either didn't happen or already
+        // finished
+        if (!claimsBackup.exists()) {
+            return;
+        }
+
+        plugin.getLogger().info("=== V1 -> V2 Claims SQL Migration ===");
+        plugin.getLogger().info("Starting legacy claims migration from " + BACKUP_CLAIMS_FILE + "...");
+
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(claimsBackup);
         ConfigurationSection claimsSection = yaml.getConfigurationSection("claims");
 
         if (claimsSection == null || claimsSection.getKeys(false).isEmpty()) {
-            plugin.getLogger().info("claims.yml is empty or has no 'claims' section. Skipping migration.");
-            renameFile(plugin, claimsFile);
+            plugin.getLogger().info("Claims backup is empty or has no 'claims' section. Skipping migration.");
+            renameToCompleted(plugin, claimsBackup);
             return;
         }
 
@@ -52,11 +112,11 @@ public class V1LegacyMigrator {
             try {
                 ownerId = UUID.fromString(uuidString);
             } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Skipping invalid UUID in claims.yml: " + uuidString);
+                plugin.getLogger().warning("Skipping invalid UUID in claims: " + uuidString);
                 continue;
             }
 
-            // Skip if a profile already exists in V2 (prevents double migration)
+            // Skip if a profile already exists in V2
             ClaimProfile existing = plugin.getDatabaseManager().getProfileDao()
                     .getProfile(ownerId).join();
             if (existing != null) {
@@ -67,10 +127,9 @@ public class V1LegacyMigrator {
             // Resolve player name for the profile
             String playerName = Bukkit.getOfflinePlayer(ownerId).getName();
             if (playerName == null) {
-                playerName = uuidString.substring(0, 8); // use first 8 chars of UUID
+                playerName = uuidString.substring(0, 8);
             }
 
-            // Create a new V2 profile with default roles
             ClaimProfile profile = new ClaimProfile(ownerId, playerName + "'s Claim");
 
             // Parse V1 chunk entries: "world,chunkX,chunkZ"
@@ -92,26 +151,25 @@ public class V1LegacyMigrator {
                 }
             }
 
-            // Save to V2 database (synchronous join to ensure migration completes before
-            // startup)
+            // Save to V2 database
             plugin.getDatabaseManager().getProfileDao().saveProfile(profile).join();
             profileCount.incrementAndGet();
         }
 
-        plugin.getLogger().info("Migration complete! Migrated " + profileCount.get()
+        plugin.getLogger().info("SQL Migration complete! Migrated " + profileCount.get()
                 + " profiles with " + chunkCount.get() + " total chunks."
                 + (skippedCount.get() > 0 ? " Skipped " + skippedCount.get() + " (already exist)." : ""));
 
-        renameFile(plugin, claimsFile);
+        renameToCompleted(plugin, claimsBackup);
     }
 
-    private static void renameFile(LandClaimPlugin plugin, File claimsFile) {
-        File backup = new File(plugin.getDataFolder(), "claims.yml.v1-backup");
-        if (claimsFile.renameTo(backup)) {
-            plugin.getLogger().info("Renamed claims.yml → claims.yml.v1-backup");
+    private static void renameToCompleted(LandClaimPlugin plugin, File file) {
+        File finalBackup = new File(plugin.getDataFolder(), "old_claims.yml.v1-migrated");
+        if (file.renameTo(finalBackup)) {
+            plugin.getLogger().info("Renamed " + file.getName() + " -> " + finalBackup.getName());
         } else {
-            plugin.getLogger().warning(
-                    "Could not rename claims.yml. Please manually rename or delete it to prevent re-migration.");
+            plugin.getLogger().warning("Could not rename " + file.getName() + " to " + finalBackup.getName()
+                    + ". Please rename manually to avoid re-migration.");
         }
     }
 }
