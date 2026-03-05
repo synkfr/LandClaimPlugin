@@ -174,15 +174,10 @@ public class LandClaimPlugin extends JavaPlugin {
                 commandHandler.shutdown();
             }
 
-            getServer().getScheduler().runTaskAsynchronously(this, () -> {
-                if (warpManager != null) {
-                    warpManager.save();
-                    getLogger().info("Saved warp data");
-                }
-                if (redisManager != null) {
-                    redisManager.shutdown();
-                }
-            });
+            if (warpManager != null) {
+                warpManager.save();
+                getLogger().info("Saved warp data");
+            }
 
             if (visualizationManager != null) {
                 visualizationManager.cleanupLocalDisplays();
