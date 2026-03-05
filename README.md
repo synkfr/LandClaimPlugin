@@ -148,7 +148,6 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `landclaim.admin` | Admin commands & bypass all protection | op |
 | `landclaim.limit.<n>` | Override the chunk claim limit (e.g., `landclaim.limit.50`) | false |
 | `landclaim.list` | List claims | ✅ true |
-
 | `landclaim.warps.limit.<n>` | Override the warps limit (e.g., `landclaim.warps.limit.10`) | false |
 | `landclaim.createrole.<n>` | Override the max number of custom roles a player can create | false |
 
