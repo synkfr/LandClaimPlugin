@@ -70,6 +70,9 @@ public class LandClaimPlugin extends JavaPlugin {
             redisManager = new RedisManager(this);
             redisManager.init();
 
+            // V1 → V2 legacy migration (runs once if claims.yml exists)
+            org.ayosynk.landClaimPlugin.migration.V1LegacyMigrator.migrate(this);
+
             combatManager = new CombatManager(this);
 
             claimManager = new ClaimManager(this, configManager);
