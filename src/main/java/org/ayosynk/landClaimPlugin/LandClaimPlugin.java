@@ -1,138 +1,87 @@
 package org.ayosynk.landClaimPlugin;
 
 import org.ayosynk.landClaimPlugin.commands.CommandHandler;
-import org.ayosynk.landClaimPlugin.commands.ClaimTabCompleter;
-import org.ayosynk.landClaimPlugin.gui.GUIListener;
-import org.ayosynk.landClaimPlugin.hooks.BlueMapHook;
-import org.ayosynk.landClaimPlugin.hooks.DynmapHook;
-import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
-import org.ayosynk.landClaimPlugin.listeners.EventListener;
-import org.ayosynk.landClaimPlugin.listeners.PlayerJoinListener;
-import org.ayosynk.landClaimPlugin.managers.ClaimManager;
-import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.HomeManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
-import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
-import org.ayosynk.landClaimPlugin.managers.SaveManager;
-import org.ayosynk.landClaimPlugin.utils.ConfigUpdater;
+import org.ayosynk.landClaimPlugin.db.DatabaseManager;
+import org.ayosynk.landClaimPlugin.managers.*;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
-
+/**
+ * Main plugin class responsible only for lifecycle, setup, and dependency
+ * injection.
+ * All logic and feature management is delegated to specific managers.
+ */
 public class LandClaimPlugin extends JavaPlugin {
 
+    private static LandClaimPlugin instance;
+
+    // Managers (Final architectural access points)
     private ConfigManager configManager;
+    private DatabaseManager databaseManager;
+    private CacheManager cacheManager;
+    private RedisManager redisManager;
     private ClaimManager claimManager;
-    private TrustManager trustManager;
+    private CombatManager combatManager;
     private VisualizationManager visualizationManager;
-    private SaveManager saveManager;
-    private HomeManager homeManager;
+    private WarpManager warpManager;
     private CommandHandler commandHandler;
-    private EventListener eventListener;
-    private BlueMapHook blueMapHook;
-    private DynmapHook dynmapHook;
-    private List<String> blockedCommands = new ArrayList<>();
-    private List<String> blockedWorlds = new ArrayList<>();
-    private boolean worldGuardEnabled = false;
+    private ListenerManager listenerManager;
+    private HookManager hookManager;
 
     @Override
     public void onEnable() {
+        instance = this;
+
         try {
-            // Initialize bStats metrics
-            // (https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
+            // 1. Enable bStats metrics
             new Metrics(this, 28407);
 
-            // Check for WorldGuard
-            if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
-                worldGuardEnabled = true;
-                getLogger().info("WorldGuard detected. Enabling region gap protection.");
-            }
-            // Initialize managers
+            // Run V1 legacy file cleanup BEFORE Okaeri ConfigManager writes defaults
+            org.ayosynk.landClaimPlugin.migration.V1LegacyMigrator.preConfigCleanup(this);
+
+            // 2. Initialize core configs
             configManager = new ConfigManager(this);
+
+            // 3. Initialize Database and Cache
+            databaseManager = new DatabaseManager(this);
+            databaseManager.init();
+            cacheManager = new CacheManager();
+
+            // 4. Initialize Network/Bungee syncing (Redis)
+            redisManager = new RedisManager(this);
+            redisManager.init();
+
+            // 5. Run V1 → V2 SQL legacy migration from the backed-up claims file
+            org.ayosynk.landClaimPlugin.migration.V1LegacyMigrator.migrateClaims(this);
+
+            // 6. Initialize business logic managers
+            combatManager = new CombatManager(this);
             claimManager = new ClaimManager(this, configManager);
-            trustManager = new TrustManager(this, claimManager, configManager);
-
-            // Load claims and trust data
-            claimManager.initialize();
-            trustManager.initialize();
-
-            // Initialize visualization manager
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
+            warpManager = new WarpManager(this, configManager);
 
-            // Initialize home manager
-            homeManager = new HomeManager(this, configManager);
-
-            // Initialize save manager with debounced async saves
-            saveManager = new SaveManager(this, claimManager, trustManager, homeManager);
-
-            // Register commands
-            commandHandler = new CommandHandler(this, claimManager, trustManager, configManager, visualizationManager,
-                    homeManager);
-
-            // Register events
-            eventListener = new EventListener(this, claimManager, trustManager, configManager);
-            getServer().getPluginManager().registerEvents(eventListener, this);
-
-            // Register command blocker
-            getServer().getPluginManager().registerEvents(
-                    new CommandBlocker(this, claimManager, trustManager),
-                    this);
-
-            getServer().getPluginManager().registerEvents(
-                    new PlayerJoinListener(this, visualizationManager),
-                    this);
-
-            // Register GUI listener
-            getServer().getPluginManager().registerEvents(
-                    new GUIListener(trustManager),
-                    this);
-
-            // Register tab completers
-            ClaimTabCompleter tabCompleter = new ClaimTabCompleter();
-            if (getCommand("claim") != null) {
-                getCommand("claim").setTabCompleter(tabCompleter);
-            }
-            if (getCommand("unclaim") != null) {
-                getCommand("unclaim").setTabCompleter(tabCompleter);
-            }
-            if (getCommand("unclaimall") != null) {
-                getCommand("unclaimall").setTabCompleter(tabCompleter);
-            }
-            // Register tab completers for aliases
-            if (getCommand("c") != null) {
-                getCommand("c").setTabCompleter(tabCompleter);
-            }
-            if (getCommand("uc") != null) {
-                getCommand("uc").setTabCompleter(tabCompleter);
-            }
-
-            // Load configuration
-            reloadConfiguration();
-
-            // Start debounced auto-save task
-            saveManager.startAutoSave();
-
-            // Initialize map integrations (after config is loaded and server finishes
-            // enabling)
-            Bukkit.getScheduler().runTask(this, () -> {
-                if (configManager.getConfig().getBoolean("bluemap.enabled", true)
-                        && Bukkit.getPluginManager().getPlugin("BlueMap") != null) {
-                    blueMapHook = new BlueMapHook(LandClaimPlugin.this, claimManager);
-                    getLogger().info("BlueMap detected. Enabling map integration.");
-                }
-                if (configManager.getConfig().getBoolean("dynmap.enabled", true)
-                        && Bukkit.getPluginManager().getPlugin("dynmap") != null) {
-                    dynmapHook = new DynmapHook(LandClaimPlugin.this, claimManager);
-                    getLogger().info("Dynmap detected. Enabling map integration.");
-                }
+            // Load persistent warp data before resolving claims
+            warpManager.loadFromDatabase().thenRun(() -> {
+                claimManager.initialize();
+                getLogger().info("Warp and Claim systems initialized.");
             });
 
-            getLogger().info("LandClaim has been enabled! Loaded " +
-                    claimManager.getTotalClaims() + " claims and " +
-                    trustManager.getTotalTrusts() + " trust relationships");
+            // 7. Initialize and register commands
+            commandHandler = new CommandHandler(this, claimManager, configManager, visualizationManager, warpManager);
+
+            // 8. Initialize and register listeners
+            listenerManager = new ListenerManager(this, claimManager, configManager, visualizationManager);
+            listenerManager.registerAll();
+
+            // 9. Initialize third-party plugins (WorldGuard, Maps)
+            hookManager = new HookManager(this, claimManager, configManager);
+            hookManager.init();
+
+            // Refresh settings once more
+            configManager.reloadMainConfig();
+
+            getLogger().info(
+                    "LandClaim has been successfully enabled! Loaded " + claimManager.getTotalClaims() + " claims.");
         } catch (Exception e) {
             getLogger().severe("Failed to enable LandClaim: " + e.getMessage());
             e.printStackTrace();
@@ -140,116 +89,87 @@ public class LandClaimPlugin extends JavaPlugin {
         }
     }
 
-    public boolean isWorldGuardEnabled() {
-        return worldGuardEnabled;
-    }
-
-    public void reloadConfiguration() {
-        // Update config to latest version
-        ConfigUpdater.updateConfig(this);
-
-        // Reload config manager
-        configManager.reloadMainConfig();
-
-        // Reload blocked commands and worlds
-        blockedCommands = configManager.getBlockedCommands();
-        blockedWorlds = configManager.getConfig().getStringList("block-world");
-
-        // Convert to lowercase for case-insensitive matching
-        blockedCommands = blockedCommands.stream().map(String::toLowerCase).toList();
-        blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();
-
-        // Reload claims and trust
-        claimManager.loadClaims();
-        trustManager.loadTrustedPlayers();
-        trustManager.loadPermissions();
-        trustManager.loadMembers();
-    }
-
     @Override
     public void onDisable() {
         try {
-            // Save all data synchronously on disable
-            if (saveManager != null) {
-                saveManager.saveAll();
-                getLogger().info("Saved " + claimManager.getTotalClaims() + " claims and " +
-                        trustManager.getTotalTrusts() + " trust relationships");
-            }
-            if (homeManager != null) {
-                homeManager.save();
-                getLogger().info("Saved home data");
-            }
+            // Shutdown commands executor gracefully
             if (commandHandler != null) {
-                commandHandler.saveAllPlayerData();
-                getLogger().info("Saved player data (auto-claim states)");
+                commandHandler.shutdown();
             }
+
+            // Save persistent data synchronously before exit
+            if (warpManager != null) {
+                warpManager.save();
+                getLogger().info("Saved warp data.");
+            }
+
+            // Clear visual effects
             if (visualizationManager != null) {
-                visualizationManager.saveAllPlayerData();
-                getLogger().info("Saved visualization modes");
+                visualizationManager.cleanupLocalDisplays();
+                getLogger().info("Cleared active visualization displays.");
             }
-            getLogger().info("LandClaim has been disabled!");
+
+            // Close external connections
+            if (databaseManager != null) {
+                databaseManager.shutdown();
+            }
+            if (redisManager != null) {
+                redisManager.shutdown();
+            }
+
+            getLogger().info("LandClaim has been successfully disabled!");
         } catch (Exception e) {
             getLogger().severe("Error while disabling LandClaim: " + e.getMessage());
         }
+    }
+
+    // --- Singleton & Manager Accessors ---
+
+    public static LandClaimPlugin getInstance() {
+        return instance;
     }
 
     public ConfigManager getConfigManager() {
         return configManager;
     }
 
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    public CacheManager getCacheManager() {
+        return cacheManager;
+    }
+
+    public RedisManager getRedisManager() {
+        return redisManager;
+    }
+
     public ClaimManager getClaimManager() {
         return claimManager;
     }
 
-    public TrustManager getTrustManager() {
-        return trustManager;
+    public CombatManager getCombatManager() {
+        return combatManager;
     }
 
     public VisualizationManager getVisualizationManager() {
         return visualizationManager;
     }
 
-    public SaveManager getSaveManager() {
-        return saveManager;
-    }
-
-    public HomeManager getHomeManager() {
-        return homeManager;
+    public WarpManager getWarpManager() {
+        return warpManager;
     }
 
     public CommandHandler getCommandHandler() {
         return commandHandler;
     }
 
-    public List<String> getBlockedCommands() {
-        return blockedCommands;
+    public ListenerManager getListenerManager() {
+        return listenerManager;
     }
 
-    public List<String> getBlockedWorlds() {
-        return blockedWorlds;
-    }
-
-    public EventListener getEventListener() {
-        return eventListener;
-    }
-
-    public BlueMapHook getBlueMapHook() {
-        return blueMapHook;
-    }
-
-    public DynmapHook getDynmapHook() {
-        return dynmapHook;
-    }
-
-    /**
-     * Refresh all map integrations (called on claim/unclaim)
-     */
-    public void refreshMapHooks() {
-        if (blueMapHook != null && blueMapHook.isActive()) {
-            blueMapHook.update();
-        }
-        if (dynmapHook != null && dynmapHook.isActive()) {
-            dynmapHook.update();
-        }
+    public HookManager getHookManager() {
+        return hookManager;
     }
 }

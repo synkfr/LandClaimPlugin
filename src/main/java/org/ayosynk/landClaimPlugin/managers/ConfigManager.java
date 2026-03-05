@@ -1,246 +1,479 @@
 package org.ayosynk.landClaimPlugin.managers;
 
+import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
+import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
-import org.ayosynk.landClaimPlugin.utils.ChatUtils;
-import org.ayosynk.landClaimPlugin.utils.ConfigUpdater;
+import org.ayosynk.landClaimPlugin.config.MessagesConfig;
+import org.ayosynk.landClaimPlugin.config.PluginConfig;
+import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ClaimSettingsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ClaimMapConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ClaimMapInfoConfig;
+import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.TrustManagementConfig;
+import org.ayosynk.landClaimPlugin.config.menus.PlayerTrustPermissionConfig;
+import org.ayosynk.landClaimPlugin.config.menus.MemberManagementConfig;
+import org.ayosynk.landClaimPlugin.config.menus.PlayerControlPanelConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RoleSelectionConfig;
+import org.ayosynk.landClaimPlugin.config.menus.WarpManagementConfig;
+import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
+import org.ayosynk.landClaimPlugin.config.menus.WarpChangeIconConfig;
+import org.ayosynk.landClaimPlugin.config.menus.AllyManagementConfig;
+import org.ayosynk.landClaimPlugin.config.menus.AllyControlPanelConfig;
+import org.ayosynk.landClaimPlugin.config.menus.AllyPremissionsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RoleEditConfig;
+import org.ayosynk.landClaimPlugin.config.menus.TitleSettingsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
 import org.bukkit.Color;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 public class ConfigManager {
     private final LandClaimPlugin plugin;
-    private FileConfiguration config;
-    private File configFile;
 
-    private FileConfiguration claimsConfig;
-    private File claimsFile;
+    private PluginConfig pluginConfig;
+    private MessagesConfig messagesConfig;
+    private MainMenuConfig mainMenuConfig;
+    private ClaimSettingsConfig claimSettingsConfig;
+    private ClaimMapConfig claimMapConfig;
+    private ClaimMapInfoConfig claimMapInfoConfig;
+    private VisitorSettingsConfig visitorSettingsConfig;
+    private TrustManagementConfig trustManagementConfig;
+    private PlayerTrustPermissionConfig playerTrustPermissionConfig;
+    private MemberManagementConfig memberManagementConfig;
+    private PlayerControlPanelConfig playerControlPanelConfig;
+    private RoleSelectionConfig roleSelectionConfig;
+    private WarpManagementConfig warpManagementConfig;
+    private WarpControlPanelConfig warpControlPanelConfig;
+    private WarpChangeIconConfig warpChangeIconConfig;
+    private AllyManagementConfig allyManagementConfig;
+    private AllyControlPanelConfig allyControlPanelConfig;
+    private AllyPremissionsConfig allyPremissionsConfig;
+    private RoleManagementConfig roleManagementConfig;
+    private RoleSetupConfig roleSetupConfig;
+    private TitleSettingsConfig titleSettingsConfig;
+    private RenameClaimConfig renameClaimConfig;
+    private ChangeClaimColorConfig changeClaimColorConfig;
+    private RoleEditConfig roleEditConfig;
 
-    private FileConfiguration trustConfig;
-    private File trustFile;
-
-    private FileConfiguration messagesConfig;
-    private File messagesFile;
-
-    private FileConfiguration playerDataConfig;
-    private File playerDataFile;
+    private List<String> blockedCommands = List.of();
+    private List<String> blockedWorlds = List.of();
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
-        updateConfig();
         loadConfigs();
     }
 
-    private void updateConfig() {
-        ConfigUpdater.updateConfig(plugin);
-    }
-
     private void loadConfigs() {
-        // Load main config
-        plugin.saveDefaultConfig();
-        config = plugin.getConfig();
+        this.pluginConfig = eu.okaeri.configs.ConfigManager.create(PluginConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "config.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
 
-        // Claims data
-        claimsFile = new File(plugin.getDataFolder(), "claims.yml");
-        if (!claimsFile.exists()) {
-            createEmptyFile(claimsFile);
-        }
-        claimsConfig = YamlConfiguration.loadConfiguration(claimsFile);
+        this.messagesConfig = eu.okaeri.configs.ConfigManager.create(MessagesConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "locales/messages_" + pluginConfig.language + ".yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
 
-        // Trust data
-        trustFile = new File(plugin.getDataFolder(), "trust.yml");
-        if (!trustFile.exists()) {
-            createEmptyFile(trustFile);
-        }
-        trustConfig = YamlConfiguration.loadConfiguration(trustFile);
+        this.mainMenuConfig = eu.okaeri.configs.ConfigManager.create(MainMenuConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/mainmenu.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
 
-        // Messages
-        messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        if (!messagesFile.exists()) {
-            plugin.saveResource("messages.yml", false);
-        }
-        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+        this.claimSettingsConfig = eu.okaeri.configs.ConfigManager.create(ClaimSettingsConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimSettings.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
 
-        // Player data (auto-claim, visualization modes, etc.)
-        playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
-        if (!playerDataFile.exists()) {
-            createEmptyFile(playerDataFile);
-        }
-        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
-    }
+        this.claimMapConfig = eu.okaeri.configs.ConfigManager.create(ClaimMapConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimMap.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
 
-    private void createEmptyFile(File file) {
-        try {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to create file: " + file.getName());
-            e.printStackTrace();
-        }
+        this.claimMapInfoConfig = eu.okaeri.configs.ConfigManager.create(ClaimMapInfoConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimMapInfo.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.visitorSettingsConfig = eu.okaeri.configs.ConfigManager.create(VisitorSettingsConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/VisitorSettings.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.trustManagementConfig = eu.okaeri.configs.ConfigManager.create(TrustManagementConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/TrustManagement.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.playerTrustPermissionConfig = eu.okaeri.configs.ConfigManager.create(PlayerTrustPermissionConfig.class,
+                (it) -> {
+                    it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+                    it.withBindFile(new File(plugin.getDataFolder(), "menus/PlayerTrustPermission.yml"));
+                    it.saveDefaults();
+                    it.load(true);
+                });
+
+        this.memberManagementConfig = eu.okaeri.configs.ConfigManager.create(MemberManagementConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/MemberManagement.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.playerControlPanelConfig = eu.okaeri.configs.ConfigManager.create(PlayerControlPanelConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/PlayerControlPanel.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.roleSelectionConfig = eu.okaeri.configs.ConfigManager.create(RoleSelectionConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RoleSelection.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.warpManagementConfig = eu.okaeri.configs.ConfigManager.create(WarpManagementConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/WarpManagement.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.warpControlPanelConfig = eu.okaeri.configs.ConfigManager.create(WarpControlPanelConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/WarpControlPanel.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.warpChangeIconConfig = eu.okaeri.configs.ConfigManager.create(WarpChangeIconConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/WarpChangeIcon.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.allyManagementConfig = eu.okaeri.configs.ConfigManager.create(AllyManagementConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/AllyManagement.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.allyControlPanelConfig = eu.okaeri.configs.ConfigManager.create(AllyControlPanelConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/AllyControlPanel.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.allyPremissionsConfig = eu.okaeri.configs.ConfigManager.create(AllyPremissionsConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/AllyPremissions.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.roleManagementConfig = eu.okaeri.configs.ConfigManager.create(RoleManagementConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RoleManagement.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.roleSetupConfig = eu.okaeri.configs.ConfigManager.create(RoleSetupConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RoleSetup.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.titleSettingsConfig = eu.okaeri.configs.ConfigManager.create(TitleSettingsConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/TitleSettings.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.renameClaimConfig = eu.okaeri.configs.ConfigManager.create(RenameClaimConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RenameClaim.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.changeClaimColorConfig = eu.okaeri.configs.ConfigManager.create(ChangeClaimColorConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/ChangeClaimColor.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.roleEditConfig = eu.okaeri.configs.ConfigManager.create(RoleEditConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/RoleEdit.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
-        plugin.reloadConfig();
-        config = plugin.getConfig();
-        // Reload messages.yml as well
-        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+        pluginConfig.load();
+        messagesConfig.load();
+        mainMenuConfig.load();
+        claimSettingsConfig.load();
+        claimMapConfig.load();
+        claimMapInfoConfig.load();
+        visitorSettingsConfig.load();
+        trustManagementConfig.load();
+        playerTrustPermissionConfig.load();
+        memberManagementConfig.load();
+        playerControlPanelConfig.load();
+        roleSelectionConfig.load();
+        warpManagementConfig.load();
+        warpControlPanelConfig.load();
+        warpChangeIconConfig.load();
+        allyManagementConfig.load();
+        allyControlPanelConfig.load();
+        allyPremissionsConfig.load();
+        roleManagementConfig.load();
+        roleSetupConfig.load();
+        titleSettingsConfig.load();
+        renameClaimConfig.load();
+        changeClaimColorConfig.load();
+        roleEditConfig.load();
+
+        blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
+        blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
     }
 
-    public FileConfiguration getConfig() {
-        return config;
+    public PluginConfig getPluginConfig() {
+        return pluginConfig;
     }
 
-    public FileConfiguration getClaimsConfig() {
-        return claimsConfig;
+    public MessagesConfig getMessagesConfig() {
+        return messagesConfig;
     }
 
-    public FileConfiguration getTrustConfig() {
-        return trustConfig;
+    public MainMenuConfig getMainMenuConfig() {
+        return mainMenuConfig;
     }
 
-    public FileConfiguration getPlayerDataConfig() {
-        return playerDataConfig;
+    public ClaimSettingsConfig getClaimSettingsConfig() {
+        return claimSettingsConfig;
     }
 
-    public void savePlayerData() {
-        try {
-            playerDataConfig.save(playerDataFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to save playerdata.yml");
-            e.printStackTrace();
-        }
+    public ClaimMapConfig getClaimMapConfig() {
+        return claimMapConfig;
     }
 
-    public void reloadPlayerData() {
-        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
+    public ClaimMapInfoConfig getClaimMapInfoConfig() {
+        return claimMapInfoConfig;
     }
+
+    public VisitorSettingsConfig getVisitorSettingsConfig() {
+        return visitorSettingsConfig;
+    }
+
+    public TrustManagementConfig getTrustManagementConfig() {
+        return trustManagementConfig;
+    }
+
+    public PlayerTrustPermissionConfig getPlayerTrustPermissionConfig() {
+        return playerTrustPermissionConfig;
+    }
+
+    public MemberManagementConfig getMemberManagementConfig() {
+        return memberManagementConfig;
+    }
+
+    public PlayerControlPanelConfig getPlayerControlPanelConfig() {
+        return playerControlPanelConfig;
+    }
+
+    public RoleSelectionConfig getRoleSelectionConfig() {
+        return roleSelectionConfig;
+    }
+
+    public WarpManagementConfig getWarpManagementConfig() {
+        return warpManagementConfig;
+    }
+
+    public WarpControlPanelConfig getWarpControlPanelConfig() {
+        return warpControlPanelConfig;
+    }
+
+    public WarpChangeIconConfig getWarpChangeIconConfig() {
+        return warpChangeIconConfig;
+    }
+
+    public AllyManagementConfig getAllyManagementConfig() {
+        return allyManagementConfig;
+    }
+
+    public AllyControlPanelConfig getAllyControlPanelConfig() {
+        return allyControlPanelConfig;
+    }
+
+    public AllyPremissionsConfig getAllyPremissionsConfig() {
+        return allyPremissionsConfig;
+    }
+
+    public RoleManagementConfig getRoleManagementConfig() {
+        return roleManagementConfig;
+    }
+
+    public RoleSetupConfig getRoleSetupConfig() {
+        return roleSetupConfig;
+    }
+
+    public TitleSettingsConfig getTitleSettingsConfig() {
+        return titleSettingsConfig;
+    }
+
+    public RenameClaimConfig getRenameClaimConfig() {
+        return renameClaimConfig;
+    }
+
+    public ChangeClaimColorConfig getChangeClaimColorConfig() {
+        return changeClaimColorConfig;
+    }
+
+    public RoleEditConfig getRoleEditConfig() {
+        return roleEditConfig;
+    }
+
+    // --- Legacy wrapper methods to bridge until other classes are transformed ---
 
     public boolean requireConnectedClaims() {
-        return getConfig().getBoolean("require-connected-claims", false);
+        return pluginConfig.requireConnectedClaims;
     }
 
     public boolean allowDiagonalConnections() {
-        return getConfig().getBoolean("allow-diagonal-connections", true);
-    }
-
-    public boolean preventPvP() {
-        return getConfig().getBoolean("prevent-pvp", true);
-    }
-
-    public boolean preventMobGriefing() {
-        return getConfig().getBoolean("prevent-mob-griefing", true);
-    }
-
-    public boolean preventExplosionDamage() {
-        return getConfig().getBoolean("prevent-explosion-damage", true);
-    }
-
-    public boolean preventHarmEntities() {
-        return getConfig().getBoolean("prevent-harm-entities", true);
+        return pluginConfig.allowDiagonalConnections;
     }
 
     public boolean isWorldBlocked(String worldName) {
-        List<String> blockedWorlds = getConfig().getStringList("block-world");
-        return blockedWorlds.contains(worldName);
+        return blockedWorlds.contains(worldName.toLowerCase());
     }
 
     public List<String> getBlockedCommands() {
-        return getConfig().getStringList("block-cmd");
+        return blockedCommands;
+    }
+
+    public List<String> getBlockedWorlds() {
+        return blockedWorlds;
     }
 
     public int getUnstuckCooldown() {
-        return getConfig().getInt("cooldown-unstuck", 30);
+        return pluginConfig.cooldownUnstuck;
     }
 
     public Color getVisualizationColor(String type) {
-        String colorStr = getConfig().getString("visualization." + type, "0,255,0");
-        String[] rgb = colorStr.split(",");
-        try {
-            int r = Integer.parseInt(rgb[0].trim());
-            int g = Integer.parseInt(rgb[1].trim());
-            int b = Integer.parseInt(rgb[2].trim());
-            return Color.fromRGB(r, g, b);
-        } catch (Exception e) {
-            return type.equals("always-color") ? Color.LIME : Color.YELLOW;
-        }
-    }
+        return Color.LIME;
+    } // Temporary stub for v2 border
 
     public double getParticleSpacing() {
-        return getConfig().getDouble("visualization.particle-spacing", 0.5);
-    }
+        return 0.5;
+    } // Temporary stub
 
     public int getVisualizationUpdateInterval() {
-        return getConfig().getInt("visualization.update-interval", 20);
-    }
-
-    public boolean getDefaultTrustPermission(String permission) {
-        return getConfig().getBoolean("default-trust-permissions." + permission, true);
-    }
-
-    public boolean getDefaultVisitorPermission(String permission) {
-        return getConfig().getBoolean("default-visitor-permissions." + permission, false);
-    }
+        return 20;
+    } // Temporary stub
 
     public int getWorldGuardGap() {
-        return getConfig().getInt("worldguard-gap", 0);
+        return pluginConfig.worldguardGap;
     }
 
     public int getMinClaimGap() {
-        return getConfig().getInt("min-claim-gap", 0);
+        return pluginConfig.minClaimGap;
     }
 
     public boolean logAutoSaveMessage() {
-        return getConfig().getBoolean("log-auto-save-message", true);
-    }
+        return true;
+    } // Temporary
 
     public String getDefaultVisualizationMode() {
-        return getConfig().getString("visualization-default", "OFF");
+        return "OFF";
     }
 
     public int getActionBarUpdateInterval() {
-        return getConfig().getInt("actionbar-update-interval", 20);
+        return pluginConfig.actionbarUpdateInterval;
     }
 
-    public void saveClaimsConfig() {
-        try {
-            claimsConfig.save(claimsFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save claims.yml: " + e.getMessage());
-        }
-    }
-
-    public void saveTrustConfig() {
-        try {
-            trustConfig.save(trustFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save trust.yml: " + e.getMessage());
-        }
-    }
+    // --- MiniMessage formatting ---
 
     public String getMessage(String key, String... replacements) {
-        String prefix = getConfig().getString("prefix", "&8[&6LandClaim&8]&r ");
-        String message = messagesConfig.getString(key, "&cMessage not found: " + key);
+        String template = getRawMessageString(key);
         for (int i = 0; i < replacements.length; i += 2) {
-            message = message.replace(replacements[i], replacements[i + 1]);
+            template = template.replace(replacements[i], replacements[i + 1]);
         }
-        return ChatUtils.colorize(prefix + message);
+        Component comp = MiniMessage.miniMessage().deserialize(pluginConfig.prefix + template);
+        return LegacyComponentSerializer.legacySection().serialize(comp);
     }
 
     public String getRawMessage(String key, String... replacements) {
-        String message = messagesConfig.getString(key, "&cMessage not found: " + key);
+        String template = getRawMessageString(key);
         for (int i = 0; i < replacements.length; i += 2) {
-            message = message.replace(replacements[i], replacements[i + 1]);
+            template = template.replace(replacements[i], replacements[i + 1]);
         }
-        return ChatUtils.colorize(message);
+        Component comp = MiniMessage.miniMessage().deserialize(template);
+        return LegacyComponentSerializer.legacySection().serialize(comp);
     }
 
-    /**
-     * Get actionbar message without prefix (for actionbar display)
-     */
     public String getActionBarMessage(String key) {
-        return messagesConfig.getString(key, "&7" + key);
+        return getRawMessageString(key);
+    }
+
+    private String getRawMessageString(String key) {
+        try {
+            // Convert kebab-case to camelCase if needed
+            String camelCaseKey = key;
+            if (key.contains("-")) {
+                StringBuilder sb = new StringBuilder();
+                boolean nextUpper = false;
+                for (char c : key.toCharArray()) {
+                    if (c == '-') {
+                        nextUpper = true;
+                    } else if (nextUpper) {
+                        sb.append(Character.toUpperCase(c));
+                        nextUpper = false;
+                    } else {
+                        sb.append(c);
+                    }
+                }
+                camelCaseKey = sb.toString();
+            }
+
+            var field = messagesConfig.getClass().getField(camelCaseKey);
+            return (String) field.get(messagesConfig);
+        } catch (Exception e) {
+            return "<red>Message not found: " + key;
+        }
     }
 }

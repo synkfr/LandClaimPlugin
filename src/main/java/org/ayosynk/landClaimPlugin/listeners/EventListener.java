@@ -1,31 +1,19 @@
 package org.ayosynk.landClaimPlugin.listeners;
 
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.TrustManager;
+import org.ayosynk.landClaimPlugin.managers.PermissionResolver;
+
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.utils.ChatUtils;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPistonRetractEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.vehicle.VehicleMoveEvent;
-import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -34,52 +22,17 @@ public class EventListener implements Listener {
 
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
-    private final TrustManager trustManager;
     private final ConfigManager configManager;
     private final Map<UUID, ChunkPosition> lastChunkMap = new HashMap<>();
     private final Map<UUID, String> lastActionBarMap = new HashMap<>();
-    private final Map<UUID, Boolean> lastClaimStatusMap = new HashMap<>(); // true = claimed, false = wilderness
-
-    // Container blocks - require CONTAINER permission
-    private static final Set<Material> CONTAINER_BLOCKS = new HashSet<>(Arrays.asList(
-            Material.CHEST, Material.TRAPPED_CHEST, Material.ENDER_CHEST, Material.COPPER_CHEST,
-            Material.EXPOSED_COPPER_CHEST, Material.WEATHERED_COPPER_CHEST, Material.OXIDIZED_COPPER_CHEST,
-            Material.WAXED_COPPER_CHEST, Material.WAXED_EXPOSED_COPPER_CHEST, Material.WAXED_WEATHERED_COPPER_CHEST,
-            Material.WAXED_OXIDIZED_COPPER_CHEST, Material.BARREL,
-            Material.FURNACE, Material.BLAST_FURNACE, Material.SMOKER, Material.HOPPER,
-            Material.DROPPER, Material.DISPENSER, Material.BREWING_STAND,
-            Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
-            Material.MAGENTA_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX,
-            Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
-            Material.LIGHT_GRAY_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX,
-            Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
-            Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX));
-
-    // Interactable blocks - require INTERACT permission
-    private static final Set<Material> INTERACTABLE_BLOCKS = new HashSet<>(Arrays.asList(
-            Material.ACACIA_DOOR, Material.BIRCH_DOOR, Material.DARK_OAK_DOOR, Material.JUNGLE_DOOR,
-            Material.OAK_DOOR, Material.SPRUCE_DOOR, Material.CHERRY_DOOR, Material.PALE_OAK_DOOR, Material.BAMBOO_DOOR,
-            Material.CRIMSON_DOOR, Material.WARPED_DOOR, Material.MANGROVE_DOOR,
-            Material.ACACIA_TRAPDOOR, Material.BIRCH_TRAPDOOR, Material.CHERRY_TRAPDOOR, Material.BAMBOO_TRAPDOOR,
-            Material.PALE_OAK_TRAPDOOR, Material.MANGROVE_TRAPDOOR,
-            Material.CRIMSON_TRAPDOOR, Material.WARPED_TRAPDOOR, Material.BAMBOO_BUTTON, Material.CHERRY_BUTTON,
-            Material.PALE_OAK_BUTTON, Material.MANGROVE_BUTTON,
-            Material.DARK_OAK_TRAPDOOR, Material.JUNGLE_TRAPDOOR, Material.OAK_TRAPDOOR, Material.SPRUCE_TRAPDOOR,
-            Material.IRON_DOOR, Material.IRON_TRAPDOOR, Material.LEVER, Material.STONE_BUTTON, Material.OAK_BUTTON,
-            Material.SPRUCE_BUTTON, Material.BIRCH_BUTTON, Material.JUNGLE_BUTTON, Material.ACACIA_BUTTON,
-            Material.DARK_OAK_BUTTON, Material.CRIMSON_BUTTON, Material.WARPED_BUTTON,
-            Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL, Material.GRINDSTONE,
-            Material.SMITHING_TABLE, Material.LOOM, Material.CARTOGRAPHY_TABLE, Material.FLETCHING_TABLE,
-            Material.STONECUTTER, Material.BELL, Material.COMPOSTER));
+    private final Map<UUID, Boolean> lastClaimStatusMap = new HashMap<>();
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
-            TrustManager trustManager, ConfigManager configManager) {
+            ConfigManager configManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
-        this.trustManager = trustManager;
         this.configManager = configManager;
 
-        // Start action bar task
         startActionBarTask();
     }
 
@@ -101,70 +54,81 @@ public class EventListener implements Listener {
         ChunkPosition lastPos = lastChunkMap.get(playerId);
 
         boolean isClaimed = claimManager.isChunkClaimed(currentPos);
-        Boolean wasClaimedBefore = lastClaimStatusMap.get(playerId);
+        boolean chunkChanged = lastPos == null || !currentPos.equals(lastPos);
 
-        // For wilderness: only update if transitioning from claimed to wilderness (or
-        // first time)
-        // For claimed chunks: update when chunk changes (different owner/trust status
-        // possible)
-        boolean needsUpdate = false;
+        // If chunk changed, compute the new actionbar string and handle titles
+        if (chunkChanged) {
+            ClaimProfile newProfile = claimManager.getProfileAt(currentPos);
+            ClaimProfile oldProfile = lastPos != null ? claimManager.getProfileAt(lastPos) : null;
 
-        if (isClaimed) {
-            // In claimed land - update if chunk changed
-            needsUpdate = (lastPos == null || !currentPos.equals(lastPos));
-        } else {
-            // In wilderness - only update if status changed from claimed to wilderness
-            needsUpdate = (wasClaimedBefore == null || wasClaimedBefore);
-        }
+            // Handle entry/leave titles if transitioning between different claims or
+            // wilderness
+            if (oldProfile != newProfile) {
+                if (oldProfile != null && oldProfile.isEnterTitleEnabled()) {
+                    String ownerName = plugin.getServer().getOfflinePlayer(oldProfile.getOwnerId()).getName();
+                    if (ownerName == null)
+                        ownerName = "Unknown";
+                    String leaveTxt = oldProfile.getLeaveTitle().replace("<owner>", ownerName);
+                    player.showTitle(net.kyori.adventure.title.Title.title(
+                            Component.empty(),
+                            MiniMessage.miniMessage().deserialize(leaveTxt)));
+                }
 
-        if (needsUpdate) {
+                if (newProfile != null && newProfile.isEnterTitleEnabled()) {
+                    String ownerName = plugin.getServer().getOfflinePlayer(newProfile.getOwnerId()).getName();
+                    if (ownerName == null)
+                        ownerName = "Unknown";
+                    String enterTxt = newProfile.getEnterTitle().replace("<owner>", ownerName);
+                    player.showTitle(net.kyori.adventure.title.Title.title(
+                            MiniMessage.miniMessage().deserialize(enterTxt),
+                            Component.empty()));
+                }
+            }
+
             lastChunkMap.put(playerId, currentPos);
             lastClaimStatusMap.put(playerId, isClaimed);
 
+            String message;
             if (isClaimed) {
                 UUID ownerId = claimManager.getChunkOwner(currentPos);
                 String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
                 if (ownerName == null)
                     ownerName = "Unknown";
 
-                String message;
-
                 if (playerId.equals(ownerId)) {
-                    message = configManager.getActionBarMessage("actionbar-own");
-                } else if (trustManager.isTrusted(ownerId, player)) {
-                    message = configManager.getActionBarMessage("actionbar-trusted")
-                            .replace("{owner}", ownerName);
-                } else if (player.hasPermission("landclaim.admin")) {
-                    message = configManager.getActionBarMessage("actionbar-admin")
-                            .replace("{owner}", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-owned-by-you");
                 } else {
-                    message = configManager.getActionBarMessage("actionbar-owner")
-                            .replace("{owner}", ownerName);
+                    String status = PermissionResolver.getPlayerStatus(newProfile, playerId);
+                    if (status.equals("member") || status.equals("trusted")) {
+                        message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
+                    } else if (player.hasPermission("landclaim.admin")) {
+                        message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
+                    } else {
+                        message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>",
+                                ownerName);
+                    }
                 }
-
-                sendActionBar(player, ChatUtils.colorize(message));
-                lastActionBarMap.put(playerId, message);
             } else {
-                // Not claimed: show wilderness message (persists until entering claimed land)
-                String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
-                sendActionBar(player, ChatUtils.colorize(wildernessMsg));
-                lastActionBarMap.put(playerId, wildernessMsg);
+                message = configManager.getActionBarMessage("actionbar-wilderness");
             }
-        } else if (!isClaimed) {
-            // In wilderness and status hasn't changed - resend wilderness message to keep
-            // it visible
-            String wildernessMsg = configManager.getActionBarMessage("actionbar-wilderness");
-            sendActionBar(player, ChatUtils.colorize(wildernessMsg));
+
+            lastActionBarMap.put(playerId, message);
+        }
+
+        // Always send the cached message to ensure persistence across all claims and
+        // wilderness
+        String cachedMessage = lastActionBarMap.get(playerId);
+        if (cachedMessage != null) {
+            sendActionBar(player, cachedMessage);
         }
     }
 
     private void sendActionBar(Player player, String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+        player.sendActionBar(MiniMessage.miniMessage().deserialize(message));
     }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        // Check if the player moved to a new chunk
         Location from = event.getFrom();
         Location to = event.getTo();
         if (to == null)
@@ -178,7 +142,9 @@ public class EventListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        // Handle auto claim
+        // Instantly update action bar and titles on chunk crossing
+        updateActionBar(player);
+
         if (plugin.getCommandHandler().isAutoClaimEnabled(playerId)) {
             ChunkPosition pos = new ChunkPosition(toChunk);
             if (!claimManager.isChunkClaimed(pos)) {
@@ -188,7 +154,6 @@ public class EventListener implements Listener {
             }
         }
 
-        // Handle auto unclaim
         if (plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
             ChunkPosition fromPos = new ChunkPosition(fromChunk);
             if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
@@ -204,378 +169,19 @@ public class EventListener implements Listener {
         if (!configManager.requireConnectedClaims())
             return false;
 
-        Set<ChunkPosition> claims = claimManager.getPlayerClaims(playerId);
+        ClaimProfile profile = claimManager.getProfile(playerId);
+        if (profile == null)
+            return false;
+        Set<ChunkPosition> claims = profile.getOwnedChunks();
         if (claims.isEmpty())
             return false;
 
-        // Check if this chunk is connected to others
         Set<ChunkPosition> neighbors = new HashSet<>(pos.getNeighbors(configManager.allowDiagonalConnections()));
         neighbors.retainAll(claims);
         neighbors.remove(pos);
 
         return !neighbors.isEmpty();
     }
-
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        // Check the block's location, not player's location
-        checkBlockPermission(event.getPlayer(), event.getBlock(), event, "BUILD");
-    }
-
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        // Check the block's location, not player's location
-        checkBlockPermission(event.getPlayer(), event.getBlock(), event, "BUILD");
-    }
-
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() == null)
-            return;
-
-        Block block = event.getClickedBlock();
-        Material blockType = block.getType();
-
-        // Check container blocks with CONTAINER permission
-        if (CONTAINER_BLOCKS.contains(blockType)) {
-            checkInteractionPermission(event.getPlayer(), event, "CONTAINER");
-            return;
-        }
-
-        // Check interactable blocks with INTERACT permission
-        if (INTERACTABLE_BLOCKS.contains(blockType)) {
-            checkInteractionPermission(event.getPlayer(), event, "INTERACT");
-        }
-    }
-
-    @EventHandler
-    public void onBucketEmpty(PlayerBucketEmptyEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getBlockClicked().getRelative(event.getBlockFace());
-        Material bucket = event.getBucket();
-
-        // Only handle water and lava buckets
-        if (bucket != Material.WATER_BUCKET && bucket != Material.LAVA_BUCKET) {
-            return;
-        }
-
-        // Check if in claimed land
-        if (shouldCancelBucketPlacement(player, block)) {
-            event.setCancelled(true);
-            player.sendMessage(configManager.getMessage("bucket-denied"));
-        }
-    }
-
-    @EventHandler
-    public void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof Villager ||
-                event.getEntity() instanceof Animals ||
-                isPet(event.getEntity())) {
-
-            // Get the attacking player
-            Player damager = null;
-            if (event.getDamager() instanceof Player) {
-                damager = (Player) event.getDamager();
-            } else if (event.getDamager() instanceof Projectile) {
-                Projectile projectile = (Projectile) event.getDamager();
-                if (projectile.getShooter() instanceof Player) {
-                    damager = (Player) projectile.getShooter();
-                }
-            }
-
-            if (damager == null)
-                return;
-
-            Location location = event.getEntity().getLocation();
-            if (isInProtectedChunk(location)) {
-                ChunkPosition pos = new ChunkPosition(location);
-                if (claimManager.isChunkClaimed(pos)) {
-                    UUID owner = claimManager.getChunkOwner(pos);
-                    if (damager.getUniqueId().equals(owner) ||
-                            trustManager.isTrusted(owner, damager)) {
-                        return; // Owner or trusted can harm
-                    }
-
-                    event.setCancelled(true);
-                    damager.sendMessage(configManager.getMessage("harm-entity-denied"));
-                }
-            }
-            return;
-        }
-
-        if (!configManager.preventPvP())
-            return;
-
-        Player attacker = null;
-        Player victim = null;
-
-        // Handle direct player attacks
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
-            attacker = (Player) event.getDamager();
-            victim = (Player) event.getEntity();
-        }
-        // Handle projectile attacks (arrows, etc.)
-        else if (event.getDamager() instanceof Projectile) {
-            Projectile projectile = (Projectile) event.getDamager();
-            if (projectile.getShooter() instanceof Player && event.getEntity() instanceof Player) {
-                attacker = (Player) projectile.getShooter();
-                victim = (Player) event.getEntity();
-            }
-        }
-
-        if (attacker == null || victim == null)
-            return;
-
-        Location location = victim.getLocation();
-        if (isInProtectedChunk(location)) {
-            event.setCancelled(true);
-            attacker.sendMessage(configManager.getMessage("pvp-denied"));
-        }
-    }
-
-    private boolean isPet(Entity entity) {
-        // Check if entity is a tamed animal
-        if (entity instanceof Tameable) {
-            Tameable tameable = (Tameable) entity;
-            return tameable.isTamed() && tameable.getOwner() != null;
-        }
-        return false;
-    }
-
-    @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
-        if (!configManager.preventExplosionDamage())
-            return;
-
-        // Get explosion location
-        Location explosionLoc = event.getLocation();
-        ChunkPosition explosionChunk = new ChunkPosition(explosionLoc);
-
-        // Check if explosion is near any claims
-        boolean nearClaim = false;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                ChunkPosition checkPos = new ChunkPosition(
-                        explosionLoc.getWorld().getName(),
-                        explosionChunk.getX() + dx,
-                        explosionChunk.getZ() + dz);
-                if (claimManager.isChunkClaimed(checkPos)) {
-                    nearClaim = true;
-                    break;
-                }
-            }
-            if (nearClaim)
-                break;
-        }
-
-        // If not near any claim, do nothing
-        if (!nearClaim)
-            return;
-
-        // Remove any blocks that are in claimed chunks from the explosion list
-        event.blockList().removeIf(b -> claimManager.isChunkClaimed(new ChunkPosition(b)));
-    }
-
-    @EventHandler
-    public void onBlockExplode(BlockExplodeEvent event) {
-        if (!configManager.preventExplosionDamage())
-            return;
-
-        // Get explosion location (e.g., respawn anchor)
-        Location explosionLoc = event.getBlock().getLocation();
-        ChunkPosition explosionChunk = new ChunkPosition(explosionLoc);
-
-        // Check if explosion is near any claims
-        boolean nearClaim = false;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                ChunkPosition checkPos = new ChunkPosition(
-                        explosionLoc.getWorld().getName(),
-                        explosionChunk.getX() + dx,
-                        explosionChunk.getZ() + dz);
-                if (claimManager.isChunkClaimed(checkPos)) {
-                    nearClaim = true;
-                    break;
-                }
-            }
-            if (nearClaim)
-                break;
-        }
-
-        // If not near any claim, do nothing
-        if (!nearClaim)
-            return;
-
-        // Remove any blocks that are in claimed chunks from the explosion list
-        event.blockList().removeIf(b -> claimManager.isChunkClaimed(new ChunkPosition(b)));
-    }
-
-    @EventHandler
-    public void onPistonExtend(BlockPistonExtendEvent event) {
-        ChunkPosition pistonChunk = new ChunkPosition(event.getBlock());
-        UUID pistonOwner = claimManager.isChunkClaimed(pistonChunk) ? claimManager.getChunkOwner(pistonChunk) : null;
-
-        for (Block block : event.getBlocks()) {
-            Block pushedTo = block.getRelative(event.getDirection());
-            ChunkPosition targetChunk = new ChunkPosition(pushedTo);
-
-            if (claimManager.isChunkClaimed(targetChunk)) {
-                UUID targetOwner = claimManager.getChunkOwner(targetChunk);
-                if (pistonOwner == null || !pistonOwner.equals(targetOwner)) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onPistonRetract(BlockPistonRetractEvent event) {
-        ChunkPosition pistonChunk = new ChunkPosition(event.getBlock());
-        UUID pistonOwner = claimManager.isChunkClaimed(pistonChunk) ? claimManager.getChunkOwner(pistonChunk) : null;
-
-        for (Block block : event.getBlocks()) {
-            ChunkPosition targetChunk = new ChunkPosition(block);
-
-            if (claimManager.isChunkClaimed(targetChunk)) {
-                UUID targetOwner = claimManager.getChunkOwner(targetChunk);
-                if (pistonOwner == null || !pistonOwner.equals(targetOwner)) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onVehicleMove(VehicleMoveEvent event) {
-        // Prevent hopper minecarts from entering claims they didn't originate from
-        if (event.getVehicle() instanceof HopperMinecart) {
-            ChunkPosition fromChunk = new ChunkPosition(event.getFrom());
-            ChunkPosition toChunk = new ChunkPosition(event.getTo());
-
-            if (!fromChunk.equals(toChunk) && claimManager.isChunkClaimed(toChunk)) {
-                UUID toOwner = claimManager.getChunkOwner(toChunk);
-                UUID fromOwner = claimManager.isChunkClaimed(fromChunk) ? claimManager.getChunkOwner(fromChunk) : null;
-
-                if (fromOwner == null || !fromOwner.equals(toOwner)) {
-                    event.getVehicle().setVelocity(new org.bukkit.util.Vector(0, 0, 0));
-                    event.getVehicle().teleport(event.getFrom());
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
-        if (!configManager.preventMobGriefing())
-            return;
-
-        // Check for griefing mobs (endermen, ravagers, etc.)
-        EntityType type = event.getEntityType();
-        if (type == EntityType.ENDERMAN || type == EntityType.RAVAGER) {
-            // Check if block change is in claimed chunk
-            if (isInProtectedChunk(event.getBlock().getLocation())) {
-                event.setCancelled(true);
-            }
-        }
-    }
-
-    private boolean isInProtectedChunk(Location location) {
-        ChunkPosition pos = new ChunkPosition(location);
-        return claimManager.isChunkClaimed(pos);
-    }
-
-    private void checkBlockPermission(Player player, Block block, org.bukkit.event.Cancellable event,
-            String permission) {
-        if (player.hasPermission("landclaim.admin"))
-            return;
-
-        // Always check the block's chunk, not the player's chunk
-        ChunkPosition pos = new ChunkPosition(block);
-
-        if (claimManager.isChunkClaimed(pos)) {
-            UUID owner = claimManager.getChunkOwner(pos);
-            if (player.getUniqueId().equals(owner)) {
-                return; // Owner can build
-            }
-
-            // Check if trusted with permission
-            if (trustManager.isTrusted(owner, player)) {
-                if (trustManager.hasTrustPermission(owner, player.getUniqueId(), permission)) {
-                    return; // Trusted with permission
-                }
-            } else {
-                // Check visitor permission
-                if (trustManager.hasVisitorPermission(owner, permission)) {
-                    return; // Visitor permission enabled
-                }
-            }
-
-            event.setCancelled(true);
-            player.sendMessage(configManager.getMessage("access-denied"));
-        }
-    }
-
-    private boolean shouldCancelBucketPlacement(Player player, Block block) {
-        if (player.hasPermission("landclaim.admin")) {
-            return false;
-        }
-
-        ChunkPosition pos = new ChunkPosition(block);
-
-        if (claimManager.isChunkClaimed(pos)) {
-            UUID owner = claimManager.getChunkOwner(pos);
-            UUID playerId = player.getUniqueId();
-
-            // Allow owner
-            if (playerId.equals(owner))
-                return false;
-
-            // Check if trusted with BUILD permission
-            if (trustManager.isTrusted(owner, player)) {
-                return !trustManager.hasTrustPermission(owner, player.getUniqueId(), "BUILD");
-            }
-
-            // Check visitor permission
-            return !trustManager.hasVisitorPermission(owner, "BUILD");
-        }
-
-        return false;
-    }
-
-    private void checkInteractionPermission(Player player, PlayerInteractEvent event, String permission) {
-        if (player.hasPermission("landclaim.admin"))
-            return;
-
-        Block block = event.getClickedBlock();
-        ChunkPosition pos = new ChunkPosition(block);
-
-        if (claimManager.isChunkClaimed(pos)) {
-            UUID owner = claimManager.getChunkOwner(pos);
-            if (player.getUniqueId().equals(owner)) {
-                return; // Owner can always interact
-            }
-
-            // Check if trusted with permission
-            if (trustManager.isTrusted(owner, player)) {
-                if (trustManager.hasTrustPermission(owner, player.getUniqueId(), permission)) {
-                    return; // Trusted with permission
-                }
-            } else {
-                // Check visitor permission
-                if (trustManager.hasVisitorPermission(owner, permission)) {
-                    return; // Visitor permission enabled
-                }
-            }
-
-            event.setCancelled(true);
-            player.sendMessage(configManager.getMessage("access-denied-interact"));
-        }
-    }
-
-    // Removed vulnerable onPlayerChat handler - trust menu is now accessed via GUI
-    // only
 
     /**
      * Clean up player data when they quit to prevent memory leaks

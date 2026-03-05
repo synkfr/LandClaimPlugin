@@ -1,27 +1,9 @@
 name: LandClaimPlugin
-version: '1.9'
+version: '2.0.0'
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: '1.21'
 author: AyoSynk
-soft-depend: [WorldGuard, BlueMap, dynmap]
-commands:
-  claim:
-    description: Main land claim command
-    usage: /claim [auto|trust <player>|untrust <player>|unstuck|visible [always|off]|help|reload|admin|trustlist|info]
-  unclaim:
-    description: Unclaim land chunks
-    usage: /unclaim [auto|all [confirm]]
-  unclaimall:
-    description: Unclaims all your land
-    usage: /unclaimall [confirm]
-  c:
-    description: Alias for /claim
-    usage: /c
-    aliases: []
-  uc:
-    description: Alias for /unclaim
-    usage: /uc
-    aliases: []
+soft-depend: [WorldGuard, BlueMap, dynmap, Vault]
 permissions:
   landclaim.*:
     description: All landclaim permissions
@@ -29,10 +11,6 @@ permissions:
       landclaim.claim: true
       landclaim.admin: true
       landclaim.list: true
-      landclaim.sethome: true
-      landclaim.delhome: true
-      landclaim.home: true
-      landclaim.homes: true
   landclaim.claim:
     description: Basic claiming permission
     default: true
@@ -48,18 +26,9 @@ permissions:
   landclaim.list:
     description: List all your claims
     default: true
-  landclaim.sethome:
-    description: Set a claim home
-    default: true
-  landclaim.delhome:
-    description: Delete a claim home
-    default: true
-  landclaim.home:
-    description: Teleport to a claim home
-    default: true
-  landclaim.homes:
-    description: List all claim homes
-    default: true
-  landclaim.homes.limit.*:
-    description: Max homes a player can set
+  landclaim.warps.limit.*:
+    description: Max warps a player can set
+    default: false
+  landclaim.createrole.*:
+    description: Max custom roles a player can create
     default: false
