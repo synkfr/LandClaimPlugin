@@ -26,6 +26,11 @@ public class ClaimProfile {
     private String claimColor; // Hex color string, e.g. "#00FF00", nullable (falls back to default)
     private String visualizationMode = "DISPLAY_ENTITY"; // "DISPLAY_ENTITY" or "PARTICLE"
 
+    // Title settings
+    private boolean enterTitleEnabled = false;
+    private String enterTitle = "<gold>Entering <owner>'s Claim";
+    private String leaveTitle = "<yellow>Leaving <owner>'s Claim";
+
     public ClaimProfile(UUID ownerId, String name) {
         this.ownerId = ownerId;
         this.name = name;
@@ -250,5 +255,31 @@ public class ClaimProfile {
 
     public void setVisualizationMode(String visualizationMode) {
         this.visualizationMode = visualizationMode;
+    }
+
+    // --- Title Settings ---
+
+    public boolean isEnterTitleEnabled() {
+        return enterTitleEnabled;
+    }
+
+    public void setEnterTitleEnabled(boolean enterTitleEnabled) {
+        this.enterTitleEnabled = enterTitleEnabled;
+    }
+
+    public String getEnterTitle() {
+        return enterTitle;
+    }
+
+    public void setEnterTitle(String enterTitle) {
+        this.enterTitle = enterTitle;
+    }
+
+    public String getLeaveTitle() {
+        return leaveTitle;
+    }
+
+    public void setLeaveTitle(String leaveTitle) {
+        this.leaveTitle = leaveTitle;
     }
 }

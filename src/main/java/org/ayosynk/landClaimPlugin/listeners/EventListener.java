@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.listeners;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
@@ -55,8 +56,35 @@ public class EventListener implements Listener {
         boolean isClaimed = claimManager.isChunkClaimed(currentPos);
         boolean chunkChanged = lastPos == null || !currentPos.equals(lastPos);
 
-        // If chunk changed, compute the new actionbar string and cache it
+        // If chunk changed, compute the new actionbar string and handle titles
         if (chunkChanged) {
+            ClaimProfile newProfile = claimManager.getProfileAt(currentPos);
+            ClaimProfile oldProfile = lastPos != null ? claimManager.getProfileAt(lastPos) : null;
+
+            // Handle entry/leave titles if transitioning between different claims or
+            // wilderness
+            if (oldProfile != newProfile) {
+                if (oldProfile != null && oldProfile.isEnterTitleEnabled()) {
+                    String ownerName = plugin.getServer().getOfflinePlayer(oldProfile.getOwnerId()).getName();
+                    if (ownerName == null)
+                        ownerName = "Unknown";
+                    String leaveTxt = oldProfile.getLeaveTitle().replace("<owner>", ownerName);
+                    player.showTitle(net.kyori.adventure.title.Title.title(
+                            Component.empty(),
+                            MiniMessage.miniMessage().deserialize(leaveTxt)));
+                }
+
+                if (newProfile != null && newProfile.isEnterTitleEnabled()) {
+                    String ownerName = plugin.getServer().getOfflinePlayer(newProfile.getOwnerId()).getName();
+                    if (ownerName == null)
+                        ownerName = "Unknown";
+                    String enterTxt = newProfile.getEnterTitle().replace("<owner>", ownerName);
+                    player.showTitle(net.kyori.adventure.title.Title.title(
+                            MiniMessage.miniMessage().deserialize(enterTxt),
+                            Component.empty()));
+                }
+            }
+
             lastChunkMap.put(playerId, currentPos);
             lastClaimStatusMap.put(playerId, isClaimed);
 
@@ -70,8 +98,7 @@ public class EventListener implements Listener {
                 if (playerId.equals(ownerId)) {
                     message = configManager.getActionBarMessage("actionbar-owned-by-you");
                 } else {
-                    ClaimProfile profile = claimManager.getProfileAt(currentPos);
-                    String status = PermissionResolver.getPlayerStatus(profile, playerId);
+                    String status = PermissionResolver.getPlayerStatus(newProfile, playerId);
                     if (status.equals("member") || status.equals("trusted")) {
                         message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
                     } else if (player.hasPermission("landclaim.admin")) {
@@ -114,6 +141,9 @@ public class EventListener implements Listener {
 
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
+
+        // Instantly update action bar and titles on chunk crossing
+        updateActionBar(player);
 
         if (plugin.getCommandHandler().isAutoClaimEnabled(playerId)) {
             ChunkPosition pos = new ChunkPosition(toChunk);

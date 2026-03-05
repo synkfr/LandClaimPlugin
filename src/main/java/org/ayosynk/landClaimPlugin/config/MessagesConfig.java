@@ -158,4 +158,10 @@ public class MessagesConfig extends OkaeriConfig {
 
     // --- Visibility ---
     public String visibilityModeChanged = "<green>Visualization mode set to <gold><mode></gold>.";
+
+    // --- Titles ---
+    public String titleEnterPrompt = "<yellow>Type the new entry title in chat (or 'cancel' to abort):";
+    public String titleLeavePrompt = "<yellow>Type the new leave title in chat (or 'cancel' to abort):";
+    public String titleUpdated = "<green>Claim title successfully updated!";
+    public String titleCancelled = "<gray>Title update cancelled.";
 }

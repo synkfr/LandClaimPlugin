@@ -9,7 +9,9 @@ import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TitleToggleGUI {
@@ -30,17 +32,74 @@ public class TitleToggleGUI {
                                         config.frame.lore));
                         ingredients.put('S', GuiHelper.buildSlot(config.navSpacer.material, config.navSpacer.name,
                                         config.navSpacer.lore));
+                        List<String> toggleLore = new ArrayList<>(config.titleToggle.lore);
+                        toggleLore.add("");
+                        toggleLore.add("<gray>Status: "
+                                        + (profile.isEnterTitleEnabled() ? "<green>Enabled" : "<red>Disabled"));
+
                         ingredients.put('T', GuiHelper.buildSlot(config.titleToggle.material, config.titleToggle.name,
-                                        config.titleToggle.lore, (p, e) -> {
-                                                // Reserved: Toggle on and off
+                                        toggleLore, (p, e) -> {
+                                                profile.setEnterTitleEnabled(!profile.isEnterTitleEnabled());
+                                                plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                                                open(player, profile, plugin);
                                         }));
+
+                        List<String> entryLore = new ArrayList<>(config.onEntry.lore);
+                        entryLore.add("");
+                        entryLore.add("<gray>Current: <reset>" + profile.getEnterTitle());
+
                         ingredients.put('E', GuiHelper.buildSlot(config.onEntry.material, config.onEntry.name,
-                                        config.onEntry.lore, (p, e) -> {
-                                                // Reserved: Configure entry title behavior
+                                        entryLore, (p, e) -> {
+                                                p.closeInventory();
+                                                p.sendMessage(GuiHelper.MM.deserialize(plugin.getConfigManager()
+                                                                .getMessagesConfig().titleEnterPrompt));
+                                                org.ayosynk.landClaimPlugin.listeners.ChatInputListener.awaitInput(p,
+                                                                input -> {
+                                                                        if (input == null) {
+                                                                                p.sendMessage(GuiHelper.MM.deserialize(
+                                                                                                plugin.getConfigManager()
+                                                                                                                .getMessagesConfig().titleCancelled));
+                                                                        } else {
+                                                                                profile.setEnterTitle(input);
+                                                                                plugin.getDatabaseManager()
+                                                                                                .getProfileDao()
+                                                                                                .saveProfile(profile);
+                                                                                p.sendMessage(GuiHelper.MM.deserialize(
+                                                                                                plugin.getConfigManager()
+                                                                                                                .getMessagesConfig().titleUpdated));
+                                                                        }
+                                                                        Bukkit.getScheduler().runTask(plugin,
+                                                                                        () -> open(p, profile, plugin));
+                                                                });
                                         }));
+
+                        List<String> leaveLore = new ArrayList<>(config.onLeaveTitle.lore);
+                        leaveLore.add("");
+                        leaveLore.add("<gray>Current: <reset>" + profile.getLeaveTitle());
+
                         ingredients.put('O', GuiHelper.buildSlot(config.onLeaveTitle.material, config.onLeaveTitle.name,
-                                        config.onLeaveTitle.lore, (p, e) -> {
-                                                // Reserved: Configure leave title behavior
+                                        leaveLore, (p, e) -> {
+                                                p.closeInventory();
+                                                p.sendMessage(GuiHelper.MM.deserialize(plugin.getConfigManager()
+                                                                .getMessagesConfig().titleLeavePrompt));
+                                                org.ayosynk.landClaimPlugin.listeners.ChatInputListener.awaitInput(p,
+                                                                input -> {
+                                                                        if (input == null) {
+                                                                                p.sendMessage(GuiHelper.MM.deserialize(
+                                                                                                plugin.getConfigManager()
+                                                                                                                .getMessagesConfig().titleCancelled));
+                                                                        } else {
+                                                                                profile.setLeaveTitle(input);
+                                                                                plugin.getDatabaseManager()
+                                                                                                .getProfileDao()
+                                                                                                .saveProfile(profile);
+                                                                                p.sendMessage(GuiHelper.MM.deserialize(
+                                                                                                plugin.getConfigManager()
+                                                                                                                .getMessagesConfig().titleUpdated));
+                                                                        }
+                                                                        Bukkit.getScheduler().runTask(plugin,
+                                                                                        () -> open(p, profile, plugin));
+                                                                });
                                         }));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,

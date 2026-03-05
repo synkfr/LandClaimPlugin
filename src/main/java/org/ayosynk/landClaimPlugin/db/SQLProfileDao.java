@@ -89,7 +89,10 @@ public class SQLProfileDao implements ProfileDao {
             // Migration: add claim_color and vis_mode columns if missing
             String[] alters = {
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN claim_color VARCHAR(16)",
-                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN vis_mode VARCHAR(32) DEFAULT 'DISPLAY_ENTITY'"
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN vis_mode VARCHAR(32) DEFAULT 'DISPLAY_ENTITY'",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN title_enabled BOOLEAN DEFAULT FALSE",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN enter_title VARCHAR(255)",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN leave_title VARCHAR(255)"
             };
             for (String alter : alters) {
                 try (PreparedStatement stmt = conn.prepareStatement(alter)) {
@@ -112,9 +115,9 @@ public class SQLProfileDao implements ProfileDao {
 
             String upsertProfile = sqlite
                     ? "INSERT OR REPLACE INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode) VALUES (?, ?, ?, ?)"
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title) VALUES (?, ?, ?, ?, ?, ?, ?)"
                     : "INSERT INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode)";
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title)";
 
             try (Connection conn = dbManager.getDatabase().getConnection()) {
                 conn.setAutoCommit(false);
@@ -125,6 +128,9 @@ public class SQLProfileDao implements ProfileDao {
                     stmt.setString(2, profile.getName());
                     stmt.setString(3, profile.getClaimColor());
                     stmt.setString(4, profile.getVisualizationMode());
+                    stmt.setBoolean(5, profile.isEnterTitleEnabled());
+                    stmt.setString(6, profile.getEnterTitle());
+                    stmt.setString(7, profile.getLeaveTitle());
                     stmt.executeUpdate();
                 }
 
@@ -300,9 +306,13 @@ public class SQLProfileDao implements ProfileDao {
                 String name;
                 String claimColor;
                 String visMode;
+                boolean titleEnabled;
+                String enterTitle;
+                String leaveTitle;
                 try (PreparedStatement stmt = conn
                         .prepareStatement(
-                                "SELECT name, claim_color, vis_mode FROM " + p + "claim_profiles WHERE owner_id = ?")) {
+                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title FROM " + p
+                                        + "claim_profiles WHERE owner_id = ?")) {
                     stmt.setString(1, ownerId.toString());
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (!rs.next())
@@ -310,12 +320,20 @@ public class SQLProfileDao implements ProfileDao {
                         name = rs.getString("name");
                         claimColor = rs.getString("claim_color");
                         visMode = rs.getString("vis_mode");
+                        titleEnabled = rs.getBoolean("title_enabled");
+                        enterTitle = rs.getString("enter_title");
+                        leaveTitle = rs.getString("leave_title");
                     }
                 }
 
                 ClaimProfile profile = new ClaimProfile(ownerId, name);
                 profile.setClaimColor(claimColor);
                 profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
+                profile.setEnterTitleEnabled(titleEnabled);
+                if (enterTitle != null)
+                    profile.setEnterTitle(enterTitle);
+                if (leaveTitle != null)
+                    profile.setLeaveTitle(leaveTitle);
                 loadChunks(conn, p, profile);
                 loadVisitorFlags(conn, p, profile);
                 loadTrustedPlayers(conn, p, profile);
@@ -354,9 +372,17 @@ public class SQLProfileDao implements ProfileDao {
                     String name = rs.getString("name");
                     String claimColor = rs.getString("claim_color");
                     String visMode = rs.getString("vis_mode");
+                    boolean titleEnabled = rs.getBoolean("title_enabled");
+                    String enterTitle = rs.getString("enter_title");
+                    String leaveTitle = rs.getString("leave_title");
                     ClaimProfile profile = new ClaimProfile(ownerId, name);
                     profile.setClaimColor(claimColor);
                     profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
+                    profile.setEnterTitleEnabled(titleEnabled);
+                    if (enterTitle != null)
+                        profile.setEnterTitle(enterTitle);
+                    if (leaveTitle != null)
+                        profile.setLeaveTitle(leaveTitle);
                     loadChunks(conn, p, profile);
                     loadVisitorFlags(conn, p, profile);
                     loadTrustedPlayers(conn, p, profile);
