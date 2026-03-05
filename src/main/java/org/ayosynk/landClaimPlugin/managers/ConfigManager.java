@@ -63,6 +63,9 @@ public class ConfigManager {
     private ChangeClaimColorConfig changeClaimColorConfig;
     private RoleEditConfig roleEditConfig;
 
+    private List<String> blockedCommands = List.of();
+    private List<String> blockedWorlds = List.of();
+
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
         loadConfigs();
@@ -264,6 +267,9 @@ public class ConfigManager {
         renameClaimConfig.load();
         changeClaimColorConfig.load();
         roleEditConfig.load();
+
+        blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
+        blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
     }
 
     public PluginConfig getPluginConfig() {
@@ -373,11 +379,15 @@ public class ConfigManager {
     }
 
     public boolean isWorldBlocked(String worldName) {
-        return pluginConfig.blockWorld.contains(worldName);
+        return blockedWorlds.contains(worldName.toLowerCase());
     }
 
     public List<String> getBlockedCommands() {
-        return pluginConfig.blockCmd;
+        return blockedCommands;
+    }
+
+    public List<String> getBlockedWorlds() {
+        return blockedWorlds;
     }
 
     public int getUnstuckCooldown() {

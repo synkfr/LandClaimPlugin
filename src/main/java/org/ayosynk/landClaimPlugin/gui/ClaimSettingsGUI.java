@@ -85,7 +85,7 @@ public class ClaimSettingsGUI {
                                                         plugin.getClaimManager().abandonProfile(profile.getOwnerId());
                                                         p.sendMessage(plugin.getConfigManager()
                                                                         .getMessage("profile-abandoned"));
-                                                        plugin.refreshMapHooks();
+                                                        plugin.getHookManager().refreshMapHooks();
                                                 }, () -> ClaimSettingsGUI.open(p, profile, plugin));
                                         }));
                         ingredients.put('B', GuiHelper.buildSlot(config.back.material, config.back.name,

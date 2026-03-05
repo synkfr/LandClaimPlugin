@@ -33,6 +33,6 @@ public class PlayerJoinListener implements Listener {
 
         visualizationManager.handlePlayerQuit(playerId);
         plugin.getCommandHandler().cleanupPlayer(playerId);
-        plugin.getEventListener().cleanupPlayer(playerId);
+        plugin.getListenerManager().getEventListener().cleanupPlayer(playerId);
     }
 }

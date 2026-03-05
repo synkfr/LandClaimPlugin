@@ -1,33 +1,21 @@
 package org.ayosynk.landClaimPlugin;
 
 import org.ayosynk.landClaimPlugin.commands.CommandHandler;
-import org.ayosynk.landClaimPlugin.gui.GuiGlobalSetup;
 import org.ayosynk.landClaimPlugin.db.DatabaseManager;
-import org.ayosynk.landClaimPlugin.managers.CacheManager;
-import org.ayosynk.landClaimPlugin.managers.RedisManager;
-import org.ayosynk.landClaimPlugin.hooks.map.BlueMapHook;
-import org.ayosynk.landClaimPlugin.hooks.map.DynmapHook;
-import org.ayosynk.landClaimPlugin.hooks.map.SquaremapHook;
-import org.ayosynk.landClaimPlugin.hooks.map.Pl3xMapHook;
-import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
-import org.ayosynk.landClaimPlugin.listeners.EventListener;
-import org.ayosynk.landClaimPlugin.listeners.PlayerJoinListener;
-import org.ayosynk.landClaimPlugin.listeners.protections.*;
-import org.ayosynk.landClaimPlugin.managers.ClaimManager;
-import org.ayosynk.landClaimPlugin.managers.ConfigManager;
-import org.ayosynk.landClaimPlugin.managers.WarpManager;
-import org.ayosynk.landClaimPlugin.managers.CombatManager;
-import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
+import org.ayosynk.landClaimPlugin.managers.*;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
-
+/**
+ * Main plugin class responsible only for lifecycle, setup, and dependency
+ * injection.
+ * All logic and feature management is delegated to specific managers.
+ */
 public class LandClaimPlugin extends JavaPlugin {
 
     private static LandClaimPlugin instance;
+
+    // Managers (Final architectural access points)
     private ConfigManager configManager;
     private DatabaseManager databaseManager;
     private CacheManager cacheManager;
@@ -37,116 +25,60 @@ public class LandClaimPlugin extends JavaPlugin {
     private VisualizationManager visualizationManager;
     private WarpManager warpManager;
     private CommandHandler commandHandler;
-    private EventListener eventListener;
-    private BlueMapHook blueMapHook;
-    private DynmapHook dynmapHook;
-    private SquaremapHook squaremapHook;
-    private Pl3xMapHook pl3xmapHook;
-    private List<String> blockedCommands = new ArrayList<>();
-    private List<String> blockedWorlds = new ArrayList<>();
-    private boolean worldGuardEnabled = false;
+    private ListenerManager listenerManager;
+    private HookManager hookManager;
 
     @Override
     public void onEnable() {
         instance = this;
+
         try {
+            // 1. Enable bStats metrics
             new Metrics(this, 28407);
 
-            if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
-                worldGuardEnabled = true;
-                getLogger().info("WorldGuard detected. Enabling region gap protection.");
-            }
-
+            // 2. Initialize core configs
             configManager = new ConfigManager(this);
 
-            // Initialize Database
+            // 3. Initialize Database and Cache
             databaseManager = new DatabaseManager(this);
             databaseManager.init();
-
-            // Initialize Cache
             cacheManager = new CacheManager();
 
-            // Initialize Redis
+            // 4. Initialize Network/Bungee syncing (Redis)
             redisManager = new RedisManager(this);
             redisManager.init();
 
-            // V1 → V2 legacy migration (runs once if claims.yml exists)
+            // 5. Run V1 → V2 legacy migration (runs once if claims.yml exists)
             org.ayosynk.landClaimPlugin.migration.V1LegacyMigrator.migrate(this);
 
+            // 6. Initialize business logic managers
             combatManager = new CombatManager(this);
-
             claimManager = new ClaimManager(this, configManager);
             visualizationManager = new VisualizationManager(this, claimManager, configManager);
             warpManager = new WarpManager(this, configManager);
 
+            // Load persistent warp data before resolving claims
             warpManager.loadFromDatabase().thenRun(() -> {
                 claimManager.initialize();
                 getLogger().info("Warp and Claim systems initialized.");
             });
 
-            // Initialize custom GUI framework (listener + scheduler)
-            GuiGlobalSetup.init(this);
-            org.ayosynk.landClaimPlugin.listeners.ChatInputListener.init(this);
+            // 7. Initialize and register commands
+            commandHandler = new CommandHandler(this, claimManager, configManager, visualizationManager, warpManager);
 
-            commandHandler = new CommandHandler(this, claimManager, configManager, visualizationManager,
-                    warpManager);
+            // 8. Initialize and register listeners
+            listenerManager = new ListenerManager(this, claimManager, configManager, visualizationManager);
+            listenerManager.registerAll();
 
-            eventListener = new EventListener(this, claimManager, configManager);
-            getServer().getPluginManager().registerEvents(eventListener, this);
+            // 9. Initialize third-party plugins (WorldGuard, Maps)
+            hookManager = new HookManager(this, claimManager, configManager);
+            hookManager.init();
 
-            // Register Protections
-            getServer().getPluginManager()
-                    .registerEvents(new BlockProtectionListener(this, claimManager, configManager), this);
-            getServer().getPluginManager().registerEvents(
-                    new EntityProtectionListener(this, claimManager, configManager), this);
-            getServer().getPluginManager().registerEvents(
-                    new InteractProtectionListener(this, claimManager, configManager), this);
-            getServer().getPluginManager().registerEvents(new ExplosionProtectionListener(this, claimManager), this);
-            getServer().getPluginManager().registerEvents(new PistonProtectionListener(this, claimManager), this);
-            getServer().getPluginManager()
-                    .registerEvents(new PvpProtectionListener(this, claimManager, configManager), this);
-            getServer().getPluginManager().registerEvents(
-                    new VehicleProtectionListener(this, claimManager, configManager), this);
-            getServer().getPluginManager().registerEvents(
-                    new ItemProtectionListener(this, claimManager, configManager), this);
+            // Refresh settings once more
+            configManager.reloadMainConfig();
 
-            getServer().getPluginManager().registerEvents(
-                    new CommandBlocker(this, claimManager),
-                    this);
-
-            getServer().getPluginManager().registerEvents(
-                    new PlayerJoinListener(this, visualizationManager),
-                    this);
-
-            // Legacy GUI Listener was removed here
-
-            reloadConfiguration();
-
-            Bukkit.getScheduler().runTask(this, () -> {
-                if (configManager.getPluginConfig().bluemap.enabled
-                        && Bukkit.getPluginManager().getPlugin("BlueMap") != null) {
-                    blueMapHook = new BlueMapHook(LandClaimPlugin.this, claimManager);
-                    getLogger().info("BlueMap detected. Enabling map integration.");
-                }
-                if (configManager.getPluginConfig().dynmap.enabled
-                        && Bukkit.getPluginManager().getPlugin("dynmap") != null) {
-                    dynmapHook = new DynmapHook(LandClaimPlugin.this, claimManager);
-                    getLogger().info("Dynmap detected. Enabling map integration.");
-                }
-                if (configManager.getPluginConfig().squaremap.enabled
-                        && Bukkit.getPluginManager().getPlugin("squaremap") != null) {
-                    squaremapHook = new SquaremapHook(LandClaimPlugin.this, claimManager);
-                    getLogger().info("Squaremap detected. Enabling map integration.");
-                }
-                if (configManager.getPluginConfig().pl3xmap.enabled
-                        && Bukkit.getPluginManager().getPlugin("Pl3xMap") != null) {
-                    pl3xmapHook = new Pl3xMapHook(LandClaimPlugin.this, claimManager);
-                    getLogger().info("Pl3xMap detected. Enabling map integration.");
-                }
-            });
-
-            getLogger().info("LandClaim has been enabled! Loaded " +
-                    claimManager.getTotalClaims() + " claims.");
+            getLogger().info(
+                    "LandClaim has been successfully enabled! Loaded " + claimManager.getTotalClaims() + " claims.");
         } catch (Exception e) {
             getLogger().severe("Failed to enable LandClaim: " + e.getMessage());
             e.printStackTrace();
@@ -154,56 +86,48 @@ public class LandClaimPlugin extends JavaPlugin {
         }
     }
 
-    public boolean isWorldGuardEnabled() {
-        return worldGuardEnabled;
-    }
-
-    public void reloadConfiguration() {
-        configManager.reloadMainConfig();
-
-        blockedCommands = configManager.getBlockedCommands();
-        blockedWorlds = configManager.getPluginConfig().blockWorld;
-
-        blockedCommands = blockedCommands.stream().map(String::toLowerCase).toList();
-        blockedWorlds = blockedWorlds.stream().map(String::toLowerCase).toList();
-
-    }
-
     @Override
     public void onDisable() {
         try {
-            // Gracefully shut down the command executor thread pool
+            // Shutdown commands executor gracefully
             if (commandHandler != null) {
                 commandHandler.shutdown();
             }
 
+            // Save persistent data synchronously before exit
             if (warpManager != null) {
                 warpManager.save();
-                getLogger().info("Saved warp data");
+                getLogger().info("Saved warp data.");
             }
 
+            // Clear visual effects
             if (visualizationManager != null) {
                 visualizationManager.cleanupLocalDisplays();
-                getLogger().info("Cleared active visualization displays");
+                getLogger().info("Cleared active visualization displays.");
             }
+
+            // Close external connections
             if (databaseManager != null) {
                 databaseManager.shutdown();
             }
             if (redisManager != null) {
                 redisManager.shutdown();
             }
-            getLogger().info("LandClaim has been disabled!");
+
+            getLogger().info("LandClaim has been successfully disabled!");
         } catch (Exception e) {
             getLogger().severe("Error while disabling LandClaim: " + e.getMessage());
         }
     }
 
-    public ConfigManager getConfigManager() {
-        return configManager;
+    // --- Singleton & Manager Accessors ---
+
+    public static LandClaimPlugin getInstance() {
+        return instance;
     }
 
-    public CombatManager getCombatManager() {
-        return combatManager;
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 
     public DatabaseManager getDatabaseManager() {
@@ -222,6 +146,10 @@ public class LandClaimPlugin extends JavaPlugin {
         return claimManager;
     }
 
+    public CombatManager getCombatManager() {
+        return combatManager;
+    }
+
     public VisualizationManager getVisualizationManager() {
         return visualizationManager;
     }
@@ -234,42 +162,11 @@ public class LandClaimPlugin extends JavaPlugin {
         return commandHandler;
     }
 
-    public List<String> getBlockedCommands() {
-        return blockedCommands;
+    public ListenerManager getListenerManager() {
+        return listenerManager;
     }
 
-    public List<String> getBlockedWorlds() {
-        return blockedWorlds;
-    }
-
-    public static LandClaimPlugin getInstance() {
-        return instance;
-    }
-
-    public EventListener getEventListener() {
-        return eventListener;
-    }
-
-    public BlueMapHook getBlueMapHook() {
-        return blueMapHook;
-    }
-
-    public DynmapHook getDynmapHook() {
-        return dynmapHook;
-    }
-
-    public void refreshMapHooks() {
-        if (blueMapHook != null && blueMapHook.isActive()) {
-            blueMapHook.update();
-        }
-        if (dynmapHook != null && dynmapHook.isActive()) {
-            dynmapHook.update();
-        }
-        if (squaremapHook != null && squaremapHook.isActive()) {
-            squaremapHook.update();
-        }
-        if (pl3xmapHook != null && pl3xmapHook.isActive()) {
-            pl3xmapHook.update();
-        }
+    public HookManager getHookManager() {
+        return hookManager;
     }
 }

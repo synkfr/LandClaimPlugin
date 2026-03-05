@@ -252,7 +252,7 @@ public class ClaimManager {
         saveAndSync(profile);
 
         plugin.getVisualizationManager().invalidateCache(playerId);
-        plugin.refreshMapHooks();
+        plugin.getHookManager().refreshMapHooks();
         return true;
     }
 
@@ -349,7 +349,7 @@ public class ClaimManager {
         saveAndSync(profile);
 
         plugin.getVisualizationManager().invalidateCache(playerId);
-        plugin.refreshMapHooks();
+        plugin.getHookManager().refreshMapHooks();
         return chunksToClaim.size();
     }
 
@@ -370,7 +370,7 @@ public class ClaimManager {
         saveAndSync(profile);
 
         plugin.getVisualizationManager().invalidateCache(owner);
-        plugin.refreshMapHooks();
+        plugin.getHookManager().refreshMapHooks();
         return true;
     }
 
@@ -395,7 +395,7 @@ public class ClaimManager {
         });
 
         plugin.getVisualizationManager().invalidateCache(playerId);
-        plugin.refreshMapHooks();
+        plugin.getHookManager().refreshMapHooks();
         return count;
     }
 
@@ -432,7 +432,7 @@ public class ClaimManager {
 
         plugin.getVisualizationManager().invalidateCache(oldOwnerId);
         plugin.getVisualizationManager().invalidateCache(newOwnerId);
-        plugin.refreshMapHooks();
+        plugin.getHookManager().refreshMapHooks();
         return true;
     }
 
@@ -505,7 +505,7 @@ public class ClaimManager {
     }
 
     private boolean isTooCloseToWorldGuardRegion(ChunkPosition pos, int gap) {
-        if (!plugin.isWorldGuardEnabled())
+        if (!plugin.getHookManager().isWorldGuardEnabled())
             return false;
 
         World world = Bukkit.getWorld(pos.world());

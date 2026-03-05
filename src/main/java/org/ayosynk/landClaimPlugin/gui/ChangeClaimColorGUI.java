@@ -132,7 +132,7 @@ public class ChangeClaimColorGUI {
                 plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
 
                 // Refresh map hooks
-                plugin.refreshMapHooks();
+                plugin.getHookManager().refreshMapHooks();
 
                 // Refresh visualization if active
                 plugin.getVisualizationManager().invalidateCache(profile.getOwnerId());

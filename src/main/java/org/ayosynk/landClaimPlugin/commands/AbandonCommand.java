@@ -52,7 +52,7 @@ public class AbandonCommand implements LandClaimCommand {
                             "<chunks>", String.valueOf(chunksDeleted)));
 
                     plugin.getVisualizationManager().invalidateCache(playerId);
-                    plugin.refreshMapHooks();
+                    plugin.getHookManager().refreshMapHooks();
                 }));
     }
 }
