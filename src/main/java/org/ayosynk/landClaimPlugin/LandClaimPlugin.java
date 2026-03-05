@@ -86,7 +86,7 @@ public class LandClaimPlugin extends JavaPlugin {
             org.ayosynk.landClaimPlugin.listeners.ChatInputListener.init(this);
 
             commandHandler = new CommandHandler(this, claimManager, configManager, visualizationManager,
-                    warpManager); // Changed from homeManager
+                    warpManager);
 
             eventListener = new EventListener(this, claimManager, configManager);
             getServer().getPluginManager().registerEvents(eventListener, this);

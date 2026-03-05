@@ -30,9 +30,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String actionbarAdmin = "<gradient:#ff416c:#ff4b2b>🛡️ <owner>'s Claim 🛡️</gradient> <gray>(Admin Override)</gray>";
 
     @Comment("Variables: <player>, <count>, <limit>, <seconds>, <world>, <x>, <z>")
-    public String homeSet = "<green>Home <gold><name></gold> has been set!";
-    public String homeTeleported = "<green>Teleported to home <gold><name></gold>.";
-    public String homeNotFound = "<red>Home <gold><name></gold> not found.";
+
     public String warpSet = "<green>Warp <gold><name></gold> has been set!";
     public String warpDeleted = "<red>Warp <gold><name></gold> has been deleted.";
     public String warpTeleport = "<green>Teleported to warp <gold><name></gold>.";
@@ -63,7 +61,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String claimListTotal = "<green>Total claims: <gold><count>";
     public String claimListWorld = "<green><world> Claims:";
     public String claimListEntry = "<gray>- <gold><x>, <z>";
-    public String homeListEntry = "<gray>- <gold><name> <gray>(<x>, <z>)";
+
     public String claimInfoTrusted = "<green>Trusted: <gold><players>";
 
     // Commands hardcoded messages

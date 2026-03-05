@@ -41,7 +41,6 @@ public class PluginConfig extends OkaeriConfig {
         public double borderOpacity = 0.8;
     }
 
-    public int maxHomes = 3;
     public boolean autoClaimDefault = false;
     public boolean autoUnclaimDefault = false;
     public int chunkClaimLimit = 5;
