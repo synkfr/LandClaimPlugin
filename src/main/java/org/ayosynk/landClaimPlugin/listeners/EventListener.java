@@ -154,7 +154,7 @@ public class EventListener implements Listener {
             }
         }
 
-        if (plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
+        if (configManager.requireConnectedClaims() && plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
             ChunkPosition fromPos = new ChunkPosition(fromChunk);
             if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
                 if (!isConnectedToOtherClaims(fromPos, playerId)) {
