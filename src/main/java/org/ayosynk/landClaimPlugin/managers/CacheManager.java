@@ -22,12 +22,10 @@ public class CacheManager {
                 .build();
 
         this.playerCache = Caffeine.newBuilder()
-                .expireAfterAccess(30, TimeUnit.MINUTES)
                 .maximumSize(5000)
                 .build();
 
         this.profileCache = Caffeine.newBuilder()
-                .expireAfterAccess(30, TimeUnit.MINUTES)
                 .maximumSize(10000)
                 .build();
     }
