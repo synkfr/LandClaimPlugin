@@ -95,6 +95,9 @@ public class RedisManager {
                 case "INVALIDATE_PLAYER":
                     cache.getPlayerCache().invalidate(targetId);
                     break;
+                case "INVALIDATE_PROFILE":
+                    cache.getProfileCache().invalidate(targetId);
+                    break;
             }
         } catch (IllegalArgumentException e) {
             // Ignore invalid UUIDs

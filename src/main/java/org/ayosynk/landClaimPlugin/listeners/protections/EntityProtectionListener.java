@@ -90,6 +90,8 @@ public class EntityProtectionListener implements Listener {
             checkPermission(player, pos, event, "TRADE_VILLAGERS");
         } else if (target instanceof Sheep && player.getInventory().getItemInMainHand().getType() == Material.SHEARS) {
             checkPermission(player, pos, event, "SHEAR_ENTITIES");
+        } else if (target instanceof Hanging) {
+            checkPermission(player, pos, event, "MODIFY_ITEM_FRAMES");
         } else if (target instanceof Animals) {
             // Very simplified approach: checking item in hand for breeding/feeding is
             // complex across 1.21 mobs,

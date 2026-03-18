@@ -27,8 +27,15 @@ public class WarpManager {
         });
     }
 
+    /**
+     * Flush any pending warp data to the database.
+     * <p>
+     * Warp changes are persisted immediately via individual DB writes
+     * ({@code saveWarp}/{@code deleteWarp}), so this method is a no-op.
+     * Retained for lifecycle symmetry with {@code onDisable()}.
+     */
     public void save() {
-        // No longer needed, changes are saved to DB instantly
+        // Warp changes are already persisted to DB immediately on set/delete.
     }
 
     public boolean setWarp(UUID ownerId, String name, Location location, Material icon) {
