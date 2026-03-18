@@ -5,6 +5,13 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+/**
+ * Central database coordinator.
+ * <p>
+ * Routes to the appropriate {@link Database} implementation (SQLite or MySQL)
+ * based on the plugin configuration. Initializes all DAO instances and manages
+ * the connection lifecycle.
+ */
 public class DatabaseManager {
     private final LandClaimPlugin plugin;
     private Database database;
