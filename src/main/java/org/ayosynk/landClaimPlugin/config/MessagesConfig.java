@@ -79,8 +79,6 @@ public class MessagesConfig extends OkaeriConfig {
     public String autoUnclaimDisabled = "<red>Auto-unclaim disabled.";
 
     // CommandHandler specifics
-    public String menuOpenedStub = "<green>Opened <menu>";
-    public String memberListStub = "<green>Member list functionality coming soon";
     public String memberInvited = "<green>You have invited <gold><player></gold> to your claim.";
     public String memberInviteReceived = "<green>You have been invited to <gold><owner></gold>'s claim!\n<gray>[<green><click:run_command:'/claim accept'><hover:show_text:'Click to accept the invite!'>Accept</hover></click></green>] [<red><click:run_command:'/claim deny'><hover:show_text:'Click to deny the invite'>Deny</hover></click></red>]</gray>";
     public String memberKicked = "<red>You have kicked <gold><player></gold> from the claim.";
@@ -105,7 +103,6 @@ public class MessagesConfig extends OkaeriConfig {
     public String notAllied = "<red>You are not allied with that claim.";
     public String allyRemoved = "<red>Alliance with <gold><name></gold> has been removed.";
 
-    public String trustListStub = "<green>Trust list functionality coming soon";
     public String trustAdded = "<green>Added trust to <player>";
     public String trustRemoved = "<red>Removed trust from <player>";
     public String claimVisibilityToggled = "<green>Claim visibility toggled.";

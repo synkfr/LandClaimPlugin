@@ -15,7 +15,6 @@ import java.sql.SQLException;
 public class DatabaseManager {
     private final LandClaimPlugin plugin;
     private Database database;
-    private ClaimDao claimDao;
     private PlayerDao playerDao;
     private WarpDao warpDao;
     private ProfileDao profileDao;
@@ -27,6 +26,12 @@ public class DatabaseManager {
     public void init() {
         String type = plugin.getConfigManager().getPluginConfig().database.type;
         if (type.equalsIgnoreCase("MYSQL") || type.equalsIgnoreCase("MARIADB")) {
+            // Validate MySQL credentials
+            var dbConfig = plugin.getConfigManager().getPluginConfig().database;
+            if (dbConfig.username.isEmpty() || dbConfig.password.isEmpty()) {
+                plugin.getLogger().warning("MySQL/MariaDB is configured but username or password is empty. "
+                        + "This may cause authentication failures. Please update your config.yml.");
+            }
             database = new MySQLDatabase(plugin);
         } else {
             database = new SQLiteDatabase(plugin);
@@ -37,12 +42,10 @@ public class DatabaseManager {
             plugin.getLogger().info("Successfully connected to the " + type + " database.");
             database.createTables();
 
-            this.claimDao = new SQLClaimDao(plugin, this);
             this.playerDao = new SQLPlayerDao(plugin, this);
             this.warpDao = new SQLWarpDao(plugin, this);
             this.profileDao = new SQLProfileDao(plugin, this);
 
-            this.claimDao.createTables();
             this.playerDao.createTables();
             this.warpDao.createTables();
             this.profileDao.createTables();
@@ -64,9 +67,7 @@ public class DatabaseManager {
         return database;
     }
 
-    public ClaimDao getClaimDao() {
-        return claimDao;
-    }
+    // ClaimDao removed as deprecated (V1 legacy). Use ProfileDao for V2 system.
 
     public PlayerDao getPlayerDao() {
         return playerDao;

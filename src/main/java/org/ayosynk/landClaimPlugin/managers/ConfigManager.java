@@ -78,6 +78,16 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+        
+        // Validate configuration
+        java.util.List<String> configErrors = pluginConfig.validateConfig();
+        if (!configErrors.isEmpty()) {
+            plugin.getLogger().warning("Configuration validation found " + configErrors.size() + " issue(s):");
+            for (String error : configErrors) {
+                plugin.getLogger().warning("  - " + error);
+            }
+            plugin.getLogger().warning("Please fix the configuration errors in config.yml.");
+        }
 
         this.messagesConfig = eu.okaeri.configs.ConfigManager.create(MessagesConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());

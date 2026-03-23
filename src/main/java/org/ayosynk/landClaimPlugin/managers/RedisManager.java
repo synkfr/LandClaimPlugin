@@ -96,6 +96,12 @@ public class RedisManager {
                     cache.getPlayerCache().invalidate(targetId);
                     break;
                 case "INVALIDATE_PROFILE":
+                    // Clean up spatial index before invalidating cache
+                    org.ayosynk.landClaimPlugin.managers.ClaimManager claimManager = plugin.getClaimManager();
+                    if (claimManager != null) {
+                        // Remove all chunks for this profile from spatial index
+                        claimManager.removeAllChunksForProfile(targetId);
+                    }
                     cache.getProfileCache().invalidate(targetId);
                     break;
             }
