@@ -27,7 +27,18 @@ public class RoleSetupGUI implements Listener {
         // Static initialization to register the listener once
         private static boolean listenerRegistered = false;
 
-        private record RoleSetupSession(ClaimProfile profile, Role role) {
+        private enum InputType { NAME, PRIORITY }
+        
+        private static class RoleSetupSession {
+                final ClaimProfile profile;
+                final Role role;
+                final InputType inputType;
+                
+                RoleSetupSession(ClaimProfile profile, Role role, InputType inputType) {
+                        this.profile = profile;
+                        this.role = role;
+                        this.inputType = inputType;
+                }
         }
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Role role) {
@@ -69,7 +80,7 @@ public class RoleSetupGUI implements Listener {
                                                 // Chat input for role name
                                                 p.closeInventory();
                                                 activeSessions.put(p.getUniqueId(),
-                                                                new RoleSetupSession(profile, workingRole));
+                                                                new RoleSetupSession(profile, workingRole, InputType.NAME));
                                                 p.sendMessage(GuiHelper.MM.deserialize(
                                                                 "<yellow>Please type the new role name in chat. Type <red>'cancel' <yellow>to abort."));
                                         }));
@@ -81,9 +92,13 @@ public class RoleSetupGUI implements Listener {
                                         }));
 
                         ingredients.put('T', GuiHelper.buildSlot(config.setPriority.material, config.setPriority.name,
-                                        List.of("<gray>Priority hierarchy is coming soon!"), (p, e) -> {
+                                        config.setPriority.lore, (p, e) -> {
+                                                // Chat input for priority
+                                                p.closeInventory();
+                                                activeSessions.put(p.getUniqueId(),
+                                                                new RoleSetupSession(profile, workingRole, InputType.PRIORITY));
                                                 p.sendMessage(GuiHelper.MM.deserialize(
-                                                                "<yellow>Priority management is coming soon!"));
+                                                                "<yellow>Please type the new priority number (higher = more important). Type <red>'cancel' <yellow>to abort."));
                                         }));
 
                         ingredients.put('<',
@@ -126,29 +141,41 @@ public class RoleSetupGUI implements Listener {
                         String input = event.getMessage().trim();
 
                         if (input.equalsIgnoreCase("cancel")) {
-                                player.sendMessage(GuiHelper.MM.deserialize("<red>Name change cancelled."));
+                                player.sendMessage(GuiHelper.MM.deserialize("<red>Operation cancelled."));
                         } else {
-                                // Remove spaces and special chars to keep names clean
-                                String cleanName = input.replaceAll("[^a-zA-Z0-9_-]", "");
-                                if (cleanName.isEmpty()) {
-                                        player.sendMessage(GuiHelper.MM.deserialize(
-                                                        "<red>Invalid role name. Must contain letters/numbers."));
-                                } else if (cleanName.equalsIgnoreCase("Member")
-                                                || cleanName.equalsIgnoreCase("CoOwner")) {
-                                        player.sendMessage(GuiHelper.MM
-                                                        .deserialize("<red>You cannot use default role names."));
-                                } else {
-                                        session.role().setName(cleanName);
-                                        player.sendMessage(GuiHelper.MM
-                                                        .deserialize("<green>Role name set to <white>" + cleanName));
+                                if (session.inputType == InputType.NAME) {
+                                        // Remove spaces and special chars to keep names clean
+                                        String cleanName = input.replaceAll("[^a-zA-Z0-9_-]", "");
+                                        if (cleanName.isEmpty()) {
+                                                player.sendMessage(GuiHelper.MM.deserialize(
+                                                                "<red>Invalid role name. Must contain letters/numbers."));
+                                        } else if (cleanName.equalsIgnoreCase("Member")
+                                                        || cleanName.equalsIgnoreCase("CoOwner")) {
+                                                player.sendMessage(GuiHelper.MM
+                                                                .deserialize("<red>You cannot use default role names."));
+                                        } else {
+                                                session.role.setName(cleanName);
+                                                player.sendMessage(GuiHelper.MM
+                                                                .deserialize("<green>Role name set to <white>" + cleanName));
+                                        }
+                                } else if (session.inputType == InputType.PRIORITY) {
+                                        try {
+                                                int priority = Integer.parseInt(input);
+                                                session.role.setPriority(priority);
+                                                player.sendMessage(GuiHelper.MM
+                                                                .deserialize("<green>Priority set to <white>" + priority));
+                                        } catch (NumberFormatException e) {
+                                                player.sendMessage(GuiHelper.MM.deserialize(
+                                                                "<red>Invalid number. Please enter an integer."));
+                                        }
                                 }
                         }
 
                         // Re-open GUI
                         Bukkit.getScheduler().runTask(LandClaimPlugin.getPlugin(LandClaimPlugin.class), () -> {
-                                RoleSetupGUI.open(player, session.profile(),
+                                RoleSetupGUI.open(player, session.profile,
                                                 LandClaimPlugin.getPlugin(LandClaimPlugin.class),
-                                                session.role());
+                                                session.role);
                         });
                 }
         }

@@ -29,8 +29,10 @@ public class RoleManagementGUI {
 
                         List<GuiItem> contentItems = new ArrayList<>();
 
-                        // Build items for each role in the profile
-                        for (Role role : profile.getRoles().values()) {
+                        // Build items for each role in the profile, sorted by priority (higher first)
+                        List<Role> sortedRoles = new ArrayList<>(profile.getRoles().values());
+                        sortedRoles.sort((r1, r2) -> Integer.compare(r2.getPriority(), r1.getPriority()));
+                        for (Role role : sortedRoles) {
                                 final String roleName = role.getName();
                                 final boolean isDefault = roleName.equalsIgnoreCase("Member")
                                                 || roleName.equalsIgnoreCase("CoOwner");

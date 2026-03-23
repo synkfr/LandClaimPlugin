@@ -49,15 +49,25 @@ public class PluginConfig extends OkaeriConfig {
     public DatabaseConfig database = new DatabaseConfig();
 
     public static class DatabaseConfig extends OkaeriConfig {
+        @Comment("Database type: SQLITE or MYSQL")
         public String type = "SQLITE";
+        @Comment("MySQL/MariaDB host (ignored for SQLite)")
         public String host = "localhost";
+        @Comment("MySQL/MariaDB port (ignored for SQLite)")
         public int port = 3306;
+        @Comment("Database name")
         public String databaseName = "landclaim";
-        public String username = "root";
-        public String password = "password";
+        @Comment("MySQL/MariaDB username (leave empty for SQLite)")
+        public String username = "";
+        @Comment("MySQL/MariaDB password (leave empty for SQLite)")
+        public String password = "";
+        @Comment("Table prefix for all plugin tables")
         public String tablePrefix = "lc_";
+        @Comment("Maximum number of database connections in the pool")
         public int maximumPoolSize = 10;
+        @Comment("Minimum number of idle connections in the pool")
         public int minimumIdle = 2;
+        @Comment("Connection timeout in milliseconds")
         public long connectionTimeout = 30000;
     }
 
@@ -79,4 +89,57 @@ public class PluginConfig extends OkaeriConfig {
 
     @Comment("Default maximum warps per player (bypass with landclaim.warps.limit.X)")
     public int maxWarps = 3;
+    
+    /**
+     * Validate configuration values and return a list of error messages.
+     * Empty list means no errors.
+     */
+    public java.util.List<String> validateConfig() {
+        java.util.List<String> errors = new java.util.ArrayList<>();
+        if (chunkClaimLimit <= 0) {
+            errors.add("chunkClaimLimit must be greater than 0, found: " + chunkClaimLimit);
+        }
+        if (cooldownUnstuck < 0) {
+            errors.add("cooldownUnstuck cannot be negative, found: " + cooldownUnstuck);
+        }
+        if (maxWarps <= 0) {
+            errors.add("maxWarps must be greater than 0, found: " + maxWarps);
+        }
+        if (actionbarUpdateInterval <= 0) {
+            errors.add("actionbarUpdateInterval must be greater than 0, found: " + actionbarUpdateInterval);
+        }
+        if (worldguardGap < 0) {
+            errors.add("worldguardGap cannot be negative, found: " + worldguardGap);
+        }
+        if (minClaimGap < 0) {
+            errors.add("minClaimGap cannot be negative, found: " + minClaimGap);
+        }
+        // Database config validation
+        if (!database.type.equalsIgnoreCase("SQLITE") && !database.type.equalsIgnoreCase("MYSQL") && 
+                !database.type.equalsIgnoreCase("MARIADB")) {
+            errors.add("database.type must be SQLITE, MYSQL, or MARIADB, found: " + database.type);
+        }
+        if (database.port <= 0 || database.port > 65535) {
+            errors.add("database.port must be between 1 and 65535, found: " + database.port);
+        }
+        if (database.maximumPoolSize <= 0) {
+            errors.add("database.maximumPoolSize must be greater than 0, found: " + database.maximumPoolSize);
+        }
+        if (database.minimumIdle < 0) {
+            errors.add("database.minimumIdle cannot be negative, found: " + database.minimumIdle);
+        }
+        if (database.connectionTimeout <= 0) {
+            errors.add("database.connectionTimeout must be greater than 0, found: " + database.connectionTimeout);
+        }
+        // Redis config validation
+        if (redis.enabled) {
+            if (redis.port <= 0 || redis.port > 65535) {
+                errors.add("redis.port must be between 1 and 65535, found: " + redis.port);
+            }
+            if (redis.channel.isEmpty()) {
+                errors.add("redis.channel cannot be empty");
+            }
+        }
+        return errors;
+    }
 }
