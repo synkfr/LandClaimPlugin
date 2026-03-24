@@ -178,7 +178,7 @@ To opt out, navigate to `plugins/bStats/config.yml` and set `enabled` to `false`
 
 ## 🔗 Links
 
-- **Discord** — [discord.gg/pAPPvSmWRK](https://discord.gg/pAPPvSmWRK)
+- **Discord** — [discord.gg/pAPPvSmWRK](https://discord.gg/fGyDyp3Ak4)
 - **GitHub** — [github.com/synkfr/LandClaimPlugin](https://github.com/synkfr/LandClaimPlugin)
 - **Issues** — [GitHub Issues](https://github.com/synkfr/LandClaimPlugin/issues)
 - **bStats** — [bstats.org/plugin/bukkit/LandClaimPlugin/28407](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
