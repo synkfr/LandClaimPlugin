@@ -10,6 +10,21 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 [![Discord](https://img.shields.io/discord/1378591879393710110?label=Discord&logo=discord&color=5865F2)](https://discord.gg/pAPPvSmWRK)
 
 ---
+## ⚠️ Development Builds
+
+Development builds are automatically generated from the latest commits and may include unfinished features, breaking changes, or experimental code.
+
+These builds are **not recommended for production use**.
+
+If you choose to run a dev build:
+- Expect bugs, crashes, or incomplete functionality
+- Configs and data formats may change without notice
+- No guarantee of backward compatibility
+
+Use them only for testing, early access, or contributing feedback.
+
+📦 Download latest dev builds:
+https://github.com/synkfr/LandClaimPlugin/releases
 
 ## ✨ Features
 
