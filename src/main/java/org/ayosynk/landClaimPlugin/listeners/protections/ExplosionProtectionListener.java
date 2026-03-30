@@ -18,7 +18,7 @@ public class ExplosionProtectionListener implements Listener {
         this.claimManager = claimManager;
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
         Location explosionLoc = event.getLocation();
         ChunkPosition explosionChunk = new ChunkPosition(explosionLoc);
@@ -48,7 +48,7 @@ public class ExplosionProtectionListener implements Listener {
         event.blockList().removeIf(b -> claimManager.isChunkClaimed(new ChunkPosition(b)));
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
         Location explosionLoc = event.getBlock().getLocation();
         ChunkPosition explosionChunk = new ChunkPosition(explosionLoc);

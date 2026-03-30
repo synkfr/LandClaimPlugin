@@ -59,7 +59,7 @@ public class EntityProtectionListener implements Listener {
         return null;
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         Entity target = event.getEntity();
         Player damager = getDamager(event.getCause(), event.getDamager());
@@ -80,7 +80,7 @@ public class EntityProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Entity target = event.getRightClicked();
         Player player = event.getPlayer();
@@ -105,7 +105,7 @@ public class EntityProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event) {
         Entity target = event.getRightClicked();
         Player player = event.getPlayer();
@@ -116,7 +116,7 @@ public class EntityProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onMobGriefing(EntityChangeBlockEvent event) {
         if (event.getEntity() instanceof Enderman || event.getEntity() instanceof Ravager
                 || event.getEntity() instanceof Wither || event.getEntity() instanceof Silverfish) {
