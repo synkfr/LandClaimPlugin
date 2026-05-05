@@ -8,13 +8,18 @@ import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
+import org.incendo.cloud.parser.standard.IntegerParser;
+import org.incendo.cloud.parser.standard.StringParser;
+import org.ayosynk.landClaimPlugin.models.ClaimPlayer;
+import java.util.UUID;
 
 /**
- * Handles: /claim admin check, /claim admin unclaim
+ * Handles: /claim admin check, /claim admin unclaim, /claim admin add chunk
  * Permission-gated: landclaim.admin
  */
 public class AdminCommand implements LandClaimCommand {
@@ -46,6 +51,59 @@ public class AdminCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     adminUnclaimCurrentChunk(player);
                 }));
+
+        // /claim admin add chunk <amount> <player>
+        manager.command(claimBuilder.literal("admin").literal("add").literal("chunk")
+                .permission("landclaim.admin")
+                .required("amount", IntegerParser.integerParser(1))
+                .required("player", StringParser.stringParser())
+                .handler(context -> {
+                    Player sender = context.sender().source();
+                    int amount = context.get("amount");
+                    String targetName = context.get("player");
+                    adminAddChunk(sender, amount, targetName);
+                }));
+    }
+
+    private void adminAddChunk(Player sender, int amount, String targetName) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            @SuppressWarnings("deprecation")
+            OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+            
+            if (target == null || (!target.hasPlayedBefore() && !target.isOnline())) {
+                sender.sendMessage(configManager.getMessage("player-not-found"));
+                return;
+            }
+
+            UUID targetId = target.getUniqueId();
+            ClaimPlayer claimPlayer = plugin.getCacheManager().getPlayerCache().getIfPresent(targetId);
+            boolean inCache = claimPlayer != null;
+
+            if (!inCache) {
+                try {
+                    claimPlayer = plugin.getDatabaseManager().getPlayerDao().getPlayer(targetId).join();
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Failed to load player data for admin add chunk: " + e.getMessage());
+                    sender.sendMessage(configManager.getMessage("player-not-found"));
+                    return;
+                }
+            }
+
+            if (claimPlayer == null) {
+                claimPlayer = new ClaimPlayer(targetId);
+            }
+
+            claimPlayer.setBonusClaimBlocks(claimPlayer.getBonusClaimBlocks() + amount);
+
+            // Save to DB
+            plugin.getDatabaseManager().getPlayerDao().savePlayer(claimPlayer).join();
+
+            if (inCache) {
+                plugin.getCacheManager().getPlayerCache().put(targetId, claimPlayer);
+            }
+
+            sender.sendMessage(configManager.getMessage("admin-add-chunk-success", "<amount>", String.valueOf(amount), "<player>", target.getName() != null ? target.getName() : targetName));
+        });
     }
 
     private void sendAdminClaimInfo(Player player) {

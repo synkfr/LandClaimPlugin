@@ -12,6 +12,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String chunkUnclaimed = "<green>Chunk successfully unclaimed!";
     public String notOwner = "<red>You do not own this claim.";
     public String playerNotFound = "<red>Player not found.";
+    public String adminAddChunkSuccess = "<green>Successfully gave <gold><amount></gold> bonus chunks to <gold><player></gold>!";
     public String invalidCommand = "<red>Invalid command usage.";
     public String reloaded = "<green>Configuration and messages reloaded successfully!";
     public String inCombat = "<red>You cannot execute LandClaim commands while in combat!</red>";
