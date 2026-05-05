@@ -51,7 +51,7 @@ public class VehicleProtectionListener implements Listener {
         return true;
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onVehicleDamage(VehicleDamageEvent event) {
         if (event.getAttacker() instanceof Player) {
             Player player = (Player) event.getAttacker();
@@ -60,7 +60,7 @@ public class VehicleProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onVehicleDestroy(VehicleDestroyEvent event) {
         if (event.getAttacker() instanceof Player) {
             Player player = (Player) event.getAttacker();
@@ -69,7 +69,7 @@ public class VehicleProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerEnterVehicle(PlayerInteractEntityEvent event) {
         if (event.getRightClicked() instanceof Vehicle) {
             Player player = event.getPlayer();
@@ -97,7 +97,7 @@ public class VehicleProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerPlaceVehicle(PlayerInteractEvent event) {
         if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK)
             return;

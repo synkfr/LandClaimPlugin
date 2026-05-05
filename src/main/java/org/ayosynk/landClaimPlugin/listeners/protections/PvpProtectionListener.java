@@ -38,7 +38,7 @@ public class PvpProtectionListener implements Listener {
         return true; // PvP is allowed in wilderness
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player))
             return;
@@ -64,7 +64,7 @@ public class PvpProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPotionSplash(PotionSplashEvent event) {
         ThrownPotion potion = event.getPotion();
         if (!(potion.getShooter() instanceof Player))

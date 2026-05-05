@@ -51,24 +51,24 @@ public class BlockProtectionListener implements Listener {
         return true;
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         checkPermission(event.getPlayer(), event.getBlock(), event, "BLOCK_BREAK");
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         checkPermission(event.getPlayer(), event.getBlock(), event, "BLOCK_PLACE");
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockIgnite(BlockIgniteEvent event) {
         if (event.getPlayer() == null)
             return;
         checkPermission(event.getPlayer(), event.getBlock(), event, "BLOCK_IGNITE");
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
         Block block = event.getBlockClicked().getRelative(event.getBlockFace());
         if (!checkPermission(event.getPlayer(), block, event, "USE_BUCKETS")) {
@@ -76,7 +76,7 @@ public class BlockProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBucketFill(PlayerBucketFillEvent event) {
         Block block = event.getBlockClicked();
         if (!checkPermission(event.getPlayer(), block, event, "USE_BUCKETS")) {
@@ -84,12 +84,12 @@ public class BlockProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent event) {
         checkPermission(event.getPlayer(), event.getBlock(), event, "MODIFY_SIGNS");
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteractForFertilizer(PlayerInteractEvent event) {
         if (event.getClickedBlock() == null || event.getItem() == null)
             return;

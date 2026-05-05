@@ -14,6 +14,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
@@ -59,7 +61,7 @@ public class EntityProtectionListener implements Listener {
         return null;
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         Entity target = event.getEntity();
         Player damager = getDamager(event.getCause(), event.getDamager());
@@ -80,7 +82,33 @@ public class EntityProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onHangingPlace(HangingPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (player != null) {
+            ChunkPosition pos = new ChunkPosition(event.getEntity().getLocation());
+            checkPermission(player, pos, event, "MODIFY_ITEM_FRAMES");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onHangingBreak(HangingBreakByEntityEvent event) {
+        Entity remover = event.getRemover();
+        if (remover != null) {
+            Player damager = getDamager(null, remover);
+            ChunkPosition pos = new ChunkPosition(event.getEntity().getLocation());
+            if (damager != null) {
+                checkPermission(damager, pos, event, "MODIFY_ITEM_FRAMES");
+            } else {
+                // If broken by a non-player entity (like a stray arrow), cancel if it's in a claim
+                if (claimManager.isChunkClaimed(pos)) {
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Entity target = event.getRightClicked();
         Player player = event.getPlayer();
@@ -105,7 +133,7 @@ public class EntityProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event) {
         Entity target = event.getRightClicked();
         Player player = event.getPlayer();
@@ -116,7 +144,7 @@ public class EntityProtectionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onMobGriefing(EntityChangeBlockEvent event) {
         if (event.getEntity() instanceof Enderman || event.getEntity() instanceof Ravager
                 || event.getEntity() instanceof Wither || event.getEntity() instanceof Silverfish) {
