@@ -24,6 +24,9 @@ public class AllyManagementConfig extends OkaeriConfig {
     @Comment("Navigation pane background filler")
     public ItemConfig navFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
+    @Comment("Add Ally Button")
+    public ItemConfig addAlly = new ItemConfig("PLAYER_HEAD", "<yellow>Add Ally", List.of("<gray>Click to ally with another player's claim"));
+
     @Comment("Previous Page Button")
     public ItemConfig previousPage = new ItemConfig(
             "CYAN_CANDLE",

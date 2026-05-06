@@ -21,6 +21,9 @@ public class MemberManagementConfig extends OkaeriConfig {
     @Comment("Navigation bar background")
     public ItemConfig bottomFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
+    @Comment("Invite Member Button")
+    public ItemConfig inviteMember = new ItemConfig("PLAYER_HEAD", "<yellow>Invite Member", List.of("<gray>Click to invite a new member"));
+
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
             "SPECTRAL_ARROW",

@@ -103,10 +103,30 @@ public class TrustManagementGUI {
                                         config.bottomFill.lore));
                         ingredients.put('+', GuiHelper.buildSlot(config.addPlayer.material, config.addPlayer.name,
                                         config.addPlayer.lore, (p, e) -> {
-                                                // Add player via /claim trust add — display instruction message
-                                                p.closeInventory();
-                                                p.sendMessage(GuiHelper.MM.deserialize(
-                                                                "<yellow>Use <white>/claim trust add <player> <yellow>to add a trusted player."));
+                                                OnlinePlayerSelectorGUI.open(p, plugin, target -> {
+                                                        // Callback: target selected
+                                                        if (profile.isOwner(target.getUniqueId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("cannot-trust-self"));
+                                                                return;
+                                                        }
+                                                        if (profile.isTrusted(target.getUniqueId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("already-trusted"));
+                                                                return;
+                                                        }
+
+                                                        profile.addTrustedPlayer(target.getUniqueId());
+                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
+                                                                        .thenRun(() -> {
+                                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                                .getMessage("trust-added",
+                                                                                                                "<player>",
+                                                                                                                target.getName()));
+                                                                                TrustManagementGUI.open(p, profile,
+                                                                                                plugin);
+                                                                        });
+                                                }, () -> TrustManagementGUI.open(p, profile, plugin));
                                         }));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,

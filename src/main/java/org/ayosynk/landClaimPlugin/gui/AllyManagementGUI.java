@@ -75,12 +75,39 @@ public class AllyManagementGUI {
                                         "x x x x x x x x x",
                                         "x x x x x x x x x",
                                         "x x x x x x x x x",
-                                        "P N N N < N N N V"
+                                        "P B B + < B B B N"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('N', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
+                        ingredients.put('B', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
                                         config.navFill.lore));
+                        ingredients.put('+', GuiHelper.buildSlot(config.addAlly.material, config.addAlly.name,
+                                        config.addAlly.lore, (p, e) -> {
+                                                OnlinePlayerSelectorGUI.open(p, plugin, target -> {
+                                                        // Callback: target selected
+                                                        if (profile.isOwner(target.getUniqueId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("cannot-ally-self"));
+                                                                return;
+                                                        }
+                                                        if (profile.getAllyFlags().containsKey(target.getUniqueId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("already-allied"));
+                                                                return;
+                                                        }
+
+                                                        profile.addAlly(target.getUniqueId());
+                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
+                                                                        .thenRun(() -> {
+                                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                                .getMessage("ally-added",
+                                                                                                                "<player>",
+                                                                                                                target.getName()));
+                                                                                AllyManagementGUI.open(p, profile,
+                                                                                                plugin);
+                                                                        });
+                                                }, () -> AllyManagementGUI.open(p, profile, plugin));
+                                        }));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                                                         (p, e) -> {
