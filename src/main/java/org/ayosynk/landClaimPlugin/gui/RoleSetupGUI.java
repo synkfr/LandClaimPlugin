@@ -23,10 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RoleSetupGUI implements Listener {
 
         private static final Map<UUID, RoleSetupSession> activeSessions = new ConcurrentHashMap<>();
-
-        // Static initialization to register the listener once
-        private static boolean listenerRegistered = false;
-
         private enum InputType { NAME, PRIORITY }
         
         private static class RoleSetupSession {
@@ -42,11 +38,6 @@ public class RoleSetupGUI implements Listener {
         }
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Role role) {
-                if (!listenerRegistered) {
-                        Bukkit.getPluginManager().registerEvents(new RoleSetupGUI(), plugin);
-                        listenerRegistered = true;
-                }
-
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         RoleSetupConfig config = plugin.getConfigManager().getRoleSetupConfig();
 
