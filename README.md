@@ -1,13 +1,33 @@
-# 💠 LandClaim — Advanced Territory Protection for Minecraft
+<div align="center">
 
-![LandClaim Banner](https://i.postimg.cc/jS6mh13k/minecraft-title-2.png)
+<img src="https://i.postimg.cc/jS6mh13k/minecraft-title-2.png" alt="LandClaim Banner" width="100%">
+
+# 💠 LandClaimPlugin
+**Advanced Territory Protection for Minecraft**
 
 A powerful, feature-rich chunk-based land protection plugin for Paper servers. Create claim profiles, protect your builds, manage members with granular roles, form alliances, set warps, and customize every aspect of your territory.
 
-[![Paper](https://img.shields.io/badge/Paper-1.21+-blue)](https://papermc.io/)
-[![Version](https://img.shields.io/badge/Version-2.0.0-brightgreen)](https://github.com/synkfr/LandClaimPlugin/releases)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Discord](https://img.shields.io/discord/1378591879393710110?label=Discord&logo=discord&color=5865F2)](https://discord.gg/pAPPvSmWRK)
+[![Paper](https://img.shields.io/badge/Paper-1.21+-blue?style=flat-square)](https://papermc.io/)
+[![Java](https://img.shields.io/badge/Java-21+-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Version](https://img.shields.io/github/v/release/synkfr/LandClaimPlugin?style=flat-square&color=40ae24&label=Version)](https://github.com/synkfr/LandClaimPlugin/releases)
+[![License](https://img.shields.io/github/license/synkfr/LandClaimPlugin?style=flat-square&color=blue)](LICENSE)
+[![Discord](https://img.shields.io/discord/1378591879393710110?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/pAPPvSmWRK)
+
+</div>
+
+<br>
+
+> ⚠️ **DEVELOPMENT BUILDS**
+>
+> Development builds are automatically generated from the latest commits and may include unfinished features, breaking changes, or experimental code. **These builds are not recommended for production use.**
+> 
+> **If you choose to run a dev build:**
+> - Expect bugs, crashes, or incomplete functionality.
+> - Configs and data formats may change without notice.
+> - No guarantee of backward compatibility.
+> 
+> Use them only for testing, early access, or contributing feedback.
+> 📦 **Download latest dev builds:** [GitHub Releases](https://github.com/synkfr/LandClaimPlugin/releases)
 
 ---
 
@@ -68,20 +88,19 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 
 ## 📥 Installation
 
-1. Drop `LandClaimPlugin.jar` into your `plugins/` folder
-2. Restart the server
-3. Configure `plugins/LandClaimPlugin/config.yml` to your liking
+1. Download the latest release and drop `LandClaimPlugin.jar` into your `plugins/` folder.
+2. Restart your server.
+3. Configure `plugins/LandClaimPlugin/config.yml` to your liking.
 
-**Requirements:** Paper 1.21+, Java 21+
+> **Requirements:** Paper 1.21+ | Java 21+
 
 ---
 
 ## 💬 Commands
 
-All commands use `/claim` (alias: `/c`) as the base.
+*All commands use `/claim` (alias: `/c`) as the base.*
 
-### General
-
+### General Commands
 | Command | Description |
 |---|---|
 | `/claim` | Claim the chunk you're standing in |
@@ -94,7 +113,9 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/unclaim` | Unclaim the chunk you're standing in |
 | `/unclaim all` | Unclaim all your chunks |
 
-### Members
+### Management Commands
+<details>
+<summary><b>Members</b></summary>
 
 | Command | Description |
 |---|---|
@@ -103,16 +124,20 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim member list` | List all members and their roles |
 | `/claim accept <name>` | Accept a pending member invitation |
 | `/claim deny <name>` | Deny a pending member invitation |
+</details>
 
-### Trust
+<details>
+<summary><b>Trust</b></summary>
 
 | Command | Description |
 |---|---|
 | `/claim trust add <player>` | Trust a player (per-player permission overrides) |
 | `/claim trust remove <player>` | Remove a trusted player |
 | `/claim trust list` | List all trusted players and their flags |
+</details>
 
-### Allies
+<details>
+<summary><b>Allies</b></summary>
 
 | Command | Description |
 |---|---|
@@ -120,8 +145,10 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim ally accept <name>` | Accept an alliance request |
 | `/claim ally deny <name>` | Deny an alliance request |
 | `/claim ally remove <name>` | Remove an existing alliance |
+</details>
 
-### Warps
+<details>
+<summary><b>Warps & Admin</b></summary>
 
 | Command | Description |
 |---|---|
@@ -129,11 +156,6 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim delwarp <name>` | Delete a warp |
 | `/claim warp <name>` | Teleport to a warp |
 | `/claim warps` | Open the warp management GUI |
-
-### Admin
-
-| Command | Description |
-|---|---|
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
 | `/claim admin edit <player>` | Open any player's claim management GUI |
@@ -145,14 +167,14 @@ All commands use `/claim` (alias: `/c`) as the base.
 
 | Permission | Description | Default |
 |---|---|---|
-| `landclaim.*` | All LandClaim permissions | false |
-| `landclaim.claim` | Basic claiming ability | ✅ true |
-| `landclaim.auto` | Use auto-claim mode | ✅ true |
-| `landclaim.admin` | Admin commands & bypass all protection | op |
-| `landclaim.limit.<n>` | Override the chunk claim limit (e.g., `landclaim.limit.50`) | false |
-| `landclaim.list` | List claims | ✅ true |
-| `landclaim.warps.limit.<n>` | Override the warps limit (e.g., `landclaim.warps.limit.10`) | false |
-| `landclaim.createrole.<n>` | Override the max number of custom roles a player can create | false |
+| `landclaim.*` | All LandClaim permissions | `false` |
+| `landclaim.claim` | Basic claiming ability | ✅ `true` |
+| `landclaim.auto` | Use auto-claim mode | ✅ `true` |
+| `landclaim.admin` | Admin commands & bypass all protection | `op` |
+| `landclaim.limit.<n>` | Override the chunk claim limit (e.g., `landclaim.limit.50`) | `false` |
+| `landclaim.list` | List claims | ✅ `true` |
+| `landclaim.warps.limit.<n>` | Override the warps limit (e.g., `landclaim.warps.limit.10`) | `false` |
+| `landclaim.createrole.<n>` | Override the max number of custom roles | `false` |
 
 ---
 
@@ -160,13 +182,17 @@ All commands use `/claim` (alias: `/c`) as the base.
 
 This plugin collects **anonymous** usage statistics via [bStats](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407). The data is publicly visible and helps us understand how the plugin is used across servers. No personal or identifiable information is collected.
 
-To opt out, navigate to `plugins/bStats/config.yml` and set `enabled` to `false`.
+*To opt out, navigate to `plugins/bStats/config.yml` and set `enabled` to `false`.*
 
 ---
 
-## 🔗 Links
+<div align="center">
 
-- **Discord** — [discord.gg/pAPPvSmWRK](https://discord.gg/pAPPvSmWRK)
-- **GitHub** — [github.com/synkfr/LandClaimPlugin](https://github.com/synkfr/LandClaimPlugin)
-- **Issues** — [GitHub Issues](https://github.com/synkfr/LandClaimPlugin/issues)
-- **bStats** — [bstats.org/plugin/bukkit/LandClaimPlugin/28407](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
+### 🔗 Quick Links
+
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/fGyDyp3Ak4)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/synkfr/LandClaimPlugin)
+[![Issues](https://img.shields.io/badge/Issues-EA4335?style=flat-square&logo=github&logoColor=white)](https://github.com/synkfr/LandClaimPlugin/issues)
+[![bStats](https://img.shields.io/badge/bStats-313131?style=flat-square&logo=chart-dot&logoColor=white)](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
+
+</div>
