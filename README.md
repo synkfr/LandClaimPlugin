@@ -19,6 +19,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **Auto-Claim** — Automatically claim chunks as you walk
 - **Connected Claims** — Optionally require claims to be adjacent (with diagonal support)
 - **Claim Map GUI** — Interactive in-game map showing nearby claims and ownership
+- **Interactive Selectors** — Programmatically select online players via their heads for Trust, Member, and Ally management
 
 ### Permission System
 - **4-Tier Priority Chain** — `Owner > Role > Trusted > Visitor` — the first matching tier decides
@@ -135,6 +136,8 @@ All commands use `/claim` (alias: `/c`) as the base.
 |---|---|
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
+| `/claim admin edit <player>` | Open any player's claim management GUI |
+| `/claim admin trust <owner> add/remove <player>` | Forcefully manage trust overrides for a claim |
 
 ---
 
