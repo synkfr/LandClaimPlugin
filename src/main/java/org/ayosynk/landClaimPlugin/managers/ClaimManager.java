@@ -20,6 +20,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 
 import java.util.*;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.ayosynk.landClaimPlugin.models.ChunkSelection;
 
@@ -31,6 +32,9 @@ public class ClaimManager {
     // Map of <ReceiverProfileOwnerId, Set<SenderProfileOwnerId>> for pending ally
     // invites
     private final Map<UUID, Set<UUID>> pendingAllyInvites = new HashMap<>();
+
+    // Pending member invites: Invitee UUID -> Owner UUID
+    private final Map<UUID, UUID> pendingMemberInvites = new ConcurrentHashMap<>();
     
     // Spatial index: ChunkPosition -> ClaimProfile for O(1) lookups
     private final Map<ChunkPosition, ClaimProfile> chunkToProfileMap = new HashMap<>();
@@ -186,9 +190,32 @@ public class ClaimManager {
         }
     }
 
+    public void sendAllyInvite(Player sender, ClaimProfile targetProfile) {
+        addAllyInvite(targetProfile.getOwnerId(), sender.getUniqueId());
+        sender.sendMessage(configManager.getMessage("ally-invite-sent", "<name>", targetProfile.getName()));
+
+        Player targetOwner = Bukkit.getPlayer(targetProfile.getOwnerId());
+        if (targetOwner != null && targetOwner.isOnline()) {
+            targetOwner.sendMessage(configManager.getMessage("ally-invite-received", "<name>", sender.getName()));
+        }
+    }
+
     public boolean hasAllyInvite(UUID receiverOwnerId, UUID senderOwnerId) {
         Set<UUID> senders = pendingAllyInvites.get(receiverOwnerId);
         return senders != null && senders.contains(senderOwnerId);
+    }
+
+    // ========== Member Invites ==========
+
+    public void sendMemberInvite(Player sender, Player target, ClaimProfile profile) {
+        pendingMemberInvites.put(target.getUniqueId(), sender.getUniqueId());
+
+        sender.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
+        target.sendMessage(configManager.getMessage("invite-received", "<owner>", sender.getName()));
+    }
+
+    public UUID getAndRemoveMemberInvite(UUID inviteeId) {
+        return pendingMemberInvites.remove(inviteeId);
     }
 
     /**

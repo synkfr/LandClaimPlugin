@@ -96,16 +96,15 @@ public class AllyManagementGUI {
                                                                 return;
                                                         }
 
-                                                        profile.addAlly(target.getUniqueId());
-                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
-                                                                        .thenRun(() -> {
-                                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                                .getMessage("ally-added",
-                                                                                                                "<player>",
-                                                                                                                target.getName()));
-                                                                                AllyManagementGUI.open(p, profile,
-                                                                                                plugin);
-                                                                        });
+                                                        ClaimProfile targetProfile = plugin.getClaimManager().getProfile(target.getUniqueId());
+                                                        if (targetProfile == null) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("no-profile-found"));
+                                                                return;
+                                                        }
+
+                                                        plugin.getClaimManager().sendAllyInvite(p, targetProfile);
+                                                        AllyManagementGUI.open(p, profile, plugin);
                                                 }, () -> AllyManagementGUI.open(p, profile, plugin));
                                         }));
                         ingredients.put('<',

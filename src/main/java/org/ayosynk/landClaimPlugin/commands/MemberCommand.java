@@ -26,9 +26,6 @@ public class MemberCommand implements LandClaimCommand {
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
 
-    /** Pending invites: invitee UUID → owner UUID */
-    private final Map<UUID, UUID> pendingInvites = new ConcurrentHashMap<>();
-
     public MemberCommand(LandClaimPlugin plugin, ClaimManager claimManager,
             ConfigManager configManager) {
         this.plugin = plugin;
@@ -102,11 +99,7 @@ public class MemberCommand implements LandClaimCommand {
                         return;
                     }
 
-                    pendingInvites.put(targetId, player.getUniqueId());
-
-                    player.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
-                    target.sendMessage(configManager.getMessage("invite-received",
-                            "<owner>", player.getName()));
+                    claimManager.sendMemberInvite(player, target, profile);
                 }));
 
         // /claim member kick <player>
@@ -160,7 +153,7 @@ public class MemberCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     UUID playerId = player.getUniqueId();
 
-                    UUID ownerId = pendingInvites.remove(playerId);
+                    UUID ownerId = claimManager.getAndRemoveMemberInvite(playerId);
                     if (ownerId == null) {
                         player.sendMessage(configManager.getMessage("no-pending-invite"));
                         return;
@@ -194,7 +187,7 @@ public class MemberCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     UUID playerId = player.getUniqueId();
 
-                    UUID ownerId = pendingInvites.remove(playerId);
+                    UUID ownerId = claimManager.getAndRemoveMemberInvite(playerId);
                     if (ownerId == null) {
                         player.sendMessage(configManager.getMessage("no-pending-invite"));
                         return;

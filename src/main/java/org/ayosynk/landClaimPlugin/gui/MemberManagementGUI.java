@@ -92,10 +92,7 @@ public class MemberManagementGUI {
                                                         }
 
                                                         // Logic from /claim member invite
-                                                        plugin.getClaimManager().sendInvite(p, target, profile);
-                                                        p.sendMessage(plugin.getConfigManager().getMessage(
-                                                                        "member-invite-sent", "<player>",
-                                                                        target.getName()));
+                                                        plugin.getClaimManager().sendMemberInvite(p, target, profile);
                                                         MemberManagementGUI.open(p, profile, plugin);
                                                 }, () -> MemberManagementGUI.open(p, profile, plugin));
                                         }));
