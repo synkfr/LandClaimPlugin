@@ -13,6 +13,14 @@ public class MessagesConfig extends OkaeriConfig {
     public String notOwner = "<red>You do not own this claim.";
     public String playerNotFound = "<red>Player not found.";
     public String adminAddChunkSuccess = "<green>Successfully gave <gold><amount></gold> bonus chunks to <gold><player></gold>!";
+    public String adminEditingProfile = "<red>[ADMIN] <green>Now editing <gold><player></gold>'s claim profile.";
+    public String adminTrustAdded = "<red>[ADMIN] <green>Added trust override for <gold><player></gold> in <gold><owner></gold>'s claim.";
+    public String adminTrustRemoved = "<red>[ADMIN] <green>Removed trust override for <gold><player></gold> in <gold><owner></gold>'s claim.";
+    public String noProfileFound = "<red>That player does not have a claim profile.";
+    public String memberInviteSent = "<green>Invite sent to <gold><player></gold>.";
+    public String allyAdded = "<green>You are now allied with <gold><player></gold>'s claim!";
+    public String cannotInviteSelf = "<red>You cannot invite yourself to your own claim.";
+    public String alreadyMember = "<red>That player is already a member of this claim.";
     public String invalidCommand = "<red>Invalid command usage.";
     public String reloaded = "<green>Configuration and messages reloaded successfully!";
     public String inCombat = "<red>You cannot execute LandClaim commands while in combat!</red>";
