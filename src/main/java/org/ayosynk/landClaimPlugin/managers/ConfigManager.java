@@ -29,6 +29,7 @@ import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleEditConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TitleSettingsConfig;
+import org.ayosynk.landClaimPlugin.config.menus.OnlinePlayerSelectorConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
 import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
 import org.bukkit.Color;
@@ -62,6 +63,7 @@ public class ConfigManager {
     private RenameClaimConfig renameClaimConfig;
     private ChangeClaimColorConfig changeClaimColorConfig;
     private RoleEditConfig roleEditConfig;
+    private OnlinePlayerSelectorConfig onlinePlayerSelectorConfig;
 
     private List<String> blockedCommands = List.of();
     private List<String> blockedWorlds = List.of();
@@ -250,6 +252,13 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        this.onlinePlayerSelectorConfig = eu.okaeri.configs.ConfigManager.create(OnlinePlayerSelectorConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/OnlinePlayerSelector.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
     }
 
     public void reloadMainConfig() {
@@ -277,6 +286,7 @@ public class ConfigManager {
         renameClaimConfig.load();
         changeClaimColorConfig.load();
         roleEditConfig.load();
+        onlinePlayerSelectorConfig.load();
 
         blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
         blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
@@ -376,6 +386,10 @@ public class ConfigManager {
 
     public RoleEditConfig getRoleEditConfig() {
         return roleEditConfig;
+    }
+
+    public OnlinePlayerSelectorConfig getOnlinePlayerSelectorConfig() {
+        return onlinePlayerSelectorConfig;
     }
 
     // --- Legacy wrapper methods to bridge until other classes are transformed ---

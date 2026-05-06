@@ -68,6 +68,7 @@ public class BlockPermissionResolver {
             case COMPOSTER:
             case CRAFTING_TABLE:
             case ENCHANTING_TABLE:
+            case DRAGON_EGG:
                 return BlockPermission.WORKSTATIONS;
             default:
                 return null;

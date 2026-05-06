@@ -16,7 +16,11 @@ import org.incendo.cloud.paper.util.sender.Source;
 import org.incendo.cloud.parser.standard.IntegerParser;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.ayosynk.landClaimPlugin.models.ClaimPlayer;
+import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
+import org.ayosynk.landClaimPlugin.gui.TrustManagementGUI;
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Handles: /claim admin check, /claim admin unclaim, /claim admin add chunk
@@ -62,6 +66,42 @@ public class AdminCommand implements LandClaimCommand {
                     int amount = context.get("amount");
                     String targetName = context.get("player");
                     adminAddChunk(sender, amount, targetName);
+                }));
+
+        // /claim admin edit <owner>
+        manager.command(claimBuilder.literal("admin").literal("edit")
+                .permission("landclaim.admin")
+                .required("owner", StringParser.stringParser())
+                .handler(context -> {
+                    Player sender = context.sender().source();
+                    String ownerName = context.get("owner");
+                    adminEditProfile(sender, ownerName);
+                }));
+
+        // /claim admin trust <owner> add <player>
+        manager.command(claimBuilder.literal("admin").literal("trust")
+                .permission("landclaim.admin")
+                .required("owner", StringParser.stringParser())
+                .literal("add")
+                .required("player", StringParser.stringParser())
+                .handler(context -> {
+                    Player sender = context.sender().source();
+                    String ownerName = context.get("owner");
+                    String playerName = context.get("player");
+                    adminManageTrust(sender, ownerName, playerName, true);
+                }));
+
+        // /claim admin trust <owner> remove <player>
+        manager.command(claimBuilder.literal("admin").literal("trust")
+                .permission("landclaim.admin")
+                .required("owner", StringParser.stringParser())
+                .literal("remove")
+                .required("player", StringParser.stringParser())
+                .handler(context -> {
+                    Player sender = context.sender().source();
+                    String ownerName = context.get("owner");
+                    String playerName = context.get("player");
+                    adminManageTrust(sender, ownerName, playerName, false);
                 }));
     }
 
@@ -137,6 +177,63 @@ public class AdminCommand implements LandClaimCommand {
 
             if (claimManager.unclaimChunk(chunk)) {
                 player.sendMessage(configManager.getMessage("admin-bypassed-unclaim"));
+            }
+        });
+    }
+
+    private void adminEditProfile(Player sender, String ownerName) {
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(ownerName);
+        if (target == null || target.getUniqueId() == null) {
+            sender.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
+
+        ClaimProfile profile = claimManager.getProfile(target.getUniqueId());
+        if (profile == null) {
+            sender.sendMessage(configManager.getMessage("no-profile-found"));
+            return;
+        }
+
+        // Open the MainMenuGUI for the admin to manage this profile
+        MainMenuGUI.open(sender, profile, plugin);
+        sender.sendMessage(configManager.getMessage("admin-editing-profile", "<player>", target.getName()));
+    }
+
+    private void adminManageTrust(Player sender, String ownerName, String playerName, boolean add) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            @SuppressWarnings("deprecation")
+            OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerName);
+            @SuppressWarnings("deprecation")
+            OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
+
+            if (owner == null || owner.getUniqueId() == null || target == null || target.getUniqueId() == null) {
+                sender.sendMessage(configManager.getMessage("player-not-found"));
+                return;
+            }
+
+            ClaimProfile profile = claimManager.getProfile(owner.getUniqueId());
+            if (profile == null) {
+                sender.sendMessage(configManager.getMessage("no-profile-found"));
+                return;
+            }
+
+            if (add) {
+                if (profile.isOwner(target.getUniqueId())) {
+                    sender.sendMessage(configManager.getMessage("cannot-trust-self"));
+                    return;
+                }
+                profile.addTrustedPlayer(target.getUniqueId());
+                claimManager.saveAndSync(profile);
+                sender.sendMessage(configManager.getMessage("admin-trust-added", "<owner>", owner.getName(), "<player>", target.getName()));
+            } else {
+                if (!profile.isTrusted(target.getUniqueId())) {
+                    sender.sendMessage(configManager.getMessage("not-trusted"));
+                    return;
+                }
+                profile.removeTrustedPlayer(target.getUniqueId());
+                claimManager.saveAndSync(profile);
+                sender.sendMessage(configManager.getMessage("admin-trust-removed", "<owner>", owner.getName(), "<player>", target.getName()));
             }
         });
     }

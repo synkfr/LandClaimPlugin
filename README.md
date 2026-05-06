@@ -33,47 +33,56 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 
 ## ✨ Features
 
-### 🏰 Core Claiming
-- **Claim Profiles** — Each player owns a single named claim profile that holds all their claimed land, settings, and permissions.
-- **Chunk-Based Claims** — 16×16 block protection zones, simple and intuitive.
-- **Auto-Claim** — Automatically claim chunks as you walk.
-- **Connected Claims** — Optionally require claims to be adjacent (with diagonal support).
-- **Claim Map GUI** — Interactive in-game map showing nearby claims and ownership.
+### Core Claiming
+- **Claim Profiles** — Each player owns a single named claim profile that holds all their claimed land, settings, and permissions
+- **Chunk-Based Claims** — 16×16 block protection zones, simple and intuitive
+- **Auto-Claim** — Automatically claim chunks as you walk
+- **Connected Claims** — Optionally require claims to be adjacent (with diagonal support)
+- **Claim Map GUI** — Interactive in-game map showing nearby claims and ownership
+- **Interactive Selectors** — Programmatically select online players via their heads for Trust, Member, and Ally management
 
-### 🔐 Permission System
-- **4-Tier Priority Chain** — `Owner > Role > Trusted > Visitor` (the first matching tier decides).
-- **Custom Roles** — Create and configure custom roles (e.g., Member, CoOwner) with granular flag-based permissions.
-- **Trusted Players** — Grant individual players specific permission overrides.
-- **Visitor Settings** — Configure what non-members can do in your claims.
-- **25+ Permission Flags** — Doors, trapdoors, containers, workstations, animals, vehicles, redstone, and more.
+### Permission System
+- **4-Tier Priority Chain** — `Owner > Role > Trusted > Visitor` — the first matching tier decides
+- **Custom Roles** — Create and configure custom roles (e.g., Member, CoOwner) with granular flag-based permissions
+- **Trusted Players** — Grant individual players specific permission overrides
+- **Visitor Settings** — Configure what non-members can do in your claims
+- **25+ Permission Flags** — Doors, trapdoors, containers, workstations, animals, vehicles, redstone, and more
 
-### 👥 Social Systems
-- **Member System** — Invite players to join your claim, assign them roles, and manage access.
-- **Ally System** — Form mutual alliances between claims with configurable inter-claim permissions.
-- **Warp System** — Set named warps within your claims with custom icons and per-player limits.
+### Social Systems
+- **Member System** — Invite players to join your claim, assign them roles, and manage access
+- **Ally System** — Form mutual alliances between claims with configurable inter-claim permissions
+- **Warp System** — Set named warps within your claims with custom icons and per-player limits
 
-### 🛡️ Protection
-- **Block Protection** — Prevent unauthorized breaking and placing.
-- **Entity & Vehicle** — Protect animals, armor stands, item frames, and prevent unauthorized vehicle use.
-- **Explosion & Piston** — Block TNT, creepers, and prevent pistons from pushing/pulling across claim borders.
-- **Interaction & Items** — Control door/container access and prevent unauthorized item pickup/drop.
-- **PvP & Commands** — Disable PvP inside claims and block specific commands inside other players' claims.
+### Protection
+- **Block Protection** — Prevent unauthorized breaking and placing
+- **Entity Protection** — Protect animals, armor stands, and item frames
+- **Explosion Protection** — Block TNT, creeper, and other explosion damage
+- **Interaction Protection** — Control door, container, and workstation access
+- **Item Protection** — Prevent unauthorized pickup and drop
+- **Piston Protection** — Block pistons from pushing/pulling across claim borders
+- **PvP Protection** — Disable PvP inside claims
+- **Vehicle Protection** — Prevent unauthorized vehicle use and destruction
+- **Command Blocking** — Block specific commands inside other players' claims
 
-### 🎨 Customization
-- **Claim Colors** — Pick a custom hex color for your claim used on maps and borders.
-- **Visualization Modes** — Toggle between Display Entity or Particle-based boundary rendering.
-- **Entry/Exit Titles** — Custom MiniMessage-formatted titles shown when players enter or leave your claim.
-- **Rename Claims** — Change your claim's display name at any time.
-- **Full Message Customization** — All plugin messages are configurable via Okaeri Configs.
+### Customization
+- **Claim Colors** — Pick a custom hex color for your claim used on maps and borders
+- **Visualization Modes** — Toggle between Display Entity or Particle-based boundary rendering
+- **Entry/Exit Titles** — Custom MiniMessage-formatted titles shown when players enter or leave your claim
+- **Rename Claims** — Change your claim's display name at any time
+- **Full Message Customization** — All plugin messages are configurable via Okaeri Configs
 
-### ⚙️ Integrations & Technical
-- **Database** — SQLite (default) or MySQL with HikariCP connection pooling.
-- **Caching & Async** — Caffeine-powered in-memory cache and Cloud Command Framework for async execution.
-- **Cross-Server** — Optional Redis cross-server claim sync for networks.
-- **Map Plugins** — Dynmap, BlueMap, Squaremap, and Pl3xMap support with customizable colors and opacity.
-- **Combat Plugins** — DeluxeCombat, PvPManager, and EternalCombat hook for combat tagging.
-- **WorldGuard** — Configurable gap enforcement between claims and WorldGuard regions.
-- **Optimized** — Eager Class Preloading eliminates first-execution lag spikes for GUI classes.
+### Integrations
+- **Database** — SQLite (default) or MySQL with HikariCP connection pooling
+- **Caching** — Caffeine-powered in-memory cache for instant lookups
+- **Redis** — Optional cross-server claim sync for networks
+- **Map Plugins** — Dynmap, BlueMap, Squaremap, and Pl3xMap support with customizable colors and opacity
+- **Combat Plugins** — DeluxeCombat, PvPManager, and EternalCombat hook for combat tagging (blocks commands while in combat)
+- **WorldGuard** — Configurable gap enforcement between claims and WorldGuard regions
+
+### Technical
+- **Cloud Command Framework** — Async command execution with dedicated thread pools
+- **Modular Architecture** — Separate command groups, listeners, and managers
+- **Eager Class Preloading** — Eliminates first-execution lag spikes for GUI classes
 
 ---
 
@@ -149,7 +158,8 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 | `/claim warps` | Open the warp management GUI |
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
-</details>
+| `/claim admin edit <player>` | Open any player's claim management GUI |
+| `/claim admin trust <owner> add/remove <player>` | Forcefully manage trust overrides for a claim |
 
 ---
 

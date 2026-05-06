@@ -70,12 +70,32 @@ public class MemberManagementGUI {
                                         "x x x x x x x x x",
                                         "x x x x x x x x x",
                                         "x x x x x x x x x",
-                                        "P B B B < B B B N"
+                                        "P B B + < B B B N"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
                         ingredients.put('B', GuiHelper.buildSlot(config.bottomFill.material, config.bottomFill.name,
                                         config.bottomFill.lore));
+                        ingredients.put('+', GuiHelper.buildSlot(config.inviteMember.material, config.inviteMember.name,
+                                        config.inviteMember.lore, (p, e) -> {
+                                                OnlinePlayerSelectorGUI.open(p, plugin, target -> {
+                                                        // Callback: target selected
+                                                        if (profile.isOwner(target.getUniqueId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("cannot-invite-self"));
+                                                                return;
+                                                        }
+                                                        if (profile.isMember(target.getUniqueId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("already-member"));
+                                                                return;
+                                                        }
+
+                                                        // Logic from /claim member invite
+                                                        plugin.getClaimManager().sendMemberInvite(p, target, profile);
+                                                        MemberManagementGUI.open(p, profile, plugin);
+                                                }, () -> MemberManagementGUI.open(p, profile, plugin));
+                                        }));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                                                         (p, e) -> {

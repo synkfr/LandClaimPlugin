@@ -5,34 +5,26 @@ import eu.okaeri.configs.annotation.*;
 
 import java.util.List;
 
-@Header("MemberManagement GUI Configuration")
-@Header("Materials must be valid Bukkit Material enum names.")
-@Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
-public class MemberManagementConfig extends OkaeriConfig {
+@Header("OnlinePlayerSelector GUI Configuration")
+public class OnlinePlayerSelectorConfig extends OkaeriConfig {
 
-    public String title = "Members Management";
+    public String title = "Select Player";
 
     @Comment("Decorative border")
     public ItemConfig frame = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
 
-    @Comment("Empty state indicator")
-    public ItemConfig emptyIndicator = new ItemConfig("RED_STAINED_GLASS_PANE", "<red>No Members Yet", List.of());
-
     @Comment("Navigation bar background")
-    public ItemConfig bottomFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
-
-    @Comment("Invite Member Button")
-    public ItemConfig inviteMember = new ItemConfig("PLAYER_HEAD", "<yellow>Invite Member", List.of("<gray>Click to invite a new member"));
+    public ItemConfig navFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
             "SPECTRAL_ARROW",
             "<yellow>Back",
-            List.of("<gray>Return to Main Menu"));
+            List.of("<gray>Return to Previous Menu"));
 
     @Comment("Previous Page Button")
     public ItemConfig previousPage = new ItemConfig(
-            "CYAN_CANDLE",
+            "LIGHT_BLUE_CANDLE",
             "<aqua>Previous Page",
             List.of("<gray>Go to the previous page"));
 
@@ -48,7 +40,7 @@ public class MemberManagementConfig extends OkaeriConfig {
         public List<String> lore;
 
         public ItemConfig() {
-        } // For Okaeri to instantiate
+        }
 
         public ItemConfig(String material, String name, List<String> lore) {
             this.material = material;

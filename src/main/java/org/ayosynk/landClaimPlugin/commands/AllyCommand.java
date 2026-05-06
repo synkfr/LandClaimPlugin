@@ -54,14 +54,7 @@ public class AllyCommand implements LandClaimCommand {
                         return;
                     }
 
-                    claimManager.addAllyInvite(targetProfile.getOwnerId(), senderProfile.getOwnerId());
-                    player.sendMessage(configManager.getMessage("ally-invite-sent", "<name>", targetProfile.getName()));
-
-                    Player targetOwner = Bukkit.getPlayer(targetProfile.getOwnerId());
-                    if (targetOwner != null && targetOwner.isOnline()) {
-                        targetOwner.sendMessage(
-                                configManager.getMessage("ally-invite-received", "<name>", senderProfile.getName()));
-                    }
+                    claimManager.sendAllyInvite(player, targetProfile);
                 }));
 
         commandManager.command(base.literal("ally").literal("accept")
