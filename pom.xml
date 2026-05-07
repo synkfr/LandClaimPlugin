@@ -6,7 +6,7 @@
 
     <groupId>org.ayosynk</groupId>
     <artifactId>LandClaimPlugin</artifactId>
-    <version>2.0.4</version>
+    <version>2.1.0</version>
     <packaging>jar</packaging>
 
     <name>LandClaimPlugin</name>
@@ -18,7 +18,7 @@
         <!-- Dependency Versions -->
         <paper.version>1.21.4-R0.1-SNAPSHOT</paper.version>
         <okaeri.version>6.1.0-beta.1</okaeri.version>
-        <cloud.version>2.0.0-beta.10</cloud.version>
+        <cloud.version>2.0.0-beta.15</cloud.version>
         <hikari.version>5.1.0</hikari.version>
         <jedis.version>5.1.0</jedis.version>
         <caffeine.version>3.1.8</caffeine.version>
@@ -68,6 +68,10 @@
                                 <relocation>
                                     <pattern>redis.clients.jedis</pattern>
                                     <shadedPattern>org.ayosynk.landClaimPlugin.lib.jedis</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.incendo.cloud</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.cloud</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
