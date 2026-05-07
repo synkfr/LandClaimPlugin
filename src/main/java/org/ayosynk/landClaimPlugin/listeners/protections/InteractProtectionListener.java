@@ -49,9 +49,19 @@ public class InteractProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Block block = event.getClickedBlock();
+
+        // 1. Handle physical interaction (trampling crops)
+        if (event.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
+            if (block != null && block.getType() == org.bukkit.Material.FARMLAND) {
+                checkPermission(event.getPlayer(), block, event, "TRAMPLE_CROPS");
+                return;
+            }
+        }
+
         if (block == null)
             return;
 
+        // 2. Handle standard block interactions (doors, containers, workstations, etc.)
         BlockPermission requiredPermission = BlockPermissionResolver.resolve(block);
         if (requiredPermission != null) {
             checkPermission(event.getPlayer(), block, event, requiredPermission.getFlag());

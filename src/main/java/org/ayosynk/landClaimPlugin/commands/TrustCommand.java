@@ -64,7 +64,7 @@ public class TrustCommand implements LandClaimCommand {
 
         // /claim trust add <player>
         manager.command(trustBuilder.literal("add")
-                .required("player", StringParser.stringParser())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
@@ -106,7 +106,7 @@ public class TrustCommand implements LandClaimCommand {
 
         // /claim trust remove <player>
         manager.command(trustBuilder.literal("remove")
-                .required("player", StringParser.stringParser())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");

@@ -120,17 +120,43 @@ public class EntityProtectionListener implements Listener {
             checkPermission(player, pos, event, "SHEAR_ENTITIES");
         } else if (target instanceof Hanging) {
             checkPermission(player, pos, event, "MODIFY_ITEM_FRAMES");
-        } else if (target instanceof Animals) {
-            // Very simplified approach: checking item in hand for breeding/feeding is
-            // complex across 1.21 mobs,
-            // so we classify general "interaction" with animals as
-            // FEED_ANIMALS/BREED_ANIMALS contextually.
+        } else if (target instanceof Animals animal) {
+            // 1. Always allow if the player is the owner of a tameable animal
+            if (animal instanceof Tameable tameable && player.getUniqueId().equals(tameable.getOwnerUniqueId())) {
+                return;
+            }
+
+            // 2. Check for mounting (Horses, Pigs, Striders, etc.)
+            if (animal instanceof Steerable || animal instanceof AbstractHorse) {
+                // If it's a mountable animal, we check MOUNT_ANIMALS first.
+                // If they have it, we allow the interaction (which might be mounting).
+                if (PermissionResolver.hasPermission(claimManager.getProfileAt(pos), player.getUniqueId(),
+                        "MOUNT_ANIMALS")) {
+                    return;
+                }
+            }
+
+            // 3. Fallback to BREED/FEED for other interactions
             if (!checkPermission(player, pos, event, "BREED_ANIMALS")) {
                 if (!checkPermission(player, pos, event, "FEED_ANIMALS")) {
                     event.setCancelled(true);
                 }
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerLeash(org.bukkit.event.entity.PlayerLeashEntityEvent event) {
+        Player player = event.getPlayer();
+        ChunkPosition pos = new ChunkPosition(event.getEntity().getLocation());
+        checkPermission(player, pos, event, "LEASH_ENTITIES");
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerUnleash(org.bukkit.event.player.PlayerUnleashEntityEvent event) {
+        Player player = event.getPlayer();
+        ChunkPosition pos = new ChunkPosition(event.getEntity().getLocation());
+        checkPermission(player, pos, event, "LEASH_ENTITIES");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
