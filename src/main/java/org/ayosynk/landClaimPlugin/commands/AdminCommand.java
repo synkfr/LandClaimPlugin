@@ -60,7 +60,7 @@ public class AdminCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("admin").literal("add").literal("chunk")
                 .permission("landclaim.admin")
                 .required("amount", IntegerParser.integerParser(1))
-                .required("player", StringParser.stringParser())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player sender = context.sender().source();
                     int amount = context.get("amount");
@@ -71,7 +71,7 @@ public class AdminCommand implements LandClaimCommand {
         // /claim admin edit <owner>
         manager.command(claimBuilder.literal("admin").literal("edit")
                 .permission("landclaim.admin")
-                .required("owner", StringParser.stringParser())
+                .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player sender = context.sender().source();
                     String ownerName = context.get("owner");
@@ -81,9 +81,9 @@ public class AdminCommand implements LandClaimCommand {
         // /claim admin trust <owner> add <player>
         manager.command(claimBuilder.literal("admin").literal("trust")
                 .permission("landclaim.admin")
-                .required("owner", StringParser.stringParser())
+                .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .literal("add")
-                .required("player", StringParser.stringParser())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player sender = context.sender().source();
                     String ownerName = context.get("owner");
@@ -94,9 +94,9 @@ public class AdminCommand implements LandClaimCommand {
         // /claim admin trust <owner> remove <player>
         manager.command(claimBuilder.literal("admin").literal("trust")
                 .permission("landclaim.admin")
-                .required("owner", StringParser.stringParser())
+                .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .literal("remove")
-                .required("player", StringParser.stringParser())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player sender = context.sender().source();
                     String ownerName = context.get("owner");

@@ -65,7 +65,7 @@ public class MemberCommand implements LandClaimCommand {
 
         // /claim member invite <player>
         manager.command(memberBuilder.literal("invite")
-                .required("player", StringParser.stringParser())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
@@ -104,7 +104,7 @@ public class MemberCommand implements LandClaimCommand {
 
         // /claim member kick <player>
         manager.command(memberBuilder.literal("kick")
-                .required("player", StringParser.stringParser())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
