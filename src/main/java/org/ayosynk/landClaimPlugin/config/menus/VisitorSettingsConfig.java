@@ -46,6 +46,9 @@ public class VisitorSettingsConfig extends OkaeriConfig {
                         Map.entry("MODIFY_SIGNS",
                                         new ItemConfig("OAK_SIGN", "<yellow>Modify Signs",
                                                         List.of("<gray>Allow visitors to edit signs."))),
+                        Map.entry("TRAMPLE_CROPS",
+                                        new ItemConfig("WHEAT", "<yellow>Trample Crops",
+                                                        List.of("<gray>Allow visitors to trample crops by jumping."))),
 
                         // Interact Flags
                         Map.entry("USE_DOORS",
@@ -108,6 +111,9 @@ public class VisitorSettingsConfig extends OkaeriConfig {
                         Map.entry("RIDE_VEHICLES",
                                         new ItemConfig("MINECART", "<yellow>Ride Vehicles",
                                                         List.of("<gray>Allow visitors to ride minecarts and boats."))),
+                        Map.entry("MOUNT_ANIMALS",
+                                        new ItemConfig("SADDLE", "<yellow>Mount Animals",
+                                                        List.of("<gray>Allow visitors to mount horses, pigs, etc."))),
                         Map.entry("PLACE_VEHICLES",
                                         new ItemConfig("OAK_BOAT", "<yellow>Place Vehicles",
                                                         List.of("<gray>Allow visitors to place vehicles."))),
