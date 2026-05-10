@@ -380,6 +380,10 @@ public class ConfigManager {
         return renameClaimConfig;
     }
 
+    public int getMaxMemberships() {
+        return pluginConfig.maxMemberships;
+    }
+
     public ChangeClaimColorConfig getChangeClaimColorConfig() {
         return changeClaimColorConfig;
     }

@@ -165,6 +165,14 @@ public class MemberCommand implements LandClaimCommand {
                         return;
                     }
 
+                    int currentMemberships = claimManager.getMemberProfiles(playerId).size();
+                    int maxMemberships = configManager.getMaxMemberships();
+                    if (currentMemberships >= maxMemberships && !player.hasPermission("landclaim.admin")) {
+                        player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                            .deserialize("<red>You cannot join more than " + maxMemberships + " claims."));
+                        return;
+                    }
+
                     // Add as "Member" role by default
                     profile.setMemberRole(playerId, "Member");
 

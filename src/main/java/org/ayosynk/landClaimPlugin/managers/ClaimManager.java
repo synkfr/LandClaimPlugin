@@ -35,6 +35,9 @@ public class ClaimManager {
 
     // Pending member invites: Invitee UUID -> Owner UUID
     private final Map<UUID, UUID> pendingMemberInvites = new ConcurrentHashMap<>();
+
+    // Pending trust invites: Invitee UUID -> Owner UUID
+    private final Map<UUID, UUID> pendingTrustInvites = new ConcurrentHashMap<>();
     
     // Spatial index: ChunkPosition -> ClaimProfile for O(1) lookups
     private final Map<ChunkPosition, ClaimProfile> chunkToProfileMap = new HashMap<>();
@@ -218,15 +221,46 @@ public class ClaimManager {
         return pendingMemberInvites.remove(inviteeId);
     }
 
+    // ========== Trust Invites ==========
+
+    public void sendTrustInvite(Player sender, Player target, ClaimProfile profile) {
+        pendingTrustInvites.put(target.getUniqueId(), sender.getUniqueId());
+
+        sender.sendMessage(configManager.getMessage("trust-invited", "<player>", target.getName()));
+        target.sendMessage(configManager.getMessage("trust-invite-received", "<owner>", sender.getName()));
+    }
+
+    public UUID getAndRemoveTrustInvite(UUID inviteeId) {
+        return pendingTrustInvites.remove(inviteeId);
+    }
+
     /**
-     * Check if a player can create a profile (not owner/member/trusted elsewhere).
+     * Get all profiles where the player is a member.
+     */
+    public java.util.List<ClaimProfile> getMemberProfiles(UUID playerId) {
+        java.util.List<ClaimProfile> list = new java.util.ArrayList<>();
+        for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
+            if (profile.isMember(playerId)) {
+                list.add(profile);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Check if a player can create a profile.
+     * They cannot if they already own one, or if they are a member/trusted in others
+     * beyond what's allowed.
      */
     public boolean canCreateProfile(UUID playerId) {
-        // Already owns a profile
-        if (getProfile(playerId) != null)
-            return false;
-
-        // Is a member or trusted in another profile
+        if (getProfile(playerId) != null) return false;
+        // They can create one if they are a member, but we might want to prevent it if they've hit max-memberships.
+        // Actually, if they are a member of anything, do we allow them to create their own profile?
+        // Previously we returned false if they were a member or trusted ANYWHERE.
+        // Let's keep it that way or allow it? The prompt implies they can be members and still claim for the owner.
+        // But if they run /claim without "CLAIM_LAND" they shouldn't create a profile if they are a member?
+        // I will keep the original logic for `canCreateProfile` for now except trusted checks.
+        // Actually, let's keep it as is, just return false if they are member/trusted.
         for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
             if (profile.isMember(playerId) || profile.isTrusted(playerId)) {
                 return false;
@@ -238,6 +272,7 @@ public class ClaimManager {
     /**
      * Create or get the player's profile, then claim the given chunk.
      * Auto-creates a profile if the player doesn't have one.
+     * Supports Delegated Claiming if the player has the CLAIM_LAND role flag.
      */
     public boolean claimChunk(Player player, Chunk chunk) {
         String worldName = chunk.getWorld().getName();
@@ -256,24 +291,47 @@ public class ClaimManager {
         }
 
         UUID playerId = player.getUniqueId();
+        ClaimProfile targetProfile = getProfile(playerId);
 
-        // Check if player is a member/trusted elsewhere — cannot claim
-        for (ClaimProfile p : plugin.getCacheManager().getProfileCache().asMap().values()) {
-            if (!p.isOwner(playerId) && (p.isMember(playerId) || p.isTrusted(playerId))) {
-                player.sendMessage(configManager.getMessage("cannot-claim-as-member"));
-                return false;
+        // Delegated claiming check
+        if (targetProfile == null) {
+            java.util.List<ClaimProfile> memberProfiles = getMemberProfiles(playerId);
+            if (!memberProfiles.isEmpty()) {
+                // Find one where they have CLAIM_LAND
+                ClaimProfile delegated = null;
+                for (ClaimProfile mp : memberProfiles) {
+                    String roleName = mp.getMemberRole(playerId);
+                    if (roleName != null) {
+                        org.ayosynk.landClaimPlugin.models.Role role = mp.getRoleByName(roleName);
+                        if (role != null && role.hasFlag("CLAIM_LAND")) {
+                            delegated = mp;
+                            break;
+                        }
+                    }
+                }
+
+                if (delegated != null) {
+                    targetProfile = delegated;
+                } else {
+                    player.sendMessage(configManager.getMessage("cannot-claim-as-member"));
+                    return false;
+                }
+            } else {
+                // Not a member anywhere, create their own profile if they aren't trusted
+                for (ClaimProfile p : plugin.getCacheManager().getProfileCache().asMap().values()) {
+                    if (p.isTrusted(playerId)) {
+                        player.sendMessage(configManager.getMessage("cannot-claim-as-member"));
+                        return false;
+                    }
+                }
+                String defaultName = player.getName() + "'s Claim";
+                targetProfile = new ClaimProfile(playerId, defaultName);
+                plugin.getCacheManager().getProfileCache().put(playerId, targetProfile); // Pre-cache so limits work
             }
         }
 
-        // Find or create the player's profile
-        ClaimProfile profile = getProfile(playerId);
-        if (profile == null) {
-            String defaultName = player.getName() + "'s Claim";
-            profile = new ClaimProfile(playerId, defaultName);
-        }
-
-        int claimLimit = getClaimLimit(player);
-        int currentTotalChunks = profile.getOwnedChunks().size();
+        int claimLimit = getClaimLimit(targetProfile.getOwnerId());
+        int currentTotalChunks = targetProfile.getOwnedChunks().size();
 
         if (currentTotalChunks >= claimLimit) {
             player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
@@ -281,7 +339,7 @@ public class ClaimManager {
         }
 
         if (configManager.requireConnectedClaims() && currentTotalChunks > 0) {
-            boolean isConnected = isConnectedToOwnChunks(pos, profile);
+            boolean isConnected = isConnectedToOwnChunks(pos, targetProfile);
             if (!isConnected) {
                 player.sendMessage(configManager.getMessage("not-connected"));
                 return false;
@@ -299,21 +357,21 @@ public class ClaimManager {
 
         int minGap = configManager.getMinClaimGap();
         if (minGap > 0) {
-            if (isTooCloseToOtherProfile(worldName, pos, playerId, minGap)) {
+            if (isTooCloseToOtherProfile(worldName, pos, targetProfile.getOwnerId(), minGap)) { // ensure targetProfile owner ID
                 player.sendMessage(
                         configManager.getMessage("too-close-to-other-claim", "{gap}", String.valueOf(minGap)));
                 return false;
             }
         }
 
-        profile.addChunk(pos);
-        addToSpatialIndex(pos, profile);
+        targetProfile.addChunk(pos);
+        addToSpatialIndex(pos, targetProfile);
 
         // Save to cache
-        plugin.getCacheManager().getProfileCache().put(playerId, profile);
+        plugin.getCacheManager().getProfileCache().put(targetProfile.getOwnerId(), targetProfile);
 
         // Save to DB async
-        saveAndSync(profile);
+        saveAndSync(targetProfile);
 
         plugin.getVisualizationManager().invalidateCache(playerId);
         plugin.getHookManager().refreshMapHooks();
@@ -663,21 +721,43 @@ public class ClaimManager {
     }
 
     public int getClaimLimit(Player player) {
-        if (player.hasPermission("landclaim.admin"))
-            return Integer.MAX_VALUE;
+        return getClaimLimit(player.getUniqueId(), player);
+    }
 
+    public int getClaimLimit(UUID playerId) {
+        return getClaimLimit(playerId, Bukkit.getPlayer(playerId));
+    }
+
+    private int getClaimLimit(UUID playerId, Player player) {
         int limit = configManager.getPluginConfig().chunkClaimLimit;
-        for (int i = 100; i > 0; i--) {
-            if (player.hasPermission("landclaim.limit." + i)) {
-                limit = i;
-                break;
+        
+        if (player != null) {
+            if (player.hasPermission("landclaim.admin"))
+                return Integer.MAX_VALUE;
+
+            for (int i = 100; i > 0; i--) {
+                if (player.hasPermission("landclaim.limit." + i)) {
+                    limit = i;
+                    break;
+                }
             }
         }
 
         org.ayosynk.landClaimPlugin.models.ClaimPlayer cp = plugin.getCacheManager().getPlayerCache()
-                .getIfPresent(player.getUniqueId());
+                .getIfPresent(playerId);
+        // If not in cache, we could load from DB, but usually if they have bonus blocks we'd have it in cache or DB.
+        // For now, use cache.
         if (cp != null) {
             limit += cp.getBonusClaimBlocks();
+        } else {
+            // Fallback to fetch from DB synchronously if not in cache (since claiming is synchronous mostly, but this is a quick fix)
+            org.ayosynk.landClaimPlugin.models.ClaimPlayer dbCp = null;
+            try {
+                dbCp = plugin.getDatabaseManager().getPlayerDao().getPlayer(playerId).join();
+            } catch (Exception ignored) {}
+            if (dbCp != null) {
+                limit += dbCp.getBonusClaimBlocks();
+            }
         }
         return limit;
     }
