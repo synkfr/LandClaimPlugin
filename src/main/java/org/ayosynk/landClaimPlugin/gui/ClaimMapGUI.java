@@ -73,22 +73,19 @@ public class ClaimMapGUI {
                                         } else if (ownerProfile.isMember(player.getUniqueId())
                                                         || ownerProfile.isTrusted(player.getUniqueId())) {
                                                 // Member/Trusted
-                                                String ownerName = Bukkit.getOfflinePlayer(ownerProfile.getOwnerId())
-                                                                .getName();
+                                                String ownerName = ownerProfile.getDisplayOwnerName();
                                                 currentLore = processLore(config.memberClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.memberClaim.material,
                                                                 config.memberClaim.name, currentLore);
                                         } else if (profile != null && profile.hasAlly(ownerProfile.getOwnerId())) {
                                                 // Ally
-                                                String ownerName = Bukkit.getOfflinePlayer(ownerProfile.getOwnerId())
-                                                                .getName();
+                                                String ownerName = ownerProfile.getDisplayOwnerName();
                                                 currentLore = processLore(config.allyClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.allyClaim.material,
                                                                 config.allyClaim.name, currentLore);
                                         } else {
                                                 // Other
-                                                String ownerName = Bukkit.getOfflinePlayer(ownerProfile.getOwnerId())
-                                                                .getName();
+                                                String ownerName = ownerProfile.getDisplayOwnerName();
                                                 currentLore = processLore(config.otherClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.otherClaim.material,
                                                                 config.otherClaim.name, currentLore);

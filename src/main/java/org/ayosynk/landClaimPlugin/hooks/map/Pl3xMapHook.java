@@ -52,13 +52,11 @@ public class Pl3xMapHook {
             }
 
             for (UUID playerId : getAllPlayerIds()) {
-                String playerName = Bukkit.getOfflinePlayer(playerId).getName();
-                if (playerName == null)
-                    playerName = "Unknown";
-
                 org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
                 if (profile == null)
                     continue;
+
+                String playerName = profile.getDisplayOwnerName();
                 Set<ChunkPosition> claims = profile.getOwnedChunks().stream()
                         .filter(pos -> pos.world().equals(world.getName()))
                         .collect(java.util.stream.Collectors.toSet());

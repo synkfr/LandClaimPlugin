@@ -17,7 +17,7 @@ public class ClaimSettingsGUI {
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         String ownerName = profile.getOwnerId() != null
-                                        ? Bukkit.getOfflinePlayer(profile.getOwnerId()).getName()
+                                        ? profile.getDisplayOwnerName()
                                         : "Unknown";
                         if (ownerName == null)
                                 ownerName = "Unknown";

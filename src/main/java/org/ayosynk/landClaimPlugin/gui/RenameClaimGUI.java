@@ -23,7 +23,7 @@ public class RenameClaimGUI {
 
                         String[] structure = {
                                         "O O B B B B B O O",
-                                        "O B B C B R B B O",
+                                        "O B C B R B A B O",
                                         "B B B B B B B B B",
                                         "O B B S < S B B B"
                         };
@@ -110,6 +110,34 @@ public class RenameClaimGUI {
                                                                                 },
                                                                                 () -> RenameClaimGUI.open(p, profile,
                                                                                                 plugin));
+                                                        }));
+
+                        // Set Owner Alias
+                        ingredients.put('A',
+                                        GuiHelper.buildSlot(config.ownerAlias.material, config.ownerAlias.name,
+                                                        config.ownerAlias.lore, (p, e) -> {
+                                                                p.closeInventory();
+                                                                String currentAlias = profile.getOwnerAlias() != null ? profile.getOwnerAlias() : "reset";
+                                                                AnvilInputGUI.open(plugin, p, "Set Owner Alias", currentAlias, input -> {
+                                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                                                if (input == null || input.isEmpty() || input.equals(currentAlias)) {
+                                                                                        p.sendMessage(plugin.getConfigManager().getMessage("rename-cancelled"));
+                                                                                        RenameClaimGUI.open(p, profile, plugin);
+                                                                                        return;
+                                                                                }
+
+                                                                                if (input.equalsIgnoreCase("reset") || input.equalsIgnoreCase("none")) {
+                                                                                        profile.setOwnerAlias(null);
+                                                                                        p.sendMessage(GuiHelper.MM.deserialize("<green>Owner alias has been reset."));
+                                                                                } else {
+                                                                                        profile.setOwnerAlias(input);
+                                                                                        p.sendMessage(GuiHelper.MM.deserialize("<green>Owner alias set to: <white>" + input));
+                                                                                }
+
+                                                                                plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                                                                                RenameClaimGUI.open(p, profile, plugin);
+                                                                        });
+                                                                });
                                                         }));
 
                         // Back

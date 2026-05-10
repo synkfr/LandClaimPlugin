@@ -97,6 +97,18 @@ public class AdminCommand implements LandClaimCommand {
                     String playerName = context.get("player");
                     adminTrustWho(sender, playerName);
                 }));
+
+        // /claim admin setalias <claimName/ownerName> <alias>
+        manager.command(claimBuilder.literal("admin").literal("setalias")
+                .permission("landclaim.admin")
+                .required("claim", StringParser.stringParser())
+                .required("alias", StringParser.greedyStringParser())
+                .handler(context -> {
+                    Player sender = context.sender().source();
+                    String claimName = context.get("claim");
+                    String alias = context.get("alias");
+                    adminSetAlias(sender, claimName, alias);
+                }));
     }
     private void adminAddChunk(Player sender, int amount, String targetName) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -253,6 +265,28 @@ public class AdminCommand implements LandClaimCommand {
                 sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
                         .deserialize("<red>This player is not trusted in any claims."));
             }
+        });
+    }
+
+    private void adminSetAlias(Player sender, String claimName, String alias) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            ClaimProfile profile = claimManager.getProfileByNameOrOwner(claimName);
+            if (profile == null) {
+                sender.sendMessage(configManager.getMessage("no-profile-found"));
+                return;
+            }
+
+            if (alias.equalsIgnoreCase("reset") || alias.equalsIgnoreCase("none")) {
+                profile.setOwnerAlias(null);
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize("<green>Owner alias for claim '<white>" + profile.getName() + "<green>' has been reset."));
+            } else {
+                profile.setOwnerAlias(alias);
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize("<green>Owner alias for claim '<white>" + profile.getName() + "<green>' set to: <white>" + alias));
+            }
+
+            plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
         });
     }
 }

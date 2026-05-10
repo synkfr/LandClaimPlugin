@@ -68,13 +68,11 @@ public class DynmapHook {
         double borderOpacity = plugin.getConfigManager().getPluginConfig().dynmap.borderOpacity;
 
         for (UUID playerId : getAllPlayerIds()) {
-            String playerName = Bukkit.getOfflinePlayer(playerId).getName();
-            if (playerName == null)
-                playerName = "Unknown";
-
             org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
             if (profile == null)
                 continue;
+
+            String playerName = profile.getDisplayOwnerName();
             Set<ChunkPosition> claims = profile.getOwnedChunks();
 
             int r, g, b;

@@ -213,9 +213,7 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        String ownerName = Bukkit.getOfflinePlayer(profile.getOwnerId()).getName();
-        if (ownerName == null)
-            ownerName = "Unknown";
+        String ownerName = profile.getDisplayOwnerName();
 
         player.sendMessage(configManager.getMessage("claim-info-owner", "<owner>", ownerName));
     }

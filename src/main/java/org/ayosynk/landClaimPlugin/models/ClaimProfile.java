@@ -15,6 +15,7 @@ public class ClaimProfile {
 
     private UUID ownerId;
     private String name;
+    private String ownerAlias;
 
     private final Set<ChunkPosition> ownedChunks = new HashSet<>();
     private final Set<String> visitorFlags = new HashSet<>();
@@ -87,6 +88,22 @@ public class ClaimProfile {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getOwnerAlias() {
+        return ownerAlias;
+    }
+
+    public void setOwnerAlias(String ownerAlias) {
+        this.ownerAlias = ownerAlias;
+    }
+
+    public String getDisplayOwnerName() {
+        if (ownerAlias != null && !ownerAlias.trim().isEmpty()) {
+            return ownerAlias;
+        }
+        org.bukkit.OfflinePlayer op = org.bukkit.Bukkit.getOfflinePlayer(ownerId);
+        return op.getName() != null ? op.getName() : "Unknown";
     }
 
     // --- Chunks ---

@@ -80,12 +80,12 @@ public class BlueMapHook {
                 if (playerClaimsInWorld != null) {
                     for (Map.Entry<UUID, Set<ChunkPosition>> entry : playerClaimsInWorld.entrySet()) {
                         UUID playerId = entry.getKey();
-                        String playerName = Bukkit.getOfflinePlayer(playerId).getName();
-                        if (playerName == null)
-                            playerName = "Unknown";
-
-                        int r, g, b;
                         org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
+                        if (profile == null)
+                            continue;
+                            
+                        String playerName = profile.getDisplayOwnerName();
+                        int r, g, b;
                         if (profile != null && profile.getClaimColor() != null
                                 && profile.getClaimColor().length() >= 7) {
                             try {

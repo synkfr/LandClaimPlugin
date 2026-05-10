@@ -65,9 +65,7 @@ public class EventListener implements Listener {
             // wilderness
             if (oldProfile != newProfile) {
                 if (oldProfile != null && oldProfile.isEnterTitleEnabled()) {
-                    String ownerName = plugin.getServer().getOfflinePlayer(oldProfile.getOwnerId()).getName();
-                    if (ownerName == null)
-                        ownerName = "Unknown";
+                    String ownerName = oldProfile.getDisplayOwnerName();
                     String leaveTxt = oldProfile.getLeaveTitle().replace("<owner>", ownerName);
                     Component leaveComp = MiniMessage.miniMessage().deserialize(leaveTxt);
                     boolean leaveSub = "SUBTITLE".equalsIgnoreCase(oldProfile.getLeaveTitleMode());
@@ -77,9 +75,7 @@ public class EventListener implements Listener {
                 }
 
                 if (newProfile != null && newProfile.isEnterTitleEnabled()) {
-                    String ownerName = plugin.getServer().getOfflinePlayer(newProfile.getOwnerId()).getName();
-                    if (ownerName == null)
-                        ownerName = "Unknown";
+                    String ownerName = newProfile.getDisplayOwnerName();
                     String enterTxt = newProfile.getEnterTitle().replace("<owner>", ownerName);
                     Component enterComp = MiniMessage.miniMessage().deserialize(enterTxt);
                     boolean enterSub = "SUBTITLE".equalsIgnoreCase(newProfile.getEnterTitleMode());
@@ -95,9 +91,7 @@ public class EventListener implements Listener {
             String message;
             if (isClaimed) {
                 UUID ownerId = claimManager.getChunkOwner(currentPos);
-                String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
-                if (ownerName == null)
-                    ownerName = "Unknown";
+                String ownerName = newProfile.getDisplayOwnerName();
 
                 if (playerId.equals(ownerId)) {
                     message = configManager.getActionBarMessage("actionbar-owned-by-you");
