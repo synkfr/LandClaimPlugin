@@ -131,7 +131,9 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 
 | Command | Description |
 |---|---|
-| `/claim trust add <player>` | Trust a player (per-player permission overrides) |
+| `/claim trust invite <player>` | Send a trust invitation to a player |
+| `/claim trust accept` | Accept a pending trust invitation |
+| `/claim trust deny` | Deny a pending trust invitation |
 | `/claim trust remove <player>` | Remove a trusted player |
 | `/claim trust list` | List all trusted players and their flags |
 </details>
@@ -159,7 +161,8 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
 | `/claim admin edit <player>` | Open any player's claim management GUI |
-| `/claim admin trust <owner> add/remove <player>` | Forcefully manage trust overrides for a claim |
+| `/claim admin trust list <owner>` | List players trusted by this owner |
+| `/claim admin trust who <player>` | List claims where this player is trusted |
 
 ---
 
