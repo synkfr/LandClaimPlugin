@@ -10,13 +10,6 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
 
 import java.util.*;
 import java.util.Collection;
@@ -685,53 +678,7 @@ public class ClaimManager {
         if (!plugin.getHookManager().isWorldGuardEnabled())
             return false;
 
-        World world = Bukkit.getWorld(pos.world());
-        if (world == null)
-            return false;
-
-        try {
-            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            RegionManager regionManager = container.get(BukkitAdapter.adapt(world));
-            if (regionManager == null)
-                return false;
-
-            int chunkX = pos.x();
-            int chunkZ = pos.z();
-
-            for (int dx = -gap; dx <= gap; dx++) {
-                for (int dz = -gap; dz <= gap; dz++) {
-                    int checkX = (chunkX + dx) * 16;
-                    int checkZ = (chunkZ + dz) * 16;
-
-                    BlockVector3 min = BlockVector3.at(checkX, world.getMinHeight(), checkZ);
-                    BlockVector3 max = BlockVector3.at(checkX + 15, world.getMaxHeight(), checkZ + 15);
-                    com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion checkRegion = 
-                            new com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion("temp-claim-check", min, max);
-
-                    ApplicableRegionSet regions = regionManager.getApplicableRegions(checkRegion);
-                    for (ProtectedRegion region : regions) {
-                        if (region.getId().equals("__global__")) {
-                            continue;
-                        }
-                        
-                        boolean allowed = false;
-                        if (org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.isRegistered() && org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.ALLOW_LAND_CLAIMS_FLAG != null) {
-                            com.sk89q.worldguard.protection.flags.StateFlag.State flagState = region.getFlag(org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.ALLOW_LAND_CLAIMS_FLAG);
-                            if (flagState == com.sk89q.worldguard.protection.flags.StateFlag.State.ALLOW) {
-                                allowed = true;
-                            }
-                        }
-                        
-                        if (!allowed) {
-                            return true; // Overlaps a region that doesn't explicitly allow land claims
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Error checking WorldGuard regions: " + e.getMessage());
-        }
-        return false;
+        return org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.isTooCloseToWorldGuardRegion(pos, gap);
     }
 
     private boolean isConnectedToOwnChunks(ChunkPosition pos, ClaimProfile profile) {

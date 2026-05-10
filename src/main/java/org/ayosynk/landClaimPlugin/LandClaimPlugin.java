@@ -30,6 +30,15 @@ public class LandClaimPlugin extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        try {
+            Class.forName("com.sk89q.worldguard.WorldGuard");
+            loadWorldGuardHook();
+        } catch (ClassNotFoundException e) {
+            // WorldGuard not installed
+        }
+    }
+
+    private void loadWorldGuardHook() {
         org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.onLoad();
     }
 
