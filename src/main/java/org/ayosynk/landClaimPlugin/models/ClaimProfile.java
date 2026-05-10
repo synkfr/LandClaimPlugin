@@ -29,7 +29,9 @@ public class ClaimProfile {
     // Title settings
     private boolean enterTitleEnabled = false;
     private String enterTitle = "<gold>Entering <owner>'s Claim";
+    private String enterTitleMode = "TITLE"; // "TITLE" or "SUBTITLE"
     private String leaveTitle = "<yellow>Leaving <owner>'s Claim";
+    private String leaveTitleMode = "SUBTITLE"; // "TITLE" or "SUBTITLE"
 
     public ClaimProfile(UUID ownerId, String name) {
         this.ownerId = ownerId;
@@ -281,5 +283,21 @@ public class ClaimProfile {
 
     public void setLeaveTitle(String leaveTitle) {
         this.leaveTitle = leaveTitle;
+    }
+
+    public String getEnterTitleMode() {
+        return enterTitleMode;
+    }
+
+    public void setEnterTitleMode(String enterTitleMode) {
+        this.enterTitleMode = enterTitleMode;
+    }
+
+    public String getLeaveTitleMode() {
+        return leaveTitleMode;
+    }
+
+    public void setLeaveTitleMode(String leaveTitleMode) {
+        this.leaveTitleMode = leaveTitleMode;
     }
 }
