@@ -136,7 +136,7 @@ public class ClaimCommand implements LandClaimCommand {
 
         // /claim pvp <on|off> [time_seconds]
         manager.command(claimBuilder.literal("pvp")
-                .required("state", org.incendo.cloud.parser.standard.StringParser.stringParser())
+                .required("state", org.incendo.cloud.parser.standard.StringParser.stringParser(), (context, input) -> java.util.concurrent.CompletableFuture.completedFuture(java.util.Arrays.asList(org.incendo.cloud.suggestion.Suggestion.suggestion("on"), org.incendo.cloud.suggestion.Suggestion.suggestion("off"))))
                 .optional("time", org.incendo.cloud.parser.standard.IntegerParser.integerParser(1))
                 .handler(context -> {
                     Player player = context.sender().source();
@@ -233,7 +233,26 @@ public class ClaimCommand implements LandClaimCommand {
 
             profile.setPvpEnabled(enable);
             if (enable && time != null) {
-                profile.setPvpTimerEnd(System.currentTimeMillis() + (time * 1000L));
+                long endTime = System.currentTimeMillis() + (time * 1000L);
+                profile.setPvpTimerEnd(endTime);
+                
+                // Schedule broadcast for when timer expires
+                Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+                    // Check if PvP is still enabled and timer hasn't been renewed/changed
+                    if (profile.isPvpEnabled() && profile.getPvpTimerEnd() == endTime) {
+                        profile.setPvpEnabled(false);
+                        profile.setPvpTimerEnd(0L);
+                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                        
+                        String expireMsg = configManager.getMessage("pvp-disabled");
+                        for (Player p2 : Bukkit.getOnlinePlayers()) {
+                            org.ayosynk.landClaimPlugin.models.ChunkPosition pPos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(p2.getLocation());
+                            if (profile.ownsChunk(pPos)) {
+                                p2.sendMessage(expireMsg);
+                            }
+                        }
+                    }
+                }, time * 20L); // Convert seconds to ticks (1s = 20 ticks)
             } else {
                 profile.setPvpTimerEnd(0L);
             }
