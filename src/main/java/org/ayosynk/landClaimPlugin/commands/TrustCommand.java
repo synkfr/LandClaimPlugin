@@ -62,8 +62,8 @@ public class TrustCommand implements LandClaimCommand {
                     }
                 }));
 
-        // /claim trust add <player>
-        manager.command(trustBuilder.literal("add")
+        // /claim trust invite <player>
+        manager.command(trustBuilder.literal("invite")
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
@@ -95,13 +95,58 @@ public class TrustCommand implements LandClaimCommand {
                         return;
                     }
 
-                    // Add with empty flags — permissions managed via PlayerTrustPermissionGUI
-                    profile.addTrustedPlayer(targetId);
+                    claimManager.sendTrustInvite(player, target, profile);
+                }));
 
-                    plugin.getCacheManager().getProfileCache().put(player.getUniqueId(), profile);
+        // /claim trust accept
+        manager.command(trustBuilder.literal("accept")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    UUID playerId = player.getUniqueId();
+
+                    UUID ownerId = claimManager.getAndRemoveTrustInvite(playerId);
+                    if (ownerId == null) {
+                        player.sendMessage(configManager.getMessage("no-pending-trust-invite"));
+                        return;
+                    }
+
+                    ClaimProfile profile = claimManager.getProfile(ownerId);
+                    if (profile == null) {
+                        player.sendMessage(configManager.getMessage("invite-expired"));
+                        return;
+                    }
+
+                    profile.addTrustedPlayer(playerId);
+                    plugin.getCacheManager().getProfileCache().put(ownerId, profile);
                     claimManager.saveAndSync(profile);
 
-                    player.sendMessage(configManager.getMessage("trust-added", "<player>", target.getName()));
+                    player.sendMessage(configManager.getMessage("trust-invite-accepted"));
+
+                    Player owner = Bukkit.getPlayer(ownerId);
+                    if (owner != null) {
+                        owner.sendMessage(configManager.getMessage("trust-added", "<player>", player.getName()));
+                    }
+                }));
+
+        // /claim trust deny
+        manager.command(trustBuilder.literal("deny")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    UUID playerId = player.getUniqueId();
+
+                    UUID ownerId = claimManager.getAndRemoveTrustInvite(playerId);
+                    if (ownerId == null) {
+                        player.sendMessage(configManager.getMessage("no-pending-trust-invite"));
+                        return;
+                    }
+
+                    player.sendMessage(configManager.getMessage("trust-invite-denied"));
+
+                    Player owner = Bukkit.getPlayer(ownerId);
+                    if (owner != null) {
+                        owner.sendMessage(configManager.getMessage("trust-invite-was-denied",
+                                "<player>", player.getName()));
+                    }
                 }));
 
         // /claim trust remove <player>

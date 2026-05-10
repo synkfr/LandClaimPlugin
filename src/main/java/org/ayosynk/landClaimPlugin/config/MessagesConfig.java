@@ -137,11 +137,19 @@ public class MessagesConfig extends OkaeriConfig {
 
     // --- Invite Flow ---
     public String inviteExpired = "<red>That invite has expired.";
-    public String inviteReceived = "<green>You have been invited to join a claim!";
+    public String inviteReceived = "<green>You have been invited to join <owner>'s claim! Type <click:run_command:/claim accept>/claim accept</click> to join or <click:run_command:/claim deny>/claim deny</click> to decline.";
     public String inviteAccepted = "<green>You have accepted the invite!";
     public String inviteDenied = "<red>You have denied the invite.";
     public String inviteWasDenied = "<red>Your invite was denied.";
     public String memberJoined = "<green><player> has joined your claim!";
+    
+    // Trust Invites
+    public String trustInvited = "<green>Invited <player> to be trusted in your claim.";
+    public String trustInviteReceived = "<green>You have been invited to be trusted in <owner>'s claim! Type <click:run_command:/claim trust accept>/claim trust accept</click> to accept or <click:run_command:/claim trust deny>/claim trust deny</click> to decline.";
+    public String noPendingTrustInvite = "<red>You have no pending trust invites.";
+    public String trustInviteAccepted = "<green>You have accepted the trust invite!";
+    public String trustInviteDenied = "<red>You have denied the trust invite.";
+    public String trustInviteWasDenied = "<red>Your trust invite was denied.";
     public String memberListHeader = "<gold>Members:";
     public String memberListEntry = "<gray>- <gold><player> <gray>(<role>)";
     public String memberListEmpty = "<gray>No members.";
