@@ -72,13 +72,28 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **Rename Claims** — Change your claim's display name at any time
 - **Full Message Customization** — All plugin messages are configurable via Okaeri Configs
 
-### Integrations
-- **Database** — SQLite (default) or MySQL with HikariCP connection pooling
-- **Caching** — Caffeine-powered in-memory cache for instant lookups
-- **Redis** — Optional cross-server claim sync for networks
-- **Map Plugins** — Dynmap, BlueMap, Squaremap, and Pl3xMap support with customizable colors and opacity
-- **Combat Plugins** — DeluxeCombat, PvPManager, and EternalCombat hook for combat tagging (blocks commands while in combat)
-- **WorldGuard** — Configurable gap enforcement with 100% accurate volumetric intersection checking, and custom `allow-land-claims` Region Flag support!
+## 🔌 Supported Integrations
+
+LandClaimPlugin seamlessly hooks into various popular server plugins to provide an interconnected experience out-of-the-box.
+
+### 🗺️ Web Map Plugins
+Visualize claims directly on your server's web map! Claims are drawn as colored polygons matching the claim's chosen color, complete with owner and size information.
+- **BlueMap**
+- **Dynmap**
+- **Squaremap**
+- **Pl3xMap**
+
+### ⚔️ Combat Tagger Plugins
+Prevent players from abusing claim commands (like teleporting or abandoning claims) while actively in combat. The plugin automatically detects when a player is combat-tagged.
+- **DeluxeCombat**
+- **PvPManager**
+- **EternalCombat**
+
+### 🛡️ WorldGuard
+Respect WorldGuard regions when players attempt to claim land.
+- **Volumetric Intersection Check:** 100% accurate 3D boundary checking to prevent players from claiming over your spawn or protected areas.
+- **Gap Enforcement:** Configurable required distance between claims and WorldGuard regions.
+- **Custom Flag Support:** Apply the custom `allow-land-claims` WorldGuard state flag to regions (e.g., Wilderness/Warzone) to explicitly allow players to claim land inside them, overriding the gap and intersection protections!
 
 ### Technical
 - **Cloud Command Framework** — Async command execution with dedicated thread pools
@@ -93,7 +108,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 2. Restart your server.
 3. Configure `plugins/LandClaimPlugin/config.yml` to your liking.
 
-> **Requirements:** Paper 1.21+ | Java 21+
+> **Requirements:** Paper 1.21.4+ | Java 21+
 
 ---
 
