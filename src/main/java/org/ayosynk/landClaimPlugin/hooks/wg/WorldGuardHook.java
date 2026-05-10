@@ -21,9 +21,16 @@ public class WorldGuardHook {
             registry.register(flag);
             ALLOW_LAND_CLAIMS_FLAG = flag;
             registered = true;
+        } catch (com.sk89q.worldguard.protection.flags.registry.FlagConflictException e) {
+            // some other plugin registered a flag by the same name already.
+            FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
+            com.sk89q.worldguard.protection.flags.Flag<?> existing = registry.get("allow-land-claims");
+            if (existing instanceof StateFlag) {
+                ALLOW_LAND_CLAIMS_FLAG = (StateFlag) existing;
+                registered = true;
+            }
         } catch (Exception e) {
-            // If the flag is already registered by another plugin (very unlikely)
-            // or some other error occurs.
+            // Any other error
         }
     }
 
