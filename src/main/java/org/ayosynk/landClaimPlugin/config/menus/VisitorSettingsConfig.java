@@ -130,7 +130,9 @@ public class VisitorSettingsConfig extends OkaeriConfig {
                                         new ItemConfig("HOPPER", "<yellow>Pickup Items",
                                                         List.of("<gray>Allow visitors to pick up dropped items."))),
                         Map.entry("DROP_ITEMS", new ItemConfig("DROPPER", "<yellow>Drop Items",
-                                        List.of("<gray>Allow visitors to drop items."))));
+                                        List.of("<gray>Allow visitors to drop items."))),
+                        Map.entry("CLAIM_LAND", new ItemConfig("GOLDEN_SHOVEL", "<yellow>Claim Land",
+                                        List.of("<gray>Allow claiming land on behalf of owner."))));
 
         @Comment("Return to previous menu")
         public ItemConfig back = new ItemConfig(

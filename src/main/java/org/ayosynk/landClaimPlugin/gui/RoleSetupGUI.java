@@ -9,33 +9,12 @@ import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.ayosynk.landClaimPlugin.models.Role;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class RoleSetupGUI implements Listener {
-
-        private static final Map<UUID, RoleSetupSession> activeSessions = new ConcurrentHashMap<>();
-        private enum InputType { NAME, PRIORITY }
-        
-        private static class RoleSetupSession {
-                final ClaimProfile profile;
-                final Role role;
-                final InputType inputType;
-                
-                RoleSetupSession(ClaimProfile profile, Role role, InputType inputType) {
-                        this.profile = profile;
-                        this.role = role;
-                        this.inputType = inputType;
-                }
-        }
+public class RoleSetupGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Role role) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -68,12 +47,23 @@ public class RoleSetupGUI implements Listener {
                         ingredients.put('N', GuiHelper.buildSlot(config.setName.material,
                                         config.setName.name.replace("<name>", workingRole.getName()),
                                         config.setName.lore, (p, e) -> {
-                                                // Chat input for role name
                                                 p.closeInventory();
-                                                activeSessions.put(p.getUniqueId(),
-                                                                new RoleSetupSession(profile, workingRole, InputType.NAME));
-                                                p.sendMessage(GuiHelper.MM.deserialize(
-                                                                "<yellow>Please type the new role name in chat. Type <red>'cancel' <yellow>to abort."));
+                                                AnvilInputGUI.open(plugin, p, "Role Name", workingRole.getName(), input -> {
+                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                                if (input == null) {
+                                                                        p.sendMessage(GuiHelper.MM.deserialize("<red>Operation cancelled."));
+                                                                } else {
+                                                                        String cleanName = input.replaceAll("[^a-zA-Z0-9_-]", "");
+                                                                        if (!cleanName.isEmpty()) {
+                                                                                workingRole.setName(cleanName);
+                                                                                p.sendMessage(GuiHelper.MM.deserialize("<green>Role name updated."));
+                                                                        } else {
+                                                                                p.sendMessage(GuiHelper.MM.deserialize("<red>Invalid name."));
+                                                                        }
+                                                                }
+                                                                RoleSetupGUI.open(p, profile, plugin, workingRole);
+                                                        });
+                                                });
                                         }));
 
                         ingredients.put('P', GuiHelper.buildSlot(config.permissions.material, config.permissions.name,
@@ -84,12 +74,23 @@ public class RoleSetupGUI implements Listener {
 
                         ingredients.put('T', GuiHelper.buildSlot(config.setPriority.material, config.setPriority.name,
                                         config.setPriority.lore, (p, e) -> {
-                                                // Chat input for priority
                                                 p.closeInventory();
-                                                activeSessions.put(p.getUniqueId(),
-                                                                new RoleSetupSession(profile, workingRole, InputType.PRIORITY));
-                                                p.sendMessage(GuiHelper.MM.deserialize(
-                                                                "<yellow>Please type the new priority number (higher = more important). Type <red>'cancel' <yellow>to abort."));
+                                                AnvilInputGUI.open(plugin, p, "Priority", String.valueOf(workingRole.getPriority()), input -> {
+                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                                if (input == null) {
+                                                                        p.sendMessage(GuiHelper.MM.deserialize("<red>Operation cancelled."));
+                                                                } else {
+                                                                        try {
+                                                                                int prio = Integer.parseInt(input);
+                                                                                workingRole.setPriority(prio);
+                                                                                p.sendMessage(GuiHelper.MM.deserialize("<green>Role priority updated."));
+                                                                        } catch (NumberFormatException ex) {
+                                                                                p.sendMessage(GuiHelper.MM.deserialize("<red>Priority must be a number."));
+                                                                        }
+                                                                }
+                                                                RoleSetupGUI.open(p, profile, plugin, workingRole);
+                                                        });
+                                                });
                                         }));
 
                         ingredients.put('<',
@@ -122,57 +123,4 @@ public class RoleSetupGUI implements Listener {
                 });
         }
 
-        @EventHandler
-        public void onChat(AsyncPlayerChatEvent event) {
-                Player player = event.getPlayer();
-                RoleSetupSession session = activeSessions.remove(player.getUniqueId());
-
-                if (session != null) {
-                        event.setCancelled(true);
-                        String input = event.getMessage().trim();
-
-                        if (input.equalsIgnoreCase("cancel")) {
-                                player.sendMessage(GuiHelper.MM.deserialize("<red>Operation cancelled."));
-                        } else {
-                                if (session.inputType == InputType.NAME) {
-                                        // Remove spaces and special chars to keep names clean
-                                        String cleanName = input.replaceAll("[^a-zA-Z0-9_-]", "");
-                                        if (cleanName.isEmpty()) {
-                                                player.sendMessage(GuiHelper.MM.deserialize(
-                                                                "<red>Invalid role name. Must contain letters/numbers."));
-                                        } else if (cleanName.equalsIgnoreCase("Member")
-                                                        || cleanName.equalsIgnoreCase("CoOwner")) {
-                                                player.sendMessage(GuiHelper.MM
-                                                                .deserialize("<red>You cannot use default role names."));
-                                        } else {
-                                                session.role.setName(cleanName);
-                                                player.sendMessage(GuiHelper.MM
-                                                                .deserialize("<green>Role name set to <white>" + cleanName));
-                                        }
-                                } else if (session.inputType == InputType.PRIORITY) {
-                                        try {
-                                                int priority = Integer.parseInt(input);
-                                                session.role.setPriority(priority);
-                                                player.sendMessage(GuiHelper.MM
-                                                                .deserialize("<green>Priority set to <white>" + priority));
-                                        } catch (NumberFormatException e) {
-                                                player.sendMessage(GuiHelper.MM.deserialize(
-                                                                "<red>Invalid number. Please enter an integer."));
-                                        }
-                                }
-                        }
-
-                        // Re-open GUI
-                        Bukkit.getScheduler().runTask(LandClaimPlugin.getPlugin(LandClaimPlugin.class), () -> {
-                                RoleSetupGUI.open(player, session.profile,
-                                                LandClaimPlugin.getPlugin(LandClaimPlugin.class),
-                                                session.role);
-                        });
-                }
-        }
-
-        @EventHandler
-        public void onQuit(PlayerQuitEvent event) {
-                activeSessions.remove(event.getPlayer().getUniqueId());
-        }
 }

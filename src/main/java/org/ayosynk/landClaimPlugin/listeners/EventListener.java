@@ -69,9 +69,11 @@ public class EventListener implements Listener {
                     if (ownerName == null)
                         ownerName = "Unknown";
                     String leaveTxt = oldProfile.getLeaveTitle().replace("<owner>", ownerName);
+                    Component leaveComp = MiniMessage.miniMessage().deserialize(leaveTxt);
+                    boolean leaveSub = "SUBTITLE".equalsIgnoreCase(oldProfile.getLeaveTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
-                            Component.empty(),
-                            MiniMessage.miniMessage().deserialize(leaveTxt)));
+                            leaveSub ? Component.empty() : leaveComp,
+                            leaveSub ? leaveComp : Component.empty()));
                 }
 
                 if (newProfile != null && newProfile.isEnterTitleEnabled()) {
@@ -79,9 +81,11 @@ public class EventListener implements Listener {
                     if (ownerName == null)
                         ownerName = "Unknown";
                     String enterTxt = newProfile.getEnterTitle().replace("<owner>", ownerName);
+                    Component enterComp = MiniMessage.miniMessage().deserialize(enterTxt);
+                    boolean enterSub = "SUBTITLE".equalsIgnoreCase(newProfile.getEnterTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
-                            MiniMessage.miniMessage().deserialize(enterTxt),
-                            Component.empty()));
+                            enterSub ? Component.empty() : enterComp,
+                            enterSub ? enterComp : Component.empty()));
                 }
             }
 

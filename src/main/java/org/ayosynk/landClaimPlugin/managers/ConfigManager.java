@@ -133,6 +133,12 @@ public class ConfigManager {
             it.load(true);
         });
 
+        // Ensure CLAIM_LAND exists to fix backward compatibility for servers updating from older versions
+        if (!visitorSettingsConfig.flags.containsKey("CLAIM_LAND")) {
+            visitorSettingsConfig.flags.put("CLAIM_LAND", new VisitorSettingsConfig.ItemConfig("GOLDEN_SHOVEL", "<yellow>Claim Land", java.util.List.of("<gray>Allow claiming land on behalf of owner.")));
+            visitorSettingsConfig.save();
+        }
+
         this.trustManagementConfig = eu.okaeri.configs.ConfigManager.create(TrustManagementConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
             it.withBindFile(new File(plugin.getDataFolder(), "menus/TrustManagement.yml"));
@@ -378,6 +384,10 @@ public class ConfigManager {
 
     public RenameClaimConfig getRenameClaimConfig() {
         return renameClaimConfig;
+    }
+
+    public int getMaxMemberships() {
+        return pluginConfig.maxMemberships;
     }
 
     public ChangeClaimColorConfig getChangeClaimColorConfig() {

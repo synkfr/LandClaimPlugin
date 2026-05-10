@@ -78,33 +78,26 @@ public class AdminCommand implements LandClaimCommand {
                     adminEditProfile(sender, ownerName);
                 }));
 
-        // /claim admin trust <owner> add <player>
-        manager.command(claimBuilder.literal("admin").literal("trust")
+        // /claim admin trust list <owner>
+        manager.command(claimBuilder.literal("admin").literal("trust").literal("list")
                 .permission("landclaim.admin")
                 .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
-                .literal("add")
-                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player sender = context.sender().source();
                     String ownerName = context.get("owner");
-                    String playerName = context.get("player");
-                    adminManageTrust(sender, ownerName, playerName, true);
+                    adminTrustList(sender, ownerName);
                 }));
 
-        // /claim admin trust <owner> remove <player>
-        manager.command(claimBuilder.literal("admin").literal("trust")
+        // /claim admin trust who <player>
+        manager.command(claimBuilder.literal("admin").literal("trust").literal("who")
                 .permission("landclaim.admin")
-                .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
-                .literal("remove")
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player sender = context.sender().source();
-                    String ownerName = context.get("owner");
                     String playerName = context.get("player");
-                    adminManageTrust(sender, ownerName, playerName, false);
+                    adminTrustWho(sender, playerName);
                 }));
     }
-
     private void adminAddChunk(Player sender, int amount, String targetName) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             @SuppressWarnings("deprecation")
@@ -200,14 +193,11 @@ public class AdminCommand implements LandClaimCommand {
         sender.sendMessage(configManager.getMessage("admin-editing-profile", "<player>", target.getName()));
     }
 
-    private void adminManageTrust(Player sender, String ownerName, String playerName, boolean add) {
+    private void adminTrustList(Player sender, String ownerName) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             @SuppressWarnings("deprecation")
             OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerName);
-            @SuppressWarnings("deprecation")
-            OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
-
-            if (owner == null || owner.getUniqueId() == null || target == null || target.getUniqueId() == null) {
+            if (owner == null || owner.getUniqueId() == null) {
                 sender.sendMessage(configManager.getMessage("player-not-found"));
                 return;
             }
@@ -218,22 +208,50 @@ public class AdminCommand implements LandClaimCommand {
                 return;
             }
 
-            if (add) {
-                if (profile.isOwner(target.getUniqueId())) {
-                    sender.sendMessage(configManager.getMessage("cannot-trust-self"));
-                    return;
+            var trusted = profile.getTrustedPlayerFlags();
+            if (trusted.isEmpty()) {
+                sender.sendMessage(configManager.getMessage("trust-list-empty"));
+                return;
+            }
+
+            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                    .deserialize("<gold>Trusted players for " + owner.getName() + ":"));
+            for (UUID trustedId : trusted.keySet()) {
+                String name = Bukkit.getOfflinePlayer(trustedId).getName();
+                if (name == null) name = trustedId.toString();
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize("<gray>- <gold>" + name));
+            }
+        });
+    }
+
+    private void adminTrustWho(Player sender, String playerName) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            @SuppressWarnings("deprecation")
+            OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
+            if (target == null || target.getUniqueId() == null) {
+                sender.sendMessage(configManager.getMessage("player-not-found"));
+                return;
+            }
+
+            UUID targetId = target.getUniqueId();
+            boolean foundAny = false;
+            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                    .deserialize("<gold>Claims where " + target.getName() + " is trusted:"));
+            
+            for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
+                if (profile.isTrusted(targetId)) {
+                    foundAny = true;
+                    String ownerName = Bukkit.getOfflinePlayer(profile.getOwnerId()).getName();
+                    if (ownerName == null) ownerName = profile.getOwnerId().toString();
+                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                            .deserialize("<gray>- <gold>" + ownerName));
                 }
-                profile.addTrustedPlayer(target.getUniqueId());
-                claimManager.saveAndSync(profile);
-                sender.sendMessage(configManager.getMessage("admin-trust-added", "<owner>", owner.getName(), "<player>", target.getName()));
-            } else {
-                if (!profile.isTrusted(target.getUniqueId())) {
-                    sender.sendMessage(configManager.getMessage("not-trusted"));
-                    return;
-                }
-                profile.removeTrustedPlayer(target.getUniqueId());
-                claimManager.saveAndSync(profile);
-                sender.sendMessage(configManager.getMessage("admin-trust-removed", "<owner>", owner.getName(), "<player>", target.getName()));
+            }
+
+            if (!foundAny) {
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize("<red>This player is not trusted in any claims."));
             }
         });
     }

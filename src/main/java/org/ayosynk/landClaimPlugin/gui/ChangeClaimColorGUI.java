@@ -5,7 +5,6 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.listeners.ChatInputListener;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -65,15 +64,13 @@ public class ChangeClaimColorGUI {
                         ingredients.put('X', GuiHelper.buildSlot(config.customColor.material, config.customColor.name,
                                         config.customColor.lore, (p, e) -> {
                                                 p.closeInventory();
-                                                p.sendMessage(
-                                                                plugin.getConfigManager()
-                                                                                .getMessage("color-hex-prompt"));
-
-                                                ChatInputListener.awaitInput(p, input -> {
+                                                p.closeInventory();
+                                                AnvilInputGUI.open(plugin, p, "Hex Color", profile.getClaimColor() != null ? profile.getClaimColor() : "#00FF00", input -> {
                                                         Bukkit.getScheduler().runTask(plugin, () -> {
                                                                 if (input == null) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("rename-cancelled"));
+                                                                        ChangeClaimColorGUI.open(p, profile, plugin);
                                                                         return;
                                                                 }
 
@@ -82,6 +79,7 @@ public class ChangeClaimColorGUI {
                                                                 if (!HEX_PATTERN.matcher(hex).matches()) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("claim-color-invalid"));
+                                                                        ChangeClaimColorGUI.open(p, profile, plugin);
                                                                         return;
                                                                 }
 

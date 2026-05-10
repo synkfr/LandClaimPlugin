@@ -52,7 +52,7 @@ public class PermissionResolver {
                 // Is player's claim an ally of the target profile?
                 if (profile.hasAlly(playerProfile.getOwnerId())) {
                     Set<String> allyFlags = profile.getAllyFlags(playerProfile.getOwnerId());
-                    if (allyFlags != null && allyFlags.contains(flag.toLowerCase())) {
+                    if (allyFlags != null && allyFlags.contains(flag.toUpperCase())) {
                         return true;
                     }
                 }
@@ -66,7 +66,7 @@ public class PermissionResolver {
                     if (allyProfile != null
                             && (allyProfile.isOwner(playerId) || allyProfile.getMemberRole(playerId) != null)) {
                         Set<String> allyFlags = profile.getAllyFlags(allyOwnerId);
-                        if (allyFlags != null && allyFlags.contains(flag.toLowerCase())) {
+                        if (allyFlags != null && allyFlags.contains(flag.toUpperCase())) {
                             return true;
                         }
                     }

@@ -126,19 +126,41 @@ public class EntityProtectionListener implements Listener {
                 return;
             }
 
-            // 2. Check for mounting (Horses, Pigs, Striders, etc.)
-            if (animal instanceof Steerable || animal instanceof AbstractHorse) {
-                // If it's a mountable animal, we check MOUNT_ANIMALS first.
-                // If they have it, we allow the interaction (which might be mounting).
-                if (PermissionResolver.hasPermission(claimManager.getProfileAt(pos), player.getUniqueId(),
-                        "MOUNT_ANIMALS")) {
+            // 2. Determine what action they are likely taking
+            org.bukkit.inventory.ItemStack handItem = player.getInventory().getItemInMainHand();
+            
+            if (handItem.getType() == Material.LEAD) {
+                // Let PlayerLeashEntityEvent handle this
+                return;
+            }
+
+            if (handItem.getType() == Material.NAME_TAG) {
+                // If they have a name tag, let them name it if they have some generic interact perm or let's just let it pass to EntityDamage/Interact?
+                // Actually, standard is to block name tags if they can't interact.
+            }
+
+            // Check for mounting (Horses, Pigs, Striders, etc.)
+            if ((animal instanceof Steerable || animal instanceof AbstractHorse) && (handItem.getType().isAir() || handItem.getType() == Material.SADDLE)) {
+                if (!PermissionResolver.hasPermission(claimManager.getProfileAt(pos), player.getUniqueId(), "MOUNT_ANIMALS")) {
+                    event.setCancelled(true);
                     return;
+                } else {
+                    return; // Allow mounting! Let them mount and bypass BREED check.
                 }
             }
 
-            // 3. Fallback to BREED/FEED for other interactions
-            if (!checkPermission(player, pos, event, "BREED_ANIMALS")) {
-                if (!checkPermission(player, pos, event, "FEED_ANIMALS")) {
+            // Fallback: If they are holding food, they might be breeding/feeding.
+            // We just do a strict check: if they don't have BREED or FEED, block it.
+            // Wait, we can just block it if they don't have BREED and they are holding something?
+            // Actually, to be safe, if it's an animal interact, we require either BREED_ANIMALS or FEED_ANIMALS unless it's a specific allowed action like leashing or mounting.
+            if (!PermissionResolver.hasPermission(claimManager.getProfileAt(pos), player.getUniqueId(), "BREED_ANIMALS") &&
+                !PermissionResolver.hasPermission(claimManager.getProfileAt(pos), player.getUniqueId(), "FEED_ANIMALS")) {
+                
+                // If they don't have breed/feed, and they aren't mounting, cancel it to prevent them from doing other things
+                // But wait, if they ALREADY mounted (returned above), they are fine.
+                // If we get here, they are doing something else (or we didn't return).
+                // Let's just check if they are holding something that could be used on the animal.
+                if (!handItem.getType().isAir()) {
                     event.setCancelled(true);
                 }
             }
