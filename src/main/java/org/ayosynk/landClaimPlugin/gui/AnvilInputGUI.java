@@ -46,6 +46,19 @@ public class AnvilInputGUI implements Listener {
     }
 
     @EventHandler
+    public void onPrepareAnvil(org.bukkit.event.inventory.PrepareAnvilEvent event) {
+        if (!event.getView().equals(this.view)) return;
+        
+        ItemStack resultItem = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+        ItemMeta meta = resultItem.getItemMeta();
+        if (meta != null) {
+            meta.displayName(GuiHelper.MM.deserialize("<i:false><color:#30FF60>✔ Save</color>"));
+            resultItem.setItemMeta(meta);
+        }
+        event.setResult(resultItem);
+    }
+
+    @EventHandler
     public void onClick(InventoryClickEvent event) {
         if (!event.getView().equals(this.view)) return;
 
@@ -63,6 +76,7 @@ public class AnvilInputGUI implements Listener {
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
         if (!event.getView().equals(this.view)) return;
+        event.getInventory().clear();
         closeAndCallback(null);
     }
 
@@ -70,6 +84,10 @@ public class AnvilInputGUI implements Listener {
         if (isClosed) return;
         isClosed = true;
         HandlerList.unregisterAll(this);
+        
+        // Clear items to prevent dropping/returning to player
+        view.getTopInventory().clear();
+
         // Delay callback slightly so inventory close processes finish
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             if (player.getOpenInventory().getTopInventory().equals(view.getTopInventory())) {

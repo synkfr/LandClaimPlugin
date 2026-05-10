@@ -31,6 +31,7 @@ public class AllyPremissionsGUI {
 
                         for (Map.Entry<String, AllyPremissionsConfig.ItemConfig> entry : config.flags.entrySet()) {
                                 String flagId = entry.getKey();
+                                if (flagId.equals("CLAIM_LAND")) continue;
                                 AllyPremissionsConfig.ItemConfig flagConfig = entry.getValue();
 
                                 contentItems.add(new GuiItem() {
