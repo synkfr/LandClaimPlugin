@@ -44,6 +44,9 @@ public class PluginConfig extends OkaeriConfig {
     public boolean autoClaimDefault = false;
     public boolean autoUnclaimDefault = false;
     public int chunkClaimLimit = 5;
+    
+    @Comment("Maximum number of claims a player can be a member of (default: 1)")
+    public int maxMemberships = 1;
 
     @Comment("Database Settings (Supported: MYSQL, SQLITE)")
     public DatabaseConfig database = new DatabaseConfig();
