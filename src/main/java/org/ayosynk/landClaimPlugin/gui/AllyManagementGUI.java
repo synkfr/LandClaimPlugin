@@ -83,29 +83,41 @@ public class AllyManagementGUI {
                                         config.navFill.lore));
                         ingredients.put('+', GuiHelper.buildSlot(config.addAlly.material, config.addAlly.name,
                                         config.addAlly.lore, (p, e) -> {
-                                                OnlinePlayerSelectorGUI.open(p, plugin, target -> {
-                                                        // Callback: target selected
-                                                        if (profile.isOwner(target.getUniqueId())) {
-                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                .getMessage("cannot-ally-self"));
-                                                                return;
-                                                        }
-                                                        if (profile.getAllyFlags().containsKey(target.getUniqueId())) {
-                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                .getMessage("already-allied"));
-                                                                return;
-                                                        }
+                                                AnvilInputGUI.open(plugin, p, "Invite Ally", "Player Name", input -> {
+                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                                if (input == null || input.isEmpty() || input.equals("Player Name")) {
+                                                                        p.sendMessage(GuiHelper.MM.deserialize("<red>Ally invite cancelled."));
+                                                                        AllyManagementGUI.open(p, profile, plugin);
+                                                                        return;
+                                                                }
+                                                                
+                                                                ClaimProfile targetProfile = plugin.getClaimManager().getProfileByNameOrOwner(input);
+                                                                
+                                                                if (targetProfile == null) {
+                                                                        p.sendMessage(plugin.getConfigManager()
+                                                                                        .getMessage("claim-not-found"));
+                                                                        AllyManagementGUI.open(p, profile, plugin);
+                                                                        return;
+                                                                }
 
-                                                        ClaimProfile targetProfile = plugin.getClaimManager().getProfile(target.getUniqueId());
-                                                        if (targetProfile == null) {
-                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                .getMessage("no-profile-found"));
-                                                                return;
-                                                        }
+                                                                if (profile.getOwnerId().equals(targetProfile.getOwnerId())) {
+                                                                        p.sendMessage(plugin.getConfigManager()
+                                                                                        .getMessage("cannot-ally-self"));
+                                                                        AllyManagementGUI.open(p, profile, plugin);
+                                                                        return;
+                                                                }
 
-                                                        plugin.getClaimManager().sendAllyInvite(p, targetProfile);
-                                                        AllyManagementGUI.open(p, profile, plugin);
-                                                }, () -> AllyManagementGUI.open(p, profile, plugin));
+                                                                if (profile.getAllyFlags().containsKey(targetProfile.getOwnerId())) {
+                                                                        p.sendMessage(plugin.getConfigManager()
+                                                                                        .getMessage("already-allied"));
+                                                                        AllyManagementGUI.open(p, profile, plugin);
+                                                                        return;
+                                                                }
+
+                                                                plugin.getClaimManager().sendAllyInvite(p, targetProfile);
+                                                                p.closeInventory();
+                                                        });
+                                                });
                                         }));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,

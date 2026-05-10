@@ -38,7 +38,7 @@ public class AllyCommand implements LandClaimCommand {
                         return;
                     }
 
-                    ClaimProfile targetProfile = claimManager.getProfileByName(targetName);
+                    ClaimProfile targetProfile = claimManager.getProfileByNameOrOwner(targetName);
                     if (targetProfile == null) {
                         player.sendMessage(configManager.getMessage("claim-not-found"));
                         return;
@@ -71,18 +71,13 @@ public class AllyCommand implements LandClaimCommand {
                     ClaimProfile senderProfile = null;
 
                     if (targetName != null) {
-                        senderProfile = claimManager.getProfileByName(targetName);
+                        senderProfile = claimManager.getProfileByNameOrOwner(targetName);
                         if (senderProfile == null
                                 || !claimManager.hasAllyInvite(profile.getOwnerId(), senderProfile.getOwnerId())) {
                             player.sendMessage(configManager.getMessage("no-ally-invite-from", "<name>", targetName));
                             return;
                         }
                     } else {
-                        // Find any pending invite if name not specified. Note: no easy way to get just
-                        // one from Map without iterating.
-                        // For simplicity, we can require name if multiple, or just take the first.
-                        // PendingAllyInvites in ClaimManager isn't easily accessible for a "get first",
-                        // so require name if they have multiple.
                         player.sendMessage(configManager.getMessage("specify-ally-name"));
                         return;
                     }
@@ -115,7 +110,7 @@ public class AllyCommand implements LandClaimCommand {
                     }
 
                     String targetName = context.get("name");
-                    ClaimProfile senderProfile = claimManager.getProfileByName(targetName);
+                    ClaimProfile senderProfile = claimManager.getProfileByNameOrOwner(targetName);
 
                     if (senderProfile == null
                             || !claimManager.hasAllyInvite(profile.getOwnerId(), senderProfile.getOwnerId())) {
@@ -138,7 +133,7 @@ public class AllyCommand implements LandClaimCommand {
                     }
 
                     String targetName = context.get("name");
-                    ClaimProfile targetProfile = claimManager.getProfileByName(targetName);
+                    ClaimProfile targetProfile = claimManager.getProfileByNameOrOwner(targetName);
 
                     if (targetProfile == null || !profile.hasAlly(targetProfile.getOwnerId())) {
                         player.sendMessage(configManager.getMessage("not-allied"));

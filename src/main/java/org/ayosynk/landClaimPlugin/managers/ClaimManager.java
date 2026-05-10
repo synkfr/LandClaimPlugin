@@ -133,7 +133,28 @@ public class ClaimManager {
     }
 
     /**
-     * Get a profile by its global name.
+     * Get a profile by its global name or by the owner's username.
+     */
+    public ClaimProfile getProfileByNameOrOwner(String query) {
+        // 1. Try exact match for claim name
+        for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
+            if (profile.getName().equalsIgnoreCase(query)) {
+                return profile;
+            }
+        }
+        
+        // 2. Try match for owner's username
+        for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
+            org.bukkit.OfflinePlayer op = plugin.getServer().getOfflinePlayer(profile.getOwnerId());
+            if (op.getName() != null && op.getName().equalsIgnoreCase(query)) {
+                return profile;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get a profile by its global name (only claim name).
      */
     public ClaimProfile getProfileByName(String name) {
         for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
