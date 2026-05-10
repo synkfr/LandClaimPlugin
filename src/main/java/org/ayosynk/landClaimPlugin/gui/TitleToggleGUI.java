@@ -64,11 +64,8 @@ public class TitleToggleGUI {
                             plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
                             open(player, profile, plugin);
                         } else {
-                            // Open chat input to set text
-                            p.closeInventory();
-                            p.sendMessage(GuiHelper.MM.deserialize(plugin.getConfigManager()
-                                    .getMessagesConfig().titleEnterPrompt));
-                            org.ayosynk.landClaimPlugin.listeners.ChatInputListener.awaitInput(p,
+                            // Open AnvilGUI to set text
+                            AnvilInputGUI.open(plugin, p, "Enter Title", profile.getEnterTitle(),
                                     input -> {
                                         if (input == null) {
                                             p.sendMessage(GuiHelper.MM.deserialize(
@@ -107,11 +104,8 @@ public class TitleToggleGUI {
                             plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
                             open(player, profile, plugin);
                         } else {
-                            // Open chat input to set text
-                            p.closeInventory();
-                            p.sendMessage(GuiHelper.MM.deserialize(plugin.getConfigManager()
-                                    .getMessagesConfig().titleLeavePrompt));
-                            org.ayosynk.landClaimPlugin.listeners.ChatInputListener.awaitInput(p,
+                            // Open AnvilGUI to set text
+                            AnvilInputGUI.open(plugin, p, "Leave Title", profile.getLeaveTitle(),
                                     input -> {
                                         if (input == null) {
                                             p.sendMessage(GuiHelper.MM.deserialize(

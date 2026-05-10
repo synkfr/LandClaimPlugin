@@ -5,7 +5,6 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
 import org.ayosynk.landClaimPlugin.gui.framework.CustomGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
-import org.ayosynk.landClaimPlugin.listeners.ChatInputListener;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -43,17 +42,19 @@ public class RenameClaimGUI {
                                                 p.closeInventory();
                                                 p.sendMessage(plugin.getConfigManager().getMessage("rename-prompt"));
 
-                                                ChatInputListener.awaitInput(p, input -> {
+                                                AnvilInputGUI.open(plugin, p, "Rename Claim", profile.getName(), input -> {
                                                         Bukkit.getScheduler().runTask(plugin, () -> {
                                                                 if (input == null) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("rename-cancelled"));
+                                                                        RenameClaimGUI.open(p, profile, plugin);
                                                                         return;
                                                                 }
 
                                                                 if (!NAME_PATTERN.matcher(input).matches()) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("claim-name-invalid"));
+                                                                        RenameClaimGUI.open(p, profile, plugin);
                                                                         return;
                                                                 }
 
@@ -68,6 +69,7 @@ public class RenameClaimGUI {
                                                                 if (!unique) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("name-already-in-use"));
+                                                                        RenameClaimGUI.open(p, profile, plugin);
                                                                         return;
                                                                 }
 
