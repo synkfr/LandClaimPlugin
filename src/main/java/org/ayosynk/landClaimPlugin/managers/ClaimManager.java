@@ -40,7 +40,7 @@ public class ClaimManager {
     private final Map<UUID, UUID> pendingTrustInvites = new ConcurrentHashMap<>();
     
     // Spatial index: ChunkPosition -> ClaimProfile for O(1) lookups
-    private final Map<ChunkPosition, ClaimProfile> chunkToProfileMap = new HashMap<>();
+    private final Map<ChunkPosition, ClaimProfile> chunkToProfileMap = new ConcurrentHashMap<>();
     
     // Helper methods for spatial index management (package-private for RedisManager access)
     void addToSpatialIndex(ChunkPosition chunk, ClaimProfile profile) {
