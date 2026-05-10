@@ -64,10 +64,7 @@ public class ChangeClaimColorGUI {
                         ingredients.put('X', GuiHelper.buildSlot(config.customColor.material, config.customColor.name,
                                         config.customColor.lore, (p, e) -> {
                                                 p.closeInventory();
-                                                p.sendMessage(
-                                                                plugin.getConfigManager()
-                                                                                .getMessage("color-hex-prompt"));
-
+                                                p.closeInventory();
                                                 AnvilInputGUI.open(plugin, p, "Hex Color", profile.getClaimColor() != null ? profile.getClaimColor() : "#00FF00", input -> {
                                                         Bukkit.getScheduler().runTask(plugin, () -> {
                                                                 if (input == null) {

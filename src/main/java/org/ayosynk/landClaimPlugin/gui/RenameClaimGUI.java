@@ -40,8 +40,6 @@ public class RenameClaimGUI {
                         ingredients.put('C', GuiHelper.buildSlot(config.changeName.material, config.changeName.name,
                                         config.changeName.lore, (p, e) -> {
                                                 p.closeInventory();
-                                                p.sendMessage(plugin.getConfigManager().getMessage("rename-prompt"));
-
                                                 AnvilInputGUI.open(plugin, p, "Rename Claim", profile.getName(), input -> {
                                                         Bukkit.getScheduler().runTask(plugin, () -> {
                                                                 if (input == null) {
