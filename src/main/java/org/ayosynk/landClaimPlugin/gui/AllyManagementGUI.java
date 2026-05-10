@@ -35,9 +35,7 @@ public class AllyManagementGUI {
                                         continue;
 
                                 String allyName = allyProfile.getName();
-                                String ownerName = Bukkit.getOfflinePlayer(allyOwnerId).getName();
-                                if (ownerName == null)
-                                        ownerName = "Unknown";
+                                String ownerName = allyProfile.getDisplayOwnerName();
                                 final String finalOwnerName = ownerName;
 
                                 contentItems.add(new GuiItem() {

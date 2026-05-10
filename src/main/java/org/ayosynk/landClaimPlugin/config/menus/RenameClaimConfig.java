@@ -33,6 +33,12 @@ public class RenameClaimConfig extends OkaeriConfig {
             "<red><bold>Reset to Default",
             List.of("<gray>Remove the custom name and", "<gray>restore the default name."));
 
+    @Comment("Change the owner alias")
+    public ItemConfig ownerAlias = new ItemConfig(
+            "NAME_TAG",
+            "<gold><bold>Set Owner Alias",
+            List.of("<gray>Change the displayed owner", "<gray>name in menus and titles.", "<gray>Type 'reset' to clear it."));
+
     @Comment("Return to Claim Settings")
     public ItemConfig back = new ItemConfig(
             "SPECTRAL_ARROW",
