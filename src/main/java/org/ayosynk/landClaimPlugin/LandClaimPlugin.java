@@ -30,11 +30,8 @@ public class LandClaimPlugin extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        try {
-            Class.forName("com.sk89q.worldguard.WorldGuard");
+        if (org.bukkit.Bukkit.getPluginManager().getPlugin("WorldGuard") != null) {
             loadWorldGuardHook();
-        } catch (ClassNotFoundException e) {
-            // WorldGuard not installed
         }
     }
 

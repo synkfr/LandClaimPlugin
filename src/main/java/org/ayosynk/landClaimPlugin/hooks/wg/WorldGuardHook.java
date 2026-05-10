@@ -16,20 +16,14 @@ public class WorldGuardHook {
      */
     public static void onLoad() {
         try {
-            // Only try if WorldGuard is actually loaded (it might not be enabled yet, but classes exist)
-            Class.forName("com.sk89q.worldguard.WorldGuard");
             FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
-            try {
-                StateFlag flag = new StateFlag("allow-land-claims", false); // Deny by default if set, null if not set
-                registry.register(flag);
-                ALLOW_LAND_CLAIMS_FLAG = flag;
-                registered = true;
-            } catch (Exception e) {
-                // If the flag is already registered by another plugin (very unlikely)
-                // or some other error occurs.
-            }
-        } catch (ClassNotFoundException e) {
-            // WorldGuard is not installed.
+            StateFlag flag = new StateFlag("allow-land-claims", false); // Deny by default if set, null if not set
+            registry.register(flag);
+            ALLOW_LAND_CLAIMS_FLAG = flag;
+            registered = true;
+        } catch (Exception e) {
+            // If the flag is already registered by another plugin (very unlikely)
+            // or some other error occurs.
         }
     }
 
