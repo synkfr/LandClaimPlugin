@@ -107,14 +107,14 @@ public final class GuiHelper {
         }
 
         if (name != null && !name.isEmpty()) {
-            Component comp = MM.deserialize(name);
+            Component comp = MM.deserialize("<i:false>" + name);
             meta.displayName(comp);
         }
 
         if (lore != null && !lore.isEmpty()) {
             List<Component> loreComponents = new ArrayList<>(lore.size());
             for (String line : lore) {
-                loreComponents.add(MM.deserialize(line));
+                loreComponents.add(MM.deserialize("<i:false>" + line));
             }
             meta.lore(loreComponents);
         }
