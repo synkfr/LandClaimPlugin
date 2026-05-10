@@ -57,6 +57,9 @@ public class MessagesConfig extends OkaeriConfig {
     public String bucketDenied = "<red>You do not have permission to use buckets here.";
     public String harmEntityDenied = "<red>You do not have permission to harm entities here.";
     public String pvpDenied = "<red>PvP is disabled in this claim.";
+    public String pvpEnabled = "<red><b>[!]</b> PvP has been ENABLED in this claim!";
+    public String pvpEnabledTemp = "<red><b>[!]</b> PvP has been ENABLED in this claim for <time> seconds!";
+    public String pvpDisabled = "<green><b>[!]</b> PvP has been DISABLED in this claim. You are safe again.";
     public String worldBlocked = "<red>You cannot claim land in this world.";
     public String alreadyClaimed = "<red>This chunk is already claimed by <owner>.";
     public String nameAlreadyInUse = "<red>That claim name is already taken. Please choose another one.";

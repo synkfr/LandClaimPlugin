@@ -46,12 +46,13 @@ public class ClaimSettingsConfig extends OkaeriConfig {
             List.of(
                     "<gray>Manage custom roles and permissions within this claim."));
 
-    @Comment("Warps Button")
-    public ItemConfig warps = new ItemConfig(
-            "ENDER_EYE",
-            "<green>Warp Settings",
+    @Comment("PvP Toggle Button")
+    public ItemConfig pvpToggle = new ItemConfig(
+            "IRON_SWORD",
+            "<red>Toggle PvP",
             List.of(
-                    "<gray>Manage warps for this claim."));
+                    "<gray>Enable or disable PvP inside this claim.",
+                    "<gray>Status: <pvp_status>"));
 
     @Comment("Visibility Button")
     public ItemConfig visibility = new ItemConfig(

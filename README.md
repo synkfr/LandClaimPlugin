@@ -111,6 +111,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
 | `/claim abandon` | Delete your entire claim profile and all claimed chunks |
+| `/claim pvp <on/off> [time]` | Toggle PvP globally in the claim, with an optional time duration in seconds |
 | `/unclaim` | Unclaim the chunk you're standing in |
 | `/unclaim all` | Unclaim all your chunks |
 

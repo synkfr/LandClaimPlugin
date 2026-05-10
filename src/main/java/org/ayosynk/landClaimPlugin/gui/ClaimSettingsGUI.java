@@ -55,10 +55,29 @@ public class ClaimSettingsGUI {
                                                 p.closeInventory();
                                                 RoleManagementGUI.open(p, profile, plugin);
                                         }));
-                        ingredients.put('W', GuiHelper.buildSlot(config.warps.material, config.warps.name,
-                                        config.warps.lore, profile, player, ownerName, claimName, (p, e) -> {
+                        java.util.List<String> modifiedPvpLore = new java.util.ArrayList<>();
+                        for (String line : config.pvpToggle.lore) {
+                                modifiedPvpLore.add(line.replace("<pvp_status>", profile.isPvpEnabled() ? "<green>Enabled" : "<red>Disabled"));
+                        }
+                        ingredients.put('W', GuiHelper.buildSlot(config.pvpToggle.material, config.pvpToggle.name,
+                                        modifiedPvpLore, profile, player, ownerName, claimName, (p, e) -> {
+                                                boolean newState = !profile.isPvpEnabled();
+                                                profile.setPvpEnabled(newState);
+                                                profile.setPvpTimerEnd(0); // Permanent via GUI
+                                                plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                                                
+                                                String messageKey = newState ? "pvp-enabled" : "pvp-disabled";
+                                                String rawMessage = plugin.getConfigManager().getMessage(messageKey);
+
+                                                for (Player p2 : Bukkit.getOnlinePlayers()) {
+                                                        org.ayosynk.landClaimPlugin.models.ChunkPosition pPos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(p2.getLocation());
+                                                        if (profile.ownsChunk(pPos)) {
+                                                                p2.sendMessage(rawMessage);
+                                                        }
+                                                }
+
                                                 p.closeInventory();
-                                                WarpManagementGUI.open(p, profile, plugin);
+                                                ClaimSettingsGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('V', GuiHelper.buildSlot(config.visibility.material, config.visibility.name,
                                         config.visibility.lore, profile, player, ownerName, claimName, (p, e) -> {

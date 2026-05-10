@@ -133,6 +133,17 @@ public class ClaimCommand implements LandClaimCommand {
                     }
                     Bukkit.getScheduler().runTask(plugin, () -> WarpManagementGUI.open(player, profile, plugin));
                 }));
+
+        // /claim pvp <on|off> [time_seconds]
+        manager.command(claimBuilder.literal("pvp")
+                .required("state", org.incendo.cloud.parser.standard.StringParser.stringParser())
+                .optional("time", org.incendo.cloud.parser.standard.IntegerParser.integerParser(1))
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String state = context.get("state");
+                    Integer time = context.getOrDefault("time", null);
+                    togglePvp(player, state.equalsIgnoreCase("on"), time);
+                }));
     }
 
     // --- State Management ---
@@ -202,6 +213,76 @@ public class ClaimCommand implements LandClaimCommand {
                 player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
             }
         });
+    }
+
+    private void togglePvp(Player player, boolean enable, Integer time) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation());
+            ClaimProfile profile = claimManager.getProfileAt(pos);
+
+            if (profile == null) {
+                player.sendMessage(configManager.getMessage("not-in-claim"));
+                return;
+            }
+
+            // Must be owner or co-owner
+            if (!profile.isOwner(player.getUniqueId()) && !isCoOwner(profile, player.getUniqueId())) {
+                player.sendMessage(configManager.getMessage("no-permission"));
+                return;
+            }
+
+            profile.setPvpEnabled(enable);
+            if (enable && time != null) {
+                profile.setPvpTimerEnd(System.currentTimeMillis() + (time * 1000L));
+            } else {
+                profile.setPvpTimerEnd(0L);
+            }
+
+            plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+
+            // Broadcast to players in the claim
+            String messageKey = enable ? (time != null ? "pvp-enabled-temp" : "pvp-enabled") : "pvp-disabled";
+            String rawMessage = configManager.getMessage(messageKey);
+            if (time != null) {
+                rawMessage = rawMessage.replace("<time>", String.valueOf(time));
+            }
+
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                org.ayosynk.landClaimPlugin.models.ChunkPosition pPos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(p.getLocation());
+                if (profile.ownsChunk(pPos)) {
+                    p.sendMessage(rawMessage);
+                }
+            }
+        });
+    }
+
+    private boolean isCoOwner(ClaimProfile profile, UUID playerId) {
+        String roleName = profile.getMemberRole(playerId);
+        if (roleName != null) {
+            org.ayosynk.landClaimPlugin.models.Role role = profile.getRoleByName(roleName);
+            if (role != null) {
+                return role.getPriority() <= 10; // Assuming CoOwner priority is <= 10
+            }
+        }
+        return false;
+    }
+
+    private void abandonClaim(Player player) {
+        ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
+        ClaimProfile profile = claimManager.getProfileAt(pos);
+
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("not-in-claim"));
+            return;
+        }
+
+        if (!profile.getOwnerId().equals(player.getUniqueId())) {
+            player.sendMessage(configManager.getMessage("not-owner"));
+            return;
+        }
+
+        claimManager.unclaimChunk(player.getLocation().getChunk());
+        player.sendMessage(configManager.getMessage("claim-abandoned"));
     }
 
     private void sendClaimInfo(Player player) {
