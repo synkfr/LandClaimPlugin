@@ -50,7 +50,7 @@ public class ClaimProfile {
         memberRole.addFlag("USE_WORKSTATIONS");
         memberRole.addFlag("USE_BEDS");
         memberRole.addFlag("USE_REDSTONE");
-        this.roles.put(memberRole.getId().toString(), memberRole);
+        this.roles.put(memberRole.getName().toLowerCase(), memberRole);
 
         // Default CoOwner Role (All Permissions)
         Role coOwnerRole = new Role(UUID.randomUUID(), this.ownerId, "CoOwner", 10);
@@ -65,7 +65,7 @@ public class ClaimProfile {
         for (String flag : allFlags) {
             coOwnerRole.addFlag(flag);
         }
-        this.roles.put(coOwnerRole.getId().toString(), coOwnerRole);
+        this.roles.put(coOwnerRole.getName().toLowerCase(), coOwnerRole);
     }
 
     // --- Owner ---
