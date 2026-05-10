@@ -65,6 +65,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **Command Blocking** — Block specific commands inside other players' claims
 
 ### Customization
+- **Owner Alias** — Set a custom display name to replace your Minecraft username in UI elements, map hooks, and titles
 - **Claim Colors** — Pick a custom hex color for your claim used on maps and borders
 - **Visualization Modes** — Toggle between Display Entity or Particle-based boundary rendering
 - **Entry/Exit Titles** — Custom MiniMessage-formatted titles shown when players enter or leave your claim
@@ -161,6 +162,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
 | `/claim admin edit <player>` | Open any player's claim management GUI |
+| `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias |
 | `/claim admin trust list <owner>` | List players trusted by this owner |
 | `/claim admin trust who <player>` | List claims where this player is trusted |
 
