@@ -29,6 +29,11 @@ public class LandClaimPlugin extends JavaPlugin {
     private HookManager hookManager;
 
     @Override
+    public void onLoad() {
+        org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.onLoad();
+    }
+
+    @Override
     public void onEnable() {
         instance = this;
 

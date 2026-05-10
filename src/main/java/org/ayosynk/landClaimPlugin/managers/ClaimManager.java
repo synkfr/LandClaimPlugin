@@ -703,21 +703,27 @@ public class ClaimManager {
                     int checkX = (chunkX + dx) * 16;
                     int checkZ = (chunkZ + dz) * 16;
 
-                    int[][] points = {
-                            { checkX, checkZ }, { checkX + 15, checkZ },
-                            { checkX, checkZ + 15 }, { checkX + 15, checkZ + 15 },
-                            { checkX + 8, checkZ + 8 }
-                    };
+                    BlockVector3 min = BlockVector3.at(checkX, world.getMinHeight(), checkZ);
+                    BlockVector3 max = BlockVector3.at(checkX + 15, world.getMaxHeight(), checkZ + 15);
+                    com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion checkRegion = 
+                            new com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion("temp-claim-check", min, max);
 
-                    for (int[] point : points) {
-                        BlockVector3 blockVector = BlockVector3.at(point[0], 64, point[1]);
-                        ApplicableRegionSet regions = regionManager.getApplicableRegions(blockVector);
-                        if (regions.size() > 0) {
-                            for (ProtectedRegion region : regions) {
-                                if (!region.getId().equals("__global__")) {
-                                    return true;
-                                }
+                    ApplicableRegionSet regions = regionManager.getApplicableRegions(checkRegion);
+                    for (ProtectedRegion region : regions) {
+                        if (region.getId().equals("__global__")) {
+                            continue;
+                        }
+                        
+                        boolean allowed = false;
+                        if (org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.isRegistered() && org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.ALLOW_LAND_CLAIMS_FLAG != null) {
+                            com.sk89q.worldguard.protection.flags.StateFlag.State flagState = region.getFlag(org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.ALLOW_LAND_CLAIMS_FLAG);
+                            if (flagState == com.sk89q.worldguard.protection.flags.StateFlag.State.ALLOW) {
+                                allowed = true;
                             }
+                        }
+                        
+                        if (!allowed) {
+                            return true; // Overlaps a region that doesn't explicitly allow land claims
                         }
                     }
                 }

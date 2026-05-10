@@ -78,7 +78,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **Redis** — Optional cross-server claim sync for networks
 - **Map Plugins** — Dynmap, BlueMap, Squaremap, and Pl3xMap support with customizable colors and opacity
 - **Combat Plugins** — DeluxeCombat, PvPManager, and EternalCombat hook for combat tagging (blocks commands while in combat)
-- **WorldGuard** — Configurable gap enforcement between claims and WorldGuard regions
+- **WorldGuard** — Configurable gap enforcement with 100% accurate volumetric intersection checking, and custom `allow-land-claims` Region Flag support!
 
 ### Technical
 - **Cloud Command Framework** — Async command execution with dedicated thread pools
