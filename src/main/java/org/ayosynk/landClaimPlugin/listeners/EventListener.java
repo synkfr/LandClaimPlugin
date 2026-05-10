@@ -64,6 +64,12 @@ public class EventListener implements Listener {
             // Handle entry/leave titles if transitioning between different claims or
             // wilderness
             if (oldProfile != newProfile) {
+                net.kyori.adventure.title.Title.Times times = net.kyori.adventure.title.Title.Times.times(
+                        java.time.Duration.ofMillis(250),
+                        java.time.Duration.ofMillis(1500),
+                        java.time.Duration.ofMillis(250)
+                );
+
                 if (oldProfile != null && oldProfile.isEnterTitleEnabled()) {
                     String ownerName = oldProfile.getDisplayOwnerName();
                     String leaveTxt = oldProfile.getLeaveTitle().replace("<owner>", ownerName);
@@ -71,7 +77,8 @@ public class EventListener implements Listener {
                     boolean leaveSub = "SUBTITLE".equalsIgnoreCase(oldProfile.getLeaveTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
                             leaveSub ? Component.empty() : leaveComp,
-                            leaveSub ? leaveComp : Component.empty()));
+                            leaveSub ? leaveComp : Component.empty(),
+                            times));
                 }
 
                 if (newProfile != null && newProfile.isEnterTitleEnabled()) {
@@ -81,7 +88,8 @@ public class EventListener implements Listener {
                     boolean enterSub = "SUBTITLE".equalsIgnoreCase(newProfile.getEnterTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
                             enterSub ? Component.empty() : enterComp,
-                            enterSub ? enterComp : Component.empty()));
+                            enterSub ? enterComp : Component.empty(),
+                            times));
                 }
             }
 
