@@ -3,7 +3,6 @@ package org.ayosynk.landClaimPlugin.managers;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.gui.GuiGlobalSetup;
 import org.ayosynk.landClaimPlugin.gui.RoleSetupGUI;
-import org.ayosynk.landClaimPlugin.listeners.ChatInputListener;
 import org.ayosynk.landClaimPlugin.listeners.CommandBlocker;
 import org.ayosynk.landClaimPlugin.listeners.EventListener;
 import org.ayosynk.landClaimPlugin.listeners.PlayerJoinListener;
@@ -34,7 +33,6 @@ public class ListenerManager {
 
         // Initialize custom GUI framework (listener + scheduler)
         GuiGlobalSetup.init(plugin);
-        ChatInputListener.init(plugin);
         pm.registerEvents(new RoleSetupGUI(), plugin);
 
         // Core Listeners
