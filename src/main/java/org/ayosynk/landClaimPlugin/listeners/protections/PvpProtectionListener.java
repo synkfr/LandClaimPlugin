@@ -28,11 +28,21 @@ public class PvpProtectionListener implements Listener {
 
     private boolean isPvpAllowed(Location location) {
         ChunkPosition pos = new ChunkPosition(location);
-        if (claimManager.isChunkClaimed(pos)) {
-            // Future implementation: check if the claim has a specific flag overriding PVP.
-            // For now, by default, PvP is completely disabled in claims unless a specific
-            // role flag allows it
-            // (or if we strictly enforce no-pvp 24/7 as requested).
+        org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfileAt(pos);
+        if (profile != null) {
+            // Check if PvP is enabled and timer hasn't expired
+            if (profile.isPvpEnabled()) {
+                if (profile.getPvpTimerEnd() == 0 || System.currentTimeMillis() <= profile.getPvpTimerEnd()) {
+                    return true;
+                } else {
+                    // Timer expired, PvP should be false
+                    profile.setPvpEnabled(false);
+                    profile.setPvpTimerEnd(0);
+                    // We don't save async here to avoid spamming the DB, it will be saved next time they modify something or periodically.
+                    // Or we could run an async save here, but let's just return false.
+                    return false;
+                }
+            }
             return false;
         }
         return true; // PvP is allowed in wilderness

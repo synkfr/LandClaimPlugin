@@ -95,7 +95,9 @@ public class SQLProfileDao implements ProfileDao {
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN leave_title VARCHAR(255)",
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN enter_title_mode VARCHAR(16) DEFAULT 'TITLE'",
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN leave_title_mode VARCHAR(16) DEFAULT 'SUBTITLE'",
-                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN owner_alias VARCHAR(64)"
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN owner_alias VARCHAR(64)",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN pvp_enabled BOOLEAN DEFAULT FALSE",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN pvp_timer_end BIGINT DEFAULT 0"
             };
             for (String alter : alters) {
                 try (PreparedStatement stmt = conn.prepareStatement(alter)) {
@@ -118,9 +120,9 @@ public class SQLProfileDao implements ProfileDao {
 
             String upsertProfile = sqlite
                     ? "INSERT OR REPLACE INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                     : "INSERT INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title), enter_title_mode=VALUES(enter_title_mode), leave_title_mode=VALUES(leave_title_mode), owner_alias=VALUES(owner_alias)";
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title), enter_title_mode=VALUES(enter_title_mode), leave_title_mode=VALUES(leave_title_mode), owner_alias=VALUES(owner_alias), pvp_enabled=VALUES(pvp_enabled), pvp_timer_end=VALUES(pvp_timer_end)";
 
             try (Connection conn = dbManager.getDatabase().getConnection()) {
                 conn.setAutoCommit(false);
@@ -137,6 +139,8 @@ public class SQLProfileDao implements ProfileDao {
                     stmt.setString(8, profile.getEnterTitleMode());
                     stmt.setString(9, profile.getLeaveTitleMode());
                     stmt.setString(10, profile.getOwnerAlias());
+                    stmt.setBoolean(11, profile.isPvpEnabled());
+                    stmt.setLong(12, profile.getPvpTimerEnd());
                     stmt.executeUpdate();
                 }
 
@@ -318,9 +322,11 @@ public class SQLProfileDao implements ProfileDao {
                 String enterTitleMode;
                 String leaveTitleMode;
                 String ownerAlias;
+                boolean pvpEnabled;
+                long pvpTimerEnd;
                 try (PreparedStatement stmt = conn
                         .prepareStatement(
-                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias FROM " + p
+                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end FROM " + p
                                         + "claim_profiles WHERE owner_id = ?")) {
                     stmt.setString(1, ownerId.toString());
                     try (ResultSet rs = stmt.executeQuery()) {
@@ -335,6 +341,8 @@ public class SQLProfileDao implements ProfileDao {
                         enterTitleMode = rs.getString("enter_title_mode");
                         leaveTitleMode = rs.getString("leave_title_mode");
                         ownerAlias = rs.getString("owner_alias");
+                        pvpEnabled = rs.getBoolean("pvp_enabled");
+                        pvpTimerEnd = rs.getLong("pvp_timer_end");
                     }
                 }
 
@@ -352,6 +360,8 @@ public class SQLProfileDao implements ProfileDao {
                     profile.setLeaveTitleMode(leaveTitleMode);
                 if (ownerAlias != null)
                     profile.setOwnerAlias(ownerAlias);
+                profile.setPvpEnabled(pvpEnabled);
+                profile.setPvpTimerEnd(pvpTimerEnd);
                 loadChunks(conn, p, profile);
                 loadVisitorFlags(conn, p, profile);
                 loadTrustedPlayers(conn, p, profile);

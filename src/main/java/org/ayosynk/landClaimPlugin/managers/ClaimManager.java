@@ -10,13 +10,6 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
 
 import java.util.*;
 import java.util.Collection;
@@ -40,7 +33,7 @@ public class ClaimManager {
     private final Map<UUID, UUID> pendingTrustInvites = new ConcurrentHashMap<>();
     
     // Spatial index: ChunkPosition -> ClaimProfile for O(1) lookups
-    private final Map<ChunkPosition, ClaimProfile> chunkToProfileMap = new HashMap<>();
+    private final Map<ChunkPosition, ClaimProfile> chunkToProfileMap = new ConcurrentHashMap<>();
     
     // Helper methods for spatial index management (package-private for RedisManager access)
     void addToSpatialIndex(ChunkPosition chunk, ClaimProfile profile) {
@@ -685,47 +678,7 @@ public class ClaimManager {
         if (!plugin.getHookManager().isWorldGuardEnabled())
             return false;
 
-        World world = Bukkit.getWorld(pos.world());
-        if (world == null)
-            return false;
-
-        try {
-            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            RegionManager regionManager = container.get(BukkitAdapter.adapt(world));
-            if (regionManager == null)
-                return false;
-
-            int chunkX = pos.x();
-            int chunkZ = pos.z();
-
-            for (int dx = -gap; dx <= gap; dx++) {
-                for (int dz = -gap; dz <= gap; dz++) {
-                    int checkX = (chunkX + dx) * 16;
-                    int checkZ = (chunkZ + dz) * 16;
-
-                    int[][] points = {
-                            { checkX, checkZ }, { checkX + 15, checkZ },
-                            { checkX, checkZ + 15 }, { checkX + 15, checkZ + 15 },
-                            { checkX + 8, checkZ + 8 }
-                    };
-
-                    for (int[] point : points) {
-                        BlockVector3 blockVector = BlockVector3.at(point[0], 64, point[1]);
-                        ApplicableRegionSet regions = regionManager.getApplicableRegions(blockVector);
-                        if (regions.size() > 0) {
-                            for (ProtectedRegion region : regions) {
-                                if (!region.getId().equals("__global__")) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Error checking WorldGuard regions: " + e.getMessage());
-        }
-        return false;
+        return org.ayosynk.landClaimPlugin.hooks.wg.WorldGuardHook.isTooCloseToWorldGuardRegion(pos, gap);
     }
 
     private boolean isConnectedToOwnChunks(ChunkPosition pos, ClaimProfile profile) {

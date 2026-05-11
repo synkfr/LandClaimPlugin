@@ -34,6 +34,10 @@ public class ClaimProfile {
     private String leaveTitle = "<yellow>Leaving <owner>'s Claim";
     private String leaveTitleMode = "SUBTITLE"; // "TITLE" or "SUBTITLE"
 
+    // PvP settings
+    private boolean pvpEnabled = false;
+    private long pvpTimerEnd = 0L;
+
     public ClaimProfile(UUID ownerId, String name) {
         this.ownerId = ownerId;
         this.name = name;
@@ -104,6 +108,24 @@ public class ClaimProfile {
         }
         org.bukkit.OfflinePlayer op = org.bukkit.Bukkit.getOfflinePlayer(ownerId);
         return op.getName() != null ? op.getName() : "Unknown";
+    }
+
+    // --- PvP Settings ---
+
+    public boolean isPvpEnabled() {
+        return pvpEnabled;
+    }
+
+    public void setPvpEnabled(boolean pvpEnabled) {
+        this.pvpEnabled = pvpEnabled;
+    }
+
+    public long getPvpTimerEnd() {
+        return pvpTimerEnd;
+    }
+
+    public void setPvpTimerEnd(long pvpTimerEnd) {
+        this.pvpTimerEnd = pvpTimerEnd;
     }
 
     // --- Chunks ---
