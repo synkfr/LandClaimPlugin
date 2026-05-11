@@ -133,7 +133,8 @@ public class CommandHandler {
                 new MemberCommand(plugin, claimManager, configManager),
                 new TrustCommand(plugin, claimManager, configManager),
                 new AllyCommand(plugin, claimManager, configManager),
-                new AbandonCommand(plugin, claimManager, configManager));
+                new AbandonCommand(plugin, claimManager, configManager),
+                new UnstuckCommand(plugin, claimManager, configManager));
 
         // Register all commands via the shared /claim builder
         Command.Builder<PlayerSource> claimBuilder = commandManager.commandBuilder("claim", "c")

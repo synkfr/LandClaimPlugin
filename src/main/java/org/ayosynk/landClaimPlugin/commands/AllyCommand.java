@@ -44,12 +44,12 @@ public class AllyCommand implements LandClaimCommand {
                         return;
                     }
 
-                    if (senderProfile.getOwnerId().equals(targetProfile.getOwnerId())) {
+                    if (senderProfile.getProfileId().equals(targetProfile.getProfileId())) {
                         player.sendMessage(configManager.getMessage("cannot-ally-self"));
                         return;
                     }
 
-                    if (senderProfile.hasAlly(targetProfile.getOwnerId())) {
+                    if (senderProfile.hasAlly(targetProfile.getProfileId())) {
                         player.sendMessage(configManager.getMessage("already-allied"));
                         return;
                     }
@@ -73,7 +73,7 @@ public class AllyCommand implements LandClaimCommand {
                     if (targetName != null) {
                         senderProfile = claimManager.getProfileByNameOrOwner(targetName);
                         if (senderProfile == null
-                                || !claimManager.hasAllyInvite(profile.getOwnerId(), senderProfile.getOwnerId())) {
+                                || !claimManager.hasAllyInvite(profile.getProfileId(), senderProfile.getProfileId())) {
                             player.sendMessage(configManager.getMessage("no-ally-invite-from", "<name>", targetName));
                             return;
                         }
@@ -83,16 +83,16 @@ public class AllyCommand implements LandClaimCommand {
                     }
 
                     // Mutual ally additions
-                    profile.addAlly(senderProfile.getOwnerId());
-                    senderProfile.addAlly(profile.getOwnerId());
+                    profile.addAlly(senderProfile.getProfileId());
+                    senderProfile.addAlly(profile.getProfileId());
 
-                    claimManager.removeAllyInvite(profile.getOwnerId(), senderProfile.getOwnerId());
+                    claimManager.removeAllyInvite(profile.getProfileId(), senderProfile.getProfileId());
 
                     claimManager.saveAndSync(profile);
                     claimManager.saveAndSync(senderProfile);
 
                     player.sendMessage(configManager.getMessage("ally-accepted", "<name>", senderProfile.getName()));
-                    Player senderOwner = Bukkit.getPlayer(senderProfile.getOwnerId());
+                    Player senderOwner = Bukkit.getPlayer(senderProfile.getProfileId());
                     if (senderOwner != null && senderOwner.isOnline()) {
                         senderOwner.sendMessage(
                                 configManager.getMessage("ally-accepted-target", "<name>", profile.getName()));
@@ -113,12 +113,12 @@ public class AllyCommand implements LandClaimCommand {
                     ClaimProfile senderProfile = claimManager.getProfileByNameOrOwner(targetName);
 
                     if (senderProfile == null
-                            || !claimManager.hasAllyInvite(profile.getOwnerId(), senderProfile.getOwnerId())) {
+                            || !claimManager.hasAllyInvite(profile.getProfileId(), senderProfile.getProfileId())) {
                         player.sendMessage(configManager.getMessage("no-ally-invite-from", "<name>", targetName));
                         return;
                     }
 
-                    claimManager.removeAllyInvite(profile.getOwnerId(), senderProfile.getOwnerId());
+                    claimManager.removeAllyInvite(profile.getProfileId(), senderProfile.getProfileId());
                     player.sendMessage(configManager.getMessage("ally-denied", "<name>", senderProfile.getName()));
                 }));
 
@@ -135,13 +135,13 @@ public class AllyCommand implements LandClaimCommand {
                     String targetName = context.get("name");
                     ClaimProfile targetProfile = claimManager.getProfileByNameOrOwner(targetName);
 
-                    if (targetProfile == null || !profile.hasAlly(targetProfile.getOwnerId())) {
+                    if (targetProfile == null || !profile.hasAlly(targetProfile.getProfileId())) {
                         player.sendMessage(configManager.getMessage("not-allied"));
                         return;
                     }
 
-                    profile.removeAlly(targetProfile.getOwnerId());
-                    targetProfile.removeAlly(profile.getOwnerId());
+                    profile.removeAlly(targetProfile.getProfileId());
+                    targetProfile.removeAlly(profile.getProfileId());
 
                     claimManager.saveAndSync(profile);
                     claimManager.saveAndSync(targetProfile);
