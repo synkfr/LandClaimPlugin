@@ -25,7 +25,7 @@ public class RoleSetupGUI {
                         final boolean isNew;
                         if (role == null) {
                                 isNew = true;
-                                workingRole = new Role(UUID.randomUUID(), profile.getOwnerId(), "NewRole", 0);
+                                workingRole = new Role(UUID.randomUUID(), profile.getProfileId(), "NewRole", 0);
                         } else {
                                 isNew = false;
                                 workingRole = role; // Edit existing by reference
@@ -106,7 +106,7 @@ public class RoleSetupGUI {
                                                         profile.addRole(workingRole);
                                                 }
 
-                                                plugin.getCacheManager().getProfileCache().put(profile.getOwnerId(),
+                                                plugin.getCacheManager().getProfileCache().put(profile.getProfileId(),
                                                                 profile);
                                                 plugin.getClaimManager().saveAndSync(profile);
 

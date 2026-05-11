@@ -116,7 +116,7 @@ public class RoleManagementGUI {
                                                                                                 // 3. Save
                                                                                                 plugin.getCacheManager()
                                                                                                                 .getProfileCache()
-                                                                                                                .put(profile.getOwnerId(),
+                                                                                                                .put(profile.getProfileId(),
                                                                                                                                 profile);
                                                                                                 plugin.getClaimManager()
                                                                                                                 .saveAndSync(profile);

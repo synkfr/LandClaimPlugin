@@ -66,7 +66,7 @@ public class RoleSelectionGUI {
                                                         profile.setMemberRole(targetPlayerId, roleName);
 
                                                         plugin.getCacheManager().getProfileCache()
-                                                                        .put(profile.getOwnerId(), profile);
+                                                                        .put(profile.getProfileId(), profile);
                                                         plugin.getClaimManager().saveAndSync(profile);
 
                                                         p.sendMessage(GuiHelper.MM.deserialize("<green>Changed "

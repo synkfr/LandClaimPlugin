@@ -38,7 +38,7 @@ public class AllyPremissionsGUI {
                                         @Override
                                         public ItemStack render(Player viewer) {
                                                 Set<String> allyFlags = profile
-                                                                .getAllyFlags(targetAllyProfile.getOwnerId());
+                                                                .getAllyFlags(targetAllyProfile.getProfileId());
                                                 boolean hasFlag = allyFlags != null && allyFlags.contains(flagId);
 
                                                 ItemStack item = GuiHelper.buildItemStack(flagConfig.material,
@@ -70,10 +70,10 @@ public class AllyPremissionsGUI {
                                         public org.ayosynk.landClaimPlugin.gui.framework.ClickAction clickAction() {
                                                 return (p, e) -> {
                                                         Set<String> allyFlags = profile
-                                                                        .getAllyFlags(targetAllyProfile.getOwnerId());
+                                                                        .getAllyFlags(targetAllyProfile.getProfileId());
                                                         if (allyFlags == null) {
                                                                 allyFlags = new HashSet<>();
-                                                                profile.setAllyFlags(targetAllyProfile.getOwnerId(),
+                                                                profile.setAllyFlags(targetAllyProfile.getProfileId(),
                                                                                 allyFlags);
                                                         }
 

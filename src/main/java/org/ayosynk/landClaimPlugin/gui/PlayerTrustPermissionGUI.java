@@ -91,7 +91,7 @@ public class PlayerTrustPermissionGUI {
                                                                                 if (plugin.getRedisManager() != null) {
                                                                                         plugin.getRedisManager()
                                                                                                         .publishUpdate("INVALIDATE_CLAIM",
-                                                                                                                        profile.getOwnerId());
+                                                                                                                        profile.getProfileId());
                                                                                 }
                                                                         });
 

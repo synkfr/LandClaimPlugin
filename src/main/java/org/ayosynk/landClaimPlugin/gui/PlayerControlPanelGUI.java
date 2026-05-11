@@ -40,7 +40,7 @@ public class PlayerControlPanelGUI {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     ConfirmationGUI.open(p, "<red>Transfer to " + targetPlayerName + "?",
                             () -> {
-                                plugin.getClaimManager().transferOwnership(profile.getOwnerId(), targetPlayerId);
+                                plugin.getClaimManager().transferOwnership(profile.getProfileId(), targetPlayerId);
                                 p.sendMessage(GuiHelper.MM
                                         .deserialize("<green>Ownership transferred to " + targetPlayerName + "."));
                             },
@@ -53,7 +53,7 @@ public class PlayerControlPanelGUI {
                     ConfirmationGUI.open(p, "<red>Kick " + targetPlayerName + " from claim?",
                             () -> {
                                 profile.removeMember(targetPlayerId);
-                                plugin.getCacheManager().getProfileCache().put(profile.getOwnerId(), profile);
+                                plugin.getCacheManager().getProfileCache().put(profile.getProfileId(), profile);
                                 plugin.getClaimManager().saveAndSync(profile);
                                 p.sendMessage(GuiHelper.MM
                                         .deserialize("<yellow>Kicked " + targetPlayerName + " from the claim."));

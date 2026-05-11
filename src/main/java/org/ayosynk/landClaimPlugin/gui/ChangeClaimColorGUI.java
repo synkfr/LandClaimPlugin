@@ -133,7 +133,7 @@ public class ChangeClaimColorGUI {
                 plugin.getHookManager().refreshMapHooks();
 
                 // Refresh visualization if active
-                plugin.getVisualizationManager().invalidateCache(profile.getOwnerId());
+                plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
 
                 player.sendMessage(plugin.getConfigManager().getMessage("claim-color-changed"));
                 ChangeClaimColorGUI.open(player, profile, plugin);

@@ -98,14 +98,14 @@ public class AllyManagementGUI {
                                                                         return;
                                                                 }
 
-                                                                if (profile.getOwnerId().equals(targetProfile.getOwnerId())) {
+                                                                if (profile.getProfileId().equals(targetProfile.getProfileId())) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("cannot-ally-self"));
                                                                         AllyManagementGUI.open(p, profile, plugin);
                                                                         return;
                                                                 }
 
-                                                                if (profile.getAllyFlags().containsKey(targetProfile.getOwnerId())) {
+                                                                if (profile.getAllyFlags().containsKey(targetProfile.getProfileId())) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("already-allied"));
                                                                         AllyManagementGUI.open(p, profile, plugin);

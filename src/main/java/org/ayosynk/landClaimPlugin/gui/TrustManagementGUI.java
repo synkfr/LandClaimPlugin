@@ -67,7 +67,7 @@ public class TrustManagementGUI {
                                                                                                                         trustedId);
                                                                                                         plugin.getCacheManager()
                                                                                                                         .getProfileCache()
-                                                                                                                        .put(profile.getOwnerId(),
+                                                                                                                        .put(profile.getProfileId(),
                                                                                                                                         profile);
                                                                                                         plugin.getClaimManager()
                                                                                                                         .saveAndSync(profile);

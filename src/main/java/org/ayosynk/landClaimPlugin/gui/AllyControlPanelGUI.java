@@ -50,8 +50,8 @@ public class AllyControlPanelGUI {
                                                 p.closeInventory();
                                                 ConfirmationGUI.open(p, "<red>Remove Alliance?", () -> {
                                                         // Confirm
-                                                        profile.removeAlly(targetAllyProfile.getOwnerId());
-                                                        targetAllyProfile.removeAlly(profile.getOwnerId());
+                                                        profile.removeAlly(targetAllyProfile.getProfileId());
+                                                        targetAllyProfile.removeAlly(profile.getProfileId());
                                                         plugin.getClaimManager().saveAndSync(profile);
                                                         plugin.getClaimManager().saveAndSync(targetAllyProfile);
                                                         p.sendMessage(plugin.getConfigManager().getMessage(
