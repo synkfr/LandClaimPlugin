@@ -9,6 +9,7 @@ public class ClaimPlayer {
     private boolean autoUnclaim;
     private String visualizationMode;
     private int bonusClaimBlocks;
+    private UUID activeProfileId;
 
     public ClaimPlayer(UUID uniqueId) {
         this.uniqueId = uniqueId;
@@ -16,6 +17,7 @@ public class ClaimPlayer {
         this.autoUnclaim = false;
         this.visualizationMode = "DEFAULT";
         this.bonusClaimBlocks = 0;
+        this.activeProfileId = null;
     }
 
     public UUID getUniqueId() {
@@ -52,5 +54,13 @@ public class ClaimPlayer {
 
     public void setBonusClaimBlocks(int bonusClaimBlocks) {
         this.bonusClaimBlocks = bonusClaimBlocks;
+    }
+
+    public UUID getActiveProfileId() {
+        return activeProfileId;
+    }
+
+    public void setActiveProfileId(UUID activeProfileId) {
+        this.activeProfileId = activeProfileId;
     }
 }

@@ -22,7 +22,7 @@ public class Role {
         return id;
     }
 
-    public UUID getOwnerId() {
+    public UUID getProfileId() {
         return ownerId;
     }
 

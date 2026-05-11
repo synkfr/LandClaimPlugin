@@ -96,7 +96,7 @@ public class SQLClaimDao implements ClaimDao {
 
                 try (PreparedStatement stmt = conn.prepareStatement(saveClaimSql)) {
                     stmt.setString(1, claim.getId().toString());
-                    stmt.setString(2, claim.getOwnerId().toString());
+                    stmt.setString(2, claim.getProfileId().toString());
                     stmt.setString(3, claim.getParentClaimId() != null ? claim.getParentClaimId().toString() : null);
                     stmt.setString(4, claim.getName());
                     stmt.setLong(5, claim.getClaimedAt());
