@@ -178,6 +178,7 @@ Respect WorldGuard regions when players attempt to claim land.
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
 | `/claim admin edit <player>` | Open any player's claim management GUI |
+| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit |
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias |
 | `/claim admin trust list <owner>` | List players trusted by this owner |
 | `/claim admin trust who <player>` | List claims where this player is trusted |
