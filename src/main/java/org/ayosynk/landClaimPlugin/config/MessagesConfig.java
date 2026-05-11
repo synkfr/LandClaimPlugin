@@ -128,7 +128,10 @@ public class MessagesConfig extends OkaeriConfig {
     // --- Profile Lifecycle ---
     public String noProfile = "<red>You don't have a claim profile yet. Claim some land first!";
     public String cannotClaimAsMember = "<red>You cannot claim land while you are a member of another claim.";
-    public String profileCreated = "<green>Your claim profile has been created!";
+    public String profileCreated = "<green>Your claim profile <gold><name></gold> has been created!";
+    public String profileChanged = "<green>Your active claim profile has been changed to <gold><name></gold>.";
+    public String profileLimitReached = "<red>You have reached your maximum profile limit of <limit>.";
+    public String multiProfilesDisabled = "<red>The multi-profile system is currently disabled on this server.";
     public String alreadyHasProfile = "<red>You already have a claim profile.";
     public String profileAbandoned = "<red>All your claims have been abandoned.";
     public String unclaimAllConfirm = "<yellow>Are you sure? Type /claim abandon confirm to proceed.";

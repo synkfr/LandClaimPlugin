@@ -200,7 +200,7 @@ public class ClaimCommand implements LandClaimCommand {
         } else {
             java.util.List<ClaimProfile> owned = claimManager.getOwnedProfiles(playerId);
             if (owned.size() >= configManager.getMaxProfilesPerPlayer() && !player.hasPermission("landclaim.admin")) {
-                player.sendMessage(configManager.getMessage("profile-limit-reached", "{limit}", String.valueOf(configManager.getMaxProfilesPerPlayer())));
+                player.sendMessage(configManager.getMessage("profile-limit-reached", "<limit>", String.valueOf(configManager.getMaxProfilesPerPlayer())));
                 return;
             }
         }

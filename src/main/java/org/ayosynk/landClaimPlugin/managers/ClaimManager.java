@@ -405,7 +405,7 @@ public class ClaimManager {
         int globalTotalChunks = getTotalClaimedChunks(targetProfile.getOwnerId());
 
         if (globalTotalChunks >= claimLimit) {
-            player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
+            player.sendMessage(configManager.getMessage("claim-limit-reached", "<limit>", String.valueOf(claimLimit)));
             return false;
         }
 
@@ -478,7 +478,7 @@ public class ClaimManager {
         int currentTotalChunks = profile.getOwnedChunks().size();
 
         if (currentTotalChunks + chunksToClaim.size() > claimLimit) {
-            player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
+            player.sendMessage(configManager.getMessage("claim-limit-reached", "<limit>", String.valueOf(claimLimit)));
             return 0;
         }
 
