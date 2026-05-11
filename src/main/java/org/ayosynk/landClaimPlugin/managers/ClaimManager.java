@@ -709,10 +709,15 @@ public class ClaimManager {
             if (player.hasPermission("landclaim.admin"))
                 return Integer.MAX_VALUE;
 
-            for (int i = 100; i > 0; i--) {
-                if (player.hasPermission("landclaim.limit." + i)) {
-                    limit = i;
-                    break;
+            for (org.bukkit.permissions.PermissionAttachmentInfo permInfo : player.getEffectivePermissions()) {
+                String perm = permInfo.getPermission();
+                if (perm.startsWith("landclaim.limit.")) {
+                    try {
+                        int amount = Integer.parseInt(perm.substring(16)); // length of "landclaim.limit."
+                        if (amount > limit) {
+                            limit = amount;
+                        }
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
