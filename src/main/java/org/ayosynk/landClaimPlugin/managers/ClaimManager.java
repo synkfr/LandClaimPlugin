@@ -46,7 +46,7 @@ public class ClaimManager {
     
     void rebuildProfileIndex(ClaimProfile profile) {
         // Remove all existing entries for this profile
-        chunkToProfileMap.values().removeIf(p -> p.getOwnerId().equals(profile.getOwnerId()));
+        chunkToProfileMap.values().removeIf(p -> p.getProfileId().equals(profile.getProfileId()));
         // Add all current chunks
         for (ChunkPosition chunk : profile.getOwnedChunks()) {
             chunkToProfileMap.put(chunk, profile);
@@ -54,7 +54,7 @@ public class ClaimManager {
     }
     
     void removeAllChunksForProfile(UUID ownerId) {
-        chunkToProfileMap.values().removeIf(p -> p.getOwnerId().equals(ownerId));
+        chunkToProfileMap.values().removeIf(p -> p.getProfileId().equals(ownerId));
     }
 
     public ClaimManager(LandClaimPlugin plugin, ConfigManager configManager) {
@@ -80,14 +80,14 @@ public class ClaimManager {
                 
                 for (ClaimProfile profile : profiles) {
                     // Populate warps from WarpManager
-                    Map<String, Warp> profileWarps = plugin.getWarpManager().getWarps(profile.getOwnerId());
+                    Map<String, Warp> profileWarps = plugin.getWarpManager().getWarps(profile.getProfileId());
                     if (!profileWarps.isEmpty()) {
                         for (Warp warp : profileWarps.values()) {
                             profile.addWarp(warp);
                         }
                     }
                     // Add to cache
-                    plugin.getCacheManager().getProfileCache().put(profile.getOwnerId(), profile);
+                    plugin.getCacheManager().getProfileCache().put(profile.getProfileId(), profile);
                     // Update spatial index for all chunks
                     for (ChunkPosition chunk : profile.getOwnedChunks()) {
                         chunkToProfileMap.put(chunk, profile);
@@ -123,6 +123,62 @@ public class ClaimManager {
      */
     public ClaimProfile getProfile(UUID ownerId) {
         return plugin.getCacheManager().getProfileCache().getIfPresent(ownerId);
+    }
+
+    /**
+     * Get the active profile for a player.
+     * If multi-profiles are disabled, returns their default owned profile.
+     * If enabled, returns the profile selected as active (or the first owned/member profile).
+     */
+    public ClaimProfile getActiveProfile(Player player) {
+        if (!plugin.getConfigManager().isMultiProfilesEnabled()) {
+            return getProfile(player.getUniqueId());
+        }
+        
+        org.ayosynk.landClaimPlugin.models.ClaimPlayer cp = plugin.getCacheManager().getPlayerCache().getIfPresent(player.getUniqueId());
+        if (cp != null && cp.getActiveProfileId() != null) {
+            ClaimProfile active = getProfile(cp.getActiveProfileId());
+            if (active != null && (active.isOwner(player.getUniqueId()) || active.isMember(player.getUniqueId()))) {
+                return active;
+            }
+        }
+        
+        // Fallback to first owned profile
+        java.util.List<ClaimProfile> owned = getOwnedProfiles(player.getUniqueId());
+        if (!owned.isEmpty()) {
+            ClaimProfile first = owned.get(0);
+            if (cp != null) {
+                cp.setActiveProfileId(first.getProfileId());
+                plugin.getDatabaseManager().getPlayerDao().savePlayer(cp);
+            }
+            return first;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get all profiles owned by a player.
+     */
+    public java.util.List<ClaimProfile> getOwnedProfiles(UUID realOwnerId) {
+        java.util.List<ClaimProfile> owned = new java.util.ArrayList<>();
+        for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
+            if (profile.isOwner(realOwnerId)) {
+                owned.add(profile);
+            }
+        }
+        return owned;
+    }
+
+    /**
+     * Get total chunks claimed across all profiles owned by a player.
+     */
+    public int getTotalClaimedChunks(UUID realOwnerId) {
+        int total = 0;
+        for (ClaimProfile profile : getOwnedProfiles(realOwnerId)) {
+            total += profile.getOwnedChunks().size();
+        }
+        return total;
     }
 
     /**
@@ -177,7 +233,7 @@ public class ClaimManager {
      */
     public UUID getChunkOwner(ChunkPosition pos) {
         ClaimProfile profile = getProfileAt(pos);
-        return profile != null ? profile.getOwnerId() : null;
+        return profile != null ? profile.getProfileId() : null;
     }
 
     /**
@@ -208,10 +264,10 @@ public class ClaimManager {
     }
 
     public void sendAllyInvite(Player sender, ClaimProfile targetProfile) {
-        addAllyInvite(targetProfile.getOwnerId(), sender.getUniqueId());
+        addAllyInvite(targetProfile.getProfileId(), sender.getUniqueId());
         sender.sendMessage(configManager.getMessage("ally-invite-sent", "<name>", targetProfile.getName()));
 
-        Player targetOwner = Bukkit.getPlayer(targetProfile.getOwnerId());
+        Player targetOwner = Bukkit.getPlayer(targetProfile.getProfileId());
         if (targetOwner != null && targetOwner.isOnline()) {
             targetOwner.sendMessage(configManager.getMessage("ally-invite-received", "<name>", sender.getName()));
         }
@@ -346,8 +402,9 @@ public class ClaimManager {
 
         int claimLimit = getClaimLimit(targetProfile.getOwnerId());
         int currentTotalChunks = targetProfile.getOwnedChunks().size();
+        int globalTotalChunks = getTotalClaimedChunks(targetProfile.getOwnerId());
 
-        if (currentTotalChunks >= claimLimit) {
+        if (globalTotalChunks >= claimLimit) {
             player.sendMessage(configManager.getMessage("claim-limit-reached", "{limit}", String.valueOf(claimLimit)));
             return false;
         }
@@ -371,7 +428,7 @@ public class ClaimManager {
 
         int minGap = configManager.getMinClaimGap();
         if (minGap > 0) {
-            if (isTooCloseToOtherProfile(worldName, pos, targetProfile.getOwnerId(), minGap)) { // ensure targetProfile owner ID
+            if (isTooCloseToOtherProfile(worldName, pos, targetProfile.getProfileId(), minGap)) { // ensure targetProfile owner ID
                 player.sendMessage(
                         configManager.getMessage("too-close-to-other-claim", "{gap}", String.valueOf(minGap)));
                 return false;
@@ -382,7 +439,7 @@ public class ClaimManager {
         addToSpatialIndex(pos, targetProfile);
 
         // Save to cache
-        plugin.getCacheManager().getProfileCache().put(targetProfile.getOwnerId(), targetProfile);
+        plugin.getCacheManager().getProfileCache().put(targetProfile.getProfileId(), targetProfile);
 
         // Save to DB async
         saveAndSync(targetProfile);
@@ -502,7 +559,7 @@ public class ClaimManager {
         if (profile == null)
             return false;
 
-        UUID owner = profile.getOwnerId();
+        UUID owner = profile.getProfileId();
         profile.removeChunk(pos);
         removeFromSpatialIndex(pos);
 
@@ -631,7 +688,7 @@ public class ClaimManager {
     public Set<Claim> getPlayerClaims(UUID playerId) {
         Set<Claim> claims = new HashSet<>();
         for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
-            if (claim.getOwnerId().equals(playerId) && claim.getParentClaimId() == null) {
+            if (claim.getProfileId().equals(playerId) && claim.getParentClaimId() == null) {
                 claims.add(claim);
             }
         }
@@ -649,11 +706,11 @@ public class ClaimManager {
         plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
             .thenRun(() -> {
                 if (plugin.getRedisManager() != null) {
-                    plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE", profile.getOwnerId());
+                    plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE", profile.getProfileId());
                 }
             })
             .exceptionally(throwable -> {
-                plugin.getLogger().severe("Failed to save profile for " + profile.getOwnerId() + ": " + throwable.getMessage());
+                plugin.getLogger().severe("Failed to save profile for " + profile.getProfileId() + ": " + throwable.getMessage());
                 throwable.printStackTrace();
                 return null;
             });
@@ -666,7 +723,7 @@ public class ClaimManager {
                     continue;
                 ChunkPosition neighbor = new ChunkPosition(worldName, pos.x() + dx, pos.z() + dz);
                 ClaimProfile profile = getProfileAt(neighbor);
-                if (profile != null && !profile.getOwnerId().equals(playerId)) {
+                if (profile != null && !profile.getProfileId().equals(playerId)) {
                     return true;
                 }
             }

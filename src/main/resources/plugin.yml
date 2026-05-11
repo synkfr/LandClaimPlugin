@@ -26,6 +26,9 @@ permissions:
   landclaim.list:
     description: List all your claims
     default: true
+  landclaim.unstuck:
+    description: Teleport to a safe wilderness location
+    default: true
   landclaim.warps.limit.*:
     description: Max warps a player can set
     default: false

@@ -424,6 +424,14 @@ public class ConfigManager {
         return blockedWorlds;
     }
 
+    public boolean isMultiProfilesEnabled() {
+        return pluginConfig.multiProfilesEnabled;
+    }
+
+    public int getMaxProfilesPerPlayer() {
+        return pluginConfig.maxProfilesPerPlayer;
+    }
+
     public int getUnstuckCooldown() {
         return pluginConfig.cooldownUnstuck;
     }
