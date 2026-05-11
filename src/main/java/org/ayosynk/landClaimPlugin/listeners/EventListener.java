@@ -65,10 +65,9 @@ public class EventListener implements Listener {
             // wilderness
             if (oldProfile != newProfile) {
                 net.kyori.adventure.title.Title.Times times = net.kyori.adventure.title.Title.Times.times(
-                        java.time.Duration.ofMillis(250),
-                        java.time.Duration.ofMillis(1500),
-                        java.time.Duration.ofMillis(250)
-                );
+                        java.time.Duration.ofMillis(500),
+                        java.time.Duration.ofMillis(1000),
+                        java.time.Duration.ofMillis(500));
 
                 if (oldProfile != null && oldProfile.isEnterTitleEnabled()) {
                     String ownerName = oldProfile.getDisplayOwnerName();
