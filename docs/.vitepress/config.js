@@ -13,6 +13,7 @@ export default defineConfig({
 
   themeConfig: {
     logo: 'https://i.postimg.cc/jS6mh13k/minecraft-title-2.png',
+    siteTitle: false,
 
     nav: [
       { text: 'Guide', link: '/guide/installation' },
