@@ -154,13 +154,24 @@ These are the flags you can check using `PermissionResolver.hasPermission()`:
 
 ### Maven
 
+To use LandClaimPlugin as a dependency, add the JitPack repository and the dependency to your `pom.xml`:
+
 ```xml
-<dependency>
-    <groupId>org.ayosynk</groupId>
-    <artifactId>LandClaimPlugin</artifactId>
-    <version>2.1.3</version>
-    <scope>provided</scope>
-</dependency>
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.synkfr</groupId>
+        <artifactId>LandClaimPlugin</artifactId>
+        <version>2.1.3</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
 ```
 
 ### plugin.yml
