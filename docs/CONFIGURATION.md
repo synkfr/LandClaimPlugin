@@ -8,8 +8,7 @@ Main plugin configuration file located at `plugins/LandClaimPlugin/config.yml`.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `prefix` | String | `&lt;dark_gray&gt;[&lt;gold&gt;LandClaim&lt;dark_gray&gt;]&lt;/gold&gt; ` | Chat prefix (MiniMessage format) |
-| `claimWandItem` | String | `GOLDEN_SHOVEL` | Material used as the claim wand |
+| `prefix` | String | `<dark_gray>[<gold>LandClaim<dark_gray>]</gold>` | Chat prefix (MiniMessage format) |
 | `language` | String | `en-US` | Locale file to load from `locales/` folder |
 | `requireConnectedClaims` | Boolean | `false` | Require new claims to touch existing claims |
 | `allowDiagonalConnections` | Boolean | `true` | Allow diagonal adjacency for connected claims |
@@ -24,6 +23,17 @@ Main plugin configuration file located at `plugins/LandClaimPlugin/config.yml`.
 
 Permission overrides: `landclaim.limit.<n>`, `landclaim.warps.limit.<n>`
 
+### Multi-Profile System
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `multiProfilesEnabled` | Boolean | `false` | Enable multi-profile support |
+| `maxProfilesPerPlayer` | Integer | `2` | Max profiles a player can **own** |
+
+::: warning
+If you disable `multiProfilesEnabled` after players have already created multiple profiles, they will lose access to all secondary profiles. This setting should be treated as permanent once enabled.
+:::
+
 ### Auto-Claim Defaults
 
 | Key | Type | Default | Description |
@@ -35,8 +45,8 @@ Permission overrides: `landclaim.limit.<n>`, `landclaim.warps.limit.<n>`
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `blockWorld` | List\<String\> | `[world_nether, world_the_end]` | Worlds where claiming is disabled |
-| `blockCmd` | List\<String\> | `[setwarp, warp]` | Commands blocked inside others' claims |
+| `blockWorld` | List | `[world_nether, world_the_end]` | Worlds where claiming is disabled |
+| `blockCmd` | List | `[setwarp, warp]` | Commands blocked inside others' claims |
 
 ### Protection Gaps
 
@@ -90,9 +100,11 @@ Supported maps: `dynmap`, `bluemap`, `squaremap`, `pl3xmap`
 |-----|------|---------|-------------|
 | `actionbarUpdateInterval` | Integer | `20` | Ticks between actionbar updates |
 
+---
+
 ## Permission Flags
 
-Complete list of permission flags used across roles, trusted players, and visitor settings:
+Complete list of permission flags used across roles, trusted players, and visitor settings.
 
 ### Block Interaction Flags
 
@@ -139,6 +151,8 @@ Complete list of permission flags used across roles, trusted players, and visito
 | `PICKUP_ITEMS` | Pick up dropped items |
 | `DROP_ITEMS` | Drop items from inventory |
 
+---
+
 ## Default Roles
 
 Every new `ClaimProfile` gets two built-in roles:
@@ -150,3 +164,20 @@ Flags: `USE_DOORS`, `USE_TRAPDOORS`, `USE_FENCE_GATES`, `USE_CONTAINERS`, `USE_W
 ### CoOwner
 Priority: 10 (higher priority than Member)
 Flags: All 25 flags listed above
+
+---
+
+## Menu Configuration
+
+All GUI menus are fully configurable via YAML files in the `plugins/LandClaimPlugin/menus/` directory. Each menu config lets you customize:
+
+- **Materials** — Item types for buttons, fillers, and navigation
+- **Display Names** — MiniMessage-formatted text for all items
+- **Lore** — Item descriptions and instructions
+- **Layout** — Slot positions and structure patterns
+
+Available menu configs:
+- `mainmenu.yml` — Main claim management GUI
+- `profile-selector.yml` — Profile selector GUI
+- `ClaimSettings.yml` — Claim settings toggles
+- And many more for members, allies, warps, roles, etc.
