@@ -58,4 +58,9 @@ UPDATE
 UPDATES.md
 UPDATE.md
 TODO.md
-UPDATES.mdnode_modules/
+UPDATES.md
+
+# --- Node ---
+node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
