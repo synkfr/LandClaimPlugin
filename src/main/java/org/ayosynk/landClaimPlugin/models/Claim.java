@@ -48,7 +48,7 @@ public class Claim {
         this.chunks.remove(position);
     }
 
-    public UUID getOwnerId() {
+    public UUID getProfileId() {
         return ownerId;
     }
 

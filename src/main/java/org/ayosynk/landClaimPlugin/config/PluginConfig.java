@@ -23,7 +23,18 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Blocked worlds for claiming")
     public List<String> blockWorld = List.of("world_nether", "world_the_end");
 
-    public List<String> blockCmd = List.of("setwarp", "warp");
+    public List<String> blockCmd = List.of("setwarp", "warp", "sethome");
+
+    @Comment({
+        "Multi-Profile System",
+        "Enable to allow players to manage multiple claims via an active profile selector.",
+        "WARNING: If you disable this after players have already created multiple profiles, ",
+        "they will lose access to all but their primary profile! (Unless they switch back)",
+        "Use with caution."
+    })
+    public boolean multiProfilesEnabled = false;
+    @Comment("Maximum number of profiles a single player is allowed to create (own)")
+    public int maxProfilesPerPlayer = 2;
 
     public int cooldownUnstuck = 30;
 

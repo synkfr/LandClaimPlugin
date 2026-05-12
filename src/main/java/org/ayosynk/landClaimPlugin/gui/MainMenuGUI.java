@@ -16,7 +16,7 @@ public class MainMenuGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                        String ownerName = profile.getOwnerId() != null
+                        String ownerName = profile.getProfileId() != null
                                         ? profile.getDisplayOwnerName()
                                         : "Unknown";
                         if (ownerName == null)

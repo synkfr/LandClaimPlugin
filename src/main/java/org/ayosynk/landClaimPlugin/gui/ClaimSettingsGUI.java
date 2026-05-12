@@ -16,7 +16,7 @@ public class ClaimSettingsGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                        String ownerName = profile.getOwnerId() != null
+                        String ownerName = profile.getProfileId() != null
                                         ? profile.getDisplayOwnerName()
                                         : "Unknown";
                         if (ownerName == null)
@@ -86,7 +86,7 @@ public class ClaimSettingsGUI {
                                                                 : "DISPLAY_ENTITY";
                                                 profile.setVisualizationMode(newMode);
                                                 plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
-                                                plugin.getVisualizationManager().invalidateCache(profile.getOwnerId());
+                                                plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
                                                 p.sendMessage(plugin.getConfigManager().getMessage(
                                                                 "visibility-mode-changed", "<mode>", newMode));
                                                 p.closeInventory();
@@ -101,7 +101,7 @@ public class ClaimSettingsGUI {
                                         config.abandonAll.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 ConfirmationGUI.open(p, "<red>Abandon ALL claims?", () -> {
-                                                        plugin.getClaimManager().abandonProfile(profile.getOwnerId());
+                                                        plugin.getClaimManager().abandonProfile(profile.getProfileId());
                                                         p.sendMessage(plugin.getConfigManager()
                                                                         .getMessage("profile-abandoned"));
                                                         plugin.getHookManager().refreshMapHooks();

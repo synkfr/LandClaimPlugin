@@ -50,6 +50,9 @@ public class MessagesConfig extends OkaeriConfig {
     public String notInOwnClaim = "<red>You must be in your own claim to set a warp.";
     public String unstuckCooldown = "<red>You must wait <seconds> seconds before using unstuck again.";
     public String unstuckSuccess = "<green>You have been safely unstuck.";
+    public String unstuckNotInClaim = "<red>You are not inside a claim.";
+    public String unstuckSearching = "<yellow>Searching for a safe wilderness location...";
+    public String unstuckFailed = "<red>Could not find a safe wilderness location nearby.";
 
     // Missing messages from various managers and commands
     public String accessDeniedInteract = "<red>You do not have permission to interact here.";
@@ -125,7 +128,10 @@ public class MessagesConfig extends OkaeriConfig {
     // --- Profile Lifecycle ---
     public String noProfile = "<red>You don't have a claim profile yet. Claim some land first!";
     public String cannotClaimAsMember = "<red>You cannot claim land while you are a member of another claim.";
-    public String profileCreated = "<green>Your claim profile has been created!";
+    public String profileCreated = "<green>Your claim profile <gold><name></gold> has been created!";
+    public String profileChanged = "<green>Your active claim profile has been changed to <gold><name></gold>.";
+    public String profileLimitReached = "<red>You have reached your maximum profile limit of <limit>.";
+    public String multiProfilesDisabled = "<red>The multi-profile system is currently disabled on this server.";
     public String alreadyHasProfile = "<red>You already have a claim profile.";
     public String profileAbandoned = "<red>All your claims have been abandoned.";
     public String unclaimAllConfirm = "<yellow>Are you sure? Type /claim abandon confirm to proceed.";

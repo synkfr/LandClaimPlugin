@@ -1,19 +1,29 @@
-<div align="center">
+---
+layout: home
 
-<img src="https://i.postimg.cc/jS6mh13k/minecraft-title-2.png" alt="LandClaim Banner" width="100%">
+hero:
+  name: "LandClaimPlugin"
+  text: "Advanced Territory Protection"
+  tagline: "A powerful, feature-rich chunk-based land protection plugin for Paper servers."
+  image:
+    src: "https://i.postimg.cc/jS6mh13k/minecraft-title-2.png"
+    alt: LandClaim Banner
+  actions:
+    - theme: brand
+      text: Getting Started
+      link: /CONFIGURATION
+    - theme: alt
+      text: Download Releases
+      link: https://github.com/synkfr/LandClaimPlugin/releases
 
-# 💠 LandClaimPlugin
-**Advanced Territory Protection for Minecraft**
-
-A powerful, feature-rich chunk-based land protection plugin for Paper servers. Create claim profiles, protect your builds, manage members with granular roles, form alliances, set warps, and customize every aspect of your territory.
-
-[![Paper](https://img.shields.io/badge/Paper-1.21+-blue?style=flat-square)](https://papermc.io/)
-[![Java](https://img.shields.io/badge/Java-21+-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
-[![Version](https://img.shields.io/github/v/release/synkfr/LandClaimPlugin?style=flat-square&color=40ae24&label=Version)](https://github.com/synkfr/LandClaimPlugin/releases)
-[![License](https://img.shields.io/github/license/synkfr/LandClaimPlugin?style=flat-square&color=blue)](LICENSE)
-[![Discord](https://img.shields.io/discord/1378591879393710110?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/pAPPvSmWRK)
-
-</div>
+features:
+  - title: Multi-Profile System
+    details: Manage multiple independent bases and quickly switch between them via an interactive GUI.
+  - title: Advanced Permissions
+    details: Granular 4-Tier Priority Chain (Owner > Role > Trusted > Visitor) with custom roles and flags.
+  - title: Full Customization
+    details: Customize everything from colors and names to entry titles, completely configurable.
+---
 
 <br>
 
@@ -185,6 +195,7 @@ Respect WorldGuard regions when players attempt to claim land.
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias |
 | `/claim admin trust list <owner>` | List players trusted by this owner |
 | `/claim admin trust who <player>` | List claims where this player is trusted |
+</details>
 
 ---
 
@@ -221,3 +232,4 @@ This plugin collects **anonymous** usage statistics via [bStats](https://bstats.
 [![bStats](https://img.shields.io/badge/bStats-313131?style=flat-square&logo=chart-dot&logoColor=white)](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
 
 </div>
+

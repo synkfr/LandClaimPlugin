@@ -8,7 +8,7 @@ Main plugin configuration file located at `plugins/LandClaimPlugin/config.yml`.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `prefix` | String | `<dark_gray>[<gold>LandClaim<dark_gray>]</gold> ` | Chat prefix (MiniMessage format) |
+| `prefix` | String | `&lt;dark_gray&gt;[&lt;gold&gt;LandClaim&lt;dark_gray&gt;]&lt;/gold&gt; ` | Chat prefix (MiniMessage format) |
 | `claimWandItem` | String | `GOLDEN_SHOVEL` | Material used as the claim wand |
 | `language` | String | `en-US` | Locale file to load from `locales/` folder |
 | `requireConnectedClaims` | Boolean | `false` | Require new claims to touch existing claims |

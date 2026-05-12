@@ -97,7 +97,8 @@ public class SQLProfileDao implements ProfileDao {
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN leave_title_mode VARCHAR(16) DEFAULT 'SUBTITLE'",
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN owner_alias VARCHAR(64)",
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN pvp_enabled BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN pvp_timer_end BIGINT DEFAULT 0"
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN pvp_timer_end BIGINT DEFAULT 0",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN real_owner_id VARCHAR(36) NULL"
             };
             for (String alter : alters) {
                 try (PreparedStatement stmt = conn.prepareStatement(alter)) {
@@ -120,16 +121,16 @@ public class SQLProfileDao implements ProfileDao {
 
             String upsertProfile = sqlite
                     ? "INSERT OR REPLACE INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                     : "INSERT INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title), enter_title_mode=VALUES(enter_title_mode), leave_title_mode=VALUES(leave_title_mode), owner_alias=VALUES(owner_alias), pvp_enabled=VALUES(pvp_enabled), pvp_timer_end=VALUES(pvp_timer_end)";
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title), enter_title_mode=VALUES(enter_title_mode), leave_title_mode=VALUES(leave_title_mode), owner_alias=VALUES(owner_alias), pvp_enabled=VALUES(pvp_enabled), pvp_timer_end=VALUES(pvp_timer_end), real_owner_id=VALUES(real_owner_id)";
 
             try (Connection conn = dbManager.getDatabase().getConnection()) {
                 conn.setAutoCommit(false);
 
                 // 1. Upsert profile
                 try (PreparedStatement stmt = conn.prepareStatement(upsertProfile)) {
-                    stmt.setString(1, profile.getOwnerId().toString());
+                    stmt.setString(1, profile.getProfileId().toString());
                     stmt.setString(2, profile.getName());
                     stmt.setString(3, profile.getClaimColor());
                     stmt.setString(4, profile.getVisualizationMode());
@@ -141,10 +142,11 @@ public class SQLProfileDao implements ProfileDao {
                     stmt.setString(10, profile.getOwnerAlias());
                     stmt.setBoolean(11, profile.isPvpEnabled());
                     stmt.setLong(12, profile.getPvpTimerEnd());
+                    stmt.setString(13, profile.getOwnerId() != null ? profile.getOwnerId().toString() : profile.getProfileId().toString());
                     stmt.executeUpdate();
                 }
 
-                String oid = profile.getOwnerId().toString();
+                String oid = profile.getProfileId().toString();
 
                 // 2. Clear and re-insert chunks
                 clearTable(conn, p + "claimed_chunks", "owner_id", oid);
@@ -261,7 +263,7 @@ public class SQLProfileDao implements ProfileDao {
                 conn.commit();
                 conn.setAutoCommit(true);
             } catch (SQLException e) {
-                plugin.getLogger().severe("Failed to save profile for " + profile.getOwnerId());
+                plugin.getLogger().severe("Failed to save profile for " + profile.getProfileId());
                 e.printStackTrace();
             }
         });
@@ -324,9 +326,10 @@ public class SQLProfileDao implements ProfileDao {
                 String ownerAlias;
                 boolean pvpEnabled;
                 long pvpTimerEnd;
+                String realOwnerIdStr;
                 try (PreparedStatement stmt = conn
                         .prepareStatement(
-                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end FROM " + p
+                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id FROM " + p
                                         + "claim_profiles WHERE owner_id = ?")) {
                     stmt.setString(1, ownerId.toString());
                     try (ResultSet rs = stmt.executeQuery()) {
@@ -343,10 +346,12 @@ public class SQLProfileDao implements ProfileDao {
                         ownerAlias = rs.getString("owner_alias");
                         pvpEnabled = rs.getBoolean("pvp_enabled");
                         pvpTimerEnd = rs.getLong("pvp_timer_end");
+                        realOwnerIdStr = rs.getString("real_owner_id");
                     }
                 }
 
-                ClaimProfile profile = new ClaimProfile(ownerId, name);
+                UUID realOwnerId = (realOwnerIdStr != null && !realOwnerIdStr.isEmpty()) ? UUID.fromString(realOwnerIdStr) : ownerId;
+                ClaimProfile profile = new ClaimProfile(ownerId, realOwnerId, name);
                 profile.setClaimColor(claimColor);
                 profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
                 profile.setEnterTitleEnabled(titleEnabled);
@@ -396,7 +401,9 @@ public class SQLProfileDao implements ProfileDao {
                     ResultSet rs = stmt.executeQuery()) {
 
                 while (rs.next()) {
-                    UUID ownerId = UUID.fromString(rs.getString("owner_id"));
+                    UUID profileId = UUID.fromString(rs.getString("owner_id"));
+                    String realOwnerIdStr = rs.getString("real_owner_id");
+                    UUID realOwnerId = (realOwnerIdStr != null && !realOwnerIdStr.isEmpty()) ? UUID.fromString(realOwnerIdStr) : profileId;
                     String name = rs.getString("name");
                     String claimColor = rs.getString("claim_color");
                     String visMode = rs.getString("vis_mode");
@@ -406,7 +413,7 @@ public class SQLProfileDao implements ProfileDao {
                     String enterTitleMode = rs.getString("enter_title_mode");
                     String leaveTitleMode = rs.getString("leave_title_mode");
                     String ownerAlias = rs.getString("owner_alias");
-                    ClaimProfile profile = new ClaimProfile(ownerId, name);
+                    ClaimProfile profile = new ClaimProfile(profileId, realOwnerId, name);
                     profile.setClaimColor(claimColor);
                     profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
                     profile.setEnterTitleEnabled(titleEnabled);
@@ -429,7 +436,7 @@ public class SQLProfileDao implements ProfileDao {
 
                     // Load warps from WarpManager to keep ClaimProfile in sync
                     Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager()
-                            .getWarps(ownerId);
+                            .getWarps(profileId);
                     if (!warps.isEmpty()) {
                         for (org.ayosynk.landClaimPlugin.models.Warp warp : warps.values()) {
                             profile.addWarp(warp);
@@ -491,7 +498,7 @@ public class SQLProfileDao implements ProfileDao {
     private void loadChunks(Connection conn, String p, ClaimProfile profile) throws SQLException {
         try (PreparedStatement stmt = conn
                 .prepareStatement("SELECT chunk_id FROM " + p + "claimed_chunks WHERE owner_id = ?")) {
-            stmt.setString(1, profile.getOwnerId().toString());
+            stmt.setString(1, profile.getProfileId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String[] parts = rs.getString("chunk_id").split(":");
@@ -507,7 +514,7 @@ public class SQLProfileDao implements ProfileDao {
     private void loadVisitorFlags(Connection conn, String p, ClaimProfile profile) throws SQLException {
         try (PreparedStatement stmt = conn
                 .prepareStatement("SELECT flag FROM " + p + "profile_visitor_flags WHERE owner_id = ?")) {
-            stmt.setString(1, profile.getOwnerId().toString());
+            stmt.setString(1, profile.getProfileId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     profile.addVisitorFlag(rs.getString("flag"));
@@ -519,7 +526,7 @@ public class SQLProfileDao implements ProfileDao {
     private void loadTrustedPlayers(Connection conn, String p, ClaimProfile profile) throws SQLException {
         try (PreparedStatement stmt = conn
                 .prepareStatement("SELECT player_id, flags FROM " + p + "profile_trusted_players WHERE owner_id = ?")) {
-            stmt.setString(1, profile.getOwnerId().toString());
+            stmt.setString(1, profile.getProfileId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     UUID playerId = UUID.fromString(rs.getString("player_id"));
@@ -539,11 +546,11 @@ public class SQLProfileDao implements ProfileDao {
     private void loadRoles(Connection conn, String p, ClaimProfile profile) throws SQLException {
         try (PreparedStatement stmt = conn
                 .prepareStatement("SELECT * FROM " + p + "profile_roles WHERE owner_id = ?")) {
-            stmt.setString(1, profile.getOwnerId().toString());
+            stmt.setString(1, profile.getProfileId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     UUID roleId = UUID.fromString(rs.getString("id"));
-                    Role role = new Role(roleId, profile.getOwnerId(), rs.getString("name"), rs.getInt("priority"));
+                    Role role = new Role(roleId, profile.getProfileId(), rs.getString("name"), rs.getInt("priority"));
                     String flagsStr = rs.getString("flags");
                     if (flagsStr != null && !flagsStr.isEmpty()) {
                         for (String flag : flagsStr.split(",")) {
@@ -560,7 +567,7 @@ public class SQLProfileDao implements ProfileDao {
         try (PreparedStatement stmt = conn
                 .prepareStatement(
                         "SELECT player_id, role_name FROM " + p + "profile_member_roles WHERE owner_id = ?")) {
-            stmt.setString(1, profile.getOwnerId().toString());
+            stmt.setString(1, profile.getProfileId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     profile.setMemberRole(UUID.fromString(rs.getString("player_id")), rs.getString("role_name"));
@@ -572,7 +579,7 @@ public class SQLProfileDao implements ProfileDao {
     private void loadAllyFlags(Connection conn, String p, ClaimProfile profile) throws SQLException {
         try (PreparedStatement stmt = conn
                 .prepareStatement("SELECT ally_id, flags FROM " + p + "profile_ally_flags WHERE owner_id = ?")) {
-            stmt.setString(1, profile.getOwnerId().toString());
+            stmt.setString(1, profile.getProfileId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     UUID allyId = UUID.fromString(rs.getString("ally_id"));

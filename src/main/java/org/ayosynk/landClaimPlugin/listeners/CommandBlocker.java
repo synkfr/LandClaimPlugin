@@ -45,7 +45,7 @@ public class CommandBlocker implements Listener {
             return;
         }
 
-        if (PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS")) {
+        if (!PermissionResolver.getPlayerStatus(profile, player.getUniqueId()).equals("visitor")) {
             return;
         }
 

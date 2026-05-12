@@ -11,7 +11,7 @@ Central business logic for claim operations.
 |--------|---------|-------------|
 | `initialize()` | `void` | Load all profiles from DB into cache |
 | `claimChunk(Player, Chunk)` | `boolean` | Claim a single chunk for a player |
-| `claimChunks(Player, Set<ChunkPosition>)` | `int` | Claim multiple chunks at once |
+| `claimChunks(Player, Set&lt;ChunkPosition&gt;)` | `int` | Claim multiple chunks at once |
 | `unclaimChunk(Chunk)` | `boolean` | Unclaim a single chunk |
 | `abandonProfile(UUID)` | `int` | Delete entire profile, returns chunk count |
 | `transferOwnership(UUID, UUID)` | `boolean` | Transfer profile to new owner |
@@ -33,7 +33,7 @@ Central business logic for claim operations.
 ### PermissionResolver
 `src/main/java/org/ayosynk/landClaimPlugin/managers/PermissionResolver.java`
 
-Implements the 4-tier permission chain: Owner > Role > Trusted > Ally > Visitor.
+Implements the 4-tier permission chain: Owner &gt; Role &gt; Trusted &gt; Ally &gt; Visitor.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -100,10 +100,10 @@ Manages warp teleport points.
 | `setWarp(UUID, String, Location, Material)` | `boolean` | Create/update a warp |
 | `deleteWarp(UUID, String)` | `boolean` | Delete a warp |
 | `getWarp(UUID, String)` | `Warp` | Get a specific warp |
-| `getWarps(UUID)` | `Map<String, Warp>` | Get all warps for a player |
+| `getWarps(UUID)` | `Map&lt;String, Warp&gt;` | Get all warps for a player |
 | `getWarpLimit(Player)` | `int` | Get effective warp limit |
 | `getWarpCount(UUID)` | `int` | Get current warp count |
-| `loadFromDatabase()` | `CompletableFuture<Map<UUID, Map<String, Warp>>>` | Load all warps from DB |
+| `loadFromDatabase()` | `CompletableFuture&lt;Map&lt;UUID, Map&lt;String, Warp&gt;&gt;&gt;` | Load all warps from DB |
 
 ### VisualizationManager
 `src/main/java/org/ayosynk/landClaimPlugin/managers/VisualizationManager.java`
@@ -151,13 +151,13 @@ Central data model — one per player.
 **Key State:**
 - `ownerId` (UUID) — Owner's UUID
 - `name` (String) — Display name
-- `ownedChunks` (Set<ChunkPosition>) — Claimed chunks
-- `visitorFlags` (Set<String>) — Base permission layer
-- `trustedPlayerFlags` (Map<UUID, Set<String>>) — Per-player overrides
-- `roles` (Map<String, Role>) — Role definitions
-- `memberRoles` (Map<UUID, String>) — Player → role assignments
-- `allyFlags` (Map<UUID, Set<String>>) — Allied profiles with flags
-- `warps` (Map<String, Warp>) — Named warps
+- `ownedChunks` (Set&lt;ChunkPosition&gt;) — Claimed chunks
+- `visitorFlags` (Set&lt;String&gt;) — Base permission layer
+- `trustedPlayerFlags` (Map&lt;UUID, Set&lt;String&gt;&gt;) — Per-player overrides
+- `roles` (Map&lt;String, Role&gt;) — Role definitions
+- `memberRoles` (Map&lt;UUID, String&gt;) — Player → role assignments
+- `allyFlags` (Map&lt;UUID, Set&lt;String&gt;&gt;) — Allied profiles with flags
+- `warps` (Map&lt;String, Warp&gt;) — Named warps
 - `claimColor` (String) — Hex color for visualization
 - `visualizationMode` (String) — `DISPLAY_ENTITY` or `PARTICLE`
 - `enterTitleEnabled` (boolean) — Entry title toggle
@@ -178,7 +178,7 @@ Permission role with flag-based access control.
 | `ownerId` | UUID | Profile owner |
 | `name` | String | Display name |
 | `priority` | int | Lower = checked first |
-| `flags` | Set<String> | Permission flags (lowercase) |
+| `flags` | Set&lt;String&gt; | Permission flags (lowercase) |
 
 ### ClaimPlayer
 `src/main/java/org/ayosynk/landClaimPlugin/models/ClaimPlayer.java`
@@ -232,7 +232,7 @@ Immutable chunk coordinate with utility methods.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getNeighbors(boolean)` | `List<ChunkPosition>` | Get adjacent chunks (optional diagonals) |
+| `getNeighbors(boolean)` | `List&lt;ChunkPosition&gt;` | Get adjacent chunks (optional diagonals) |
 | `toChunk(World)` | `Chunk` | Get Bukkit Chunk object |
 
 ## GUI Framework
@@ -247,7 +247,7 @@ Base GUI runtime. Implements `InventoryHolder` for reliable event routing.
 CustomGui gui = new CustomGui(Component.text("My GUI"), 3); // 3 rows
 
 // Add items with click handlers
-gui.setItem(0, itemStack, (player, event) -> {
+gui.setItem(0, itemStack, (player, event) -&gt; {
     // Handle click
 });
 
@@ -265,7 +265,7 @@ Maps structure characters to items + actions for declarative GUI layouts.
 SlotDefinition filler = new SlotDefinition(fillItem, null);
 SlotDefinition button = new SlotDefinition(buttonItem, clickAction);
 
-Map<Character, SlotDefinition> ingredients = Map.of(
+Map&lt;Character, SlotDefinition&gt; ingredients = Map.of(
     'F', filler,
     'B', button
 );
@@ -284,7 +284,7 @@ All commands implement this interface:
 
 ```java
 public interface LandClaimCommand {
-    void register(PaperCommandManager<Source> manager, Command.Builder<PlayerSource> claimBuilder);
+    void register(PaperCommandManager<Source&gt; manager, Command.Builder<PlayerSource&gt; claimBuilder);
 }
 ```
 

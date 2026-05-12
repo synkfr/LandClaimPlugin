@@ -50,8 +50,8 @@ public class PermissionResolver {
             ClaimProfile playerProfile = plugin.getClaimManager().getProfile(playerId);
             if (playerProfile != null) {
                 // Is player's claim an ally of the target profile?
-                if (profile.hasAlly(playerProfile.getOwnerId())) {
-                    Set<String> allyFlags = profile.getAllyFlags(playerProfile.getOwnerId());
+                if (profile.hasAlly(playerProfile.getProfileId())) {
+                    Set<String> allyFlags = profile.getAllyFlags(playerProfile.getProfileId());
                     if (allyFlags != null && allyFlags.contains(flag.toUpperCase())) {
                         return true;
                     }

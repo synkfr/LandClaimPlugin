@@ -159,13 +159,13 @@ public class AdminCommand implements LandClaimCommand {
             player.sendMessage(configManager.getMessage("not-in-claim"));
             return;
         }
-        String ownerName = Bukkit.getOfflinePlayer(profile.getOwnerId()).getName();
+        String ownerName = Bukkit.getOfflinePlayer(profile.getProfileId()).getName();
         if (ownerName == null)
             ownerName = "Unknown";
 
         player.sendMessage(
                 configManager.getMessage("admin-claim-info-owned-by", "<owner>", ownerName, "<uuid>",
-                        profile.getOwnerId().toString()));
+                        profile.getProfileId().toString()));
         player.sendMessage(configManager.getMessage("admin-claim-info-id", "<id>", profile.getName()));
     }
 
@@ -254,8 +254,8 @@ public class AdminCommand implements LandClaimCommand {
             for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
                 if (profile.isTrusted(targetId)) {
                     foundAny = true;
-                    String ownerName = Bukkit.getOfflinePlayer(profile.getOwnerId()).getName();
-                    if (ownerName == null) ownerName = profile.getOwnerId().toString();
+                    String ownerName = Bukkit.getOfflinePlayer(profile.getProfileId()).getName();
+                    if (ownerName == null) ownerName = profile.getProfileId().toString();
                     sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
                             .deserialize("<gray>- <gold>" + ownerName));
                 }

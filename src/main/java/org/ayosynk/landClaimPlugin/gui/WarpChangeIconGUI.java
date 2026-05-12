@@ -46,7 +46,7 @@ public class WarpChangeIconGUI {
                                                 return (p, e) -> {
                                                         p.closeInventory();
                                                         warp.setIcon(mat);
-                                                        plugin.getWarpManager().setWarp(profile.getOwnerId(),
+                                                        plugin.getWarpManager().setWarp(profile.getProfileId(),
                                                                         warp.getName(),
                                                                         warp.getLocation(), warp.getIcon());
                                                         p.sendMessage(plugin.getConfigManager().getMessage(

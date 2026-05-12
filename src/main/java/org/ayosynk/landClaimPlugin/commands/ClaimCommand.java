@@ -80,7 +80,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("menu")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
@@ -126,12 +126,23 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("warps")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
                     Bukkit.getScheduler().runTask(plugin, () -> WarpManagementGUI.open(player, profile, plugin));
+                }));
+
+        // /claim profiles
+        manager.command(claimBuilder.literal("profiles")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!configManager.isMultiProfilesEnabled()) {
+                        player.sendMessage(configManager.getMessage("multi-profiles-disabled"));
+                        return;
+                    }
+                    Bukkit.getScheduler().runTask(plugin, () -> org.ayosynk.landClaimPlugin.gui.ProfileSelectorGUI.open(player, plugin));
                 }));
 
         // /claim pvp <on|off> [time_seconds]
@@ -180,10 +191,18 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        ClaimProfile existing = claimManager.getProfile(playerId);
-        if (existing != null) {
-            player.sendMessage(configManager.getMessage("already-has-profile"));
-            return;
+        if (!configManager.isMultiProfilesEnabled()) {
+            ClaimProfile existing = claimManager.getProfile(playerId);
+            if (existing != null) {
+                player.sendMessage(configManager.getMessage("already-has-profile"));
+                return;
+            }
+        } else {
+            java.util.List<ClaimProfile> owned = claimManager.getOwnedProfiles(playerId);
+            if (owned.size() >= configManager.getMaxProfilesPerPlayer() && !player.hasPermission("landclaim.admin")) {
+                player.sendMessage(configManager.getMessage("profile-limit-reached", "<limit>", String.valueOf(configManager.getMaxProfilesPerPlayer())));
+                return;
+            }
         }
 
         if (!claimManager.isClaimNameUnique(name)) {
@@ -191,9 +210,18 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        ClaimProfile profile = new ClaimProfile(playerId, name);
-        plugin.getCacheManager().getProfileCache().put(playerId, profile);
+        UUID profileId = configManager.isMultiProfilesEnabled() ? UUID.randomUUID() : playerId;
+        ClaimProfile profile = new ClaimProfile(profileId, playerId, name);
+        plugin.getCacheManager().getProfileCache().put(profileId, profile);
         claimManager.saveAndSync(profile);
+
+        // Set as active
+        org.ayosynk.landClaimPlugin.models.ClaimPlayer cp = plugin.getCacheManager().getPlayerCache().getIfPresent(playerId);
+        if (cp != null) {
+            cp.setActiveProfileId(profileId);
+            plugin.getDatabaseManager().getPlayerDao().savePlayer(cp);
+        }
+
         player.sendMessage(configManager.getMessage("profile-created", "<name>", name));
     }
 
@@ -295,7 +323,7 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        if (!profile.getOwnerId().equals(player.getUniqueId())) {
+        if (!profile.getProfileId().equals(player.getUniqueId())) {
             player.sendMessage(configManager.getMessage("not-owner"));
             return;
         }
@@ -319,7 +347,7 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void setWarp(Player player, String name) {
-        ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+        ClaimProfile profile = claimManager.getActiveProfile(player);
         if (profile == null) {
             player.sendMessage(configManager.getMessage("no-profile"));
             return;
@@ -328,7 +356,7 @@ public class ClaimCommand implements LandClaimCommand {
         ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
         ClaimProfile atLoc = claimManager.getProfileAt(pos);
 
-        if (atLoc == null || !atLoc.getOwnerId().equals(player.getUniqueId())) {
+        if (atLoc == null || !atLoc.getProfileId().equals(player.getUniqueId())) {
             player.sendMessage(configManager.getMessage("not-in-own-claim"));
             return;
         }
@@ -345,7 +373,7 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void delWarp(Player player, String name) {
-        ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+        ClaimProfile profile = claimManager.getActiveProfile(player);
         if (profile == null) {
             player.sendMessage(configManager.getMessage("no-profile"));
             return;
@@ -360,7 +388,7 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void teleportToWarp(Player player, String name) {
-        ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+        ClaimProfile profile = claimManager.getActiveProfile(player);
         if (profile == null) {
             player.sendMessage(configManager.getMessage("no-profile"));
             return;

@@ -161,8 +161,9 @@ public class EventListener implements Listener {
 
         if (configManager.requireConnectedClaims() && plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
             ChunkPosition fromPos = new ChunkPosition(fromChunk);
-            if (claimManager.isChunkClaimed(fromPos) && claimManager.getChunkOwner(fromPos).equals(playerId)) {
-                if (!isConnectedToOtherClaims(fromPos, playerId)) {
+            ClaimProfile activeProfile = claimManager.getActiveProfile(player);
+            if (activeProfile != null && claimManager.isChunkClaimed(fromPos) && activeProfile.getProfileId().equals(claimManager.getChunkOwner(fromPos))) {
+                if (!isConnectedToOtherClaims(fromPos, activeProfile)) {
                     claimManager.unclaimChunk(fromChunk);
                     player.sendMessage(configManager.getMessage("auto-unclaimed"));
                 }
@@ -170,11 +171,10 @@ public class EventListener implements Listener {
         }
     }
 
-    private boolean isConnectedToOtherClaims(ChunkPosition pos, UUID playerId) {
+    private boolean isConnectedToOtherClaims(ChunkPosition pos, ClaimProfile profile) {
         if (!configManager.requireConnectedClaims())
             return false;
 
-        ClaimProfile profile = claimManager.getProfile(playerId);
         if (profile == null)
             return false;
         Set<ChunkPosition> claims = profile.getOwnedChunks();

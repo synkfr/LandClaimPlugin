@@ -53,7 +53,7 @@ public class ClaimMapGUI {
                                                                                 }
                                                                         }
                                                                 });
-                                        } else if (ownerProfile.getOwnerId().equals(player.getUniqueId())) {
+                                        } else if (ownerProfile.getProfileId().equals(player.getUniqueId())) {
                                                 // Your Claim
                                                 currentLore = config.yourClaim.lore;
                                                 slot = GuiHelper.buildSlot(config.yourClaim.material,
@@ -77,7 +77,7 @@ public class ClaimMapGUI {
                                                 currentLore = processLore(config.memberClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.memberClaim.material,
                                                                 config.memberClaim.name, currentLore);
-                                        } else if (profile != null && profile.hasAlly(ownerProfile.getOwnerId())) {
+                                        } else if (profile != null && profile.hasAlly(ownerProfile.getProfileId())) {
                                                 // Ally
                                                 String ownerName = ownerProfile.getDisplayOwnerName();
                                                 currentLore = processLore(config.allyClaim.lore, ownerName);

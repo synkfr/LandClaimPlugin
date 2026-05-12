@@ -28,7 +28,8 @@ public class SQLPlayerDao implements PlayerDao {
                 "auto_claim BOOLEAN NOT NULL DEFAULT 0," +
                 "auto_unclaim BOOLEAN NOT NULL DEFAULT 0," +
                 "visualization_mode VARCHAR(32) NOT NULL DEFAULT 'DEFAULT'," +
-                "bonus_blocks INT NOT NULL DEFAULT 0)";
+                "bonus_blocks INT NOT NULL DEFAULT 0," +
+                "active_profile_id VARCHAR(36) NULL)";
 
         try (Connection conn = dbManager.getDatabase().getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -36,6 +37,14 @@ public class SQLPlayerDao implements PlayerDao {
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to create players table.");
             e.printStackTrace();
+        }
+
+        // Migration: Add active_profile_id to existing tables
+        try (Connection conn = dbManager.getDatabase().getConnection();
+             PreparedStatement stmt = conn.prepareStatement("ALTER TABLE " + tablePrefix + "players ADD COLUMN active_profile_id VARCHAR(36) NULL")) {
+            stmt.executeUpdate();
+        } catch (SQLException ignored) {
+            // Column likely already exists
         }
     }
 
@@ -45,11 +54,11 @@ public class SQLPlayerDao implements PlayerDao {
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
             String sql = plugin.getConfigManager().getPluginConfig().database.type.equalsIgnoreCase("SQLITE")
                     ? "INSERT OR REPLACE INTO " + tablePrefix
-                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks) VALUES (?, ?, ?, ?, ?)"
+                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks, active_profile_id) VALUES (?, ?, ?, ?, ?, ?)"
                     : "INSERT INTO " + tablePrefix
-                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks) VALUES (?, ?, ?, ?, ?) "
+                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks, active_profile_id) VALUES (?, ?, ?, ?, ?, ?) "
                             +
-                            "ON DUPLICATE KEY UPDATE auto_claim=VALUES(auto_claim), auto_unclaim=VALUES(auto_unclaim), visualization_mode=VALUES(visualization_mode), bonus_blocks=VALUES(bonus_blocks)";
+                            "ON DUPLICATE KEY UPDATE auto_claim=VALUES(auto_claim), auto_unclaim=VALUES(auto_unclaim), visualization_mode=VALUES(visualization_mode), bonus_blocks=VALUES(bonus_blocks), active_profile_id=VALUES(active_profile_id)";
 
             try (Connection conn = dbManager.getDatabase().getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -59,6 +68,7 @@ public class SQLPlayerDao implements PlayerDao {
                 stmt.setBoolean(3, player.isAutoUnclaim());
                 stmt.setString(4, player.getVisualizationMode());
                 stmt.setInt(5, player.getBonusClaimBlocks());
+                stmt.setString(6, player.getActiveProfileId() != null ? player.getActiveProfileId().toString() : null);
 
                 stmt.executeUpdate();
             } catch (SQLException e) {
@@ -85,6 +95,13 @@ public class SQLPlayerDao implements PlayerDao {
                         player.setAutoUnclaim(rs.getBoolean("auto_unclaim"));
                         player.setVisualizationMode(rs.getString("visualization_mode"));
                         player.setBonusClaimBlocks(rs.getInt("bonus_blocks"));
+                        
+                        String activeIdStr = rs.getString("active_profile_id");
+                        if (activeIdStr != null && !activeIdStr.isEmpty()) {
+                            try {
+                                player.setActiveProfileId(UUID.fromString(activeIdStr));
+                            } catch (IllegalArgumentException ignored) {}
+                        }
                         return player;
                     }
                 }

@@ -13,7 +13,8 @@ import java.util.UUID;
  */
 public class ClaimProfile {
 
-    private UUID ownerId;
+    private UUID profileId; // The unique ID of the profile (maps to owner_id in DB for backwards compatibility)
+    private UUID realOwnerId; // The actual player UUID who owns the profile
     private String name;
     private String ownerAlias;
 
@@ -38,15 +39,24 @@ public class ClaimProfile {
     private boolean pvpEnabled = false;
     private long pvpTimerEnd = 0L;
 
+    public ClaimProfile(UUID profileId, UUID realOwnerId, String name) {
+        this.profileId = profileId;
+        this.realOwnerId = realOwnerId;
+        this.name = name;
+        setupDefaultRoles();
+    }
+
     public ClaimProfile(UUID ownerId, String name) {
-        this.ownerId = ownerId;
+        // Backwards compatibility for old constructor
+        this.profileId = ownerId;
+        this.realOwnerId = ownerId;
         this.name = name;
         setupDefaultRoles();
     }
 
     private void setupDefaultRoles() {
         // Default Member Role (Basic Interact)
-        Role memberRole = new Role(UUID.randomUUID(), this.ownerId, "Member", 100);
+        Role memberRole = new Role(UUID.randomUUID(), this.profileId, "Member", 100);
         memberRole.addFlag("USE_DOORS");
         memberRole.addFlag("USE_TRAPDOORS");
         memberRole.addFlag("USE_FENCE_GATES");
@@ -57,33 +67,49 @@ public class ClaimProfile {
         this.roles.put(memberRole.getName().toLowerCase(), memberRole);
 
         // Default CoOwner Role (All Permissions)
-        Role coOwnerRole = new Role(UUID.randomUUID(), this.ownerId, "CoOwner", 10);
-        String[] allFlags = {
-                "USE_DOORS", "USE_TRAPDOORS", "USE_FENCE_GATES", "USE_CONTAINERS",
-                "USE_WORKSTATIONS", "USE_BEDS", "USE_REDSTONE", "USE_LECTERNS", "USE_BELLS",
-                "DAMAGE_ANIMALS", "DAMAGE_MONSTERS", "BREED_ANIMALS", "SHEAR_ENTITIES",
-                "TRADE_VILLAGERS", "FEED_ANIMALS", "LEASH_ENTITIES", "MODIFY_ARMOR_STANDS",
-                "MODIFY_ITEM_FRAMES", "RIDE_VEHICLES", "PLACE_VEHICLES", "DESTROY_VEHICLES",
-                "USE_ENDER_PEARLS", "USE_CHORUS_FRUIT", "PICKUP_ITEMS", "DROP_ITEMS"
-        };
-        for (String flag : allFlags) {
-            coOwnerRole.addFlag(flag);
-        }
+        Role coOwnerRole = new Role(UUID.randomUUID(), this.profileId, "CoOwner", 10);
+        coOwnerRole.addFlag("USE_DOORS");
+        coOwnerRole.addFlag("USE_TRAPDOORS");
+        coOwnerRole.addFlag("USE_FENCE_GATES");
+        coOwnerRole.addFlag("USE_CONTAINERS");
+        coOwnerRole.addFlag("USE_WORKSTATIONS");
+        coOwnerRole.addFlag("USE_BEDS");
+        coOwnerRole.addFlag("USE_REDSTONE");
+        coOwnerRole.addFlag("MANAGE_MEMBERS");
+        coOwnerRole.addFlag("MANAGE_ROLES");
+        coOwnerRole.addFlag("MANAGE_SETTINGS");
+        coOwnerRole.addFlag("USE_BUCKETS");
+        coOwnerRole.addFlag("TRAMPLE_CROPS");
+        coOwnerRole.addFlag("BLOCK_BREAK");
+        coOwnerRole.addFlag("BLOCK_PLACE");
+        coOwnerRole.addFlag("BLOCK_IGNITE");
+        coOwnerRole.addFlag("INTERACT_ENTITIES");
+        coOwnerRole.addFlag("HARM_ENTITIES");
+        coOwnerRole.addFlag("MANAGE_VEHICLES");
+        coOwnerRole.addFlag("WARP_MANAGE");
+        coOwnerRole.addFlag("MODIFY_SIGNS");
+        coOwnerRole.addFlag("USE_FERTILIZER");
+        coOwnerRole.addFlag("USE_LEASHES");
+        coOwnerRole.addFlag("INTERACT_VILLAGERS");
         this.roles.put(coOwnerRole.getName().toLowerCase(), coOwnerRole);
     }
 
     // --- Owner ---
 
+    public UUID getProfileId() {
+        return profileId;
+    }
+
     public UUID getOwnerId() {
-        return ownerId;
+        return realOwnerId;
     }
 
     public void setOwnerId(UUID ownerId) {
-        this.ownerId = ownerId;
+        this.realOwnerId = ownerId;
     }
 
     public boolean isOwner(UUID playerId) {
-        return ownerId.equals(playerId);
+        return realOwnerId.equals(playerId);
     }
 
     public String getName() {
@@ -103,11 +129,11 @@ public class ClaimProfile {
     }
 
     public String getDisplayOwnerName() {
-        if (ownerAlias != null && !ownerAlias.trim().isEmpty()) {
+        if (ownerAlias != null && !ownerAlias.isEmpty()) {
             return ownerAlias;
         }
-        org.bukkit.OfflinePlayer op = org.bukkit.Bukkit.getOfflinePlayer(ownerId);
-        return op.getName() != null ? op.getName() : "Unknown";
+        org.bukkit.OfflinePlayer op = org.bukkit.Bukkit.getOfflinePlayer(realOwnerId);
+        return op.getName() != null ? op.getName() : realOwnerId.toString();
     }
 
     // --- PvP Settings ---

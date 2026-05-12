@@ -61,8 +61,8 @@ public class RenameClaimGUI {
                                                                                 .getAllProfiles().stream()
                                                                                 .noneMatch(cp -> cp.getName()
                                                                                                 .equalsIgnoreCase(input)
-                                                                                                && !cp.getOwnerId()
-                                                                                                                .equals(profile.getOwnerId()));
+                                                                                                && !cp.getProfileId()
+                                                                                                                .equals(profile.getProfileId()));
 
                                                                 if (!unique) {
                                                                         p.sendMessage(plugin.getConfigManager()
@@ -87,7 +87,7 @@ public class RenameClaimGUI {
                                                         config.resetToDefault.lore, (p, e) -> {
                                                                 p.closeInventory();
                                                                 String defaultName = Bukkit.getOfflinePlayer(
-                                                                                profile.getOwnerId()).getName();
+                                                                                profile.getProfileId()).getName();
                                                                 if (defaultName == null)
                                                                         defaultName = "Unnamed Claim";
                                                                 else

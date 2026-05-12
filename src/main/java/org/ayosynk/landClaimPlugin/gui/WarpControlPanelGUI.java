@@ -42,7 +42,7 @@ public class WarpControlPanelGUI {
                                                         config.changeLocation.lore, (p, e) -> {
                                                                 p.closeInventory();
                                                                 warp.setLocation(p.getLocation());
-                                                                plugin.getWarpManager().setWarp(profile.getOwnerId(),
+                                                                plugin.getWarpManager().setWarp(profile.getProfileId(),
                                                                                 warp.getName(), warp.getLocation(),
                                                                                 warp.getIcon());
 
@@ -60,7 +60,7 @@ public class WarpControlPanelGUI {
                                         config.deleteWarp.lore, (p, e) -> {
                                                 p.closeInventory();
                                                 profile.removeWarp(warp.getName());
-                                                plugin.getWarpManager().deleteWarp(profile.getOwnerId(),
+                                                plugin.getWarpManager().deleteWarp(profile.getProfileId(),
                                                                 warp.getName());
                                                 p.sendMessage(plugin.getConfigManager().getMessage("warp-deleted",
                                                                 "<name>", warp.getName()));
