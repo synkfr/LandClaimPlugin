@@ -17,7 +17,7 @@ cd LandClaimPlugin
 mvn clean package
 ```
 
-Output: `target/LandClaimPlugin-2.0.3.jar` (shaded JAR with all dependencies)
+Output: `target/LandClaimPlugin-2.1.2.jar` (shaded JAR with all dependencies)
 
 ## Project Structure
 
