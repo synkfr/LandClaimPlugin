@@ -1,9 +1,12 @@
 # Internal API Reference
 
+::: info
+This is the **internal** API reference for contributors. If you're a plugin developer looking to integrate with LandClaimPlugin, see the [Public API](/guide/api) page instead.
+:::
+
 ## Managers
 
 ### ClaimManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/ClaimManager.java`
 
 Central business logic for claim operations.
 
@@ -11,7 +14,7 @@ Central business logic for claim operations.
 |--------|---------|-------------|
 | `initialize()` | `void` | Load all profiles from DB into cache |
 | `claimChunk(Player, Chunk)` | `boolean` | Claim a single chunk for a player |
-| `claimChunks(Player, Set&lt;ChunkPosition&gt;)` | `int` | Claim multiple chunks at once |
+| `claimChunks(Player, Set)` | `int` | Claim multiple chunks at once |
 | `unclaimChunk(Chunk)` | `boolean` | Unclaim a single chunk |
 | `abandonProfile(UUID)` | `int` | Delete entire profile, returns chunk count |
 | `transferOwnership(UUID, UUID)` | `boolean` | Transfer profile to new owner |
@@ -31,17 +34,15 @@ Central business logic for claim operations.
 | `hasAllyInvite(UUID, UUID)` | `boolean` | Check pending ally invite |
 
 ### PermissionResolver
-`src/main/java/org/ayosynk/landClaimPlugin/managers/PermissionResolver.java`
 
-Implements the 4-tier permission chain: Owner &gt; Role &gt; Trusted &gt; Ally &gt; Visitor.
+Implements the 4-tier permission chain: Owner › Role › Trusted › Ally › Visitor.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `hasPermission(ClaimProfile, UUID, String)` | `boolean` | Check if player has a flag |
-| `getPlayerStatus(ClaimProfile, UUID)` | `String` | Get player's status: `owner`, `member`, `trusted`, `visitor`, `wilderness` |
+| `getPlayerStatus(ClaimProfile, UUID)` | `String` | Get player's status in the claim |
 
 ### BlockPermissionResolver
-`src/main/java/org/ayosynk/landClaimPlugin/managers/BlockPermissionResolver.java`
 
 Maps Minecraft blocks to claim permission flags.
 
@@ -52,7 +53,6 @@ Maps Minecraft blocks to claim permission flags.
 Resolution order: explicit overrides → InventoryHolder check → Tag matching → workstation switch.
 
 ### CacheManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/CacheManager.java`
 
 Caffeine-backed in-memory caches.
 
@@ -63,7 +63,6 @@ Caffeine-backed in-memory caches.
 | `playerCache` | UUID (player) | `ClaimPlayer` | None (max 5,000) |
 
 ### ConfigManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/ConfigManager.java`
 
 Configuration lifecycle management using Okaeri Configs.
 
@@ -80,7 +79,6 @@ Configuration lifecycle management using Okaeri Configs.
 | `reloadMainConfig()` | `void` | Reload configuration |
 
 ### CombatManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/CombatManager.java`
 
 Detects combat-tagged players via hooked plugins.
 
@@ -91,7 +89,6 @@ Detects combat-tagged players via hooked plugins.
 Supported hooks: DeluxeCombat, PvPManager, EternalCombat.
 
 ### WarpManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/WarpManager.java`
 
 Manages warp teleport points.
 
@@ -100,13 +97,12 @@ Manages warp teleport points.
 | `setWarp(UUID, String, Location, Material)` | `boolean` | Create/update a warp |
 | `deleteWarp(UUID, String)` | `boolean` | Delete a warp |
 | `getWarp(UUID, String)` | `Warp` | Get a specific warp |
-| `getWarps(UUID)` | `Map&lt;String, Warp&gt;` | Get all warps for a player |
+| `getWarps(UUID)` | `Map` | Get all warps for a player |
 | `getWarpLimit(Player)` | `int` | Get effective warp limit |
 | `getWarpCount(UUID)` | `int` | Get current warp count |
-| `loadFromDatabase()` | `CompletableFuture&lt;Map&lt;UUID, Map&lt;String, Warp&gt;&gt;&gt;` | Load all warps from DB |
+| `loadFromDatabase()` | `CompletableFuture` | Load all warps from DB |
 
 ### VisualizationManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/VisualizationManager.java`
 
 Renders claim boundaries using display entities or particles.
 
@@ -116,7 +112,6 @@ Renders claim boundaries using display entities or particles.
 | `cleanupLocalDisplays()` | `void` | Remove all active displays |
 
 ### RedisManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/RedisManager.java`
 
 Cross-server cache invalidation via Redis pub/sub.
 
@@ -129,7 +124,6 @@ Cross-server cache invalidation via Redis pub/sub.
 Message format: `ACTION:UUID` (e.g., `INVALIDATE_PROFILE:uuid`)
 
 ### HookManager
-`src/main/java/org/ayosynk/landClaimPlugin/managers/HookManager.java`
 
 Third-party plugin integrations.
 
@@ -144,31 +138,29 @@ Supported map plugins: BlueMap, Dynmap, Squaremap, Pl3xMap.
 ## Models
 
 ### ClaimProfile
-`src/main/java/org/ayosynk/landClaimPlugin/models/ClaimProfile.java`
 
-Central data model — one per player.
+Central data model — one per player (or multiple in multi-profile mode).
 
-**Key State:**
-- `ownerId` (UUID) — Owner's UUID
-- `name` (String) — Display name
-- `ownedChunks` (Set&lt;ChunkPosition&gt;) — Claimed chunks
-- `visitorFlags` (Set&lt;String&gt;) — Base permission layer
-- `trustedPlayerFlags` (Map&lt;UUID, Set&lt;String&gt;&gt;) — Per-player overrides
-- `roles` (Map&lt;String, Role&gt;) — Role definitions
-- `memberRoles` (Map&lt;UUID, String&gt;) — Player → role assignments
-- `allyFlags` (Map&lt;UUID, Set&lt;String&gt;&gt;) — Allied profiles with flags
-- `warps` (Map&lt;String, Warp&gt;) — Named warps
-- `claimColor` (String) — Hex color for visualization
-- `visualizationMode` (String) — `DISPLAY_ENTITY` or `PARTICLE`
-- `enterTitleEnabled` (boolean) — Entry title toggle
-- `enterTitle` / `leaveTitle` (String) — MiniMessage titles
+**Key Fields:**
+- `ownerId` — UUID of the owner
+- `name` — Display name
+- `ownedChunks` — Set of claimed chunk positions
+- `visitorFlags` — Base permission layer
+- `trustedPlayerFlags` — Per-player permission overrides
+- `roles` — Role definitions
+- `memberRoles` — Player to role assignments
+- `allyFlags` — Allied profiles with flags
+- `warps` — Named warps
+- `claimColor` — Hex color for visualization
+- `visualizationMode` — `DISPLAY_ENTITY` or `PARTICLE`
+- `enterTitleEnabled` — Entry title toggle
+- `enterTitle` / `leaveTitle` — MiniMessage titles
 
 **Default Roles:**
 - **Member** (priority 100): Basic interact (doors, containers, workstations, beds, redstone)
 - **CoOwner** (priority 10): All 25 flags
 
 ### Role
-`src/main/java/org/ayosynk/landClaimPlugin/models/Role.java`
 
 Permission role with flag-based access control.
 
@@ -178,10 +170,9 @@ Permission role with flag-based access control.
 | `ownerId` | UUID | Profile owner |
 | `name` | String | Display name |
 | `priority` | int | Lower = checked first |
-| `flags` | Set&lt;String&gt; | Permission flags (lowercase) |
+| `flags` | Set | Permission flags (lowercase) |
 
 ### ClaimPlayer
-`src/main/java/org/ayosynk/landClaimPlugin/models/ClaimPlayer.java`
 
 Per-player preferences (persisted in `lc_players`).
 
@@ -194,7 +185,6 @@ Per-player preferences (persisted in `lc_players`).
 | `bonusClaimBlocks` | int | Bonus claim limit |
 
 ### Warp
-`src/main/java/org/ayosynk/landClaimPlugin/models/Warp.java`
 
 Named teleport point within a claim.
 
@@ -205,7 +195,6 @@ Named teleport point within a claim.
 | `icon` | Material | Menu icon material |
 
 ### BlockPermission
-`src/main/java/org/ayosynk/landClaimPlugin/models/BlockPermission.java`
 
 Enum mapping block types to permission flags.
 
@@ -222,6 +211,7 @@ Enum mapping block types to permission flags.
 | `BELLS` | `USE_BELLS` |
 
 ### ChunkPosition
+
 Immutable chunk coordinate with utility methods.
 
 | Field | Type | Description |
@@ -232,13 +222,12 @@ Immutable chunk coordinate with utility methods.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getNeighbors(boolean)` | `List&lt;ChunkPosition&gt;` | Get adjacent chunks (optional diagonals) |
+| `getNeighbors(boolean)` | `List` | Get adjacent chunks (optional diagonals) |
 | `toChunk(World)` | `Chunk` | Get Bukkit Chunk object |
 
 ## GUI Framework
 
 ### CustomGui
-`src/main/java/org/ayosynk/landClaimPlugin/gui/framework/CustomGui.java`
 
 Base GUI runtime. Implements `InventoryHolder` for reliable event routing.
 
@@ -247,7 +236,7 @@ Base GUI runtime. Implements `InventoryHolder` for reliable event routing.
 CustomGui gui = new CustomGui(Component.text("My GUI"), 3); // 3 rows
 
 // Add items with click handlers
-gui.setItem(0, itemStack, (player, event) -&gt; {
+gui.setItem(0, itemStack, (player, event) -> {
     // Handle click
 });
 
@@ -265,7 +254,7 @@ Maps structure characters to items + actions for declarative GUI layouts.
 SlotDefinition filler = new SlotDefinition(fillItem, null);
 SlotDefinition button = new SlotDefinition(buttonItem, clickAction);
 
-Map&lt;Character, SlotDefinition&gt; ingredients = Map.of(
+Map<Character, SlotDefinition> ingredients = Map.of(
     'F', filler,
     'B', button
 );
