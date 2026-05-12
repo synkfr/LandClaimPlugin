@@ -158,7 +158,7 @@ These are the flags you can check using `PermissionResolver.hasPermission()`:
 <dependency>
     <groupId>org.ayosynk</groupId>
     <artifactId>LandClaimPlugin</artifactId>
-    <version>2.1.2</version>
+    <version>2.1.3</version>
     <scope>provided</scope>
 </dependency>
 ```
