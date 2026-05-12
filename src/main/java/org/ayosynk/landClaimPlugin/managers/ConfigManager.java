@@ -30,6 +30,7 @@ import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RoleEditConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TitleSettingsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.OnlinePlayerSelectorConfig;
+import org.ayosynk.landClaimPlugin.config.menus.ProfileSelectorConfig;
 import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
 import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
 import org.bukkit.Color;
@@ -64,6 +65,7 @@ public class ConfigManager {
     private ChangeClaimColorConfig changeClaimColorConfig;
     private RoleEditConfig roleEditConfig;
     private OnlinePlayerSelectorConfig onlinePlayerSelectorConfig;
+    private ProfileSelectorConfig profileSelectorConfig;
 
     private List<String> blockedCommands = List.of();
     private List<String> blockedWorlds = List.of();
@@ -101,6 +103,13 @@ public class ConfigManager {
         this.mainMenuConfig = eu.okaeri.configs.ConfigManager.create(MainMenuConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
             it.withBindFile(new File(plugin.getDataFolder(), "menus/mainmenu.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
+        this.profileSelectorConfig = eu.okaeri.configs.ConfigManager.create(ProfileSelectorConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/profile-selector.yml"));
             it.saveDefaults();
             it.load(true);
         });
@@ -392,6 +401,10 @@ public class ConfigManager {
 
     public ChangeClaimColorConfig getChangeClaimColorConfig() {
         return changeClaimColorConfig;
+    }
+
+    public ProfileSelectorConfig getProfileSelectorConfig() {
+        return profileSelectorConfig;
     }
 
     public RoleEditConfig getRoleEditConfig() {

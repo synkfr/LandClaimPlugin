@@ -26,6 +26,8 @@ public class ProfileSelectorGUI {
             ClaimPlayer cp = plugin.getCacheManager().getPlayerCache().getIfPresent(player.getUniqueId());
             if (cp == null) return;
             
+            org.ayosynk.landClaimPlugin.config.menus.ProfileSelectorConfig config = plugin.getConfigManager().getProfileSelectorConfig();
+            
             List<ClaimProfile> ownedProfiles = plugin.getClaimManager().getOwnedProfiles(player.getUniqueId());
             
             // Also add member profiles
@@ -46,23 +48,31 @@ public class ProfileSelectorGUI {
                 contentItems.add(new GuiItem() {
                     @Override
                     public ItemStack render(Player viewer) {
-                        ItemStack item = new ItemStack(isActive ? Material.ENCHANTED_BOOK : Material.BOOK);
+                        Material mat;
+                        try {
+                            mat = Material.valueOf(isActive ? config.activeProfileMaterial.toUpperCase() : config.inactiveProfileMaterial.toUpperCase());
+                        } catch (Exception ex) {
+                            mat = isActive ? Material.ENCHANTED_BOOK : Material.BOOK;
+                        }
+                        
+                        ItemStack item = new ItemStack(mat);
                         ItemMeta meta = item.getItemMeta();
                         if (meta != null) {
-                            meta.displayName(GuiHelper.MM.deserialize("<!italic><gold><bold>" + profile.getName()));
+                            String nameStr = config.profileNameFormat.replace("<name>", profile.getName());
+                            meta.displayName(GuiHelper.MM.deserialize(nameStr));
                             List<Component> lore = new ArrayList<>();
                             if (profile.isOwner(player.getUniqueId())) {
-                                lore.add(GuiHelper.MM.deserialize("<!italic><gray>Role: <yellow>Owner"));
+                                lore.add(GuiHelper.MM.deserialize(config.roleOwnerLore));
                             } else {
                                 String role = profile.getMemberRole(player.getUniqueId());
-                                lore.add(GuiHelper.MM.deserialize("<!italic><gray>Role: <yellow>" + (role != null ? role : "Member")));
+                                lore.add(GuiHelper.MM.deserialize(config.roleMemberLore.replace("<role>", role != null ? role : "Member")));
                             }
-                            lore.add(GuiHelper.MM.deserialize("<!italic><gray>Chunks Claimed: <yellow>" + profile.getOwnedChunks().size()));
+                            lore.add(GuiHelper.MM.deserialize(config.chunksClaimedLore.replace("<count>", String.valueOf(profile.getOwnedChunks().size()))));
                             lore.add(GuiHelper.MM.deserialize(""));
                             if (isActive) {
-                                lore.add(GuiHelper.MM.deserialize("<!italic><green>Currently Active Profile"));
+                                lore.add(GuiHelper.MM.deserialize(config.activeProfileLore));
                             } else {
-                                lore.add(GuiHelper.MM.deserialize("<!italic><yellow>Click to set as Active Profile"));
+                                lore.add(GuiHelper.MM.deserialize(config.clickToActivateLore));
                             }
                             meta.lore(lore);
                             item.setItemMeta(meta);
@@ -95,18 +105,18 @@ public class ProfileSelectorGUI {
             };
 
             Map<Character, SlotDefinition> ingredients = new HashMap<>();
-            ingredients.put('F', GuiHelper.buildSlot("GRAY_STAINED_GLASS_PANE", "<gray> ", new ArrayList<>()));
-            ingredients.put('C', GuiHelper.buildSlot("BARRIER", "<red>Close", new ArrayList<>(), (p, e) -> p.closeInventory()));
+            ingredients.put('F', GuiHelper.buildSlot(config.filler.material, config.filler.name, config.filler.lore));
+            ingredients.put('C', GuiHelper.buildSlot(config.close.material, config.close.name, config.close.lore, (p, e) -> p.closeInventory()));
 
-            Component title = GuiHelper.MM.deserialize("<dark_gray>Select Claim Profile");
+            Component title = GuiHelper.MM.deserialize(config.title);
             PaginatedGui gui = new PaginatedGui(title, 5, structure, ingredients, 'x');
 
             gui.setPrevButton(39,
-                    GuiHelper.buildItemStack("ARROW", "<green>Previous Page", new ArrayList<>()),
-                    GuiHelper.buildItemStack("GRAY_STAINED_GLASS_PANE", "<gray> ", new ArrayList<>()));
+                    GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name, config.previousPage.lore),
+                    GuiHelper.buildItemStack(config.filler.material, config.filler.name, config.filler.lore));
             gui.setNextButton(41,
-                    GuiHelper.buildItemStack("ARROW", "<green>Next Page", new ArrayList<>()),
-                    GuiHelper.buildItemStack("GRAY_STAINED_GLASS_PANE", "<gray> ", new ArrayList<>()));
+                    GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name, config.nextPage.lore),
+                    GuiHelper.buildItemStack(config.filler.material, config.filler.name, config.filler.lore));
 
             gui.setContent(contentItems, player);
             gui.open(player);
