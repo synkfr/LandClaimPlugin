@@ -281,10 +281,10 @@ public class ClaimManager {
     // ========== Member Invites ==========
 
     public void sendMemberInvite(Player sender, Player target, ClaimProfile profile) {
-        pendingMemberInvites.put(target.getUniqueId(), sender.getUniqueId());
+        pendingMemberInvites.put(target.getUniqueId(), profile.getProfileId());
 
         sender.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
-        target.sendMessage(configManager.getMessage("invite-received", "<owner>", sender.getName()));
+        target.sendMessage(configManager.getMessage("invite-received", "<owner>", profile.getName()));
     }
 
     public UUID getAndRemoveMemberInvite(UUID inviteeId) {
@@ -323,14 +323,12 @@ public class ClaimManager {
      * beyond what's allowed.
      */
     public boolean canCreateProfile(UUID playerId) {
+        if (plugin.getConfigManager().isMultiProfilesEnabled()) {
+            return true; // Limit checks handled individually when creating profile.
+        }
+
         if (getProfile(playerId) != null) return false;
-        // They can create one if they are a member, but we might want to prevent it if they've hit max-memberships.
-        // Actually, if they are a member of anything, do we allow them to create their own profile?
-        // Previously we returned false if they were a member or trusted ANYWHERE.
-        // Let's keep it that way or allow it? The prompt implies they can be members and still claim for the owner.
-        // But if they run /claim without "CLAIM_LAND" they shouldn't create a profile if they are a member?
-        // I will keep the original logic for `canCreateProfile` for now except trusted checks.
-        // Actually, let's keep it as is, just return false if they are member/trusted.
+        
         for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
             if (profile.isMember(playerId) || profile.isTrusted(playerId)) {
                 return false;

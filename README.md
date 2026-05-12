@@ -34,12 +34,13 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 ## ✨ Features
 
 ### Core Claiming
-- **Claim Profiles** — Each player owns a single named claim profile that holds all their claimed land, settings, and permissions
-- **Chunk-Based Claims** — 16×16 block protection zones, simple and intuitive
-- **Auto-Claim** — Automatically claim chunks as you walk
-- **Connected Claims** — Optionally require claims to be adjacent (with diagonal support)
-- **Claim Map GUI** — Interactive in-game map showing nearby claims and ownership
-- **Interactive Selectors** — Programmatically select online players via their heads for Trust, Member, and Ally management
+- **Claim Profiles** — Manage your land using claim profiles. Depending on server configuration, players can own a single profile or utilize the **Multi-Profile System** to manage multiple independent bases and quickly switch between them via an interactive GUI.
+- **Chunk-Based Claims** — 16×16 block protection zones, simple and intuitive.
+- **Auto-Claim** — Automatically claim chunks as you walk.
+- **Connected Claims** — Optionally require claims to be adjacent (with diagonal support).
+- **Claim Map GUI** — Interactive in-game map showing nearby claims and ownership.
+- **Interactive Selectors** — Programmatically select online players via their heads for Trust, Member, and Ally management.
+- **Unstuck Command** — A safe `/claim unstuck` feature that teleports trapped players to the nearest safe wilderness block.
 
 ### Permission System
 - **4-Tier Priority Chain** — `Owner > Role > Trusted > Visitor` — the first matching tier decides
@@ -120,15 +121,17 @@ Respect WorldGuard regions when players attempt to claim land.
 | Command | Description |
 |---|---|
 | `/claim` | Claim the chunk you're standing in |
+| `/claim profiles` | Open the active profile selector (if Multi-Profile is enabled) |
 | `/claim create <name>` | Create a new claim profile with the given name |
 | `/claim auto` | Toggle auto-claim mode (claim chunks as you walk) |
 | `/claim menu` | Open the main claim management GUI |
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
-| `/claim abandon` | Delete your entire claim profile and all claimed chunks |
+| `/claim unstuck` | Safely teleport to the nearest wilderness block if trapped |
+| `/claim abandon` | Delete your entire active claim profile and all its chunks |
 | `/claim pvp <on/off> [time]` | Toggle PvP globally in the claim, with an optional time duration in seconds |
 | `/unclaim` | Unclaim the chunk you're standing in |
-| `/unclaim all` | Unclaim all your chunks |
+| `/unclaim all` | Unclaim all chunks belonging to your active profile |
 
 ### Management Commands
 <details>

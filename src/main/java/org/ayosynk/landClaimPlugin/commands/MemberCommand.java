@@ -41,7 +41,8 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(memberBuilder.literal("list")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
@@ -70,7 +71,7 @@ public class MemberCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
 
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
@@ -109,7 +110,7 @@ public class MemberCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     String targetName = context.get("player");
 
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
