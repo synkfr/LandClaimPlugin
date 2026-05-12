@@ -195,6 +195,7 @@ Respect WorldGuard regions when players attempt to claim land.
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias |
 | `/claim admin trust list <owner>` | List players trusted by this owner |
 | `/claim admin trust who <player>` | List claims where this player is trusted |
+</details>
 
 ---
 
