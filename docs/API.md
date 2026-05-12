@@ -284,7 +284,7 @@ All commands implement this interface:
 
 ```java
 public interface LandClaimCommand {
-    void register(PaperCommandManager<Source&gt; manager, Command.Builder<PlayerSource&gt; claimBuilder);
+    void register(PaperCommandManager<Source> manager, Command.Builder<PlayerSource> claimBuilder);
 }
 ```
 

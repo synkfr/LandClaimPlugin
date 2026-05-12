@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "LandClaimPlugin",
   description: "Advanced Territory Protection for Minecraft",
+  base: "/LandClaimPlugin/",
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
