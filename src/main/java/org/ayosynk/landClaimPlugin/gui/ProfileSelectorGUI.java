@@ -49,20 +49,20 @@ public class ProfileSelectorGUI {
                         ItemStack item = new ItemStack(isActive ? Material.ENCHANTED_BOOK : Material.BOOK);
                         ItemMeta meta = item.getItemMeta();
                         if (meta != null) {
-                            meta.displayName(GuiHelper.MM.deserialize("<gold><bold>" + profile.getName()));
+                            meta.displayName(GuiHelper.MM.deserialize("<!italic><gold><bold>" + profile.getName()));
                             List<Component> lore = new ArrayList<>();
                             if (profile.isOwner(player.getUniqueId())) {
-                                lore.add(GuiHelper.MM.deserialize("<gray>Role: <yellow>Owner"));
+                                lore.add(GuiHelper.MM.deserialize("<!italic><gray>Role: <yellow>Owner"));
                             } else {
                                 String role = profile.getMemberRole(player.getUniqueId());
-                                lore.add(GuiHelper.MM.deserialize("<gray>Role: <yellow>" + (role != null ? role : "Member")));
+                                lore.add(GuiHelper.MM.deserialize("<!italic><gray>Role: <yellow>" + (role != null ? role : "Member")));
                             }
-                            lore.add(GuiHelper.MM.deserialize("<gray>Chunks Claimed: <yellow>" + profile.getOwnedChunks().size()));
+                            lore.add(GuiHelper.MM.deserialize("<!italic><gray>Chunks Claimed: <yellow>" + profile.getOwnedChunks().size()));
                             lore.add(GuiHelper.MM.deserialize(""));
                             if (isActive) {
-                                lore.add(GuiHelper.MM.deserialize("<green>Currently Active Profile"));
+                                lore.add(GuiHelper.MM.deserialize("<!italic><green>Currently Active Profile"));
                             } else {
-                                lore.add(GuiHelper.MM.deserialize("<yellow>Click to set as Active Profile"));
+                                lore.add(GuiHelper.MM.deserialize("<!italic><yellow>Click to set as Active Profile"));
                             }
                             meta.lore(lore);
                             item.setItemMeta(meta);
