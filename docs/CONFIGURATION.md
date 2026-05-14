@@ -14,6 +14,10 @@ Main plugin configuration file located at `plugins/LandClaimPlugin/config.yml`.
 | `allowDiagonalConnections` | Boolean | `true` | Allow diagonal adjacency for connected claims |
 | `cooldownUnstuck` | Integer | `30` | Seconds cooldown for unstuck command |
 
+::: tip Placeholder Brackets
+For all messages and placeholders, the plugin supports both **angle brackets** `<owner>` and **curly braces** `{owner}` interchangeably. 
+:::
+
 ### Claim Limits
 
 | Key | Type | Default | Description |
