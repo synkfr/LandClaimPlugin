@@ -18,6 +18,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/installation' },
       { text: 'Commands', link: '/guide/commands' },
+      { text: 'Placeholders', link: '/guide/placeholders' },
       { text: 'Config', link: '/CONFIGURATION' },
       { text: 'API', link: '/guide/api' },
       { text: 'FAQ', link: '/FAQ' }
@@ -30,6 +31,7 @@ export default defineConfig({
           items: [
             { text: 'Installation', link: '/guide/installation' },
             { text: 'Commands & Permissions', link: '/guide/commands' },
+            { text: 'Placeholders', link: '/guide/placeholders' },
             { text: 'Configuration', link: '/CONFIGURATION' },
             { text: 'FAQ', link: '/FAQ' }
           ]
@@ -51,6 +53,7 @@ export default defineConfig({
           items: [
             { text: 'Installation', link: '/guide/installation' },
             { text: 'Commands & Permissions', link: '/guide/commands' },
+            { text: 'Placeholders', link: '/guide/placeholders' },
             { text: 'Configuration', link: '/CONFIGURATION' },
             { text: 'FAQ', link: '/FAQ' }
           ]
