@@ -486,7 +486,18 @@ public class ConfigManager {
     public String getMessage(String key, String... replacements) {
         String template = getRawMessageString(key);
         for (int i = 0; i < replacements.length; i += 2) {
-            template = template.replace(replacements[i], replacements[i + 1]);
+            String placeholder = replacements[i];
+            String value = replacements[i + 1];
+            template = template.replace(placeholder, value);
+            
+            // Support alternate bracket style if placeholder starts with < or {
+            if (placeholder.startsWith("<") && placeholder.endsWith(">")) {
+                String alt = "{" + placeholder.substring(1, placeholder.length() - 1) + "}";
+                template = template.replace(alt, value);
+            } else if (placeholder.startsWith("{") && placeholder.endsWith("}")) {
+                String alt = "<" + placeholder.substring(1, placeholder.length() - 1) + ">";
+                template = template.replace(alt, value);
+            }
         }
         Component comp = MiniMessage.miniMessage().deserialize(pluginConfig.prefix + template);
         return LegacyComponentSerializer.legacySection().serialize(comp);
@@ -495,7 +506,18 @@ public class ConfigManager {
     public String getRawMessage(String key, String... replacements) {
         String template = getRawMessageString(key);
         for (int i = 0; i < replacements.length; i += 2) {
-            template = template.replace(replacements[i], replacements[i + 1]);
+            String placeholder = replacements[i];
+            String value = replacements[i + 1];
+            template = template.replace(placeholder, value);
+
+            // Support alternate bracket style
+            if (placeholder.startsWith("<") && placeholder.endsWith(">")) {
+                String alt = "{" + placeholder.substring(1, placeholder.length() - 1) + "}";
+                template = template.replace(alt, value);
+            } else if (placeholder.startsWith("{") && placeholder.endsWith("}")) {
+                String alt = "<" + placeholder.substring(1, placeholder.length() - 1) + ">";
+                template = template.replace(alt, value);
+            }
         }
         Component comp = MiniMessage.miniMessage().deserialize(template);
         return LegacyComponentSerializer.legacySection().serialize(comp);
