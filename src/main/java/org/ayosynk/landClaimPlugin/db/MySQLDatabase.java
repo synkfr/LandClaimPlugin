@@ -20,11 +20,18 @@ public class MySQLDatabase implements Database {
     public void connect() throws SQLException {
         PluginConfig.DatabaseConfig dbConfig = plugin.getConfigManager().getPluginConfig().database;
 
+        // Check for password in environment variable first (more secure)
+        String password = System.getenv("LANDCLAIM_DB_PASSWORD");
+        if (password == null || password.isEmpty()) {
+            password = dbConfig.password;
+        }
+
         HikariConfig config = new HikariConfig();
+        // Use SSL for security - credentials and data are encrypted
         config.setJdbcUrl("jdbc:mysql://" + dbConfig.host + ":" + dbConfig.port + "/" + dbConfig.databaseName
-                + "?useSSL=false&autoReconnect=true");
+                + "?useSSL=true&requireSSL=true&serverTimezone=UTC&autoReconnect=true");
         config.setUsername(dbConfig.username);
-        config.setPassword(dbConfig.password);
+        config.setPassword(password);
         config.setPoolName("LandClaim-MySQL");
 
         config.setMaximumPoolSize(dbConfig.maximumPoolSize);
