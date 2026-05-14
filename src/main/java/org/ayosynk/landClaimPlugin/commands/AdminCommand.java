@@ -109,6 +109,65 @@ public class AdminCommand implements LandClaimCommand {
                     String alias = context.get("alias");
                     adminSetAlias(sender, claimName, alias);
                 }));
+
+        // /claim admin claim
+        manager.command(claimBuilder.literal("admin")
+                .literal("claim")
+                .permission("landclaim.admin")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation());
+
+                    if (claimManager.isChunkClaimed(pos)) {
+                        UUID ownerId = claimManager.getChunkOwner(pos);
+                        String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
+                        player.sendMessage(configManager.getMessage("admin-already-claimed", "<owner>", ownerName != null ? ownerName : "Unknown"));
+                        return;
+                    }
+
+                    // Get or Create Admin Profile
+                    ClaimProfile adminProfile = claimManager.getProfile(org.ayosynk.landClaimPlugin.models.ClaimProfile.ADMIN_PROFILE_ID);
+                    if (adminProfile == null) {
+                        adminProfile = new ClaimProfile(org.ayosynk.landClaimPlugin.models.ClaimProfile.ADMIN_PROFILE_ID, org.ayosynk.landClaimPlugin.models.ClaimProfile.ADMIN_PROFILE_ID, "Admin");
+                        plugin.getCacheManager().getProfileCache().put(adminProfile.getProfileId(), adminProfile);
+                    }
+
+                    adminProfile.addChunk(pos);
+                    claimManager.addToSpatialIndex(pos, adminProfile);
+                    claimManager.saveAndSync(adminProfile);
+
+                    plugin.getVisualizationManager().invalidateCache(adminProfile.getProfileId());
+                    plugin.getHookManager().refreshMapHooks();
+
+                    player.sendMessage(configManager.getMessage("admin-chunk-claimed"));
+                }));
+
+        // /claim admin menu
+        manager.command(claimBuilder.literal("admin")
+                .literal("menu")
+                .permission("landclaim.admin")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile adminProfile = claimManager.getProfile(org.ayosynk.landClaimPlugin.models.ClaimProfile.ADMIN_PROFILE_ID);
+
+                    if (adminProfile == null) {
+                        adminProfile = new ClaimProfile(org.ayosynk.landClaimPlugin.models.ClaimProfile.ADMIN_PROFILE_ID, org.ayosynk.landClaimPlugin.models.ClaimProfile.ADMIN_PROFILE_ID, "Admin");
+                        plugin.getCacheManager().getProfileCache().put(adminProfile.getProfileId(), adminProfile);
+                        claimManager.saveAndSync(adminProfile);
+                    }
+
+                    final ClaimProfile finalProfile = adminProfile;
+                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, finalProfile, plugin));
+                }));
+
+        // /claim admin reload
+        manager.command(claimBuilder.literal("admin").literal("reload")
+                .permission("landclaim.admin")
+                .handler(context -> {
+                    Player sender = context.sender().source();
+                    plugin.reloadPlugin();
+                    sender.sendMessage(configManager.getMessage("reloaded"));
+                }));
     }
     private void adminAddChunk(Player sender, int amount, String targetName) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {

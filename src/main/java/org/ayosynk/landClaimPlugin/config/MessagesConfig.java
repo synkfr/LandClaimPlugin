@@ -24,6 +24,9 @@ public class MessagesConfig extends OkaeriConfig {
     public String invalidCommand = "<red>Invalid command usage.";
     public String reloaded = "<green>Configuration and messages reloaded successfully!";
     public String inCombat = "<red>You cannot execute LandClaim commands while in combat!</red>";
+    
+    public String adminChunkClaimed = "<green>Admin bypass: Chunk claimed successfully for the Admin Profile.";
+    public String adminAlreadyClaimed = "<red>This chunk is already claimed by <owner>. Unclaim it first.";
 
     public String claimInfoOwner = "<gray>Claim Owner: <gold><owner>";
     public String claimInfoManage = "\n<gray>[<green><click:run_command:'/claim member'><hover:show_text:'Click to manage claim members'>Manage Members</hover></click></green>] [<gold><click:run_command:'/claim'><hover:show_text:'Click to manage claim setings'>Manage Claim</hover></click></gold>]</gray>";

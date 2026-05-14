@@ -183,4 +183,8 @@ public class LandClaimPlugin extends JavaPlugin {
     public HookManager getHookManager() {
         return hookManager;
     }
+
+    public void reloadPlugin() {
+        configManager.reloadMainConfig();
+    }
 }
