@@ -86,6 +86,35 @@ public class LandClaimExpansion extends PlaceholderExpansion {
             return "No";
         }
 
+        // %landclaim_members% - total members in the claim at player's location
+        if (params.equalsIgnoreCase("members")) {
+            if (player instanceof Player p) {
+                ChunkPosition pos = new ChunkPosition(p.getLocation());
+                ClaimProfile profile = plugin.getClaimManager().getProfileAt(pos);
+                if (profile != null) {
+                    return String.valueOf(profile.getMemberRoles().size());
+                }
+            }
+            return "0";
+        }
+
+        // %landclaim_size% - total chunks in the claim at player's location
+        if (params.equalsIgnoreCase("size")) {
+            if (player instanceof Player p) {
+                ChunkPosition pos = new ChunkPosition(p.getLocation());
+                ClaimProfile profile = plugin.getClaimManager().getProfileAt(pos);
+                if (profile != null) {
+                    return String.valueOf(profile.getOwnedChunks().size());
+                }
+            }
+            return "0";
+        }
+
+        // %landclaim_power% - current power level (placeholder for future mechanics)
+        if (params.equalsIgnoreCase("power")) {
+            return "0";
+        }
+
         // %landclaim_pvp% - whether PvP is enabled in the claim at player's location
         if (params.equalsIgnoreCase("pvp")) {
             if (player instanceof Player p) {
@@ -96,6 +125,44 @@ public class LandClaimExpansion extends PlaceholderExpansion {
                 }
             }
             return "Disabled";
+        }
+
+        // %landclaim_role% - player's role in the claim at their location
+        if (params.equalsIgnoreCase("role")) {
+            if (player instanceof Player p) {
+                ChunkPosition pos = new ChunkPosition(p.getLocation());
+                ClaimProfile profile = plugin.getClaimManager().getProfileAt(pos);
+                if (profile != null) {
+                    if (profile.isOwner(p.getUniqueId())) return "Owner";
+                    String role = profile.getMemberRole(p.getUniqueId());
+                    return role != null ? role : "Visitor";
+                }
+            }
+            return "Visitor";
+        }
+
+        // %landclaim_world% - world name at current location
+        if (params.equalsIgnoreCase("world")) {
+            if (player instanceof Player p) {
+                return p.getWorld().getName();
+            }
+            return "None";
+        }
+
+        // %landclaim_x% - X coordinate
+        if (params.equalsIgnoreCase("x")) {
+            if (player instanceof Player p) {
+                return String.valueOf(p.getLocation().getBlockX());
+            }
+            return "0";
+        }
+
+        // %landclaim_z% - Z coordinate
+        if (params.equalsIgnoreCase("z")) {
+            if (player instanceof Player p) {
+                return String.valueOf(p.getLocation().getBlockZ());
+            }
+            return "0";
         }
 
         // %landclaim_profile% - name of the player's active profile
