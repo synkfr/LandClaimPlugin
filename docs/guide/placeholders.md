@@ -1,60 +1,72 @@
 # Placeholders
 
-LandClaimPlugin supports **PlaceholderAPI** for use in tablists, scoreboards, chat, and more. 
+LandClaimPlugin supports both **internal placeholders** (used in messages and menus) and **PlaceholderAPI** (for external integrations).
 
-## Integration
-To use these placeholders, ensure you have [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) installed on your server.
+## 1. Internal Placeholders
+These placeholders are used within `messages.yml` and GUI configuration files. You can use either **angle brackets** `<>` or **curly braces** `{}` interchangeably.
 
-The plugin automatically registers its expansion with the identifier: `landclaim`
-
-## Claim Placeholders
-These placeholders return information about the claim at the **player's current location**.
-
-| Placeholder | Description | Example Output |
-| :--- | :--- | :--- |
-| `%landclaim_owner%` | Name or alias of the claim owner | `AyoSynk` |
-| `%landclaim_owner_uuid%` | UUID of the claim owner | `f84c...` |
-| `%landclaim_name%` | The custom name of the claim | `Base Alpha` |
-| `%landclaim_is_claimed%` | Whether the current chunk is claimed | `Yes` / `No` |
-| `%landclaim_pvp%` | Whether PvP is currently enabled | `Enabled` / `Disabled` |
-| `%landclaim_role%` | Your role in the current claim | `Owner`, `Member`, `Visitor` |
-| `%landclaim_members%` | Number of members in the claim | `5` |
-| `%landclaim_size%` | Total chunks in the current claim | `15` |
-| `%landclaim_power%` | Current claim power level | `0` |
-| `%landclaim_world%` | Current world name | `world` |
-| `%landclaim_x%` | Your current X coordinate | `124` |
-| `%landclaim_z%` | Your current Z coordinate | `-512` |
-
-## Player Placeholders
-These placeholders return information about the **player's own status and profile**.
-
-| Placeholder | Description | Example Output |
-| :--- | :--- | :--- |
-| `%landclaim_profile%` | Name of player's active profile | `My Primary Claim` |
-| `%landclaim_chunks%` | Chunks used in active profile | `12` |
-| `%landclaim_chunks_used%` | Alias for `%landclaim_chunks%` | `12` |
-| `%landclaim_limit%` | Player's total chunk claim limit | `50` |
-| `%landclaim_chunks_max%` | Alias for `%landclaim_limit%` | `50` |
-
-## Advanced Placeholders
-You can dynamically fetch any raw message string from your `messages.yml` configuration.
-
+### Core Variables
 | Placeholder | Description |
 | :--- | :--- |
-| `%landclaim_message:<key>%` | Fetches the raw message for the specified key. |
+| `<owner>` | Name of the claim owner |
+| `<player>` | Name of the target player (e.g. invited player) |
+| `<name>` | Name of the claim or warp |
+| `<count>` | Number of chunks or items |
+| `<amount>` | Numerical amount |
+| `<limit>` | Max limit for claims, warps, or profiles |
+| `<gap>` | Required distance between claims |
+| `<time>` | Remaining time (e.g. for temporary PvP) |
+| `<seconds>` | Seconds remaining for cooldowns |
 
-**Example:** `%landclaim_message:alreadyClaimed%`
+### Location & Meta
+| Placeholder | Description |
+| :--- | :--- |
+| `<world>` | Name of the world |
+| `<x>` | X coordinate |
+| `<z>` | Z coordinate |
+| `<id>` | Internal Claim ID |
+| `<uuid>` | Player's Unique ID |
+| `<mode>` | Active visualization mode |
+| `<players>` | Comma-separated list of players |
+
+---
+
+## 2. PlaceholderAPI
+To use these in external plugins, ensure you have [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) installed.
+
+**Identifier:** `landclaim`
+
+### Claim Data (Current Location)
+| Placeholder | Description |
+| :--- | :--- |
+| `%landclaim_owner%` | Name of the claim owner at your location |
+| `%landclaim_owner_uuid%` | UUID of the claim owner |
+| `%landclaim_name%` | The custom name of the claim |
+| `%landclaim_role%` | Your role (**Owner**, **Member**, **Visitor**) |
+| `%landclaim_members%` | Number of members in the claim |
+| `%landclaim_size%` | Total chunks in the current claim |
+| `%landclaim_pvp%` | PvP status (**Enabled**/**Disabled**) |
+| `%landclaim_is_claimed%` | Check if chunk is claimed (**Yes**/**No**) |
+| `%landclaim_world%` | Current world name |
+| `%landclaim_x%`, `%landclaim_z%` | Your current coordinates |
+
+### Player Status
+| Placeholder | Description |
+| :--- | :--- |
+| `%landclaim_profile%` | Name of your active profile |
+| `%landclaim_chunks%` | Chunks used in your active profile |
+| `%landclaim_limit%` | Your total chunk claim limit |
+| `%landclaim_power%` | Current power level (if enabled) |
+
+### Dynamic Fetch
+| Placeholder | Description |
+| :--- | :--- |
+| `%landclaim_message:<key>%` | Fetches any raw string from your `messages.yml` |
 
 ---
 
 ## Placeholder Format Compatibility
-The plugin is designed to be flexible with placeholder formats. When configuring your `messages.yml` or menu files, you can use either **angle brackets** or **curly braces** for the plugin's internal placeholders.
-
-### Supported Formats
-Both of these are treated identically by the plugin:
-*   `<owner>` or `{owner}`
-*   `<gap>` or `{gap}`
-*   `<limit>` or `{limit}`
-*   `<time>` or `{time}`
-
-This ensures compatibility with various message styles and prevents configuration errors if you prefer one format over the other.
+As noted above, all internal placeholders support both bracket styles:
+*   `<owner>` is the same as `{owner}`
+*   `<limit>` is the same as `{limit}`
+*   etc.
