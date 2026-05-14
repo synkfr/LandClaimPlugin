@@ -1,8 +1,12 @@
 package org.ayosynk.landClaimPlugin;
 
+import org.ayosynk.landClaimPlugin.api.LandClaimAPI;
+import org.ayosynk.landClaimPlugin.api.LandClaimAPIImpl;
 import org.ayosynk.landClaimPlugin.commands.CommandHandler;
 import org.ayosynk.landClaimPlugin.db.DatabaseManager;
 import org.ayosynk.landClaimPlugin.managers.*;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
+import org.ayosynk.landClaimPlugin.models.Warp;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -10,8 +14,10 @@ import org.bukkit.plugin.java.JavaPlugin;
  * Main plugin class responsible only for lifecycle, setup, and dependency
  * injection.
  * All logic and feature management is delegated to specific managers.
+ *
+ * Implements LandClaimAPI for external plugin integration.
  */
-public class LandClaimPlugin extends JavaPlugin {
+public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
 
     private static LandClaimPlugin instance;
 
@@ -27,6 +33,9 @@ public class LandClaimPlugin extends JavaPlugin {
     private CommandHandler commandHandler;
     private ListenerManager listenerManager;
     private HookManager hookManager;
+
+    // API delegate for interface methods
+    private LandClaimAPIImpl apiDelegate;
 
     @Override
     public void onLoad() {
@@ -87,6 +96,9 @@ public class LandClaimPlugin extends JavaPlugin {
             // 9. Initialize third-party plugins (WorldGuard, Maps)
             hookManager = new HookManager(this, claimManager, configManager);
             hookManager.init();
+
+            // 10. Initialize public API for external plugins
+            apiDelegate = new LandClaimAPIImpl(this);
 
             // Refresh settings once more
             configManager.reloadMainConfig();
@@ -186,5 +198,137 @@ public class LandClaimPlugin extends JavaPlugin {
 
     public void reloadPlugin() {
         configManager.reloadMainConfig();
+    }
+
+    // --- LandClaimAPI Implementation (delegated to apiDelegate) ---
+
+    @Override
+    public boolean isChunkClaimed(String world, int chunkX, int chunkZ) {
+        return apiDelegate.isChunkClaimed(world, chunkX, chunkZ);
+    }
+
+    @Override
+    public boolean isChunkClaimed(org.ayosynk.landClaimPlugin.models.ChunkPosition pos) {
+        return apiDelegate.isChunkClaimed(pos);
+    }
+
+    @Override
+    public boolean isLocationClaimed(org.bukkit.Location location) {
+        return apiDelegate.isLocationClaimed(location);
+    }
+
+    @Override
+    public ClaimProfile getClaimAt(String world, int chunkX, int chunkZ) {
+        return apiDelegate.getClaimAt(world, chunkX, chunkZ);
+    }
+
+    @Override
+    public ClaimProfile getClaimAt(org.ayosynk.landClaimPlugin.models.ChunkPosition pos) {
+        return apiDelegate.getClaimAt(pos);
+    }
+
+    @Override
+    public ClaimProfile getClaimAt(org.bukkit.Location location) {
+        return apiDelegate.getClaimAt(location);
+    }
+
+    @Override
+    public java.util.List<ClaimProfile> getClaimsByOwner(java.util.UUID playerId) {
+        return apiDelegate.getClaimsByOwner(playerId);
+    }
+
+    @Override
+    public java.util.List<ClaimProfile> getClaimsByMember(java.util.UUID playerId) {
+        return apiDelegate.getClaimsByMember(playerId);
+    }
+
+    @Override
+    public ClaimProfile getClaimByName(String name) {
+        return apiDelegate.getClaimByName(name);
+    }
+
+    @Override
+    public int getTotalChunksByOwner(java.util.UUID playerId) {
+        return apiDelegate.getTotalChunksByOwner(playerId);
+    }
+
+    @Override
+    public boolean hasPermission(ClaimProfile profile, java.util.UUID playerId, String permission) {
+        return apiDelegate.hasPermission(profile, playerId, permission);
+    }
+
+    @Override
+    public String getPlayerStatus(ClaimProfile profile, java.util.UUID playerId) {
+        return apiDelegate.getPlayerStatus(profile, playerId);
+    }
+
+    @Override
+    public boolean isOwner(ClaimProfile profile, java.util.UUID playerId) {
+        return apiDelegate.isOwner(profile, playerId);
+    }
+
+    @Override
+    public boolean isMember(ClaimProfile profile, java.util.UUID playerId) {
+        return apiDelegate.isMember(profile, playerId);
+    }
+
+    @Override
+    public boolean isTrusted(ClaimProfile profile, java.util.UUID playerId) {
+        return apiDelegate.isTrusted(profile, playerId);
+    }
+
+    @Override
+    public java.util.Map<String, Warp> getWarps(java.util.UUID profileId) {
+        return apiDelegate.getWarps(profileId);
+    }
+
+    @Override
+    public Warp getWarp(java.util.UUID profileId, String warpName) {
+        return apiDelegate.getWarp(profileId, warpName);
+    }
+
+    @Override
+    public boolean isInCombat(org.bukkit.entity.Player player) {
+        return apiDelegate.isInCombat(player);
+    }
+
+    @Override
+    public int getClaimLimit(org.bukkit.entity.Player player) {
+        return apiDelegate.getClaimLimit(player);
+    }
+
+    @Override
+    public int getClaimLimit(java.util.UUID playerId) {
+        return apiDelegate.getClaimLimit(playerId);
+    }
+
+    @Override
+    public boolean canCreateClaim(java.util.UUID playerId) {
+        return apiDelegate.canCreateClaim(playerId);
+    }
+
+    @Override
+    public boolean adminClaimChunk(org.bukkit.entity.Player player, org.bukkit.Location location) {
+        return apiDelegate.adminClaimChunk(player, location);
+    }
+
+    @Override
+    public boolean adminUnclaimChunk(org.bukkit.entity.Player player, org.bukkit.Location location) {
+        return apiDelegate.adminUnclaimChunk(player, location);
+    }
+
+    @Override
+    public java.util.concurrent.CompletableFuture<Integer> addBonusBlocks(java.util.UUID playerId, int amount) {
+        return apiDelegate.addBonusBlocks(playerId, amount);
+    }
+
+    @Override
+    public java.util.concurrent.CompletableFuture<Integer> getBonusBlocks(java.util.UUID playerId) {
+        return apiDelegate.getBonusBlocks(playerId);
+    }
+
+    @Override
+    public long getServerTime() {
+        return apiDelegate.getServerTime();
     }
 }
