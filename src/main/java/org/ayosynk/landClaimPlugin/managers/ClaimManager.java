@@ -354,7 +354,7 @@ public class ClaimManager {
             UUID owner = getChunkOwner(pos);
             String ownerName = plugin.getServer().getOfflinePlayer(owner).getName();
             player.sendMessage(
-                    configManager.getMessage("already-claimed", "{owner}", ownerName != null ? ownerName : "Unknown"));
+                    configManager.getMessage("already-claimed", "<owner>", ownerName != null ? ownerName : "Unknown"));
             return false;
         }
 
@@ -419,7 +419,7 @@ public class ClaimManager {
         if (worldGuardGap > 0) {
             if (isTooCloseToWorldGuardRegion(pos, worldGuardGap)) {
                 player.sendMessage(
-                        configManager.getMessage("too-close-to-worldguard", "{gap}", String.valueOf(worldGuardGap)));
+                        configManager.getMessage("too-close-to-worldguard", "<gap>", String.valueOf(worldGuardGap)));
                 return false;
             }
         }
@@ -428,7 +428,7 @@ public class ClaimManager {
         if (minGap > 0) {
             if (isTooCloseToOtherProfile(worldName, pos, targetProfile.getProfileId(), minGap)) { // ensure targetProfile owner ID
                 player.sendMessage(
-                        configManager.getMessage("too-close-to-other-claim", "{gap}", String.valueOf(minGap)));
+                        configManager.getMessage("too-close-to-other-claim", "<gap>", String.valueOf(minGap)));
                 return false;
             }
         }
@@ -496,7 +496,7 @@ public class ClaimManager {
                 UUID owner = getChunkOwner(pos);
                 String ownerName = plugin.getServer().getOfflinePlayer(owner).getName();
                 player.sendMessage(
-                        configManager.getMessage("already-claimed", "{owner}",
+                        configManager.getMessage("already-claimed", "<owner>",
                                 ownerName != null ? ownerName : "Unknown"));
                 return 0;
             }

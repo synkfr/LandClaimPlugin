@@ -88,6 +88,18 @@ public class ClaimCommand implements LandClaimCommand {
                     Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profile, plugin));
                 }));
 
+        // /claim settings — alias for /claim menu
+        manager.command(claimBuilder.literal("settings")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
+                    if (profile == null) {
+                        player.sendMessage(configManager.getMessage("no-profile"));
+                        return;
+                    }
+                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profile, plugin));
+                }));
+
         // /claim info
         manager.command(claimBuilder.literal("info")
                 .handler(context -> {
