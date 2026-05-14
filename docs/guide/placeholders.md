@@ -17,6 +17,13 @@ These placeholders return information about the claim at the **player's current 
 | `%landclaim_name%` | The custom name of the claim | `Base Alpha` |
 | `%landclaim_is_claimed%` | Whether the current chunk is claimed | `Yes` / `No` |
 | `%landclaim_pvp%` | Whether PvP is currently enabled | `Enabled` / `Disabled` |
+| `%landclaim_role%` | Your role in the current claim | `Owner`, `Member`, `Visitor` |
+| `%landclaim_members%` | Number of members in the claim | `5` |
+| `%landclaim_size%` | Total chunks in the current claim | `15` |
+| `%landclaim_power%` | Current claim power level | `0` |
+| `%landclaim_world%` | Current world name | `world` |
+| `%landclaim_x%` | Your current X coordinate | `124` |
+| `%landclaim_z%` | Your current Z coordinate | `-512` |
 
 ## Player Placeholders
 These placeholders return information about the **player's own status and profile**.
