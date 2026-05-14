@@ -285,13 +285,15 @@ public class AdminCommand implements LandClaimCommand {
                 return;
             }
 
+            String safeOwnerName = escapeMiniMessage(owner.getName() != null ? owner.getName() : ownerName);
             sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gold>Trusted players for " + owner.getName() + ":"));
+                    .deserialize("<gold>Trusted players for " + safeOwnerName + ":"));
             for (UUID trustedId : trusted.keySet()) {
                 String name = Bukkit.getOfflinePlayer(trustedId).getName();
                 if (name == null) name = trustedId.toString();
+                String safeName = escapeMiniMessage(name);
                 sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<gray>- <gold>" + name));
+                        .deserialize("<gray>- <gold>" + safeName));
             }
         });
     }
@@ -307,16 +309,18 @@ public class AdminCommand implements LandClaimCommand {
 
             UUID targetId = target.getUniqueId();
             boolean foundAny = false;
+            String safeTargetName = escapeMiniMessage(target.getName() != null ? target.getName() : playerName);
             sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gold>Claims where " + target.getName() + " is trusted:"));
-            
+                    .deserialize("<gold>Claims where " + safeTargetName + " is trusted:"));
+
             for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
                 if (profile.isTrusted(targetId)) {
                     foundAny = true;
                     String ownerName = Bukkit.getOfflinePlayer(profile.getProfileId()).getName();
                     if (ownerName == null) ownerName = profile.getProfileId().toString();
+                    String safeOwnerName = escapeMiniMessage(ownerName);
                     sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<gray>- <gold>" + ownerName));
+                            .deserialize("<gray>- <gold>" + safeOwnerName));
                 }
             }
 
@@ -335,17 +339,29 @@ public class AdminCommand implements LandClaimCommand {
                 return;
             }
 
+            String safeClaimName = escapeMiniMessage(profile.getName());
             if (alias.equalsIgnoreCase("reset") || alias.equalsIgnoreCase("none")) {
                 profile.setOwnerAlias(null);
                 sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<green>Owner alias for claim '<white>" + profile.getName() + "<green>' has been reset."));
+                        .deserialize("<green>Owner alias for claim '<white>" + safeClaimName + "<green>' has been reset."));
             } else {
                 profile.setOwnerAlias(alias);
+                String safeAlias = escapeMiniMessage(alias);
                 sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<green>Owner alias for claim '<white>" + profile.getName() + "<green>' set to: <white>" + alias));
+                        .deserialize("<green>Owner alias for claim '<white>" + safeClaimName + "<green>' set to: <white>" + safeAlias));
             }
 
             plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
         });
+    }
+
+    /**
+     * Escape MiniMessage special characters to prevent injection attacks.
+     */
+    private String escapeMiniMessage(String input) {
+        if (input == null) return "";
+        return input.replace("\\", "\\\\")
+                    .replace("<", "\\<")
+                    .replace(">", "\\>");
     }
 }
