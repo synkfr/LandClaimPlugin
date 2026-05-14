@@ -132,7 +132,10 @@ public class VisitorSettingsConfig extends OkaeriConfig {
                         Map.entry("DROP_ITEMS", new ItemConfig("DROPPER", "<yellow>Drop Items",
                                         List.of("<gray>Allow visitors to drop items."))),
                         Map.entry("CLAIM_LAND", new ItemConfig("GOLDEN_SHOVEL", "<yellow>Claim Land",
-                                        List.of("<gray>Allow claiming land on behalf of owner."))));
+                                        List.of("<gray>Allow claiming land on behalf of owner."))),
+                        Map.entry("ADMIN_MENU", new ItemConfig("COMMAND_BLOCK", "<gold>Admin Menu Access",
+                                        List.of("<gray>Allow members to open the /claim menu.", "<gray>Does not allow abandoning the claim.")))
+        );
 
         @Comment("Return to previous menu")
         public ItemConfig back = new ItemConfig(

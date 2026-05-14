@@ -76,28 +76,48 @@ public class ClaimCommand implements LandClaimCommand {
                     Bukkit.getScheduler().runTask(plugin, () -> createProfile(player, name));
                 }));
 
-        // /claim menu — accessible from anywhere, uses player's own profile
+        // /claim menu — prioritize current location if admin, then player's own profile
         manager.command(claimBuilder.literal("menu")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    ClaimProfile profile = claimManager.getActiveProfile(player);
-                    if (profile == null) {
+                    org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation());
+                    ClaimProfile profileAtLoc = claimManager.getProfileAt(pos);
+                    
+                    // Priority 1: Current location if they have ADMIN_MENU flag or are owner
+                    if (profileAtLoc != null && (profileAtLoc.isOwner(player.getUniqueId()) || 
+                            org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profileAtLoc, player.getUniqueId(), "ADMIN_MENU"))) {
+                        Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profileAtLoc, plugin));
+                        return;
+                    }
+
+                    // Priority 2: Player's own active profile
+                    ClaimProfile ownProfile = claimManager.getActiveProfile(player);
+                    if (ownProfile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
-                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profile, plugin));
+                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, ownProfile, plugin));
                 }));
 
         // /claim settings — alias for /claim menu
         manager.command(claimBuilder.literal("settings")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    ClaimProfile profile = claimManager.getActiveProfile(player);
-                    if (profile == null) {
+                    org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation());
+                    ClaimProfile profileAtLoc = claimManager.getProfileAt(pos);
+                    
+                    if (profileAtLoc != null && (profileAtLoc.isOwner(player.getUniqueId()) || 
+                            org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profileAtLoc, player.getUniqueId(), "ADMIN_MENU"))) {
+                        Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profileAtLoc, plugin));
+                        return;
+                    }
+
+                    ClaimProfile ownProfile = claimManager.getActiveProfile(player);
+                    if (ownProfile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
-                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, profile, plugin));
+                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, ownProfile, plugin));
                 }));
 
         // /claim info
