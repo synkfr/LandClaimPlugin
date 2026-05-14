@@ -5,7 +5,6 @@ import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.MessagesConfig;
 import org.ayosynk.landClaimPlugin.config.PluginConfig;
@@ -449,17 +448,20 @@ public class ConfigManager {
         return pluginConfig.cooldownUnstuck;
     }
 
+    @Deprecated // TODO: Implement per-profile visualization colors
     public Color getVisualizationColor(String type) {
         return Color.LIME;
-    } // Temporary stub for v2 border
+    }
 
+    @Deprecated // TODO: Implement configurable particle spacing
     public double getParticleSpacing() {
         return 0.5;
-    } // Temporary stub
+    }
 
+    @Deprecated // TODO: Implement configurable visualization update interval
     public int getVisualizationUpdateInterval() {
         return 20;
-    } // Temporary stub
+    }
 
     public int getWorldGuardGap() {
         return pluginConfig.worldguardGap;
@@ -469,9 +471,10 @@ public class ConfigManager {
         return pluginConfig.minClaimGap;
     }
 
+    @Deprecated // TODO: Implement auto-save logging configuration
     public boolean logAutoSaveMessage() {
         return true;
-    } // Temporary
+    }
 
     public String getDefaultVisualizationMode() {
         return "OFF";
