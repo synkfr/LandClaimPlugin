@@ -12,7 +12,8 @@ import java.util.UUID;
  * are attached to this profile. A player may own at most one ClaimProfile.
  */
 public class ClaimProfile {
-    public static final UUID ADMIN_PROFILE_ID = new UUID(0L, 0L);
+    // Use UUID based on namespace to guarantee no collision with real player UUIDs
+    public static final UUID ADMIN_PROFILE_ID = UUID.nameUUIDFromBytes("landclaim.admin.profile".getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
     private final UUID profileId; // The unique ID of the profile (maps to owner_id in DB for backwards compatibility)
     private UUID realOwnerId; // The actual player UUID who owns the profile
