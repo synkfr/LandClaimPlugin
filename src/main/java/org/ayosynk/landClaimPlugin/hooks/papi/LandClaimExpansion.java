@@ -110,11 +110,6 @@ public class LandClaimExpansion extends PlaceholderExpansion {
             return "0";
         }
 
-        // %landclaim_power% - current power level (placeholder for future mechanics)
-        if (params.equalsIgnoreCase("power")) {
-            return "0";
-        }
-
         // %landclaim_pvp% - whether PvP is enabled in the claim at player's location
         if (params.equalsIgnoreCase("pvp")) {
             if (player instanceof Player p) {

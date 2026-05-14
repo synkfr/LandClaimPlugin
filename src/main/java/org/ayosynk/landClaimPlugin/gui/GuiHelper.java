@@ -77,7 +77,6 @@ public final class GuiHelper {
         return text.replace("{claim_name}", claimName)
                 .replace("{owner}", ownerName)
                 .replace("{size}", String.valueOf(profile.getOwnedChunks().size()))
-                .replace("{power}", "0")
                 .replace("{members}", String.valueOf(profile.getMemberRoles().size()))
                 .replace("{world}", player.getWorld().getName())
                 .replace("{x}", String.valueOf(player.getLocation().getBlockX()))
