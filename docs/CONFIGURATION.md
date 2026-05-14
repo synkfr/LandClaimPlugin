@@ -155,6 +155,24 @@ Complete list of permission flags used across roles, trusted players, and visito
 | `PICKUP_ITEMS` | Pick up dropped items |
 | `DROP_ITEMS` | Drop items from inventory |
 
+### Administrative Flags
+These flags grant control over the claim management systems.
+
+| Flag | Description |
+|------|-------------|
+| `CLAIM_LAND` | Allow members to claim new chunks for the owner's profile |
+| `ADMIN_MENU` | Allow members to open the `/claim menu` while standing in the claim |
+| `MANAGE_SETTINGS` | Access to claim settings (PvP, Color, Toggles) |
+| `MANAGE_MEMBERS` | Access to member management (Add/Remove/Trust) |
+| `MANAGE_ROLES` | Access to role management (Create/Edit/Delete) |
+
+::: warning Owner-Only Restrictions
+Even with `ADMIN_MENU` and management flags, the following actions are **strictly owner-only**:
+- **Abandoning/Deleting** the entire profile or claim.
+- **Renaming** the claim.
+- **Transferring Ownership**.
+:::
+
 ---
 
 ## Default Roles
