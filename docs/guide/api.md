@@ -1,126 +1,146 @@
 # Public API
 
-LandClaimPlugin exposes its core managers through the main plugin instance, allowing other plugins to integrate with the claim system.
+LandClaimPlugin provides a comprehensive API for external plugins to integrate with the claim system. The API includes both a direct interface and custom Bukkit events.
 
-## Getting the Plugin Instance
-
-```java
-// Get the LandClaimPlugin instance from Bukkit
-LandClaimPlugin plugin = (LandClaimPlugin) Bukkit.getPluginManager().getPlugin("LandClaimPlugin");
-if (plugin == null) {
-    // Plugin not installed
-    return;
-}
-```
-
-## Checking if a Chunk is Claimed
+## Quick Start
 
 ```java
-ClaimManager claimManager = plugin.getClaimManager();
+// Get the API instance
+LandClaimAPI api = LandClaimAPI.getInstance();
 
-// From a Bukkit Chunk
-Chunk chunk = player.getLocation().getChunk();
-ChunkPosition pos = new ChunkPosition(chunk);
+// Check if a chunk is claimed
+boolean claimed = api.isLocationClaimed(player.getLocation());
 
-boolean isClaimed = claimManager.isChunkClaimed(pos);
-```
-
-## Getting Claim Info at a Location
-
-```java
-ClaimManager claimManager = plugin.getClaimManager();
-ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-
-// Get the profile that owns this chunk (null if unclaimed)
-ClaimProfile profile = claimManager.getProfileAt(pos);
-
+// Get claim info
+ClaimProfile profile = api.getClaimAt(player.getLocation());
 if (profile != null) {
-    String claimName = profile.getName();
-    UUID ownerId = profile.getOwnerId();
-    int chunkCount = profile.getOwnedChunks().size();
+    player.sendMessage("You are in " + profile.getName());
 }
 ```
 
-## Checking Player Permissions in a Claim
+## API Interface Methods
+
+### Claim Queries
+
+| Method | Description |
+|--------|-------------|
+| `isChunkClaimed(world, x, z)` | Check if specific chunk is claimed |
+| `isLocationClaimed(location)` | Check if location's chunk is claimed |
+| `getClaimAt(location)` | Get ClaimProfile at location (null if wilderness) |
+| `getClaimByName(name)` | Find claim by its name |
+| `getClaimsByOwner(uuid)` | Get all claims owned by a player |
+| `getClaimsByMember(uuid)` | Get all claims where player is a member |
+| `getTotalChunksByOwner(uuid)` | Total chunks across all player's claims |
+
+### Permission Checks
+
+| Method | Description |
+|--------|-------------|
+| `hasPermission(profile, playerId, flag)` | Check if player has specific permission |
+| `getPlayerStatus(profile, playerId)` | Get player status: "owner", "member", "trusted", "visitor" |
+| `isOwner(profile, playerId)` | Check if player owns the claim |
+| `isMember(profile, playerId)` | Check if player is a member |
+| `isTrusted(profile, playerId)` | Check if player is trusted |
+
+### Warp Operations
+
+| Method | Description |
+|--------|-------------|
+| `getWarps(profileId)` | Get all warps in a claim |
+| `getWarp(profileId, name)` | Get specific warp by name |
+
+### Combat & Limits
+
+| Method | Description |
+|--------|-------------|
+| `isInCombat(player)` | Check if player is in combat |
+| `getClaimLimit(player)` | Get player's chunk claim limit |
+| `canCreateClaim(playerId)` | Check if player can create new claim |
+
+### Admin Operations
+
+| Method | Description |
+|--------|-------------|
+| `adminClaimChunk(player, location)` | Force-claim chunk (requires admin permission) |
+| `adminUnclaimChunk(player, location)` | Force-unclaim chunk (requires admin permission) |
+| `addBonusBlocks(playerId, amount)` | Add/subtract bonus claim blocks |
+| `getBonusBlocks(playerId)` | Get player's bonus blocks |
+
+---
+
+## Custom Events
+
+LandClaimPlugin fires custom events that other plugins can listen for:
+
+### ClaimCreateEvent
+
+Fired when a new claim is created.
 
 ```java
-ClaimProfile profile = claimManager.getProfileAt(pos);
-if (profile != null) {
-    UUID playerId = player.getUniqueId();
-
-    // Check if a player has a specific permission flag
-    boolean canOpenDoors = PermissionResolver.hasPermission(profile, playerId, "USE_DOORS");
-    boolean canUseChests = PermissionResolver.hasPermission(profile, playerId, "USE_CONTAINERS");
-
-    // Get the player's status in this claim
-    String status = PermissionResolver.getPlayerStatus(profile, playerId);
-    // Returns: "owner", "member", "trusted", "visitor", or "wilderness"
+@EventHandler
+public void onClaimCreate(ClaimCreateEvent event) {
+    System.out.println("Claim created: " + event.getClaimName());
+    System.out.println("Owner: " + event.getProfile().getOwnerId());
+    System.out.println("Chunk: " + event.getWorld() + " @ " + event.getChunkX() + ", " + event.getChunkZ());
 }
 ```
 
-## Getting a Player's Profile
+### ClaimDeleteEvent
+
+Fired when a claim is deleted.
 
 ```java
-// Get the profile owned by this player
-ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
-
-// Get profile by display name
-ClaimProfile namedProfile = claimManager.getProfileByName("MyBase");
-
-// Check if a player can create a new profile
-boolean canCreate = claimManager.canCreateProfile(player.getUniqueId());
-
-// Get the player's effective chunk limit (includes permission overrides + bonus)
-int limit = claimManager.getClaimLimit(player);
-```
-
-## Working with Warps
-
-```java
-WarpManager warpManager = plugin.getWarpManager();
-
-// Set a warp
-warpManager.setWarp(profileId, "home", player.getLocation(), Material.OAK_DOOR);
-
-// Get a warp
-Warp warp = warpManager.getWarp(profileId, "home");
-if (warp != null) {
-    Location loc = warp.getLocation();
+@EventHandler
+public void onClaimDelete(ClaimDeleteEvent event) {
+    System.out.println("Claim deleted: " + event.getClaimName());
+    System.out.println("Reason: " + event.getReason()); // PLAYER_ABANDON, ADMIN_UNCLAIM, etc.
 }
-
-// Delete a warp
-warpManager.deleteWarp(profileId, "home");
-
-// Get all warps for a profile
-Map<String, Warp> warps = warpManager.getWarps(profileId);
 ```
 
-## Combat Status Check
+### PlayerEnterClaimEvent
+
+Fired when a player enters a claimed chunk.
 
 ```java
-CombatManager combatManager = plugin.getCombatManager();
+@EventHandler
+public void onPlayerEnterClaim(PlayerEnterClaimEvent event) {
+    Player player = event.getPlayer();
+    ClaimProfile claim = event.getProfile();
 
-// Check if a player is currently in combat
-boolean inCombat = combatManager.isInCombat(player);
+    if (event.isFromWilderness()) {
+        player.sendMessage("Entering " + claim.getName());
+    } else {
+        // Player moved from another claim
+        player.sendMessage("Entering " + claim.getName() + " from " + event.getFromClaim().getName());
+    }
+}
 ```
 
-## Available Managers
+### PlayerLeaveClaimEvent
 
-| Manager | Access Method | Purpose |
-|---------|--------------|---------|
-| `ClaimManager` | `plugin.getClaimManager()` | Core claim operations (claim, unclaim, profiles) |
-| `ConfigManager` | `plugin.getConfigManager()` | Configuration and messages |
-| `CacheManager` | `plugin.getCacheManager()` | In-memory caches for profiles and players |
-| `WarpManager` | `plugin.getWarpManager()` | Warp CRUD operations |
-| `CombatManager` | `plugin.getCombatManager()` | Combat tag detection |
-| `VisualizationManager` | `plugin.getVisualizationManager()` | Claim boundary rendering |
-| `HookManager` | `plugin.getHookManager()` | Third-party plugin integrations |
-| `DatabaseManager` | `plugin.getDatabaseManager()` | Direct database access (DAOs) |
-| `RedisManager` | `plugin.getRedisManager()` | Cross-server pub/sub |
+Fired when a player leaves a claimed chunk.
+
+```java
+@EventHandler
+public void onPlayerLeaveClaim(PlayerLeaveClaimEvent event) {
+    if (event.isToWilderness()) {
+        event.getPlayer().sendMessage("Leaving " + event.getClaimName());
+    }
+}
+```
+
+### Registering Listeners
+
+```java
+// In your plugin's onEnable()
+getServer().getPluginManager().registerEvents(new MyClaimListener(), this);
+```
+
+---
 
 ## Permission Flags Reference
 
-These are the flags you can check using `PermissionResolver.hasPermission()`:
+These are the flags you can check using `api.hasPermission()`:
 
 | Flag | Description |
 |------|-------------|
@@ -131,30 +151,23 @@ These are the flags you can check using `PermissionResolver.hasPermission()`:
 | `USE_WORKSTATIONS` | Crafting tables, anvils, etc. |
 | `USE_BEDS` | Sleep in beds |
 | `USE_REDSTONE` | Buttons, levers, pressure plates |
-| `USE_LECTERNS` | Read lecterns |
-| `USE_BELLS` | Ring bells |
-| `DAMAGE_ANIMALS` | Harm passive mobs |
-| `DAMAGE_MONSTERS` | Harm hostile mobs |
-| `BREED_ANIMALS` | Breed animals |
-| `SHEAR_ENTITIES` | Shear sheep |
-| `TRADE_VILLAGERS` | Trade with villagers |
-| `FEED_ANIMALS` | Feed animals |
-| `LEASH_ENTITIES` | Use leads |
-| `MODIFY_ARMOR_STANDS` | Edit armor stands |
-| `MODIFY_ITEM_FRAMES` | Item frame interaction |
-| `RIDE_VEHICLES` | Enter vehicles |
-| `PLACE_VEHICLES` | Place vehicles |
-| `DESTROY_VEHICLES` | Break vehicles |
-| `USE_ENDER_PEARLS` | Throw ender pearls |
-| `USE_CHORUS_FRUIT` | Eat chorus fruit |
-| `PICKUP_ITEMS` | Pick up items |
-| `DROP_ITEMS` | Drop items |
+| `BLOCK_BREAK` | Break blocks |
+| `BLOCK_PLACE` | Place blocks |
+| `BLOCK_IGNITE` | Ignite blocks (fire, flint & steel) |
+| `INTERACT_ENTITIES` | Interact with mobs |
+| `HARM_ENTITIES` | Damage mobs |
+| `MANAGE_MEMBERS` | Add/remove members |
+| `MANAGE_ROLES` | Create/edit roles |
+| `MANAGE_SETTINGS` | Change claim settings |
+| `WARP_MANAGE` | Create/delete warps |
+| `CLAIM_LAND` | Claim land on behalf of owner |
+| `ADMIN_MENU` | Access admin menu |
+
+---
 
 ## Adding as a Dependency
 
 ### Maven
-
-To use LandClaimPlugin as a dependency, add the JitPack repository and the dependency to your `pom.xml`:
 
 ```xml
 <repositories>
@@ -183,5 +196,14 @@ softdepend: [LandClaimPlugin]  # Optional dependency
 ```
 
 ::: tip
-Always use `provided` scope — LandClaimPlugin will already be loaded on the server. You don't need to shade it.
+Always use `provided` scope — LandClaimPlugin will already be loaded on the server.
 :::
+
+---
+
+## Full API Reference
+
+For the complete method signatures, see the source code:
+- API Interface: `src/main/java/org/ayosynk/landClaimPlugin/api/LandClaimAPI.java`
+- API Implementation: `src/main/java/org/ayosynk/landClaimPlugin/api/LandClaimAPIImpl.java`
+- Events: `src/main/java/org/ayosynk/landClaimPlugin/api/event/`
