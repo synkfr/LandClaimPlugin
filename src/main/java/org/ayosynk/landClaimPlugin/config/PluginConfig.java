@@ -73,7 +73,8 @@ public class PluginConfig extends OkaeriConfig {
         public String databaseName = "landclaim";
         @Comment("MySQL/MariaDB username (leave empty for SQLite)")
         public String username = "";
-        @Comment("MySQL/MariaDB password (leave empty for SQLite)")
+        @Comment({"MySQL/MariaDB password (leave empty for SQLite)",
+            "Can also be set via LANDCLAIM_DB_PASSWORD environment variable for security"})
         public String password = "";
         @Comment("Table prefix for all plugin tables")
         public String tablePrefix = "lc_";

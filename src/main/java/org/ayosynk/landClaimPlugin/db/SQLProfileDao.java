@@ -125,7 +125,9 @@ public class SQLProfileDao implements ProfileDao {
                     : "INSERT INTO " + p
                             + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title), enter_title_mode=VALUES(enter_title_mode), leave_title_mode=VALUES(leave_title_mode), owner_alias=VALUES(owner_alias), pvp_enabled=VALUES(pvp_enabled), pvp_timer_end=VALUES(pvp_timer_end), real_owner_id=VALUES(real_owner_id)";
 
-            try (Connection conn = dbManager.getDatabase().getConnection()) {
+            Connection conn = null;
+            try {
+                conn = dbManager.getDatabase().getConnection();
                 conn.setAutoCommit(false);
 
                 // 1. Upsert profile
@@ -263,8 +265,22 @@ public class SQLProfileDao implements ProfileDao {
                 conn.commit();
                 conn.setAutoCommit(true);
             } catch (SQLException e) {
-                plugin.getLogger().severe("Failed to save profile for " + profile.getProfileId());
+                plugin.getLogger().severe("Failed to save profile for " + profile.getProfileId() + ". Rolling back transaction.");
+                try {
+                    if (conn != null) {
+                        conn.rollback();
+                        conn.setAutoCommit(true);
+                    }
+                } catch (SQLException rollbackEx) {
+                    plugin.getLogger().severe("Failed to rollback transaction: " + rollbackEx.getMessage());
+                }
                 e.printStackTrace();
+            } finally {
+                if (conn != null) {
+                    try {
+                        conn.close();
+                    } catch (SQLException ignored) {}
+                }
             }
         });
     }

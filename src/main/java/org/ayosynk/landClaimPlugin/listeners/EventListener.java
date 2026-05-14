@@ -17,15 +17,16 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EventListener implements Listener {
 
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
-    private final Map<UUID, ChunkPosition> lastChunkMap = new HashMap<>();
-    private final Map<UUID, String> lastActionBarMap = new HashMap<>();
-    private final Map<UUID, Boolean> lastClaimStatusMap = new HashMap<>();
+    private final Map<UUID, ChunkPosition> lastChunkMap = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastActionBarMap = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> lastClaimStatusMap = new ConcurrentHashMap<>();
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
             ConfigManager configManager) {

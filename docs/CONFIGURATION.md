@@ -68,7 +68,7 @@ If you disable `multiProfilesEnabled` after players have already created multipl
 | `database.port` | Integer | `3306` | MySQL port |
 | `database.databaseName` | String | `landclaim` | MySQL database name |
 | `database.username` | String | `root` | MySQL username |
-| `database.password` | String | `password` | MySQL password |
+| `database.password` | String | `password` | MySQL password (or set `LANDCLAIM_DB_PASSWORD` env var) |
 | `database.tablePrefix` | String | `lc_` | Prefix for all SQL tables |
 | `database.maximumPoolSize` | Integer | `10` | HikariCP max pool size |
 | `database.minimumIdle` | Integer | `2` | HikariCP min idle connections |

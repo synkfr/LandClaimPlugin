@@ -15,6 +15,8 @@ public class RedisManager {
     private final LandClaimPlugin plugin;
     private JedisPool jedisPool;
     private JedisPubSub pubSub;
+    private static final int MAX_RECONNECT_ATTEMPTS = 5;
+    private int reconnectAttempts = 0;
 
     public RedisManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -51,6 +53,11 @@ public class RedisManager {
     private void startSubscriber() {
         PluginConfig.RedisConfig config = plugin.getConfigManager().getPluginConfig().redis;
 
+        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            plugin.getLogger().severe("Redis reconnection attempts exceeded (" + MAX_RECONNECT_ATTEMPTS + "). Giving up. Redis cross-server sync disabled.");
+            return;
+        }
+
         this.pubSub = new JedisPubSub() {
             @Override
             public void onMessage(String channel, String message) {
@@ -62,10 +69,12 @@ public class RedisManager {
 
         CompletableFuture.runAsync(() -> {
             try (Jedis jedis = jedisPool.getResource()) {
+                reconnectAttempts = 0; // Reset on successful connection
                 jedis.subscribe(pubSub, config.channel);
             } catch (Exception e) {
                 if (!jedisPool.isClosed()) {
-                    plugin.getLogger().warning("Redis subscriber disconnected. Attempting to restart...");
+                    reconnectAttempts++;
+                    plugin.getLogger().warning("Redis subscriber disconnected (attempt " + reconnectAttempts + "/" + MAX_RECONNECT_ATTEMPTS + "). Attempting to restart...");
                     try {
                         Thread.sleep(5000);
                         startSubscriber();

@@ -67,7 +67,7 @@ public class VisualizationManager {
             public void run() {
                 long now = System.currentTimeMillis();
 
-                // Clean up expired temporary timers
+                // Clean up expired temporary timers (thread-safe with ConcurrentHashMap)
                 for (Iterator<Map.Entry<UUID, Long>> it = temporaryTimers.entrySet().iterator(); it.hasNext();) {
                     Map.Entry<UUID, Long> entry = it.next();
                     if (now > entry.getValue()) {
@@ -81,33 +81,34 @@ public class VisualizationManager {
                 }
 
                 // Respawn particles for players using PARTICLE mode
-                for (Map.Entry<UUID, Boolean> entry : visualizationActive.entrySet()) {
-                    Player player = Bukkit.getPlayer(entry.getKey());
+                // Note: We iterate a snapshot to avoid concurrent modification issues
+                new HashSet<>(visualizationActive.keySet()).forEach(playerId -> {
+                    Player player = Bukkit.getPlayer(playerId);
                     if (player == null || !player.isOnline())
-                        continue;
+                        return;
 
-                    ClaimProfile profile = claimManager.getProfile(entry.getKey());
+                    ClaimProfile profile = claimManager.getProfile(playerId);
                     if (profile == null)
-                        continue;
+                        return;
 
                     if ("PARTICLE".equals(profile.getVisualizationMode())) {
                         spawnParticles(player, profile);
                     }
-                }
+                });
 
                 // Also respawn particles for temporary timers
-                for (UUID playerId : temporaryTimers.keySet()) {
+                new HashSet<>(temporaryTimers.keySet()).forEach(playerId -> {
                     Player player = Bukkit.getPlayer(playerId);
                     if (player == null || !player.isOnline())
-                        continue;
+                        return;
 
                     ClaimProfile profile = claimManager.getProfile(playerId);
                     if (profile != null && "PARTICLE".equals(profile.getVisualizationMode())) {
                         spawnParticles(player, profile);
                     }
-                }
+                });
             }
-        }.runTaskTimer(plugin, 20L, 20L);
+        }.runTaskTimer(plugin, 40L, 40L); // Run every 2 seconds instead of every 1 second
     }
 
     public boolean toggleVisualization(Player player) {

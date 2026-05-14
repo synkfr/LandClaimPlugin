@@ -2,6 +2,8 @@ package org.ayosynk.landClaimPlugin.managers;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
+import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.Claim;
 import org.ayosynk.landClaimPlugin.models.ClaimPlayer;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
@@ -32,14 +34,17 @@ public class CacheManager {
         this.claimCache = Caffeine.newBuilder()
                 .expireAfterAccess(30, TimeUnit.MINUTES)
                 .maximumSize(10000)
+                .recordStats()
                 .build();
 
         this.playerCache = Caffeine.newBuilder()
                 .maximumSize(5000)
+                .recordStats()
                 .build();
 
         this.profileCache = Caffeine.newBuilder()
                 .maximumSize(10000)
+                .recordStats()
                 .build();
     }
 
@@ -53,6 +58,29 @@ public class CacheManager {
 
     public Cache<UUID, ClaimProfile> getProfileCache() {
         return profileCache;
+    }
+
+    /**
+     * Log cache statistics for debugging and monitoring.
+     */
+    public void logCacheStats() {
+        CacheStats profileStats = profileCache.stats();
+        CacheStats playerStats = playerCache.stats();
+        CacheStats claimStats = claimCache.stats();
+
+        LandClaimPlugin plugin = LandClaimPlugin.getInstance();
+        if (plugin == null) return;
+
+        plugin.getLogger().info("=== Cache Statistics ===");
+        plugin.getLogger().info("Profile Cache: hitRate=" + String.format("%.2f", profileStats.hitRate() * 100)
+                + "%, hits=" + profileStats.hitCount() + ", misses=" + profileStats.missCount()
+                + ", size=" + profileCache.estimatedSize());
+        plugin.getLogger().info("Player Cache: hitRate=" + String.format("%.2f", playerStats.hitRate() * 100)
+                + "%, hits=" + playerStats.hitCount() + ", misses=" + playerStats.missCount()
+                + ", size=" + playerCache.estimatedSize());
+        plugin.getLogger().info("Claim Cache: hitRate=" + String.format("%.2f", claimStats.hitRate() * 100)
+                + "%, hits=" + claimStats.hitCount() + ", misses=" + claimStats.missCount()
+                + ", size=" + claimCache.estimatedSize());
     }
 
 }
