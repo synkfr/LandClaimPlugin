@@ -78,6 +78,7 @@ public class ClaimProfile {
         coOwnerRole.addFlag("MANAGE_MEMBERS");
         coOwnerRole.addFlag("MANAGE_ROLES");
         coOwnerRole.addFlag("MANAGE_SETTINGS");
+        coOwnerRole.addFlag("ADMIN_MENU");
         coOwnerRole.addFlag("USE_BUCKETS");
         coOwnerRole.addFlag("TRAMPLE_CROPS");
         coOwnerRole.addFlag("BLOCK_BREAK");
