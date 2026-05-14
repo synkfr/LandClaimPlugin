@@ -178,7 +178,7 @@ public class RoleManagementGUI {
                                                         }
                                                 }
 
-                                                if (profile.getRoles().size() >= maxRoles) {
+                                                if (profile.getRoles().size() >= maxRoles && !profile.getProfileId().equals(ClaimProfile.ADMIN_PROFILE_ID)) {
                                                         p.sendMessage(GuiHelper.MM.deserialize(
                                                                         "<red>You have reached your maximum role limit ("
                                                                                         + (maxRoles - 2)

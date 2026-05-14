@@ -33,9 +33,9 @@ public class ClaimSettingsGUI {
                                         "1 1 2 2 B 2 2 1 1"
                         };
 
-                        boolean isOwner = profile.isOwner(player.getUniqueId());
-                        boolean canManageSettings = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS");
-                        boolean canManageRoles = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_ROLES");
+                        boolean canManage = profile.canManage(player);
+                        boolean canManageSettings = canManage || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS");
+                        boolean canManageRoles = canManage || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_ROLES");
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
                         ingredients.put('1', GuiHelper.buildSlot(config.filler1.material, config.filler1.name,
@@ -45,8 +45,8 @@ public class ClaimSettingsGUI {
                         ingredients.put('O', GuiHelper.buildSlot(config.overview.material, config.overview.name,
                                         config.overview.lore, profile, player, ownerName, claimName));
                         
-                        // Rename: OWNER ONLY
-                        ingredients.put('N', isOwner ? GuiHelper.buildSlot(config.rename.material, config.rename.name,
+                        // Rename: OWNER or ADMIN BYPASS
+                        ingredients.put('N', canManage ? GuiHelper.buildSlot(config.rename.material, config.rename.name,
                                         config.rename.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 RenameClaimGUI.open(p, profile, plugin);
@@ -109,8 +109,8 @@ public class ClaimSettingsGUI {
                                                 TitleToggleGUI.open(p, profile, plugin);
                                         }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
 
-                        // Abandon: OWNER ONLY
-                        ingredients.put('A', isOwner ? GuiHelper.buildSlot(config.abandonAll.material, config.abandonAll.name,
+                        // Abandon: OWNER or ADMIN BYPASS
+                        ingredients.put('A', canManage ? GuiHelper.buildSlot(config.abandonAll.material, config.abandonAll.name,
                                         config.abandonAll.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 ConfirmationGUI.open(p, "<red>Abandon ALL claims?", () -> {

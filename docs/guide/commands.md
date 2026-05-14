@@ -61,14 +61,16 @@ All commands use `/claim` (alias: `/c`) as the base.
 
 | Command | Description |
 |---|---|
+| `/claim admin claim` | Claim the current chunk for the global Admin Profile (Server Land) |
+| `/claim admin menu` | Open the management menu for the global Admin Profile |
+| `/claim admin edit <player>` | Open any player's claim management GUI with full override |
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
-| `/claim admin edit <player>` | Open any player's claim management GUI |
 | `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit |
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias |
 | `/claim admin trust list <owner>` | List players trusted by this owner |
 | `/claim admin trust who <player>` | List claims where this player is trusted |
-| `/claim admin reload` | Reload the plugin configuration |
+| `/claim admin reload` | Reload the plugin configuration and messages |
 
 ## Permissions
 

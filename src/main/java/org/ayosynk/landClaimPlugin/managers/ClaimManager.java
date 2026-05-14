@@ -36,7 +36,7 @@ public class ClaimManager {
     private final Map<ChunkPosition, ClaimProfile> chunkToProfileMap = new ConcurrentHashMap<>();
     
     // Helper methods for spatial index management (package-private for RedisManager access)
-    void addToSpatialIndex(ChunkPosition chunk, ClaimProfile profile) {
+    public void addToSpatialIndex(ChunkPosition chunk, ClaimProfile profile) {
         chunkToProfileMap.put(chunk, profile);
     }
     

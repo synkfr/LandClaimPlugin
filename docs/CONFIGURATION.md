@@ -167,11 +167,19 @@ These flags grant control over the claim management systems.
 | `MANAGE_ROLES` | Access to role management (Create/Edit/Delete) |
 
 ::: warning Owner-Only Restrictions
-Even with `ADMIN_MENU` and management flags, the following actions are **strictly owner-only**:
+Even with `ADMIN_MENU` and management flags, the following actions are **strictly owner-only** for regular player claims:
 - **Abandoning/Deleting** the entire profile or claim.
 - **Renaming** the claim.
 - **Transferring Ownership**.
 :::
+
+### Admin & Server Land
+Administrators with the `landclaim.admin` permission have special bypasses for managing server-owned land.
+
+- **Admin Profile**: A global, dedicated profile (UUID `00000000-0000-0000-0000-000000000000`) is used for all Server Land.
+- **Management Bypass**: Any player with `landclaim.admin` can manage the Admin Profile using `/claim admin menu`.
+- **Full Control**: Unlike regular members, admins bypass the "Owner-Only" restrictions when managing the Admin Profile, allowing them to **Rename** (e.g., to "Spawn") or **Abandon** server chunks.
+- **Command Bypass**: `/claim admin claim` allows instant claiming for the server profile, bypassing all connection and limit checks.
 
 ---
 

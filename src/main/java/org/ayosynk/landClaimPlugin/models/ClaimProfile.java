@@ -12,8 +12,9 @@ import java.util.UUID;
  * are attached to this profile. A player may own at most one ClaimProfile.
  */
 public class ClaimProfile {
+    public static final UUID ADMIN_PROFILE_ID = new UUID(0L, 0L);
 
-    private UUID profileId; // The unique ID of the profile (maps to owner_id in DB for backwards compatibility)
+    private final UUID profileId; // The unique ID of the profile (maps to owner_id in DB for backwards compatibility)
     private UUID realOwnerId; // The actual player UUID who owns the profile
     private String name;
     private String ownerAlias;
@@ -96,6 +97,11 @@ public class ClaimProfile {
     }
 
     // --- Owner ---
+    
+    public boolean canManage(org.bukkit.entity.Player player) {
+        if (isOwner(player.getUniqueId())) return true;
+        return profileId.equals(ADMIN_PROFILE_ID) && player.hasPermission("landclaim.admin");
+    }
 
     public UUID getProfileId() {
         return profileId;
