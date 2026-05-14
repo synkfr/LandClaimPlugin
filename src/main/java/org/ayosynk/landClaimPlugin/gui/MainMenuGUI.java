@@ -32,6 +32,11 @@ public class MainMenuGUI {
                                         "2 2 2 1 X 1 2 2 2"
                         };
 
+                        boolean isOwner = profile.isOwner(player.getUniqueId());
+                        boolean canManageSettings = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS");
+                        boolean canManageRoles = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_ROLES");
+                        boolean canManageMembers = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_MEMBERS");
+
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
                         ingredients.put('1', GuiHelper.buildSlot(config.filler1.material, config.filler1.name,
                                         config.filler1.lore, profile, player, ownerName, claimName));
@@ -49,26 +54,44 @@ public class MainMenuGUI {
                                         }));
                         ingredients.put('A', GuiHelper.buildSlot(config.allies.material, config.allies.name,
                                         config.allies.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                if (!canManageSettings) {
+                                                        p.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
+                                                        return;
+                                                }
                                                 p.closeInventory();
                                                 AllyManagementGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('S', GuiHelper.buildSlot(config.settings.material, config.settings.name,
                                         config.settings.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                // Settings menu itself handles granular permissions, but need MANAGE_SETTINGS or ADMIN_MENU to enter
+                                                // Actually ADMIN_MENU is what got them here, so we allow entry.
                                                 p.closeInventory();
                                                 ClaimSettingsGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('T', GuiHelper.buildSlot(config.trusted.material, config.trusted.name,
                                         config.trusted.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                if (!canManageMembers) {
+                                                        p.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
+                                                        return;
+                                                }
                                                 p.closeInventory();
                                                 TrustManagementGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('E', GuiHelper.buildSlot(config.members.material, config.members.name,
                                         config.members.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                if (!canManageMembers) {
+                                                        p.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
+                                                        return;
+                                                }
                                                 p.closeInventory();
                                                 MemberManagementGUI.open(p, profile, plugin);
                                         }));
                         ingredients.put('V', GuiHelper.buildSlot(config.visitors.material, config.visitors.name,
                                         config.visitors.lore, profile, player, ownerName, claimName, (p, e) -> {
+                                                if (!canManageSettings) {
+                                                        p.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
+                                                        return;
+                                                }
                                                 p.closeInventory();
                                                 VisitorSettingsGUI.open(p, profile, plugin);
                                         }));

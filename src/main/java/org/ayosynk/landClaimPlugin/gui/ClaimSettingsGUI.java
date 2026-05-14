@@ -33,6 +33,10 @@ public class ClaimSettingsGUI {
                                         "1 1 2 2 B 2 2 1 1"
                         };
 
+                        boolean isOwner = profile.isOwner(player.getUniqueId());
+                        boolean canManageSettings = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS");
+                        boolean canManageRoles = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_ROLES");
+
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
                         ingredients.put('1', GuiHelper.buildSlot(config.filler1.material, config.filler1.name,
                                         config.filler1.lore, profile, player, ownerName, claimName));
@@ -40,26 +44,31 @@ public class ClaimSettingsGUI {
                                         config.filler2.lore, profile, player, ownerName, claimName));
                         ingredients.put('O', GuiHelper.buildSlot(config.overview.material, config.overview.name,
                                         config.overview.lore, profile, player, ownerName, claimName));
-                        ingredients.put('N', GuiHelper.buildSlot(config.rename.material, config.rename.name,
+                        
+                        // Rename: OWNER ONLY
+                        ingredients.put('N', isOwner ? GuiHelper.buildSlot(config.rename.material, config.rename.name,
                                         config.rename.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 RenameClaimGUI.open(p, profile, plugin);
-                                        }));
-                        ingredients.put('C', GuiHelper.buildSlot(config.color.material, config.color.name,
+                                        }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
+                        ingredients.put('C', canManageSettings ? GuiHelper.buildSlot(config.color.material, config.color.name,
                                         config.color.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 ChangeClaimColorGUI.open(p, profile, plugin);
-                                        }));
-                        ingredients.put('R', GuiHelper.buildSlot(config.roles.material, config.roles.name,
+                                        }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
+                        ingredients.put('R', canManageRoles ? GuiHelper.buildSlot(config.roles.material, config.roles.name,
                                         config.roles.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 RoleManagementGUI.open(p, profile, plugin);
-                                        }));
+                                        }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
                         java.util.List<String> modifiedPvpLore = new java.util.ArrayList<>();
                         for (String line : config.pvpToggle.lore) {
                                 modifiedPvpLore.add(line.replace("<pvp_status>", profile.isPvpEnabled() ? "<green>Enabled" : "<red>Disabled"));
                         }
-                        ingredients.put('W', GuiHelper.buildSlot(config.pvpToggle.material, config.pvpToggle.name,
+                        ingredients.put('W', canManageSettings ? GuiHelper.buildSlot(config.pvpToggle.material, config.pvpToggle.name,
                                         modifiedPvpLore, profile, player, ownerName, claimName, (p, e) -> {
                                                 boolean newState = !profile.isPvpEnabled();
                                                 profile.setPvpEnabled(newState);
@@ -78,26 +87,30 @@ public class ClaimSettingsGUI {
 
                                                 p.closeInventory();
                                                 ClaimSettingsGUI.open(p, profile, plugin);
-                                        }));
-                        ingredients.put('V', GuiHelper.buildSlot(config.visibility.material, config.visibility.name,
+                                        }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
+                        ingredients.put('V', canManageSettings ? GuiHelper.buildSlot(config.visibility.material, config.visibility.name,
                                         config.visibility.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 String currentMode = profile.getVisualizationMode();
                                                 String newMode = "DISPLAY_ENTITY".equals(currentMode) ? "PARTICLE"
-                                                                : "DISPLAY_ENTITY";
+                                                                 : "DISPLAY_ENTITY";
                                                 profile.setVisualizationMode(newMode);
                                                 plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
                                                 plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
                                                 p.sendMessage(plugin.getConfigManager().getMessage(
-                                                                "visibility-mode-changed", "<mode>", newMode));
+                                                                 "visibility-mode-changed", "<mode>", newMode));
                                                 p.closeInventory();
                                                 ClaimSettingsGUI.open(p, profile, plugin);
-                                        }));
-                        ingredients.put('T', GuiHelper.buildSlot(config.titleToggle.material, config.titleToggle.name,
+                                        }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
+                        ingredients.put('T', canManageSettings ? GuiHelper.buildSlot(config.titleToggle.material, config.titleToggle.name,
                                         config.titleToggle.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 TitleToggleGUI.open(p, profile, plugin);
-                                        }));
-                        ingredients.put('A', GuiHelper.buildSlot(config.abandonAll.material, config.abandonAll.name,
+                                        }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
+                        // Abandon: OWNER ONLY
+                        ingredients.put('A', isOwner ? GuiHelper.buildSlot(config.abandonAll.material, config.abandonAll.name,
                                         config.abandonAll.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
                                                 ConfirmationGUI.open(p, "<red>Abandon ALL claims?", () -> {
@@ -106,7 +119,8 @@ public class ClaimSettingsGUI {
                                                                         .getMessage("profile-abandoned"));
                                                         plugin.getHookManager().refreshMapHooks();
                                                 }, () -> ClaimSettingsGUI.open(p, profile, plugin));
-                                        }));
+                                        }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
                         ingredients.put('B', GuiHelper.buildSlot(config.back.material, config.back.name,
                                         config.back.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();

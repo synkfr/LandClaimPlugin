@@ -24,6 +24,7 @@ Internal placeholders are **not global**. They only work in specific messages wh
 | `<world>`, `<x>`, `<z>` | Location coordinates | Wand, Claim List |
 | `<id>` | Internal Claim ID | Admin Claim Info |
 | `<uuid>` | Player's Unique ID | Admin Claim Info |
+| `ADMIN_MENU` | **Permission Flag**: Allows non-owners (like Co-owners) to access the `/claim menu` for the claim they are standing in. | Role Editor |
 | `<time>`, `<seconds>` | Remaining time/cooldown | PvP, Unstuck |
 | `<gap>` | Required distance | Gap protection messages |
 | `<players>` | List of trusted players | Claim Info |
@@ -71,3 +72,14 @@ These return data about the player's own profile and limits.
 All internal placeholders support both bracket styles interchangeably in configuration files:
 *   `<owner>` is the same as `{owner}`
 *   `<limit>` is the same as `{limit}`
+
+---
+
+## Administrative Restrictions
+Even if a player has the `ADMIN_MENU` flag, the following actions are **strictly owner-only**:
+*   **Abandoning/Deleting** the profile or claim.
+*   **Renaming** the claim.
+*   **Transferring Ownership**.
+
+These restrictions ensure that while Co-owners can manage settings and members, the claim's existence and identity remain secure.
+
