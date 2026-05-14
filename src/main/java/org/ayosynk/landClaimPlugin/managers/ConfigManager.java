@@ -141,9 +141,30 @@ public class ConfigManager {
             it.load(true);
         });
 
-        // Ensure CLAIM_LAND exists to fix backward compatibility for servers updating from older versions
+        // Ensure new flags exist to fix backward compatibility for servers updating from older versions
+        boolean changed = false;
         if (!visitorSettingsConfig.flags.containsKey("CLAIM_LAND")) {
             visitorSettingsConfig.flags.put("CLAIM_LAND", new VisitorSettingsConfig.ItemConfig("GOLDEN_SHOVEL", "<yellow>Claim Land", java.util.List.of("<gray>Allow claiming land on behalf of owner.")));
+            changed = true;
+        }
+        if (!visitorSettingsConfig.flags.containsKey("ADMIN_MENU")) {
+            visitorSettingsConfig.flags.put("ADMIN_MENU", new VisitorSettingsConfig.ItemConfig("COMMAND_BLOCK", "<gold>Admin Menu Access", java.util.List.of("<gray>Allow members to open the /claim menu.", "<gray>Does not allow abandoning the claim.")));
+            changed = true;
+        }
+        if (!visitorSettingsConfig.flags.containsKey("MANAGE_SETTINGS")) {
+            visitorSettingsConfig.flags.put("MANAGE_SETTINGS", new VisitorSettingsConfig.ItemConfig("COMPARATOR", "<yellow>Manage Settings", java.util.List.of("<gray>Allow changing claim settings (PvP, Color, Toggles).")));
+            changed = true;
+        }
+        if (!visitorSettingsConfig.flags.containsKey("MANAGE_MEMBERS")) {
+            visitorSettingsConfig.flags.put("MANAGE_MEMBERS", new VisitorSettingsConfig.ItemConfig("PLAYER_HEAD", "<yellow>Manage Members", java.util.List.of("<gray>Allow adding/removing members and trusted players.")));
+            changed = true;
+        }
+        if (!visitorSettingsConfig.flags.containsKey("MANAGE_ROLES")) {
+            visitorSettingsConfig.flags.put("MANAGE_ROLES", new VisitorSettingsConfig.ItemConfig("WRITABLE_BOOK", "<yellow>Manage Roles", java.util.List.of("<gray>Allow creating, editing, and deleting roles.")));
+            changed = true;
+        }
+
+        if (changed) {
             visitorSettingsConfig.save();
         }
 

@@ -134,7 +134,13 @@ public class VisitorSettingsConfig extends OkaeriConfig {
                         Map.entry("CLAIM_LAND", new ItemConfig("GOLDEN_SHOVEL", "<yellow>Claim Land",
                                         List.of("<gray>Allow claiming land on behalf of owner."))),
                         Map.entry("ADMIN_MENU", new ItemConfig("COMMAND_BLOCK", "<gold>Admin Menu Access",
-                                        List.of("<gray>Allow members to open the /claim menu.", "<gray>Does not allow abandoning the claim.")))
+                                        List.of("<gray>Allow members to open the /claim menu.", "<gray>Does not allow abandoning the claim."))),
+                        Map.entry("MANAGE_SETTINGS", new ItemConfig("COMPARATOR", "<yellow>Manage Settings",
+                                        List.of("<gray>Allow changing claim settings (PvP, Color, Toggles)."))),
+                        Map.entry("MANAGE_MEMBERS", new ItemConfig("PLAYER_HEAD", "<yellow>Manage Members",
+                                        List.of("<gray>Allow adding/removing members and trusted players."))),
+                        Map.entry("MANAGE_ROLES", new ItemConfig("WRITABLE_BOOK", "<yellow>Manage Roles",
+                                        List.of("<gray>Allow creating, editing, and deleting roles.")))
         );
 
         @Comment("Return to previous menu")

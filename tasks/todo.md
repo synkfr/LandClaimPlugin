@@ -8,8 +8,8 @@
     - [x] `package.json` (if applicable) <!-- id: 4 -->
     - [x] `docs/` files <!-- id: 5 -->
 - [x] Verify all updates <!-- id: 6 -->
-- [ ] Git commit and push to `master` <!-- id: 7 -->
+- [x] Git commit and push to `master` <!-- id: 7 -->
 
 ## Review
-- [ ] Version 2.1.4 is correctly set in all files.
-- [ ] Changes are pushed to master.
+- [x] Version 2.1.4 is correctly set in all files.
+- [x] Changes are pushed to master.
