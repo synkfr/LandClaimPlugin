@@ -32,10 +32,10 @@ public class MainMenuGUI {
                                         "2 2 2 1 X 1 2 2 2"
                         };
 
-                        boolean isOwner = profile.isOwner(player.getUniqueId());
-                        boolean canManageSettings = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS");
-                        boolean canManageRoles = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_ROLES");
-                        boolean canManageMembers = isOwner || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_MEMBERS");
+                        boolean canManage = profile.canManage(player);
+                        boolean canManageSettings = canManage || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_SETTINGS");
+                        boolean canManageRoles = canManage || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_ROLES");
+                        boolean canManageMembers = canManage || org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profile, player.getUniqueId(), "MANAGE_MEMBERS");
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
                         ingredients.put('1', GuiHelper.buildSlot(config.filler1.material, config.filler1.name,
