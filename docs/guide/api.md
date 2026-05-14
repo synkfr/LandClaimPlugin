@@ -181,7 +181,7 @@ These are the flags you can check using `api.hasPermission()`:
     <dependency>
         <groupId>com.github.synkfr</groupId>
         <artifactId>LandClaimPlugin</artifactId>
-        <version>2.1.3</version>
+        <version>2.1.4</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
