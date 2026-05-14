@@ -1,5 +1,5 @@
 name: LandClaimPlugin
-version: "2.1.3"
+version: "2.1.4"
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: "1.21"
 author: AyoSynk
