@@ -130,6 +130,16 @@ public class VisualizationManager {
         redrawDisplays(player);
     }
 
+    /**
+     * Redraw visualization for a specific player (public API).
+     */
+    public void redrawDisplaysForPlayer(Player player) {
+        if (player == null || !player.isOnline()) return;
+        // Ensure visualization is active and redraw
+        visualizationActive.put(player.getUniqueId(), true);
+        redrawDisplays(player);
+    }
+
     public void invalidateCache(UUID playerId) {
         if (mergedEdgesCache.remove(playerId) != null) {
             cacheSize.decrementAndGet();

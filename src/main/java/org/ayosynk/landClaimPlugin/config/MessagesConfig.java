@@ -95,6 +95,8 @@ public class MessagesConfig extends OkaeriConfig {
     public String autoClaimDisabled = "<red>Auto-claim disabled.";
     public String autoUnclaimEnabled = "<green>Auto-unclaim enabled.";
     public String autoUnclaimDisabled = "<red>Auto-unclaim disabled.";
+    public String invalidVisualizationMode = "<red>Invalid visualization mode. Use: display_entities, particles, or off";
+    public String visualizationModeChanged = "<green>Visualization mode set to <gold><mode></gold>.";
 
     // CommandHandler specifics
     public String memberInvited = "<green>You have invited <gold><player></gold> to your claim.";

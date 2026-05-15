@@ -67,6 +67,15 @@ public class ClaimCommand implements LandClaimCommand {
                     toggleVisibility(player);
                 }));
 
+        // /claim toggle <display_entities|particles>
+        manager.command(claimBuilder.literal("toggle")
+                .required("mode", StringParser.stringParser())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String mode = (String) context.get("mode");
+                    toggleVisualizationMode(player, mode);
+                }));
+
         // /claim create <name>
         manager.command(claimBuilder.literal("create")
                 .required("name", StringParser.greedyStringParser())
@@ -211,8 +220,40 @@ public class ClaimCommand implements LandClaimCommand {
             Chunk chunk = player.getLocation().getChunk();
             if (claimManager.claimChunk(player, chunk)) {
                 player.sendMessage(configManager.getMessage("chunk-claimed"));
+                // Update action bar immediately
+                updateActionBarInstant(player);
             }
         });
+    }
+
+    private void updateActionBarInstant(Player player) {
+        org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation().getChunk());
+        org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfileAt(pos);
+
+        String message;
+        UUID playerId = player.getUniqueId();
+
+        if (profile != null) {
+            UUID ownerId = claimManager.getChunkOwner(pos);
+            String ownerName = profile.getDisplayOwnerName();
+
+            if (playerId.equals(ownerId)) {
+                message = configManager.getActionBarMessage("actionbar-owned-by-you");
+            } else {
+                String status = org.ayosynk.landClaimPlugin.managers.PermissionResolver.getPlayerStatus(profile, playerId);
+                if (status.equals("member") || status.equals("trusted")) {
+                    message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
+                } else if (player.hasPermission("landclaim.admin")) {
+                    message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
+                } else {
+                    message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>", ownerName);
+                }
+            }
+        } else {
+            message = configManager.getActionBarMessage("actionbar-wilderness");
+        }
+
+        player.sendActionBar(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize(message));
     }
 
     private void createProfile(Player player, String name) {
@@ -272,6 +313,48 @@ public class ClaimCommand implements LandClaimCommand {
             } else {
                 player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
             }
+        });
+    }
+
+    private void toggleVisualizationMode(Player player, String mode) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ClaimProfile profile = claimManager.getActiveProfile(player);
+            if (profile == null) {
+                player.sendMessage(configManager.getMessage("no-profile"));
+                return;
+            }
+
+            String newMode;
+            switch (mode) {
+                case "display_entities":
+                case "display-entities":
+                case "entity":
+                case "entities":
+                    newMode = "DISPLAY_ENTITY";
+                    break;
+                case "particles":
+                case "particle":
+                    newMode = "PARTICLE";
+                    break;
+                case "off":
+                    newMode = "OFF";
+                    break;
+                default:
+                    player.sendMessage(configManager.getMessage("invalid-visualization-mode"));
+                    return;
+            }
+
+            String oldMode = profile.getVisualizationMode();
+            profile.setVisualizationMode(newMode);
+            claimManager.saveAndSync(profile);
+
+            // Update visualization immediately
+            visualizationManager.handlePlayerJoin(player);
+            visualizationManager.redrawDisplaysForPlayer(player);
+
+            String modeName = newMode.equals("DISPLAY_ENTITY") ? "Display Entities" :
+                              newMode.equals("PARTICLE") ? "Particles" : "Off";
+            player.sendMessage(configManager.getMessage("visualization-mode-changed", "<mode>", modeName));
         });
     }
 
