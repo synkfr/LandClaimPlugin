@@ -67,7 +67,7 @@ public class ClaimCommand implements LandClaimCommand {
                     toggleVisibility(player);
                 }));
 
-        // /claim toggle <display_entities|particles>
+        // /claim toggle <display_entities|particles|off>
         manager.command(claimBuilder.literal("toggle")
                 .required("mode", StringParser.stringParser())
                 .handler(context -> {
@@ -220,7 +220,9 @@ public class ClaimCommand implements LandClaimCommand {
             Chunk chunk = player.getLocation().getChunk();
             if (claimManager.claimChunk(player, chunk)) {
                 player.sendMessage(configManager.getMessage("chunk-claimed"));
-                // Update action bar immediately
+                // Update action bar cache so EventListener sends correct message
+                plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
+                // Also send immediate action bar update
                 updateActionBarInstant(player);
             }
         });
