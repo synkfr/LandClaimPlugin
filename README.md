@@ -127,6 +127,7 @@ Respect WorldGuard regions when players attempt to claim land.
 | `/claim menu` | Open the main claim management GUI |
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
+| `/claim toggle <mode>` | Switch visualization mode (`display_entities`, `particles`, `off`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block if trapped |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
 | `/claim pvp <on/off> [time]` | Toggle PvP globally in the claim, with an optional time duration in seconds |

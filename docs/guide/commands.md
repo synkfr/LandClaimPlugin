@@ -13,6 +13,7 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim menu` | Open the main claim management GUI |
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
+| `/claim toggle <mode>` | Switch visualization mode (`display_entities`, `particles`, `off`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
 | `/claim pvp <on/off> [time]` | Toggle PvP in the claim, with optional duration in seconds |
