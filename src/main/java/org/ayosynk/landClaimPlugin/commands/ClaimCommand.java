@@ -69,7 +69,7 @@ public class ClaimCommand implements LandClaimCommand {
 
         // /claim toggle <display_entities|particles|off>
         manager.command(claimBuilder.literal("toggle")
-                .required("mode", StringParser.stringParser())
+                .required("mode", StringParser.stringParser(), VisualizationModeSuggestions.modes())
                 .handler(context -> {
                     Player player = context.sender().source();
                     String mode = (String) context.get("mode");
