@@ -294,6 +294,10 @@ public class ConfigManager {
             it.saveDefaults();
             it.load(true);
         });
+
+        // Populate blocked lists on initial load (not just on reload)
+        blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
+        blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
     }
 
     public void reloadMainConfig() {
