@@ -359,7 +359,7 @@ public class ClaimManager {
         }
 
         UUID playerId = player.getUniqueId();
-        ClaimProfile targetProfile = getProfile(playerId);
+        ClaimProfile targetProfile = getActiveProfile(player);
 
         // Delegated claiming check
         if (targetProfile == null) {
@@ -466,7 +466,7 @@ public class ClaimManager {
             }
         }
 
-        ClaimProfile profile = getProfile(playerId);
+        ClaimProfile profile = getActiveProfile(player);
         if (profile == null) {
             String defaultName = player.getName() + "'s Claim";
             profile = new ClaimProfile(playerId, defaultName);

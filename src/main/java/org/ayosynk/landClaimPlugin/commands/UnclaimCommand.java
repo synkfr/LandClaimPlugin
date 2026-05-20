@@ -59,7 +59,7 @@ public class UnclaimCommand implements LandClaimCommand {
                 return;
             }
 
-            if (!profile.getProfileId().equals(player.getUniqueId())) {
+            if (!profile.isOwner(player.getUniqueId())) {
                 player.sendMessage(configManager.getMessage("not-owner"));
                 return;
             }

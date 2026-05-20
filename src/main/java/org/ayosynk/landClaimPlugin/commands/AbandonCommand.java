@@ -36,7 +36,7 @@ public class AbandonCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     UUID playerId = player.getUniqueId();
 
-                    ClaimProfile profile = claimManager.getProfile(playerId);
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
@@ -47,11 +47,11 @@ public class AbandonCommand implements LandClaimCommand {
                         return;
                     }
 
-                    int chunksDeleted = claimManager.abandonProfile(playerId);
+                    int chunksDeleted = claimManager.abandonProfile(profile.getProfileId());
                     player.sendMessage(configManager.getMessage("profile-abandoned",
                             "<chunks>", String.valueOf(chunksDeleted)));
 
-                    plugin.getVisualizationManager().invalidateCache(playerId);
+                    plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
                     plugin.getHookManager().refreshMapHooks();
                 }));
     }
