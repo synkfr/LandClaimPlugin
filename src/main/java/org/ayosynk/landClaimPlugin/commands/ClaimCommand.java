@@ -1,8 +1,7 @@
 package org.ayosynk.landClaimPlugin.commands;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
-import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
-import org.ayosynk.landClaimPlugin.gui.WarpManagementGUI;
+import org.ayosynk.landClaimPlugin.gui.*;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
@@ -22,9 +21,11 @@ import org.incendo.cloud.parser.standard.StringParser;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
- * Handles: /claim, /claim auto, /claim visible, /claim info, /claim menu
+ * Handles: /claim, /claim auto, /claim visible, /claim info, /claim menu,
+ * /claim menu <subcommand>, /claim rename, /claim color, /claim visualization, /claim unclaimall
  */
 public class ClaimCommand implements LandClaimCommand {
 
@@ -195,6 +196,147 @@ public class ClaimCommand implements LandClaimCommand {
                     String state = context.get("state");
                     Integer time = context.getOrDefault("time", null);
                     togglePvp(player, state.equalsIgnoreCase("on"), time);
+                }));
+
+        // ========== /claim menu <subcommand> shortcuts ==========
+
+        // /claim menu settings
+        manager.command(claimBuilder.literal("menu").literal("settings")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    if (!checkMenuPermission(player, profile, "MANAGE_SETTINGS")) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> ClaimSettingsGUI.open(player, profile, plugin));
+                }));
+
+        // /claim menu members
+        manager.command(claimBuilder.literal("menu").literal("members")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    if (!checkMenuPermission(player, profile, "MANAGE_MEMBERS")) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> MemberManagementGUI.open(player, profile, plugin));
+                }));
+
+        // /claim menu roles
+        manager.command(claimBuilder.literal("menu").literal("roles")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    if (!checkMenuPermission(player, profile, "MANAGE_ROLES")) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> RoleManagementGUI.open(player, profile, plugin));
+                }));
+
+        // /claim menu trusted
+        manager.command(claimBuilder.literal("menu").literal("trusted")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    if (!checkMenuPermission(player, profile, "MANAGE_MEMBERS")) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> TrustManagementGUI.open(player, profile, plugin));
+                }));
+
+        // /claim menu visitors
+        manager.command(claimBuilder.literal("menu").literal("visitors")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    if (!checkMenuPermission(player, profile, "MANAGE_SETTINGS")) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> VisitorSettingsGUI.open(player, profile, plugin));
+                }));
+
+        // /claim menu allies
+        manager.command(claimBuilder.literal("menu").literal("allies")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    if (!checkMenuPermission(player, profile, "MANAGE_SETTINGS")) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> AllyManagementGUI.open(player, profile, plugin));
+                }));
+
+        // /claim menu map
+        manager.command(claimBuilder.literal("menu").literal("map")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> ClaimMapGUI.open(player, profile, plugin));
+                }));
+
+        // /claim menu warps
+        manager.command(claimBuilder.literal("menu").literal("warps")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    ClaimProfile profile = resolveProfileForMenu(player);
+                    if (profile == null) return;
+                    Bukkit.getScheduler().runTask(plugin, () -> WarpManagementGUI.open(player, profile, plugin));
+                }));
+
+        // ========== /claim rename <name> ==========
+        manager.command(claimBuilder.literal("rename")
+                .required("name", StringParser.greedyStringParser())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String name = context.get("name");
+                    Bukkit.getScheduler().runTask(plugin, () -> renameClaim(player, name));
+                }));
+
+        // ========== /claim color <color> ==========
+        manager.command(claimBuilder.literal("color")
+                .required("color", StringParser.greedyStringParser(),
+                        (ctx, input) -> java.util.concurrent.CompletableFuture.completedFuture(
+                                java.util.Arrays.asList(
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("red"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("blue"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("green"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("yellow"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("orange"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("purple"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("cyan"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("pink"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("lime"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("white"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("black"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("gray"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("brown"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("magenta"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("light_blue"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("light_gray"),
+                                        org.incendo.cloud.suggestion.Suggestion.suggestion("#")
+                                )))
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String color = context.get("color");
+                    Bukkit.getScheduler().runTask(plugin, () -> changeClaimColor(player, color));
+                }));
+
+        // ========== /claim visualization <mode> — alias for /claim toggle ==========
+        manager.command(claimBuilder.literal("visualization")
+                .required("mode", StringParser.stringParser(), VisualizationModeSuggestions.modes())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String mode = (String) context.get("mode");
+                    toggleVisualizationMode(player, mode);
+                }));
+
+        // ========== /claim unclaimall ==========
+        manager.command(claimBuilder.literal("unclaimall")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
+                }));
+
+        // /claim unclaimall confirm
+        manager.command(claimBuilder.literal("unclaimall").literal("confirm")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    Bukkit.getScheduler().runTask(plugin, () -> unclaimAll(player));
                 }));
     }
 
@@ -522,5 +664,160 @@ public class ClaimCommand implements LandClaimCommand {
                 player.sendMessage(configManager.getMessage("warp-teleport", "<name>", name));
             }
         });
+    }
+
+    // ========== Helpers for new CLI commands ==========
+
+    private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9 ]{3,32}$");
+    private static final Pattern HEX_PATTERN = Pattern.compile("^#[0-9A-Fa-f]{6}$");
+
+    // Named color -> hex mapping (same as ChangeClaimColorGUI)
+    private static final Map<String, String> NAMED_COLORS = Map.ofEntries(
+            Map.entry("black", "#1D1D21"),
+            Map.entry("blue", "#3C44AA"),
+            Map.entry("brown", "#835432"),
+            Map.entry("cyan", "#169C9C"),
+            Map.entry("gray", "#474F52"),
+            Map.entry("grey", "#474F52"),
+            Map.entry("green", "#5E7C16"),
+            Map.entry("light_blue", "#3AB3DA"),
+            Map.entry("lightblue", "#3AB3DA"),
+            Map.entry("lime", "#80C71F"),
+            Map.entry("light_gray", "#9D9D97"),
+            Map.entry("lightgray", "#9D9D97"),
+            Map.entry("light_grey", "#9D9D97"),
+            Map.entry("lightgrey", "#9D9D97"),
+            Map.entry("magenta", "#C74EBD"),
+            Map.entry("orange", "#F9801D"),
+            Map.entry("pink", "#F38BAA"),
+            Map.entry("purple", "#8932B8"),
+            Map.entry("red", "#B02E26"),
+            Map.entry("white", "#F9FFFE"),
+            Map.entry("yellow", "#FED83D")
+    );
+
+    /**
+     * Resolve the profile for /claim menu subcommands.
+     * Priority: location-based profile (if owner/ADMIN_MENU), then active profile.
+     */
+    private ClaimProfile resolveProfileForMenu(Player player) {
+        ChunkPosition pos = new ChunkPosition(player.getLocation());
+        ClaimProfile profileAtLoc = claimManager.getProfileAt(pos);
+
+        if (profileAtLoc != null && (profileAtLoc.isOwner(player.getUniqueId()) ||
+                org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(
+                        profileAtLoc, player.getUniqueId(), "ADMIN_MENU"))) {
+            return profileAtLoc;
+        }
+
+        ClaimProfile ownProfile = claimManager.getActiveProfile(player);
+        if (ownProfile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+        }
+        return ownProfile;
+    }
+
+    /**
+     * Check if a player has permission to access a menu subcommand.
+     * Owners and admins always pass; members need the specific flag.
+     */
+    private boolean checkMenuPermission(Player player, ClaimProfile profile, String flag) {
+        boolean canManage = profile.canManage(player);
+        boolean hasFlag = canManage ||
+                org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(
+                        profile, player.getUniqueId(), flag);
+        if (!hasFlag) {
+            player.sendMessage(configManager.getMessage("no-permission"));
+            return false;
+        }
+        return true;
+    }
+
+    private void renameClaim(Player player, String name) {
+        ClaimProfile profile = claimManager.getActiveProfile(player);
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return;
+        }
+
+        if (!profile.canManage(player)) {
+            player.sendMessage(configManager.getMessage("not-owner"));
+            return;
+        }
+
+        if (!NAME_PATTERN.matcher(name).matches()) {
+            player.sendMessage(configManager.getMessage("claim-name-invalid"));
+            return;
+        }
+
+        // Check uniqueness
+        boolean unique = claimManager.getAllProfiles().stream()
+                .noneMatch(cp -> cp.getName().equalsIgnoreCase(name)
+                        && !cp.getProfileId().equals(profile.getProfileId()));
+
+        if (!unique) {
+            player.sendMessage(configManager.getMessage("name-already-in-use"));
+            return;
+        }
+
+        profile.setName(name);
+        claimManager.saveAndSync(profile);
+        player.sendMessage(configManager.getMessage("claim-renamed", "<name>", name));
+    }
+
+    private void changeClaimColor(Player player, String colorInput) {
+        ClaimProfile profile = claimManager.getActiveProfile(player);
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return;
+        }
+
+        boolean canManageSettings = profile.canManage(player) ||
+                org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(
+                        profile, player.getUniqueId(), "MANAGE_SETTINGS");
+        if (!canManageSettings) {
+            player.sendMessage(configManager.getMessage("no-permission"));
+            return;
+        }
+
+        // Resolve color: try named color first, then hex
+        String hex = NAMED_COLORS.get(colorInput.toLowerCase());
+        if (hex == null) {
+            // Try as hex code
+            hex = colorInput.startsWith("#") ? colorInput : "#" + colorInput;
+            if (!HEX_PATTERN.matcher(hex).matches()) {
+                player.sendMessage(configManager.getMessage("claim-color-invalid"));
+                return;
+            }
+        }
+
+        profile.setClaimColor(hex.toUpperCase());
+        claimManager.saveAndSync(profile);
+
+        // Refresh hooks and visualization
+        plugin.getHookManager().refreshMapHooks();
+        plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
+
+        player.sendMessage(configManager.getMessage("claim-color-changed"));
+    }
+
+    private void unclaimAll(Player player) {
+        ClaimProfile profile = claimManager.getActiveProfile(player);
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return;
+        }
+
+        if (!profile.isOwner(player.getUniqueId())) {
+            player.sendMessage(configManager.getMessage("not-owner"));
+            return;
+        }
+
+        int chunksDeleted = claimManager.abandonProfile(profile.getProfileId());
+        player.sendMessage(configManager.getMessage("profile-abandoned",
+                "<chunks>", String.valueOf(chunksDeleted)));
+
+        plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
+        plugin.getHookManager().refreshMapHooks();
     }
 }
