@@ -197,4 +197,13 @@ public class EventListener implements Listener {
         lastActionBarMap.remove(playerId);
         lastClaimStatusMap.remove(playerId);
     }
+
+    /**
+     * Update player's action bar cache immediately (for commands that change claim state)
+     */
+    public void updatePlayerClaimCache(Player player) {
+        ChunkPosition currentPos = new ChunkPosition(player.getLocation().getChunk());
+        lastChunkMap.put(player.getUniqueId(), currentPos);
+        lastClaimStatusMap.put(player.getUniqueId(), claimManager.isChunkClaimed(currentPos));
+    }
 }

@@ -95,6 +95,8 @@ public class MessagesConfig extends OkaeriConfig {
     public String autoClaimDisabled = "<red>Auto-claim disabled.";
     public String autoUnclaimEnabled = "<green>Auto-unclaim enabled.";
     public String autoUnclaimDisabled = "<red>Auto-unclaim disabled.";
+    public String invalidVisualizationMode = "<red>Invalid visualization mode. Use: display_entities, particles, or off";
+    public String visualizationModeChanged = "<green>Visualization mode set to <gold><mode></gold>.";
 
     // CommandHandler specifics
     public String memberInvited = "<green>You have invited <gold><player></gold> to your claim.";
@@ -137,7 +139,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String multiProfilesDisabled = "<red>The multi-profile system is currently disabled on this server.";
     public String alreadyHasProfile = "<red>You already have a claim profile.";
     public String profileAbandoned = "<red>All your claims have been abandoned.";
-    public String unclaimAllConfirm = "<yellow>Are you sure? Type /claim abandon confirm to proceed.";
+    public String unclaimAllConfirm = "<yellow>Are you sure? Type <click:run_command:'/claim unclaimall confirm'><gold>/claim unclaimall confirm</gold></click> to proceed.";
 
     // --- Trust / Member ---
     public String notAMember = "<red>That player is not a member of this claim.";

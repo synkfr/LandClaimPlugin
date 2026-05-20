@@ -127,11 +127,31 @@ Respect WorldGuard regions when players attempt to claim land.
 | `/claim menu` | Open the main claim management GUI |
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
+| `/claim toggle <mode>` | Switch visualization mode (`display_entities`, `particles`, `off`) |
+| `/claim visualization <mode>` | Alias for `/claim toggle` |
+| `/claim rename <name>` | Rename your active claim profile (3-32 alphanumeric characters) |
+| `/claim color <color>` | Change claim color using a named color or hex code (e.g., `red`, `#FF5500`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block if trapped |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
+| `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires confirmation) |
 | `/claim pvp <on/off> [time]` | Toggle PvP globally in the claim, with an optional time duration in seconds |
 | `/unclaim` | Unclaim the chunk you're standing in |
 | `/unclaim all` | Unclaim all chunks belonging to your active profile |
+
+### Menu Shortcuts
+
+Jump directly to specific GUI panels without navigating through the main menu.
+
+| Command | Description |
+|---|---|
+| `/claim menu settings` | Open claim settings (color, PvP, visibility, etc.) |
+| `/claim menu members` | Open member management |
+| `/claim menu roles` | Open role management |
+| `/claim menu trusted` | Open trusted player management |
+| `/claim menu visitors` | Open visitor settings |
+| `/claim menu allies` | Open ally management |
+| `/claim menu map` | Open the claim map |
+| `/claim menu warps` | Open warp management |
 
 ### Management Commands
 <details>

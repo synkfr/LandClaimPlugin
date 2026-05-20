@@ -52,6 +52,10 @@ If you disable `multiProfilesEnabled` after players have already created multipl
 | `blockWorld` | List | `[world_nether, world_the_end]` | Worlds where claiming is disabled |
 | `blockCmd` | List | `[setwarp, warp]` | Commands blocked inside others' claims |
 
+::: tip
+Changes to `blockWorld` and `blockCmd` take effect immediately on server startup — no `/claim admin reload` needed. To unblock a dimension, simply remove it from the list and restart.
+:::
+
 ### Protection Gaps
 
 | Key | Type | Default | Description |

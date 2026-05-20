@@ -13,11 +13,32 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim menu` | Open the main claim management GUI |
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
+| `/claim toggle <mode>` | Switch visualization mode (`display_entities`, `particles`, `off`) |
+| `/claim visualization <mode>` | Alias for `/claim toggle` |
+| `/claim rename <name>` | Rename your active claim profile (3-32 alphanumeric characters) |
+| `/claim color <color>` | Change claim color using a named color (e.g., `red`, `lime`) or hex code (e.g., `#FF5500`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
+| `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires `/claim unclaimall confirm`) |
 | `/claim pvp <on/off> [time]` | Toggle PvP in the claim, with optional duration in seconds |
 | `/unclaim` | Unclaim the chunk you're standing in |
 | `/unclaim all` | Unclaim all chunks belonging to your active profile |
+
+## Menu Shortcuts
+
+Jump directly to specific GUI panels without navigating through the main menu.
+These commands respect the same permission checks as clicking the GUI buttons.
+
+| Command | Permission Required | Description |
+|---|---|---|
+| `/claim menu settings` | `MANAGE_SETTINGS` | Open claim settings (color, PvP, visibility, titles) |
+| `/claim menu members` | `MANAGE_MEMBERS` | Open member management |
+| `/claim menu roles` | `MANAGE_ROLES` | Open role management |
+| `/claim menu trusted` | `MANAGE_MEMBERS` | Open trusted player management |
+| `/claim menu visitors` | `MANAGE_SETTINGS` | Open visitor settings |
+| `/claim menu allies` | `MANAGE_SETTINGS` | Open ally management |
+| `/claim menu map` | — | Open the claim map |
+| `/claim menu warps` | — | Open warp management |
 
 ## Member Commands
 
