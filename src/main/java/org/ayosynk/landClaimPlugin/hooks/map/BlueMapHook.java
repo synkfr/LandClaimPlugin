@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.hooks.map;
 
+import com.flowpowered.math.vector.Vector2d;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
@@ -9,7 +10,7 @@ import de.bluecolored.bluemap.api.math.Shape;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.bukkit.Bukkit;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 
 import java.util.*;
 
@@ -36,23 +37,36 @@ public class BlueMapHook {
 
     public void update() {
         BlueMapAPI.getInstance().ifPresent(api -> {
-            Map<String, Map<UUID, Set<ChunkPosition>>> worldPlayerClaims = new HashMap<>();
+            // Build world -> (profileId -> chunks) index directly from all cached profiles
+            Map<String, Map<UUID, Set<ChunkPosition>>> worldProfileClaims = new HashMap<>();
+            // Keep a profile lookup by profileId for later use
+            Map<UUID, ClaimProfile> profileLookup = new HashMap<>();
 
-            for (UUID playerId : getAllPlayerIds()) {
-                org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
-                if (profile == null)
-                    continue;
-                Set<ChunkPosition> claims = profile.getOwnedChunks();
-                for (ChunkPosition pos : claims) {
-                    worldPlayerClaims
+            Collection<ClaimProfile> allProfiles = claimManager.getAllProfiles();
+            int totalChunks = 0;
+
+            for (ClaimProfile profile : allProfiles) {
+                Set<ChunkPosition> chunks = profile.getOwnedChunks();
+                if (chunks.isEmpty()) continue;
+
+                UUID profileId = profile.getProfileId();
+                profileLookup.put(profileId, profile);
+
+                for (ChunkPosition pos : chunks) {
+                    worldProfileClaims
                             .computeIfAbsent(pos.world(), k -> new HashMap<>())
-                            .computeIfAbsent(playerId, k -> new HashSet<>())
+                            .computeIfAbsent(profileId, k -> new HashSet<>())
                             .add(pos);
+                    totalChunks++;
                 }
             }
 
+            plugin.getLogger().info("[BlueMap] Updating markers: " + allProfiles.size() + " profiles, " + totalChunks + " total chunks across " + worldProfileClaims.size() + " worlds.");
+
             double fillOpacity = plugin.getConfigManager().getPluginConfig().bluemap.fillOpacity;
             double borderOpacity = plugin.getConfigManager().getPluginConfig().bluemap.borderOpacity;
+
+            int totalMarkers = 0;
 
             for (BlueMapMap map : api.getMaps()) {
                 String worldId = map.getWorld().getId();
@@ -62,8 +76,9 @@ public class BlueMapHook {
                         .defaultHidden(false)
                         .build();
 
-                Map<UUID, Set<ChunkPosition>> playerClaimsInWorld = null;
-                for (Map.Entry<String, Map<UUID, Set<ChunkPosition>>> entry : worldPlayerClaims.entrySet()) {
+                Map<UUID, Set<ChunkPosition>> profileClaimsInWorld = null;
+                String matchedWorldName = null;
+                for (Map.Entry<String, Map<UUID, Set<ChunkPosition>>> entry : worldProfileClaims.entrySet()) {
                     String worldName = entry.getKey();
                     if (worldId.equals(worldName)
                             || worldId.endsWith("/" + worldName)
@@ -72,90 +87,85 @@ public class BlueMapHook {
                             || (worldName.equals("world") && worldId.contains("overworld"))
                             || (worldName.equals("world_nether") && worldId.contains("the_nether"))
                             || (worldName.equals("world_the_end") && worldId.contains("the_end"))) {
-                        playerClaimsInWorld = entry.getValue();
+                        profileClaimsInWorld = entry.getValue();
+                        matchedWorldName = worldName;
                         break;
                     }
                 }
 
-                if (playerClaimsInWorld != null) {
-                    for (Map.Entry<UUID, Set<ChunkPosition>> entry : playerClaimsInWorld.entrySet()) {
-                        UUID playerId = entry.getKey();
-                        org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
-                        if (profile == null)
-                            continue;
-                            
-                        String playerName = profile.getDisplayOwnerName();
-                        int r, g, b;
-                        if (profile != null && profile.getClaimColor() != null
-                                && profile.getClaimColor().length() >= 7) {
-                            try {
-                                String hex = profile.getClaimColor().startsWith("#")
-                                        ? profile.getClaimColor().substring(1)
-                                        : profile.getClaimColor();
-                                r = Integer.parseInt(hex.substring(0, 2), 16);
-                                g = Integer.parseInt(hex.substring(2, 4), 16);
-                                b = Integer.parseInt(hex.substring(4, 6), 16);
-                            } catch (NumberFormatException ex) {
-                                Random rnd = new Random(playerId.getMostSignificantBits());
-                                r = rnd.nextInt(200) + 55;
-                                g = rnd.nextInt(200) + 55;
-                                b = rnd.nextInt(200) + 55;
-                            }
-                        } else {
-                            Random rnd = new Random(playerId.getMostSignificantBits());
+                if (profileClaimsInWorld == null) {
+                    plugin.getLogger().info("[BlueMap] No claims matched for map world '" + worldId + "'. Known claim worlds: " + worldProfileClaims.keySet());
+                    map.getMarkerSets().put("landclaims", markerSet);
+                    continue;
+                }
+
+                plugin.getLogger().info("[BlueMap] Matched world '" + matchedWorldName + "' -> BlueMap world '" + worldId + "' with " + profileClaimsInWorld.size() + " profiles.");
+
+                for (Map.Entry<UUID, Set<ChunkPosition>> entry : profileClaimsInWorld.entrySet()) {
+                    UUID profileId = entry.getKey();
+                    ClaimProfile profile = profileLookup.get(profileId);
+                    if (profile == null) continue;
+
+                    String playerName = profile.getDisplayOwnerName();
+                    int r, g, b;
+                    if (profile.getClaimColor() != null
+                            && profile.getClaimColor().length() >= 7) {
+                        try {
+                            String hex = profile.getClaimColor().startsWith("#")
+                                    ? profile.getClaimColor().substring(1)
+                                    : profile.getClaimColor();
+                            r = Integer.parseInt(hex.substring(0, 2), 16);
+                            g = Integer.parseInt(hex.substring(2, 4), 16);
+                            b = Integer.parseInt(hex.substring(4, 6), 16);
+                        } catch (NumberFormatException ex) {
+                            Random rnd = new Random(profileId.getMostSignificantBits());
                             r = rnd.nextInt(200) + 55;
                             g = rnd.nextInt(200) + 55;
                             b = rnd.nextInt(200) + 55;
                         }
-                        Color pFill = new Color(r, g, b, (float) fillOpacity);
-                        Color pBorder = new Color(r, g, b, (float) borderOpacity);
+                    } else {
+                        Random rnd = new Random(profileId.getMostSignificantBits());
+                        r = rnd.nextInt(200) + 55;
+                        g = rnd.nextInt(200) + 55;
+                        b = rnd.nextInt(200) + 55;
+                    }
+                    Color pFill = new Color(r, g, b, (float) fillOpacity);
+                    Color pBorder = new Color(r, g, b, (float) borderOpacity);
 
-                        Set<ChunkPosition> chunks = entry.getValue();
-                        List<double[][]> polygons = createPolygons(chunks);
-                        int i = 0;
-                        for (double[][] polygon : polygons) {
-                            if (polygon[0].length < 3)
-                                continue;
+                    Set<ChunkPosition> chunks = entry.getValue();
+                    List<double[][]> polygons = createPolygons(chunks);
+                    int i = 0;
+                    for (double[][] polygon : polygons) {
+                        if (polygon[0].length < 3)
+                            continue;
 
-                            Shape.Builder shapeBuilder = Shape.builder();
-
-                            try {
-                                Class<?> vectorClass = Class.forName("com.flowpowered.math.vector.Vector2d", true,
-                                        BlueMapAPI.class.getClassLoader());
-                                java.lang.reflect.Constructor<?> vectorConstructor = vectorClass
-                                        .getConstructor(double.class, double.class);
-                                java.lang.reflect.Method addPointMethod = shapeBuilder.getClass().getMethod("addPoint",
-                                        vectorClass);
-
-                                for (int j = 0; j < polygon[0].length; j++) {
-                                    Object vec = vectorConstructor.newInstance(polygon[0][j], polygon[1][j]);
-                                    addPointMethod.invoke(shapeBuilder, vec);
-                                }
-                            } catch (Exception ex) {
-                                plugin.getLogger().warning("Failed to create BlueMap shape: " + ex.getMessage());
-                                continue;
-                            }
-
-                            Shape shape = shapeBuilder.build();
-
-                            ShapeMarker marker = ShapeMarker.builder()
-                                    .label(playerName + "'s Claim")
-                                    .shape(shape, 64)
-                                    .fillColor(pFill)
-                                    .lineColor(pBorder)
-                                    .lineWidth(2)
-                                    .depthTestEnabled(false)
-                                    .build();
-
-                            String markerId = playerId.toString() + "_" + i;
-                            markerSet.getMarkers().put(markerId, marker);
-                            i++;
+                        Shape.Builder shapeBuilder = Shape.builder();
+                        for (int j = 0; j < polygon[0].length; j++) {
+                            shapeBuilder.addPoint(new Vector2d(polygon[0][j], polygon[1][j]));
                         }
+
+                        Shape shape = shapeBuilder.build();
+
+                        ShapeMarker marker = ShapeMarker.builder()
+                                .label(playerName + "'s Claim")
+                                .shape(shape, 64)
+                                .fillColor(pFill)
+                                .lineColor(pBorder)
+                                .lineWidth(2)
+                                .depthTestEnabled(false)
+                                .build();
+
+                        String markerId = profileId.toString() + "_" + i;
+                        markerSet.getMarkers().put(markerId, marker);
+                        i++;
+                        totalMarkers++;
                     }
                 }
 
                 map.getMarkerSets().put("landclaims", markerSet);
             }
+
+            plugin.getLogger().info("[BlueMap] Marker update complete. Total markers created: " + totalMarkers);
         });
     }
 
@@ -237,19 +247,6 @@ public class BlueMapHook {
             }
         }
         return polygons;
-    }
-
-    private Set<UUID> getAllPlayerIds() {
-        Set<UUID> playerIds = new HashSet<>();
-        for (var offlinePlayer : Bukkit.getOfflinePlayers()) {
-            if (offlinePlayer.hasPlayedBefore()) {
-                UUID playerId = offlinePlayer.getUniqueId();
-                if (claimManager.getProfile(playerId) != null) {
-                    playerIds.add(playerId);
-                }
-            }
-        }
-        return playerIds;
     }
 
     public boolean isActive() {
