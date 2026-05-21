@@ -16,3 +16,9 @@
 
 ## CLI vs GUI Parity
 - **When adding a feature accessible via GUI, always consider adding a CLI shortcut too.** Players should be able to perform common actions both ways. Reuse the same validation logic (name patterns, uniqueness checks, permission checks) across both entry points.
+
+## Map Hooks (BlueMap/Dynmap)
+- **Never scan `Bukkit.getOfflinePlayers()` to find profiles.** Use `claimManager.getAllProfiles()` directly. The offline player scan is slow (O(n) over ALL players who ever joined), misses multi-profile data, and depends on cache lookups that may be empty.
+- **Never use reflection for classes available at compile time.** If `bluemap-api` is a `provided` dependency, use its classes (`Vector2d`, `Shape.Builder`) directly. Reflection silently fails and produces zero markers with no visible error.
+- **Always add debug logging to map hooks.** Log profile/chunk counts and world-matching results so users can diagnose issues from server logs.
+
