@@ -80,10 +80,18 @@ public class BlueMapHook {
                 String matchedWorldName = null;
                 for (Map.Entry<String, Map<UUID, Set<ChunkPosition>>> entry : worldProfileClaims.entrySet()) {
                     String worldName = entry.getKey();
+                    // BlueMap sanitizes world folder names (spaces → underscores),
+                    // so we normalize before comparing to handle names like "earth preview" → "earth_preview"
+                    String sanitizedWorldName = worldName.replace(" ", "_");
                     if (worldId.equals(worldName)
                             || worldId.endsWith("/" + worldName)
                             || worldId.endsWith("\\" + worldName)
                             || worldId.endsWith(":" + worldName)
+                            || worldId.equals(sanitizedWorldName)
+                            || worldId.endsWith("/" + sanitizedWorldName)
+                            || worldId.endsWith("\\" + sanitizedWorldName)
+                            || worldId.endsWith(":" + sanitizedWorldName)
+                            || worldId.contains(sanitizedWorldName)
                             || (worldName.equals("world") && worldId.contains("overworld"))
                             || (worldName.equals("world_nether") && worldId.contains("the_nether"))
                             || (worldName.equals("world_the_end") && worldId.contains("the_end"))) {
