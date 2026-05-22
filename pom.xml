@@ -73,6 +73,10 @@
                                     <pattern>org.incendo.cloud</pattern>
                                     <shadedPattern>org.ayosynk.landClaimPlugin.lib.cloud</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.flowpowered.math</pattern>
+                                    <shadedPattern>org.ayosynk.landClaimPlugin.lib.flowmath</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
@@ -192,8 +196,16 @@
         <dependency>
             <groupId>de.bluecolored</groupId>
             <artifactId>bluemap-api</artifactId>
-            <version>2.7.7</version>
+            <version>2.7.8</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- flow-math is required by bluemap-api's Shape/Vector2d classes but
+             BlueMap 5.20+ no longer exports it to plugins at runtime -->
+        <dependency>
+            <groupId>com.flowpowered</groupId>
+            <artifactId>flow-math</artifactId>
+            <version>1.0.3</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>us.dynmap</groupId>
