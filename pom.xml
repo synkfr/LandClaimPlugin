@@ -195,14 +195,6 @@
             <version>2.7.8</version>
             <scope>provided</scope>
         </dependency>
-        <!-- flow-math is required by bluemap-api's Shape/Vector2d classes but
-             BlueMap 5.20+ no longer exports it to plugins at runtime -->
-        <dependency>
-            <groupId>com.flowpowered</groupId>
-            <artifactId>flow-math</artifactId>
-            <version>1.0.3</version>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>DynmapCoreAPI</artifactId>

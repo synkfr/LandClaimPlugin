@@ -1,6 +1,5 @@
 package org.ayosynk.landClaimPlugin.hooks.map;
 
-import com.flowpowered.math.vector.Vector2d;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
@@ -12,6 +11,8 @@ import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.*;
 
 public class BlueMapHook {
@@ -19,9 +20,26 @@ public class BlueMapHook {
     private final ClaimManager claimManager;
     private boolean active = false;
 
+    // Cached reflection handles for Vector2d — loaded from BlueMap's classloader
+    // to avoid LinkageError when both plugin and BlueMap have their own flow-math copies
+    private final Constructor<?> vector2dConstructor;
+    private final Method addPointMethod;
+
     public BlueMapHook(LandClaimPlugin plugin, ClaimManager claimManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
+
+        // Load Vector2d from BlueMap's classloader to ensure type identity
+        // with Shape.Builder.addPoint()'s expected parameter type
+        try {
+            Class<?> vector2dClass = Shape.class.getClassLoader()
+                    .loadClass("com.flowpowered.math.vector.Vector2d");
+            this.vector2dConstructor = vector2dClass.getConstructor(double.class, double.class);
+            this.addPointMethod = Shape.Builder.class.getMethod("addPoint", vector2dClass);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Failed to initialize BlueMap Vector2d reflection. "
+                    + "Is BlueMap API compatible?", e);
+        }
 
         BlueMapAPI.onEnable(api -> {
             active = true;
@@ -134,8 +152,14 @@ public class BlueMapHook {
                             continue;
 
                         Shape.Builder shapeBuilder = Shape.builder();
-                        for (int j = 0; j < polygon[0].length; j++) {
-                            shapeBuilder.addPoint(new Vector2d(polygon[0][j], polygon[1][j]));
+                        try {
+                            for (int j = 0; j < polygon[0].length; j++) {
+                                Object point = vector2dConstructor.newInstance(polygon[0][j], polygon[1][j]);
+                                addPointMethod.invoke(shapeBuilder, point);
+                            }
+                        } catch (ReflectiveOperationException e) {
+                            plugin.getLogger().severe("[BlueMap] Failed to create shape points: " + e.getMessage());
+                            continue;
                         }
 
                         Shape shape = shapeBuilder.build();
