@@ -80,21 +80,7 @@ public class BlueMapHook {
                 String matchedWorldName = null;
                 for (Map.Entry<String, Map<UUID, Set<ChunkPosition>>> entry : worldProfileClaims.entrySet()) {
                     String worldName = entry.getKey();
-                    // BlueMap sanitizes world folder names (spaces → underscores),
-                    // so we normalize before comparing to handle names like "earth preview" → "earth_preview"
-                    String sanitizedWorldName = worldName.replace(" ", "_");
-                    if (worldId.equals(worldName)
-                            || worldId.endsWith("/" + worldName)
-                            || worldId.endsWith("\\" + worldName)
-                            || worldId.endsWith(":" + worldName)
-                            || worldId.equals(sanitizedWorldName)
-                            || worldId.endsWith("/" + sanitizedWorldName)
-                            || worldId.endsWith("\\" + sanitizedWorldName)
-                            || worldId.endsWith(":" + sanitizedWorldName)
-                            || worldId.contains(sanitizedWorldName)
-                            || (worldName.equals("world") && worldId.contains("overworld"))
-                            || (worldName.equals("world_nether") && worldId.contains("the_nether"))
-                            || (worldName.equals("world_the_end") && worldId.contains("the_end"))) {
+                    if (matchesBlueMapWorld(worldId, worldName)) {
                         profileClaimsInWorld = entry.getValue();
                         matchedWorldName = worldName;
                         break;
@@ -175,6 +161,74 @@ public class BlueMapHook {
 
             plugin.getLogger().info("[BlueMap] Marker update complete. Total markers created: " + totalMarkers);
         });
+    }
+
+    /**
+     * Check whether a BlueMap world ID corresponds to a Bukkit world name.
+     * <p>
+     * BlueMap world IDs use several formats depending on version and server type:
+     * <ul>
+     *   <li>{@code "worldName#minecraft:overworld"} (common modern format)</li>
+     *   <li>{@code "path/to/worldName"} or {@code "namespace:worldName"}</li>
+     *   <li>Spaces in folder names may be kept or replaced with underscores</li>
+     * </ul>
+     * Vanilla Bukkit maps {@code "world"} → overworld, {@code "world_nether"} → the_nether,
+     * {@code "world_the_end"} → the_end.
+     */
+    private static boolean matchesBlueMapWorld(String blueMapWorldId, String bukkitWorldName) {
+        // Normalize: BlueMap may replace spaces with underscores
+        String normalizedBukkit = bukkitWorldName.replace(" ", "_");
+        String normalizedBlueMap = blueMapWorldId.replace(" ", "_");
+
+        // Split on '#' — BlueMap uses "worldName#minecraft:dimension"
+        String blueMapBase = normalizedBlueMap.contains("#")
+                ? normalizedBlueMap.substring(0, normalizedBlueMap.indexOf('#'))
+                : normalizedBlueMap;
+        String blueMapDimension = normalizedBlueMap.contains("#")
+                ? normalizedBlueMap.substring(normalizedBlueMap.indexOf('#') + 1)
+                : "";
+
+        // Extract the last path segment if the base contains path separators
+        String blueMapBaseName = blueMapBase;
+        int lastSep = Math.max(blueMapBase.lastIndexOf('/'), blueMapBase.lastIndexOf('\\'));
+        if (lastSep >= 0) {
+            blueMapBaseName = blueMapBase.substring(lastSep + 1);
+        }
+
+        // Direct name match (with or without path)
+        if (blueMapBase.equals(normalizedBukkit) || blueMapBaseName.equals(normalizedBukkit)) {
+            // For custom world names, the base name match is sufficient.
+            // For vanilla "world" names, also check the dimension suffix.
+            if (normalizedBukkit.equals("world")) {
+                return blueMapDimension.isEmpty() || blueMapDimension.contains("overworld");
+            }
+            if (normalizedBukkit.equals("world_nether")) {
+                return blueMapDimension.isEmpty() || blueMapDimension.contains("the_nether");
+            }
+            if (normalizedBukkit.equals("world_the_end")) {
+                return blueMapDimension.isEmpty() || blueMapDimension.contains("the_end");
+            }
+            return true;
+        }
+
+        // Vanilla world name mappings: Bukkit uses "world" for the overworld folder,
+        // but the dimension in the BlueMap ID might differ from the folder name.
+        if (normalizedBukkit.equals("world") && blueMapDimension.contains("overworld")) {
+            return true;
+        }
+        if (normalizedBukkit.equals("world_nether") && blueMapDimension.contains("the_nether")) {
+            return true;
+        }
+        if (normalizedBukkit.equals("world_the_end") && blueMapDimension.contains("the_end")) {
+            return true;
+        }
+
+        // Colon-separated format: "namespace:worldName"
+        if (blueMapBase.endsWith(":" + normalizedBukkit)) {
+            return true;
+        }
+
+        return false;
     }
 
     private record Point(int x, int z) {
