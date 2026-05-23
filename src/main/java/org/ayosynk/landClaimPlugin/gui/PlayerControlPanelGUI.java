@@ -36,7 +36,11 @@ public class PlayerControlPanelGUI {
                 RoleSelectionGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName);
             }));
             ingredients.put('T', buildPlayerSlotWithAction(config.transferOwnership, targetPlayerName, (p, e) -> {
-                // Transfer Ownership
+                // Transfer Ownership — only the actual owner can transfer
+                if (!profile.isOwner(p.getUniqueId())) {
+                    p.sendMessage(GuiHelper.MM.deserialize("<red>Only the claim owner can transfer ownership."));
+                    return;
+                }
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     ConfirmationGUI.open(p, "<red>Transfer to " + targetPlayerName + "?",
                             () -> {

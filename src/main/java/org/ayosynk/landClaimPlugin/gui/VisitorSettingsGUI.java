@@ -27,7 +27,9 @@ public class VisitorSettingsGUI {
 
                         for (Map.Entry<String, VisitorSettingsConfig.ItemConfig> entry : config.flags.entrySet()) {
                                 String flagId = entry.getKey();
-                                if (flagId.equals("CLAIM_LAND") || flagId.equals("ADMIN_MENU")) continue;
+                                if (flagId.equals("CLAIM_LAND") || flagId.equals("ADMIN_MENU")
+                                        || flagId.equals("MANAGE_SETTINGS") || flagId.equals("MANAGE_MEMBERS")
+                                        || flagId.equals("MANAGE_ROLES")) continue;
                                 VisitorSettingsConfig.ItemConfig flagConfig = entry.getValue();
 
                                 contentItems.add(new GuiItem() {

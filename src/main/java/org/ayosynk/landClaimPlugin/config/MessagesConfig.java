@@ -164,6 +164,11 @@ public class MessagesConfig extends OkaeriConfig {
     public String trustInviteAccepted = "<green>You have accepted the trust invite!";
     public String trustInviteDenied = "<red>You have denied the trust invite.";
     public String trustInviteWasDenied = "<red>Your trust invite was denied.";
+    // --- Leave Claim ---
+    public String claimLeft = "<green>You have left <gold><name></gold>'s claim.";
+    public String notInThatClaim = "<red>You are not a member or trusted player in that claim.";
+    public String memberLeftClaim = "<yellow><player> has left your claim.";
+
     public String memberListHeader = "<gold>Members:";
     public String memberListEntry = "<gray>- <gold><player> <gray>(<role>)";
     public String memberListEmpty = "<gray>No members.";

@@ -49,6 +49,7 @@ These commands respect the same permission checks as clicking the GUI buttons.
 | `/claim member list` | List all members and their roles |
 | `/claim accept <name>` | Accept a pending member invitation |
 | `/claim deny <name>` | Deny a pending member invitation |
+| `/claim leave <claim name>` | Leave a claim you are a member or trusted player of |
 
 ## Trust Commands
 

@@ -338,6 +338,15 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     Bukkit.getScheduler().runTask(plugin, () -> unclaimAll(player));
                 }));
+
+        // ========== /claim leave <claim name> ==========
+        manager.command(claimBuilder.literal("leave")
+                .required("name", StringParser.greedyStringParser())
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    String name = context.get("name");
+                    Bukkit.getScheduler().runTask(plugin, () -> leaveClaim(player, name));
+                }));
     }
 
     // --- State Management ---
@@ -819,5 +828,44 @@ public class ClaimCommand implements LandClaimCommand {
 
         plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
         plugin.getHookManager().refreshMapHooks();
+    }
+
+    private void leaveClaim(Player player, String claimName) {
+        UUID playerId = player.getUniqueId();
+        ClaimProfile profile = claimManager.getProfileByName(claimName);
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("not-in-that-claim"));
+            return;
+        }
+
+        boolean isMember = profile.isMember(playerId);
+        boolean isTrusted = profile.isTrusted(playerId);
+
+        if (!isMember && !isTrusted) {
+            player.sendMessage(configManager.getMessage("not-in-that-claim"));
+            return;
+        }
+
+        if (isMember) {
+            profile.removeMember(playerId);
+        } else {
+            profile.removeTrustedPlayer(playerId);
+        }
+
+        claimManager.saveAndSync(profile);
+
+        player.sendMessage(configManager.getMessage("claim-left", 
+            "<name>", profile.getDisplayOwnerName(),
+            "<owner>", profile.getDisplayOwnerName()
+        ));
+
+        // Update player's action bar cache
+        plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
+
+        // Notify the owner if online
+        Player owner = Bukkit.getPlayer(profile.getOwnerId());
+        if (owner != null && owner.isOnline()) {
+            owner.sendMessage(configManager.getMessage("member-left-claim", "<player>", player.getName()));
+        }
     }
 }
