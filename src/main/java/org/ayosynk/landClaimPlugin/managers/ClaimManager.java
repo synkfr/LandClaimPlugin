@@ -330,7 +330,7 @@ public class ClaimManager {
         if (getProfile(playerId) != null) return false;
         
         for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
-            if (profile.isMember(playerId) || profile.isTrusted(playerId)) {
+            if (profile.isMember(playerId)) {
                 return false;
             }
         }
@@ -385,13 +385,7 @@ public class ClaimManager {
                     return false;
                 }
             } else {
-                // Not a member anywhere, create their own profile if they aren't trusted
-                for (ClaimProfile p : plugin.getCacheManager().getProfileCache().asMap().values()) {
-                    if (p.isTrusted(playerId)) {
-                        player.sendMessage(configManager.getMessage("cannot-claim-as-member"));
-                        return false;
-                    }
-                }
+                // Not a member anywhere, create their own profile
                 String defaultName = player.getName() + "'s Claim";
                 targetProfile = new ClaimProfile(playerId, defaultName);
                 plugin.getCacheManager().getProfileCache().put(playerId, targetProfile); // Pre-cache so limits work
