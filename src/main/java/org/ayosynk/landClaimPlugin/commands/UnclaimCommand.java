@@ -66,6 +66,8 @@ public class UnclaimCommand implements LandClaimCommand {
 
             if (claimManager.unclaimChunk(chunk)) {
                 player.sendMessage(configManager.getMessage("chunk-unclaimed"));
+                // Update action bar cache so EventListener sends correct message
+                plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
             }
         });
     }

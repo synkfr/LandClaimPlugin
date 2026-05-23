@@ -199,11 +199,14 @@ public class EventListener implements Listener {
     }
 
     /**
-     * Update player's action bar cache immediately (for commands that change claim state)
+     * Invalidate player's action bar cache so the next periodic tick recomputes.
+     * Called by commands that change claim state (claim/unclaim).
      */
     public void updatePlayerClaimCache(Player player) {
-        ChunkPosition currentPos = new ChunkPosition(player.getLocation().getChunk());
-        lastChunkMap.put(player.getUniqueId(), currentPos);
-        lastClaimStatusMap.put(player.getUniqueId(), claimManager.isChunkClaimed(currentPos));
+        UUID playerId = player.getUniqueId();
+        // Remove cached state to force full recomputation on next periodic tick
+        lastChunkMap.remove(playerId);
+        lastActionBarMap.remove(playerId);
+        lastClaimStatusMap.remove(playerId);
     }
 }
