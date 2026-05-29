@@ -21,6 +21,9 @@ import java.util.*;
 public class TrustManagementGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "trusted", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         TrustManagementConfig config = plugin.getConfigManager().getTrustManagementConfig();
 
@@ -116,16 +119,8 @@ public class TrustManagementGUI {
                                                                 return;
                                                         }
 
-                                                        profile.addTrustedPlayer(target.getUniqueId());
-                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
-                                                                        .thenRun(() -> {
-                                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                                .getMessage("trust-added",
-                                                                                                                "<player>",
-                                                                                                                target.getName()));
-                                                                                TrustManagementGUI.open(p, profile,
-                                                                                                plugin);
-                                                                        });
+                                                        plugin.getClaimManager().sendTrustInvite(p, target, profile);
+                                                        TrustManagementGUI.open(p, profile, plugin);
                                                 }, () -> TrustManagementGUI.open(p, profile, plugin));
                                         }));
                         ingredients.put('<',

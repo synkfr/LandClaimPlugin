@@ -24,6 +24,9 @@ import java.util.Map;
 public class RoleManagementGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "roles", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         RoleManagementConfig config = plugin.getConfigManager().getRoleManagementConfig();
 

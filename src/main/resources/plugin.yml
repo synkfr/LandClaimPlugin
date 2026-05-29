@@ -11,6 +11,24 @@ permissions:
       landclaim.claim: true
       landclaim.admin: true
       landclaim.list: true
+      landclaim.menu.*: true
+      landclaim.unclaim: true
+      landclaim.member: true
+      landclaim.trust: true
+      landclaim.ally: true
+      landclaim.abandon: true
+      landclaim.create: true
+      landclaim.visible: true
+      landclaim.toggle: true
+      landclaim.info: true
+      landclaim.setwarp: true
+      landclaim.delwarp: true
+      landclaim.warp: true
+      landclaim.pvp: true
+      landclaim.rename: true
+      landclaim.color: true
+      landclaim.unclaimall: true
+      landclaim.leave: true
   landclaim.claim:
     description: Basic claiming permission
     default: true
@@ -28,6 +46,60 @@ permissions:
     default: true
   landclaim.unstuck:
     description: Teleport to a safe wilderness location
+    default: true
+  landclaim.unclaim:
+    description: Unclaim the current chunk
+    default: true
+  landclaim.member:
+    description: Access to member subcommands
+    default: true
+  landclaim.trust:
+    description: Access to trust subcommands
+    default: true
+  landclaim.ally:
+    description: Access to ally subcommands
+    default: true
+  landclaim.abandon:
+    description: Abandon claim profile
+    default: true
+  landclaim.create:
+    description: Create new claim profiles
+    default: true
+  landclaim.visible:
+    description: Toggle boundary visibility
+    default: true
+  landclaim.toggle:
+    description: Switch visualization mode
+    default: true
+  landclaim.info:
+    description: View claim information
+    default: true
+  landclaim.setwarp:
+    description: Set claim warps
+    default: true
+  landclaim.delwarp:
+    description: Delete claim warps
+    default: true
+  landclaim.warp:
+    description: Teleport to claim warps
+    default: true
+  landclaim.pvp:
+    description: Toggle PvP state
+    default: true
+  landclaim.rename:
+    description: Rename claims
+    default: true
+  landclaim.color:
+    description: Change claim colors
+    default: true
+  landclaim.unclaimall:
+    description: Unclaim all land
+    default: true
+  landclaim.leave:
+    description: Leave a claim
+    default: true
+  landclaim.menu.*:
+    description: Access to all GUI menus
     default: true
   landclaim.warps.limit.*:
     description: Max warps a player can set

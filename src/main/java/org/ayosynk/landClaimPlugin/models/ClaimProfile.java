@@ -314,6 +314,36 @@ public class ClaimProfile {
 
     // --- Claim Color ---
 
+    public String getColoredName() {
+        if (claimColor == null || claimColor.isEmpty()) {
+            return name;
+        }
+        return "<" + claimColor + ">" + name + "</" + claimColor + ">";
+    }
+
+    public String getColoredOwnerName() {
+        String ownerName = getDisplayOwnerName();
+        if (claimColor == null || claimColor.isEmpty()) {
+            return ownerName;
+        }
+        return "<" + claimColor + ">" + ownerName + "</" + claimColor + ">";
+    }
+
+    public String getLegacyColoredName() {
+        if (claimColor == null || claimColor.isEmpty()) {
+            return name;
+        }
+        return "&" + claimColor + name;
+    }
+
+    public String getLegacyColoredOwnerName() {
+        String ownerName = getDisplayOwnerName();
+        if (claimColor == null || claimColor.isEmpty()) {
+            return ownerName;
+        }
+        return "&" + claimColor + ownerName;
+    }
+
     public String getClaimColor() {
         return claimColor;
     }

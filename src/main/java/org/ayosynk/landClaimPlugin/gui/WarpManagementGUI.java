@@ -22,6 +22,9 @@ import org.bukkit.inventory.ItemStack;
 public class WarpManagementGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "warps", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         WarpManagementConfig config = plugin.getConfigManager().getWarpManagementConfig();
 

@@ -47,7 +47,7 @@ public class LandClaimExpansion extends PlaceholderExpansion {
                 ChunkPosition pos = new ChunkPosition(p.getLocation());
                 ClaimProfile profile = plugin.getClaimManager().getProfileAt(pos);
                 if (profile != null) {
-                    return profile.getDisplayOwnerName();
+                    return profile.getLegacyColoredOwnerName();
                 }
             }
             return "None";
@@ -71,7 +71,7 @@ public class LandClaimExpansion extends PlaceholderExpansion {
                 ChunkPosition pos = new ChunkPosition(p.getLocation());
                 ClaimProfile profile = plugin.getClaimManager().getProfileAt(pos);
                 if (profile != null) {
-                    return profile.getName();
+                    return profile.getLegacyColoredName();
                 }
             }
             return "None";
@@ -165,7 +165,7 @@ public class LandClaimExpansion extends PlaceholderExpansion {
             if (player instanceof Player p) {
                 ClaimProfile profile = plugin.getClaimManager().getActiveProfile(p);
                 if (profile != null) {
-                    return profile.getName();
+                    return profile.getLegacyColoredName();
                 }
             }
             return "None";

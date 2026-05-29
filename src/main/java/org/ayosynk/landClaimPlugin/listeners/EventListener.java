@@ -27,6 +27,7 @@ public class EventListener implements Listener {
     private final Map<UUID, ChunkPosition> lastChunkMap = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastActionBarMap = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> lastClaimStatusMap = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastPlayerStatusMap = new ConcurrentHashMap<>();
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
             ConfigManager configManager) {
@@ -55,15 +56,29 @@ public class EventListener implements Listener {
         ChunkPosition lastPos = lastChunkMap.get(playerId);
 
         boolean isClaimed = claimManager.isChunkClaimed(currentPos);
-        boolean chunkChanged = lastPos == null || !currentPos.equals(lastPos);
+        ClaimProfile newProfile = claimManager.getProfileAt(currentPos);
 
-        // If chunk changed, compute the new actionbar string and handle titles
-        if (chunkChanged) {
-            ClaimProfile newProfile = claimManager.getProfileAt(currentPos);
+        String currentStatus;
+        if (!isClaimed || newProfile == null) {
+            currentStatus = "wilderness";
+        } else {
+            UUID profileId = newProfile.getProfileId();
+            String relation = PermissionResolver.getPlayerStatus(newProfile, playerId);
+            boolean isAdmin = player.hasPermission("landclaim.admin");
+            boolean isOwner = playerId.equals(newProfile.getOwnerId());
+            currentStatus = (profileId != null ? profileId.toString() : "null") + ":" + (isOwner ? "owner" : (isAdmin ? "admin" : relation));
+        }
+
+        String lastStatus = lastPlayerStatusMap.get(playerId);
+        boolean chunkChanged = lastPos == null || !currentPos.equals(lastPos);
+        boolean statusChanged = lastStatus == null || !currentStatus.equals(lastStatus);
+        boolean isClaimedChanged = lastClaimStatusMap.get(playerId) == null || isClaimed != lastClaimStatusMap.get(playerId);
+
+        // If chunk, claim status, or relationship status changed, compute the new actionbar string and handle titles
+        if (chunkChanged || statusChanged || isClaimedChanged) {
             ClaimProfile oldProfile = lastPos != null ? claimManager.getProfileAt(lastPos) : null;
 
-            // Handle entry/leave titles if transitioning between different claims or
-            // wilderness
+            // Handle entry/leave titles if transitioning between different claims or wilderness
             if (oldProfile != newProfile) {
                 net.kyori.adventure.title.Title.Times times = net.kyori.adventure.title.Title.Times.times(
                         java.time.Duration.ofMillis(500),
@@ -71,8 +86,12 @@ public class EventListener implements Listener {
                         java.time.Duration.ofMillis(500));
 
                 if (oldProfile != null && oldProfile.isEnterTitleEnabled()) {
-                    String ownerName = oldProfile.getDisplayOwnerName();
-                    String leaveTxt = oldProfile.getLeaveTitle().replace("<owner>", ownerName);
+                    String ownerName = oldProfile.getColoredOwnerName();
+                    String claimName = oldProfile.getColoredName();
+                    String leaveTxt = oldProfile.getLeaveTitle()
+                            .replace("<owner>", ownerName)
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                     Component leaveComp = MiniMessage.miniMessage().deserialize(leaveTxt);
                     boolean leaveSub = "SUBTITLE".equalsIgnoreCase(oldProfile.getLeaveTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
@@ -82,8 +101,12 @@ public class EventListener implements Listener {
                 }
 
                 if (newProfile != null && newProfile.isEnterTitleEnabled()) {
-                    String ownerName = newProfile.getDisplayOwnerName();
-                    String enterTxt = newProfile.getEnterTitle().replace("<owner>", ownerName);
+                    String ownerName = newProfile.getColoredOwnerName();
+                    String claimName = newProfile.getColoredName();
+                    String enterTxt = newProfile.getEnterTitle()
+                            .replace("<owner>", ownerName)
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                     Component enterComp = MiniMessage.miniMessage().deserialize(enterTxt);
                     boolean enterSub = "SUBTITLE".equalsIgnoreCase(newProfile.getEnterTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
@@ -95,23 +118,35 @@ public class EventListener implements Listener {
 
             lastChunkMap.put(playerId, currentPos);
             lastClaimStatusMap.put(playerId, isClaimed);
+            lastPlayerStatusMap.put(playerId, currentStatus);
 
             String message;
-            if (isClaimed) {
+            if (isClaimed && newProfile != null) {
                 UUID ownerId = claimManager.getChunkOwner(currentPos);
-                String ownerName = newProfile.getDisplayOwnerName();
+                String ownerName = newProfile.getColoredOwnerName();
+                String claimName = newProfile.getColoredName();
 
                 if (playerId.equals(ownerId)) {
-                    message = configManager.getActionBarMessage("actionbar-owned-by-you");
+                    message = configManager.getActionBarMessage("actionbar-owned-by-you")
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                 } else {
                     String status = PermissionResolver.getPlayerStatus(newProfile, playerId);
                     if (status.equals("member") || status.equals("trusted")) {
-                        message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
+                        message = configManager.getActionBarMessage("actionbar-trusted")
+                                .replace("<owner>", ownerName)
+                                .replace("<claim>", claimName)
+                                .replace("<name>", claimName);
                     } else if (player.hasPermission("landclaim.admin")) {
-                        message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
+                        message = configManager.getActionBarMessage("actionbar-admin")
+                                .replace("<owner>", ownerName)
+                                .replace("<claim>", claimName)
+                                .replace("<name>", claimName);
                     } else {
-                        message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>",
-                                ownerName);
+                        message = configManager.getActionBarMessage("actionbar-owned-by-other")
+                                .replace("<owner>", ownerName)
+                                .replace("<claim>", claimName)
+                                .replace("<name>", claimName);
                     }
                 }
             } else {
@@ -196,6 +231,7 @@ public class EventListener implements Listener {
         lastChunkMap.remove(playerId);
         lastActionBarMap.remove(playerId);
         lastClaimStatusMap.remove(playerId);
+        lastPlayerStatusMap.remove(playerId);
     }
 
     /**
@@ -208,5 +244,6 @@ public class EventListener implements Listener {
         lastChunkMap.remove(playerId);
         lastActionBarMap.remove(playerId);
         lastClaimStatusMap.remove(playerId);
+        lastPlayerStatusMap.remove(playerId);
     }
 }

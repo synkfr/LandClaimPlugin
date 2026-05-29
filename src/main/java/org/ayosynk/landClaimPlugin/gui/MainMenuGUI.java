@@ -15,13 +15,16 @@ import java.util.Map;
 public class MainMenuGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "main", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         String ownerName = profile.getProfileId() != null
-                                        ? profile.getDisplayOwnerName()
+                                        ? profile.getColoredOwnerName()
                                         : "Unknown";
                         if (ownerName == null)
                                 ownerName = "Unknown";
-                        String claimName = profile.getName() != null ? profile.getName() : "Unnamed Claim";
+                        String claimName = profile.getColoredName() != null ? profile.getColoredName() : "Unnamed Claim";
 
                         MainMenuConfig config = plugin.getConfigManager().getMainMenuConfig();
 

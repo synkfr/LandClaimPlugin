@@ -20,6 +20,9 @@ import java.util.Map;
 public class VisitorSettingsGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "visitors", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         VisitorSettingsConfig config = plugin.getConfigManager().getVisitorSettingsConfig();
 

@@ -39,6 +39,7 @@ public class TrustCommand implements LandClaimCommand {
         manager.command(trustBuilder.literal("list")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
                     ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
@@ -67,6 +68,7 @@ public class TrustCommand implements LandClaimCommand {
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
                     String targetName = context.get("player");
 
                     ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
@@ -102,6 +104,7 @@ public class TrustCommand implements LandClaimCommand {
         manager.command(trustBuilder.literal("accept")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
                     UUID playerId = player.getUniqueId();
 
                     UUID ownerId = claimManager.getAndRemoveTrustInvite(playerId);
@@ -132,6 +135,7 @@ public class TrustCommand implements LandClaimCommand {
         manager.command(trustBuilder.literal("deny")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
                     UUID playerId = player.getUniqueId();
 
                     UUID ownerId = claimManager.getAndRemoveTrustInvite(playerId);
@@ -154,6 +158,7 @@ public class TrustCommand implements LandClaimCommand {
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
                     String targetName = context.get("player");
 
                     ClaimProfile profile = claimManager.getProfile(player.getUniqueId());

@@ -34,6 +34,7 @@ public class AbandonCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("abandon")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.abandon", plugin)) return;
                     UUID playerId = player.getUniqueId();
 
                     ClaimProfile profile = claimManager.getActiveProfile(player);
@@ -53,6 +54,7 @@ public class AbandonCommand implements LandClaimCommand {
 
                     plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
                     plugin.getHookManager().refreshMapHooks();
+                    plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
                 }));
     }
 }

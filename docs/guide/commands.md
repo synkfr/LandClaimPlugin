@@ -102,6 +102,26 @@ These commands respect the same permission checks as clicking the GUI buttons.
 | `landclaim.claim` | Basic claiming ability | `true` |
 | `landclaim.auto` | Use auto-claim mode | `true` |
 | `landclaim.admin` | Admin commands and bypass all protection | `op` |
+| `landclaim.unstuck` | Teleport to a safe wilderness location | `true` |
+| `landclaim.unclaim` | Unclaim the current chunk | `true` |
+| `landclaim.member` | Access to member subcommands | `true` |
+| `landclaim.trust` | Access to trust subcommands | `true` |
+| `landclaim.ally` | Access to ally subcommands | `true` |
+| `landclaim.abandon` | Abandon active claim profile | `true` |
+| `landclaim.create` | Create new claim profiles | `true` |
+| `landclaim.visible` | Toggle boundary visibility | `true` |
+| `landclaim.toggle` | Switch visualization mode | `true` |
+| `landclaim.info` | View claim information | `true` |
+| `landclaim.setwarp` | Set claim warps | `true` |
+| `landclaim.delwarp` | Delete claim warps | `true` |
+| `landclaim.warp` | Teleport to claim warps | `true` |
+| `landclaim.pvp` | Toggle PvP state | `true` |
+| `landclaim.rename` | Rename claims | `true` |
+| `landclaim.color` | Change claim colors | `true` |
+| `landclaim.unclaimall` | Unclaim all land | `true` |
+| `landclaim.leave` | Leave a claim | `true` |
+| `landclaim.menu.*` | Access to all GUI menus | `true` |
+| `landclaim.menu.<menu>` | Access to a specific GUI menu (e.g. `mainmenu`, `claimsettings`, `membermanagement`, `rolemanagement`, `trustmanagement`, `visitorsettings`, `allymanagement`, `claimmap`, `warpmanagement`, `profileselector`) | `true` |
 | `landclaim.limit.<n>` | Override the chunk claim limit | `false` |
 | `landclaim.list` | List claims | `true` |
 | `landclaim.warps.limit.<n>` | Override the warps limit | `false` |

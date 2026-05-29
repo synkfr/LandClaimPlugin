@@ -37,6 +37,7 @@ public class UnclaimCommand implements LandClaimCommand {
         manager.command(unclaimBuilder
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
                     unclaimCurrentChunk(player);
                 }));
 
@@ -44,6 +45,7 @@ public class UnclaimCommand implements LandClaimCommand {
         manager.command(unclaimBuilder.literal("all")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
                     player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
                 }));
     }
