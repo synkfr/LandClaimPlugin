@@ -2,6 +2,19 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [2.3.0] - 2026-05-29
+
+### Added
+- **Dynamic Custom Claim Colors:** Customized claim colors are now automatically applied across scoreboard, PAPI placeholders (`%landclaim_owner%`, `%landclaim_name%`, `%landclaim_profile%`), Spigot action bars, transition titles, and the entire GUI menu system.
+- **LuckPerms Separate Permissions:** Added optional granular permission control (`useSeparatePremission = false` by default) to restrict individual GUI menus (`landclaim.menu.<menu>`, `landclaim.menu.*`) and commands.
+- **Banned Claim Names Filter:** Added configurable banned word filter to restrict offensive or inappropriate claim names via `banned-claim-name.txt` and `bannedClaimNamesFile` configuration parameter.
+
+### Improvements
+- **GUI Ally Invite Selector:** Replaced the old text-based Anvil GUI for inviting allies with a highly intuitive player selector screen (`OnlinePlayerSelectorGUI`), matching the member selection workflow.
+- **Tab-Completion for `/claim leave`:** Implemented custom Cloud SuggestionProvider to autocomplete leavable claim names for players.
+- **Dynamic Action Bar Refresh:** Action bars and transition titles now instantly update on chunk unclaimed, abandon, and trust status changes without requiring player movement.
+- **Trust Consent Flow:** Adding trusted members via the GUI now sends proper trust invitations rather than auto-adding them without consent.
+
 ## [2.2.0] - 2026-05-21
 
 ### Bug Fixes
