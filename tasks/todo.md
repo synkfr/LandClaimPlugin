@@ -76,4 +76,11 @@
 - [x] Added validations for target active profile, self-allies, and duplicate allies inside the selector callback.
 - [x] Verified compilation success and pushed clean changes to `v2` branch.
 
+# Follow-up: Bump Version, Update Docs, and Release to Master
+- [ ] Bump version to `2.3.0` inside `pom.xml`, `plugin.yml`, docs, and `CHANGELOG.md` <!-- id: 43 -->
+- [ ] Merge `v2` branch changes into `master` and push to master remote <!-- id: 44 -->
+- [ ] Verify that master branch builds successfully via Maven <!-- id: 45 -->
+- [ ] Document results in tasks/todo.md and commit changes <!-- id: 46 -->
+
+
 
