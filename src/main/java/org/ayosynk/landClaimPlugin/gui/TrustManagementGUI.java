@@ -119,16 +119,8 @@ public class TrustManagementGUI {
                                                                 return;
                                                         }
 
-                                                        profile.addTrustedPlayer(target.getUniqueId());
-                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
-                                                                        .thenRun(() -> {
-                                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                                .getMessage("trust-added",
-                                                                                                                "<player>",
-                                                                                                                target.getName()));
-                                                                                TrustManagementGUI.open(p, profile,
-                                                                                                plugin);
-                                                                        });
+                                                        plugin.getClaimManager().sendTrustInvite(p, target, profile);
+                                                        TrustManagementGUI.open(p, profile, plugin);
                                                 }, () -> TrustManagementGUI.open(p, profile, plugin));
                                         }));
                         ingredients.put('<',

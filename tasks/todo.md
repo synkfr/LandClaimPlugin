@@ -25,8 +25,12 @@
 - [x] Verify compilation succeeds with Maven <!-- id: 17 -->
 - [x] Commit the changes <!-- id: 18 -->
 
+# Follow-up: Fix trust addition in TrustManagementGUI bypassing player consent
+- [x] Route GUI trust addition through the standard `sendTrustInvite` invitation flow instead of direct addition <!-- id: 19 -->
+- [x] Verify compilation succeeds with Maven <!-- id: 20 -->
+- [x] Commit the changes <!-- id: 21 -->
+
 ## Review
-- [x] ActionBar updates instantly on unclaiming and abandoning.
-- [x] ActionBar updates automatically within 1 second for any player when trust/untrust status changes.
+- [x] Trust additions via GUI now correctly require target player acceptance/consent.
 - [x] Project builds successfully.
 - [x] Changes are logically committed and pushed.
