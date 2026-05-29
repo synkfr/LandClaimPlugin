@@ -51,6 +51,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.claim", plugin)) return;
                     claimCurrentChunk(player);
                 }));
 
@@ -58,6 +59,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("auto")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.auto", plugin)) return;
                     toggleAutoClaim(player);
                 }));
 
@@ -65,6 +67,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("visible")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.visible", plugin)) return;
                     toggleVisibility(player);
                 }));
 
@@ -73,6 +76,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .required("mode", StringParser.stringParser(), VisualizationModeSuggestions.modes())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.toggle", plugin)) return;
                     String mode = (String) context.get("mode");
                     toggleVisualizationMode(player, mode);
                 }));
@@ -82,6 +86,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .required("name", StringParser.greedyStringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.create", plugin)) return;
                     String name = context.get("name");
                     Bukkit.getScheduler().runTask(plugin, () -> createProfile(player, name));
                 }));
@@ -90,6 +95,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("menu")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.menu", plugin)) return;
                     org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation());
                     ClaimProfile profileAtLoc = claimManager.getProfileAt(pos);
                     
@@ -113,6 +119,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("settings")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.menu", plugin)) return;
                     org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation());
                     ClaimProfile profileAtLoc = claimManager.getProfileAt(pos);
                     
@@ -134,6 +141,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("info")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.info", plugin)) return;
                     Bukkit.getScheduler().runTask(plugin, () -> sendClaimInfo(player));
                 }));
 
@@ -142,6 +150,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .required("name", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.setwarp", plugin)) return;
                     String name = context.get("name");
                     Bukkit.getScheduler().runTask(plugin, () -> setWarp(player, name));
                 }));
@@ -151,6 +160,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .required("name", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.delwarp", plugin)) return;
                     String name = context.get("name");
                     Bukkit.getScheduler().runTask(plugin, () -> delWarp(player, name));
                 }));
@@ -160,6 +170,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .required("name", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.warp", plugin)) return;
                     String name = context.get("name");
                     Bukkit.getScheduler().runTask(plugin, () -> teleportToWarp(player, name));
                 }));
@@ -193,6 +204,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .optional("time", org.incendo.cloud.parser.standard.IntegerParser.integerParser(1))
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.pvp", plugin)) return;
                     String state = context.get("state");
                     Integer time = context.getOrDefault("time", null);
                     togglePvp(player, state.equalsIgnoreCase("on"), time);
@@ -283,6 +295,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .required("name", StringParser.greedyStringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.rename", plugin)) return;
                     String name = context.get("name");
                     Bukkit.getScheduler().runTask(plugin, () -> renameClaim(player, name));
                 }));
@@ -312,6 +325,7 @@ public class ClaimCommand implements LandClaimCommand {
                                 )))
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.color", plugin)) return;
                     String color = context.get("color");
                     Bukkit.getScheduler().runTask(plugin, () -> changeClaimColor(player, color));
                 }));
@@ -329,6 +343,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("unclaimall")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
                     player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
                 }));
 
@@ -336,6 +351,7 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("unclaimall").literal("confirm")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
                     Bukkit.getScheduler().runTask(plugin, () -> unclaimAll(player));
                 }));
 
@@ -344,6 +360,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .required("name", StringParser.greedyStringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.leave", plugin)) return;
                     String name = context.get("name");
                     Bukkit.getScheduler().runTask(plugin, () -> leaveClaim(player, name));
                 }));

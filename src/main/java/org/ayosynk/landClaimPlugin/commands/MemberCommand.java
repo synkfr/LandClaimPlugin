@@ -41,6 +41,7 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(memberBuilder.literal("list")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.member", plugin)) return;
 
                     ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
@@ -69,6 +70,7 @@ public class MemberCommand implements LandClaimCommand {
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.member", plugin)) return;
                     String targetName = context.get("player");
 
                     ClaimProfile profile = claimManager.getActiveProfile(player);
@@ -108,6 +110,7 @@ public class MemberCommand implements LandClaimCommand {
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.member", plugin)) return;
                     String targetName = context.get("player");
 
                     ClaimProfile profile = claimManager.getActiveProfile(player);
@@ -152,6 +155,7 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("accept")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.member", plugin)) return;
                     UUID playerId = player.getUniqueId();
 
                     UUID ownerId = claimManager.getAndRemoveMemberInvite(playerId);
@@ -194,6 +198,7 @@ public class MemberCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("deny")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.member", plugin)) return;
                     UUID playerId = player.getUniqueId();
 
                     UUID ownerId = claimManager.getAndRemoveMemberInvite(playerId);

@@ -33,6 +33,7 @@ public class UnstuckCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("unstuck")
                 .handler(ctx -> {
                     Player player = ctx.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unstuck", plugin)) return;
                     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> unstuckPlayer(player));
                 }));
     }
