@@ -27,6 +27,7 @@ public class EventListener implements Listener {
     private final Map<UUID, ChunkPosition> lastChunkMap = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastActionBarMap = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> lastClaimStatusMap = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastPlayerStatusMap = new ConcurrentHashMap<>();
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
             ConfigManager configManager) {
@@ -55,15 +56,29 @@ public class EventListener implements Listener {
         ChunkPosition lastPos = lastChunkMap.get(playerId);
 
         boolean isClaimed = claimManager.isChunkClaimed(currentPos);
-        boolean chunkChanged = lastPos == null || !currentPos.equals(lastPos);
+        ClaimProfile newProfile = claimManager.getProfileAt(currentPos);
 
-        // If chunk changed, compute the new actionbar string and handle titles
-        if (chunkChanged) {
-            ClaimProfile newProfile = claimManager.getProfileAt(currentPos);
+        String currentStatus;
+        if (!isClaimed || newProfile == null) {
+            currentStatus = "wilderness";
+        } else {
+            UUID profileId = newProfile.getProfileId();
+            String relation = PermissionResolver.getPlayerStatus(newProfile, playerId);
+            boolean isAdmin = player.hasPermission("landclaim.admin");
+            boolean isOwner = playerId.equals(newProfile.getOwnerId());
+            currentStatus = (profileId != null ? profileId.toString() : "null") + ":" + (isOwner ? "owner" : (isAdmin ? "admin" : relation));
+        }
+
+        String lastStatus = lastPlayerStatusMap.get(playerId);
+        boolean chunkChanged = lastPos == null || !currentPos.equals(lastPos);
+        boolean statusChanged = lastStatus == null || !currentStatus.equals(lastStatus);
+        boolean isClaimedChanged = lastClaimStatusMap.get(playerId) == null || isClaimed != lastClaimStatusMap.get(playerId);
+
+        // If chunk, claim status, or relationship status changed, compute the new actionbar string and handle titles
+        if (chunkChanged || statusChanged || isClaimedChanged) {
             ClaimProfile oldProfile = lastPos != null ? claimManager.getProfileAt(lastPos) : null;
 
-            // Handle entry/leave titles if transitioning between different claims or
-            // wilderness
+            // Handle entry/leave titles if transitioning between different claims or wilderness
             if (oldProfile != newProfile) {
                 net.kyori.adventure.title.Title.Times times = net.kyori.adventure.title.Title.Times.times(
                         java.time.Duration.ofMillis(500),
@@ -95,9 +110,10 @@ public class EventListener implements Listener {
 
             lastChunkMap.put(playerId, currentPos);
             lastClaimStatusMap.put(playerId, isClaimed);
+            lastPlayerStatusMap.put(playerId, currentStatus);
 
             String message;
-            if (isClaimed) {
+            if (isClaimed && newProfile != null) {
                 UUID ownerId = claimManager.getChunkOwner(currentPos);
                 String ownerName = newProfile.getDisplayOwnerName();
 
@@ -196,6 +212,7 @@ public class EventListener implements Listener {
         lastChunkMap.remove(playerId);
         lastActionBarMap.remove(playerId);
         lastClaimStatusMap.remove(playerId);
+        lastPlayerStatusMap.remove(playerId);
     }
 
     /**
@@ -208,5 +225,6 @@ public class EventListener implements Listener {
         lastChunkMap.remove(playerId);
         lastActionBarMap.remove(playerId);
         lastClaimStatusMap.remove(playerId);
+        lastPlayerStatusMap.remove(playerId);
     }
 }

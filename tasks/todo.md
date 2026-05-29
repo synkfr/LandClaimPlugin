@@ -18,8 +18,15 @@
 - [x] Verify compilation succeeds with Maven <!-- id: 12 -->
 - [x] Commit the changes <!-- id: 13 -->
 
+# Follow-up: Fix ActionBar (hotbar) not updating on unclaim/abandon/trust/untrust
+- [x] Track relationship status and claim status changes in `EventListener` (`lastPlayerStatusMap` and `lastClaimStatusMap`) <!-- id: 14 -->
+- [x] Refresh ActionBar if chunk position, claim status, or player status changes <!-- id: 15 -->
+- [x] Call `updatePlayerClaimCache` inside `AbandonCommand` <!-- id: 16 -->
+- [x] Verify compilation succeeds with Maven <!-- id: 17 -->
+- [x] Commit the changes <!-- id: 18 -->
+
 ## Review
-- [x] Unused configuration parameters are removed cleanly from source code and docs.
-- [x] Detailed Okaeri comments are added to all configuration fields.
-- [x] Project compiles and builds successfully.
-- [x] Changes are logically committed.
+- [x] ActionBar updates instantly on unclaiming and abandoning.
+- [x] ActionBar updates automatically within 1 second for any player when trust/untrust status changes.
+- [x] Project builds successfully.
+- [x] Changes are logically committed and pushed.

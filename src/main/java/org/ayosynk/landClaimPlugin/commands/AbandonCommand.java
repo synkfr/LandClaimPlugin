@@ -54,6 +54,7 @@ public class AbandonCommand implements LandClaimCommand {
 
                     plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
                     plugin.getHookManager().refreshMapHooks();
+                    plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
                 }));
     }
 }
