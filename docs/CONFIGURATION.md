@@ -39,13 +39,6 @@ Permission overrides: `landclaim.limit.<n>`, `landclaim.warps.limit.<n>`
 If you disable `multiProfilesEnabled` after players have already created multiple profiles, they will lose access to all secondary profiles. This setting should be treated as permanent once enabled.
 :::
 
-### Auto-Claim Defaults
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `autoClaimDefault` | Boolean | `false` | Auto-claim enabled by default for new players |
-| `autoUnclaimDefault` | Boolean | `false` | Auto-unclaim enabled by default |
-
 ### World & Command Blocking
 
 | Key | Type | Default | Description |

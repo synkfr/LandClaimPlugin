@@ -11,7 +11,15 @@
 - [x] Document the new config option in `docs/CONFIGURATION.md` <!-- id: 7 -->
 - [x] Create logical git commits for the changes <!-- id: 8 -->
 
+# Follow-up: Make config more understandable and remove unused things
+- [x] Clean up `PluginConfig.java` by removing unused fields (`claimWandItem`, `autoClaimDefault`, `autoUnclaimDefault`) <!-- id: 9 -->
+- [x] Add detailed, readable comments/descriptions to all configuration fields in `PluginConfig.java` <!-- id: 10 -->
+- [x] Remove unused settings from `docs/CONFIGURATION.md` and update documentation for clarity <!-- id: 11 -->
+- [x] Verify compilation succeeds with Maven <!-- id: 12 -->
+- [x] Commit the changes <!-- id: 13 -->
+
 ## Review
-- [x] Centralized checks correctly handle separate permissions or bypass them when disabled.
-- [x] Documentation is complete.
-- [x] Changes are committed.
+- [x] Unused configuration parameters are removed cleanly from source code and docs.
+- [x] Detailed Okaeri comments are added to all configuration fields.
+- [x] Project compiles and builds successfully.
+- [x] Changes are logically committed.
