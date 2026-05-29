@@ -496,6 +496,10 @@ public class ConfigManager {
         return pluginConfig.minClaimGap;
     }
 
+    public boolean useSeparatePremission() {
+        return pluginConfig.useSeparatePremission;
+    }
+
     @Deprecated // TODO: Implement auto-save logging configuration
     public boolean logAutoSaveMessage() {
         return true;

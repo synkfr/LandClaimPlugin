@@ -104,6 +104,14 @@ public class PluginConfig extends OkaeriConfig {
 
     @Comment("Default maximum warps per player (bypass with landclaim.warps.limit.X)")
     public int maxWarps = 3;
+
+    @Comment({
+        "LuckPerms / Bukkit Permissions",
+        "If true, separate permissions like landclaim.menu.<menu>, landclaim.menu.*, ",
+        "and command-specific permissions (e.g., landclaim.unstuck) will be checked.",
+        "If false, separate permissions are bypassed so you don't have to configure a permission system."
+    })
+    public boolean useSeparatePremission = false;
     
     /**
      * Validate configuration values and return a list of error messages.

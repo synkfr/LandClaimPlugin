@@ -5,6 +5,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.ayosynk.landClaimPlugin.gui.framework.ClickAction;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
+import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -120,5 +121,27 @@ public final class GuiHelper {
 
         item.setItemMeta(meta);
         return item;
+    }
+
+    public static boolean checkMenuPermission(Player player, String menuName, LandClaimPlugin plugin) {
+        if (!plugin.getConfigManager().useSeparatePremission()) {
+            return true;
+        }
+        if (player.hasPermission("landclaim.admin") || player.hasPermission("landclaim.menu.*") || player.hasPermission("landclaim.menu." + menuName.toLowerCase())) {
+            return true;
+        }
+        player.sendMessage(plugin.getConfigManager().getMessage("access-denied"));
+        return false;
+    }
+
+    public static boolean checkPermission(Player player, String permission, LandClaimPlugin plugin) {
+        if (!plugin.getConfigManager().useSeparatePremission()) {
+            return true;
+        }
+        if (player.hasPermission("landclaim.admin") || player.hasPermission(permission)) {
+            return true;
+        }
+        player.sendMessage(plugin.getConfigManager().getMessage("access-denied"));
+        return false;
     }
 }
