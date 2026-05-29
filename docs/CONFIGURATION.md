@@ -14,6 +14,7 @@ Main plugin configuration file located at `plugins/LandClaimPlugin/config.yml`.
 | `allowDiagonalConnections` | Boolean | `true` | Allow diagonal adjacency for connected claims |
 | `cooldownUnstuck` | Integer | `30` | Seconds cooldown for unstuck command |
 | `useSeparatePremission` | Boolean | `false` | If true, separate LuckPerms permissions like `landclaim.menu.<menu>`, `landclaim.menu.*`, and command-specific permissions will be checked. If false, these separate permissions are bypassed. |
+| `bannedClaimNamesFile` | String | `banned-claim-name.txt` | The file name containing banned words (one per line) that cannot be used in claim names. |
 
 ::: tip Placeholder Brackets
 For all messages and placeholders, the plugin supports both **angle brackets** `<owner>` and **curly braces** `{owner}` interchangeably. 

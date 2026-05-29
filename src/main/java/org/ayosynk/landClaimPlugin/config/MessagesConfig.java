@@ -179,6 +179,7 @@ public class MessagesConfig extends OkaeriConfig {
     // --- Rename ---
     public String claimRenamed = "<green>Claim renamed to <gold><name></gold>.";
     public String claimNameInvalid = "<red>Invalid name. Use 3-32 characters (letters, numbers, spaces).";
+    public String bannedClaimName = "<red>That name contains banned words. Please choose a different name.";
     public String renamePrompt = "<yellow>Type the new claim name in chat (or 'cancel' to abort):";
     public String renameCancelled = "<gray>Rename cancelled.";
 

@@ -55,7 +55,12 @@ public class RenameClaimGUI {
                                                                         RenameClaimGUI.open(p, profile, plugin);
                                                                         return;
                                                                 }
-
+                                                                 if (plugin.getConfigManager().isBannedClaimName(input)) {
+                                                                        p.sendMessage(plugin.getConfigManager()
+                                                                                        .getMessage("banned-claim-name"));
+                                                                        RenameClaimGUI.open(p, profile, plugin);
+                                                                        return;
+                                                                 }
                                                                 // Check uniqueness
                                                                 boolean unique = plugin.getClaimManager()
                                                                                 .getAllProfiles().stream()

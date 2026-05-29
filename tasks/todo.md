@@ -30,7 +30,16 @@
 - [x] Verify compilation succeeds with Maven <!-- id: 20 -->
 - [x] Commit the changes <!-- id: 21 -->
 
+# Follow-up: Add Banned Claim Names system and banned-claim-name.txt
+- [x] Add `bannedClaimNamesFile` option inside `PluginConfig.java` <!-- id: 22 -->
+- [x] Implement loading and validation logic in `ConfigManager.java` <!-- id: 23 -->
+- [x] Check for banned claim names during profile creation and renaming inside `ClaimCommand.java` and `RenameClaimGUI.java` <!-- id: 24 -->
+- [x] Add default `banned-claim-name.txt` file inside `src/main/resources` and load/create it dynamically on startup <!-- id: 25 -->
+- [x] Document the new config option inside `docs/CONFIGURATION.md` and add the `bannedClaimName` message to `MessagesConfig.java` <!-- id: 26 -->
+- [x] Verify compilation succeeds with Maven <!-- id: 27 -->
+- [x] Commit the changes <!-- id: 28 -->
+
 ## Review
-- [x] Trust additions via GUI now correctly require target player acceptance/consent.
+- [x] Banned claim names are rejected with a proper message on creation and renaming.
 - [x] Project builds successfully.
 - [x] Changes are logically committed and pushed.

@@ -68,6 +68,7 @@ public class ConfigManager {
 
     private List<String> blockedCommands = List.of();
     private List<String> blockedWorlds = List.of();
+    private final java.util.Set<String> bannedClaimNames = new java.util.concurrent.ConcurrentHashMap<String, Boolean>().keySet(Boolean.TRUE);
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -298,6 +299,7 @@ public class ConfigManager {
         // Populate blocked lists on initial load (not just on reload)
         blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
         blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
+        loadBannedWords();
     }
 
     public void reloadMainConfig() {
@@ -329,6 +331,7 @@ public class ConfigManager {
 
         blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
         blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
+        loadBannedWords();
     }
 
     public PluginConfig getPluginConfig() {
@@ -584,5 +587,62 @@ public class ConfigManager {
         } catch (Exception e) {
             return "<red>Message not found: " + key;
         }
+    }
+
+    public void loadBannedWords() {
+        bannedClaimNames.clear();
+        String fileName = pluginConfig.bannedClaimNamesFile;
+        if (fileName == null || fileName.isEmpty()) {
+            fileName = "banned-claim-name.txt";
+        }
+        File file = new File(plugin.getDataFolder(), fileName);
+        if (!file.exists()) {
+            try {
+                if (!file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+                }
+                java.nio.file.Files.write(file.toPath(), java.util.List.of(
+                    "# LandClaimPlugin - Banned Claim Names",
+                    "# Add words or phrases (one per line) that cannot be used in claim profile names.",
+                    "# Any claim name containing these words (case-insensitive) will be rejected.",
+                    "# Empty lines and lines starting with '#' are ignored.",
+                    "",
+                    "slur1",
+                    "slur2",
+                    "offensiveword1",
+                    "offensiveword2",
+                    "badword"
+                ));
+            } catch (java.io.IOException e) {
+                plugin.getLogger().severe("Failed to create default " + fileName + ": " + e.getMessage());
+            }
+        }
+
+        if (file.exists()) {
+            try {
+                java.util.List<String> lines = java.nio.file.Files.readAllLines(file.toPath());
+                for (String line : lines) {
+                    line = line.trim();
+                    if (line.isEmpty() || line.startsWith("#")) {
+                        continue;
+                    }
+                    bannedClaimNames.add(line.toLowerCase());
+                }
+                plugin.getLogger().info("Loaded " + bannedClaimNames.size() + " banned claim name words from " + fileName);
+            } catch (java.io.IOException e) {
+                plugin.getLogger().severe("Failed to read " + fileName + ": " + e.getMessage());
+            }
+        }
+    }
+
+    public boolean isBannedClaimName(String name) {
+        if (name == null) return false;
+        String lower = name.toLowerCase();
+        for (String banned : bannedClaimNames) {
+            if (lower.contains(banned)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -448,6 +448,11 @@ public class ClaimCommand implements LandClaimCommand {
             }
         }
 
+        if (configManager.isBannedClaimName(name)) {
+            player.sendMessage(configManager.getMessage("banned-claim-name"));
+            return;
+        }
+
         if (!claimManager.isClaimNameUnique(name)) {
             player.sendMessage(configManager.getMessage("name-already-in-use"));
             return;
@@ -773,6 +778,11 @@ public class ClaimCommand implements LandClaimCommand {
 
         if (!NAME_PATTERN.matcher(name).matches()) {
             player.sendMessage(configManager.getMessage("claim-name-invalid"));
+            return;
+        }
+
+        if (configManager.isBannedClaimName(name)) {
+            player.sendMessage(configManager.getMessage("banned-claim-name"));
             return;
         }
 

@@ -164,6 +164,13 @@ public class PluginConfig extends OkaeriConfig {
         "servers where players don't want to set up an elaborate permission group system."
     })
     public boolean useSeparatePremission = false;
+
+    @Comment({
+        "Banned Claim Names File",
+        "The text file containing words (one per line) that cannot be used in claim profiles or renamed claims.",
+        "Useful for blocking slurs, swearing, or other inappropriate/reserved names."
+    })
+    public String bannedClaimNamesFile = "banned-claim-name.txt";
     
     /**
      * Validate configuration values and return a list of error messages.

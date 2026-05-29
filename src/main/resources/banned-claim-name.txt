@@ -1,0 +1,10 @@
+# LandClaimPlugin - Banned Claim Names
+# Add words or phrases (one per line) that cannot be used in claim profile names.
+# Any claim name containing these words (case-insensitive) will be rejected.
+# Empty lines and lines starting with '#' are ignored.
+
+slur1
+slur2
+offensiveword1
+offensiveword2
+badword
