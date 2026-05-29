@@ -405,18 +405,30 @@ public class ClaimCommand implements LandClaimCommand {
 
         if (profile != null) {
             UUID ownerId = claimManager.getChunkOwner(pos);
-            String ownerName = profile.getDisplayOwnerName();
+            String ownerName = profile.getColoredOwnerName();
+            String claimName = profile.getColoredName();
 
             if (playerId.equals(ownerId)) {
-                message = configManager.getActionBarMessage("actionbar-owned-by-you");
+                message = configManager.getActionBarMessage("actionbar-owned-by-you")
+                        .replace("<claim>", claimName)
+                        .replace("<name>", claimName);
             } else {
                 String status = org.ayosynk.landClaimPlugin.managers.PermissionResolver.getPlayerStatus(profile, playerId);
                 if (status.equals("member") || status.equals("trusted")) {
-                    message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-trusted")
+                            .replace("<owner>", ownerName)
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                 } else if (player.hasPermission("landclaim.admin")) {
-                    message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-admin")
+                            .replace("<owner>", ownerName)
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                 } else {
-                    message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>", ownerName);
+                    message = configManager.getActionBarMessage("actionbar-owned-by-other")
+                            .replace("<owner>", ownerName)
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                 }
             }
         } else {
@@ -631,7 +643,7 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        String ownerName = profile.getDisplayOwnerName();
+        String ownerName = profile.getColoredOwnerName();
 
         player.sendMessage(configManager.getMessage("claim-info-owner", "<owner>", ownerName));
     }
@@ -882,8 +894,8 @@ public class ClaimCommand implements LandClaimCommand {
         claimManager.saveAndSync(profile);
 
         player.sendMessage(configManager.getMessage("claim-left", 
-            "<name>", profile.getDisplayOwnerName(),
-            "<owner>", profile.getDisplayOwnerName()
+            "<name>", profile.getColoredName(),
+            "<owner>", profile.getColoredOwnerName()
         ));
 
         // Update player's action bar cache

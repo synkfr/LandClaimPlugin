@@ -61,7 +61,7 @@ public class ProfileSelectorGUI {
                         ItemStack item = new ItemStack(mat);
                         ItemMeta meta = item.getItemMeta();
                         if (meta != null) {
-                            String nameStr = config.profileNameFormat.replace("<name>", profile.getName());
+                            String nameStr = config.profileNameFormat.replace("<name>", profile.getColoredName());
                             meta.displayName(GuiHelper.MM.deserialize(nameStr));
                             List<Component> lore = new ArrayList<>();
                             if (profile.isOwner(player.getUniqueId())) {
@@ -89,7 +89,7 @@ public class ProfileSelectorGUI {
                             if (!isActive) {
                                 cp.setActiveProfileId(profile.getProfileId());
                                 plugin.getDatabaseManager().getPlayerDao().savePlayer(cp);
-                                p.sendMessage(plugin.getConfigManager().getMessage("profile-changed", "<name>", profile.getName()));
+                                p.sendMessage(plugin.getConfigManager().getMessage("profile-changed", "<name>", profile.getColoredName()));
                             }
                             p.closeInventory();
                             // Re-open main menu with the new active profile

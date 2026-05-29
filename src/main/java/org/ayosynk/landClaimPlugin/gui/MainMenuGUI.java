@@ -20,11 +20,11 @@ public class MainMenuGUI {
                 }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         String ownerName = profile.getProfileId() != null
-                                        ? profile.getDisplayOwnerName()
+                                        ? profile.getColoredOwnerName()
                                         : "Unknown";
                         if (ownerName == null)
                                 ownerName = "Unknown";
-                        String claimName = profile.getName() != null ? profile.getName() : "Unnamed Claim";
+                        String claimName = profile.getColoredName() != null ? profile.getColoredName() : "Unnamed Claim";
 
                         MainMenuConfig config = plugin.getConfigManager().getMainMenuConfig();
 

@@ -76,19 +76,19 @@ public class ClaimMapGUI {
                                         } else if (ownerProfile.isMember(player.getUniqueId())
                                                         || ownerProfile.isTrusted(player.getUniqueId())) {
                                                 // Member/Trusted
-                                                String ownerName = ownerProfile.getDisplayOwnerName();
+                                                String ownerName = ownerProfile.getColoredOwnerName();
                                                 currentLore = processLore(config.memberClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.memberClaim.material,
                                                                 config.memberClaim.name, currentLore);
                                         } else if (profile != null && profile.hasAlly(ownerProfile.getProfileId())) {
                                                 // Ally
-                                                String ownerName = ownerProfile.getDisplayOwnerName();
+                                                String ownerName = ownerProfile.getColoredOwnerName();
                                                 currentLore = processLore(config.allyClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.allyClaim.material,
                                                                 config.allyClaim.name, currentLore);
                                         } else {
                                                 // Other
-                                                String ownerName = ownerProfile.getDisplayOwnerName();
+                                                String ownerName = ownerProfile.getColoredOwnerName();
                                                 currentLore = processLore(config.otherClaim.lore, ownerName);
                                                 slot = GuiHelper.buildSlot(config.otherClaim.material,
                                                                 config.otherClaim.name, currentLore);

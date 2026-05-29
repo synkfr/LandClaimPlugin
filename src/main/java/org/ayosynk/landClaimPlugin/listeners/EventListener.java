@@ -86,8 +86,12 @@ public class EventListener implements Listener {
                         java.time.Duration.ofMillis(500));
 
                 if (oldProfile != null && oldProfile.isEnterTitleEnabled()) {
-                    String ownerName = oldProfile.getDisplayOwnerName();
-                    String leaveTxt = oldProfile.getLeaveTitle().replace("<owner>", ownerName);
+                    String ownerName = oldProfile.getColoredOwnerName();
+                    String claimName = oldProfile.getColoredName();
+                    String leaveTxt = oldProfile.getLeaveTitle()
+                            .replace("<owner>", ownerName)
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                     Component leaveComp = MiniMessage.miniMessage().deserialize(leaveTxt);
                     boolean leaveSub = "SUBTITLE".equalsIgnoreCase(oldProfile.getLeaveTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
@@ -97,8 +101,12 @@ public class EventListener implements Listener {
                 }
 
                 if (newProfile != null && newProfile.isEnterTitleEnabled()) {
-                    String ownerName = newProfile.getDisplayOwnerName();
-                    String enterTxt = newProfile.getEnterTitle().replace("<owner>", ownerName);
+                    String ownerName = newProfile.getColoredOwnerName();
+                    String claimName = newProfile.getColoredName();
+                    String enterTxt = newProfile.getEnterTitle()
+                            .replace("<owner>", ownerName)
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                     Component enterComp = MiniMessage.miniMessage().deserialize(enterTxt);
                     boolean enterSub = "SUBTITLE".equalsIgnoreCase(newProfile.getEnterTitleMode());
                     player.showTitle(net.kyori.adventure.title.Title.title(
@@ -115,19 +123,30 @@ public class EventListener implements Listener {
             String message;
             if (isClaimed && newProfile != null) {
                 UUID ownerId = claimManager.getChunkOwner(currentPos);
-                String ownerName = newProfile.getDisplayOwnerName();
+                String ownerName = newProfile.getColoredOwnerName();
+                String claimName = newProfile.getColoredName();
 
                 if (playerId.equals(ownerId)) {
-                    message = configManager.getActionBarMessage("actionbar-owned-by-you");
+                    message = configManager.getActionBarMessage("actionbar-owned-by-you")
+                            .replace("<claim>", claimName)
+                            .replace("<name>", claimName);
                 } else {
                     String status = PermissionResolver.getPlayerStatus(newProfile, playerId);
                     if (status.equals("member") || status.equals("trusted")) {
-                        message = configManager.getActionBarMessage("actionbar-trusted").replace("<owner>", ownerName);
+                        message = configManager.getActionBarMessage("actionbar-trusted")
+                                .replace("<owner>", ownerName)
+                                .replace("<claim>", claimName)
+                                .replace("<name>", claimName);
                     } else if (player.hasPermission("landclaim.admin")) {
-                        message = configManager.getActionBarMessage("actionbar-admin").replace("<owner>", ownerName);
+                        message = configManager.getActionBarMessage("actionbar-admin")
+                                .replace("<owner>", ownerName)
+                                .replace("<claim>", claimName)
+                                .replace("<name>", claimName);
                     } else {
-                        message = configManager.getActionBarMessage("actionbar-owned-by-other").replace("<owner>",
-                                ownerName);
+                        message = configManager.getActionBarMessage("actionbar-owned-by-other")
+                                .replace("<owner>", ownerName)
+                                .replace("<claim>", claimName)
+                                .replace("<name>", claimName);
                     }
                 }
             } else {

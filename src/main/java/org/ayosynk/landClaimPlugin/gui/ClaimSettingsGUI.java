@@ -20,11 +20,11 @@ public class ClaimSettingsGUI {
                 }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         String ownerName = profile.getProfileId() != null
-                                        ? profile.getDisplayOwnerName()
+                                        ? profile.getColoredOwnerName()
                                         : "Unknown";
                         if (ownerName == null)
                                 ownerName = "Unknown";
-                        String claimName = profile.getName() != null ? profile.getName() : "Unnamed Claim";
+                        String claimName = profile.getColoredName() != null ? profile.getColoredName() : "Unnamed Claim";
 
                         ClaimSettingsConfig config = plugin.getConfigManager().getClaimSettingsConfig();
 

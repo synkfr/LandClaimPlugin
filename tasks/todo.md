@@ -49,3 +49,12 @@
 - [x] Tab-completion for `/claim leave` suggests exact leavable claims.
 - [x] Project builds successfully.
 - [x] Changes are logically committed and pushed.
+
+# Follow-up: Render custom claim colors in placeholders, action bar, and menus
+- [x] Enter Fast mode for implementation & verification <!-- id: 33 -->
+- [x] Update `%landclaim_profile%` PAPI placeholder in `LandClaimExpansion.java` to use colored name <!-- id: 34 -->
+- [x] Update event listener action bar & enter/leave title owner formatting in `EventListener.java` <!-- id: 35 -->
+- [x] Update GUI menu names & owner names in claim GUI menus (MainMenuGUI, ClaimSettingsGUI, etc.) to use colored name/owner <!-- id: 36 -->
+- [x] Verify that building compiles successfully via Maven <!-- id: 37 -->
+- [ ] Document results in tasks/todo.md and commit changes <!-- id: 38 -->
+

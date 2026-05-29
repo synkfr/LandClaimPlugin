@@ -37,8 +37,8 @@ public class AllyManagementGUI {
                                 if (allyProfile == null)
                                         continue;
 
-                                String allyName = allyProfile.getName();
-                                String ownerName = allyProfile.getDisplayOwnerName();
+                                String allyName = allyProfile.getColoredName();
+                                String ownerName = allyProfile.getColoredOwnerName();
                                 final String finalOwnerName = ownerName;
 
                                 contentItems.add(new GuiItem() {
