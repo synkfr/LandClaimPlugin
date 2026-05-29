@@ -9,9 +9,9 @@
 - [x] Verify compilation succeeds with Maven <!-- id: 5 -->
 - [x] Document all new permissions in `docs/guide/commands.md` <!-- id: 6 -->
 - [x] Document the new config option in `docs/CONFIGURATION.md` <!-- id: 7 -->
-- [ ] Create logical git commits for the changes <!-- id: 8 -->
+- [x] Create logical git commits for the changes <!-- id: 8 -->
 
 ## Review
-- [ ] Centralized checks correctly handle separate permissions or bypass them when disabled.
-- [ ] Documentation is complete.
-- [ ] Changes are committed.
+- [x] Centralized checks correctly handle separate permissions or bypass them when disabled.
+- [x] Documentation is complete.
+- [x] Changes are committed.
