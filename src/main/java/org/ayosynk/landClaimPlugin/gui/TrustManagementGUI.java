@@ -21,6 +21,9 @@ import java.util.*;
 public class TrustManagementGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "trusted", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         TrustManagementConfig config = plugin.getConfigManager().getTrustManagementConfig();
 

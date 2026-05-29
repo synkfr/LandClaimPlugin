@@ -12,6 +12,9 @@ import org.bukkit.entity.Player;
 public class ClaimMapGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "map", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         ClaimMapConfig config = plugin.getConfigManager().getClaimMapConfig();
                         org.ayosynk.landClaimPlugin.managers.ClaimManager claimManager = plugin.getClaimManager();

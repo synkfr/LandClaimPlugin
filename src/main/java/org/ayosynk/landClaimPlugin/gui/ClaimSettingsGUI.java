@@ -15,6 +15,9 @@ import java.util.Map;
 public class ClaimSettingsGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "settings", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         String ownerName = profile.getProfileId() != null
                                         ? profile.getDisplayOwnerName()

@@ -24,6 +24,9 @@ import java.util.UUID;
 public class AllyManagementGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "allies", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         AllyManagementConfig config = plugin.getConfigManager().getAllyManagementConfig();
 

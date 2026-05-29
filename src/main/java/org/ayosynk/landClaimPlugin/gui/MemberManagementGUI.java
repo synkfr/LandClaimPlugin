@@ -19,6 +19,9 @@ import java.util.*;
 public class MemberManagementGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (!GuiHelper.checkMenuPermission(player, "members", plugin)) {
+                        return;
+                }
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                         MemberManagementConfig config = plugin.getConfigManager().getMemberManagementConfig();
 

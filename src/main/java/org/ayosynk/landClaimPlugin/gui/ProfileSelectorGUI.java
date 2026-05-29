@@ -22,6 +22,9 @@ import java.util.Map;
 public class ProfileSelectorGUI {
 
     public static void open(Player player, LandClaimPlugin plugin) {
+        if (!GuiHelper.checkMenuPermission(player, "profiles", plugin)) {
+            return;
+        }
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             ClaimPlayer cp = plugin.getCacheManager().getPlayerCache().getIfPresent(player.getUniqueId());
             if (cp == null) return;
