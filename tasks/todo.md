@@ -65,3 +65,15 @@
 - [x] Compilation completes flawlessly with shade packaging.
 - [x] Git branch successfully pushed.
 
+# Follow-up: Use OnlinePlayerSelectorGUI for Ally Invites in GUI
+- [x] Route ally invite GUI addition through `OnlinePlayerSelectorGUI` instead of `AnvilInputGUI` <!-- id: 39 -->
+- [x] Validate target profile ownership, self-allies, and duplicate allies inside the selector callback <!-- id: 40 -->
+- [x] Verify that building compiles successfully via Maven <!-- id: 41 -->
+- [x] Document results in tasks/todo.md and commit changes <!-- id: 42 -->
+
+## Review
+- [x] Replaced Anvil text-based GUI for ally invites with the highly intuitive `OnlinePlayerSelectorGUI`.
+- [x] Added validations for target active profile, self-allies, and duplicate allies inside the selector callback.
+- [x] Verified compilation success and pushed clean changes to `v2` branch.
+
+

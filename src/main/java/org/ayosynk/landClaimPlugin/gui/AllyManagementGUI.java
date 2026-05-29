@@ -84,41 +84,33 @@ public class AllyManagementGUI {
                                         config.navFill.lore));
                         ingredients.put('+', GuiHelper.buildSlot(config.addAlly.material, config.addAlly.name,
                                         config.addAlly.lore, (p, e) -> {
-                                                AnvilInputGUI.open(plugin, p, "Invite Ally", "Player Name", input -> {
-                                                        Bukkit.getScheduler().runTask(plugin, () -> {
-                                                                if (input == null || input.isEmpty() || input.equals("Player Name")) {
-                                                                        p.sendMessage(GuiHelper.MM.deserialize("<red>Ally invite cancelled."));
-                                                                        AllyManagementGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
-                                                                
-                                                                ClaimProfile targetProfile = plugin.getClaimManager().getProfileByNameOrOwner(input);
-                                                                
-                                                                if (targetProfile == null) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("claim-not-found"));
-                                                                        AllyManagementGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
+                                                OnlinePlayerSelectorGUI.open(p, plugin, target -> {
+                                                        ClaimProfile targetProfile = plugin.getClaimManager().getActiveProfile(target);
+                                                        
+                                                        if (targetProfile == null) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("claim-not-found"));
+                                                                AllyManagementGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
 
-                                                                if (profile.getProfileId().equals(targetProfile.getProfileId())) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("cannot-ally-self"));
-                                                                        AllyManagementGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
+                                                        if (profile.getProfileId().equals(targetProfile.getProfileId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("cannot-ally-self"));
+                                                                AllyManagementGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
 
-                                                                if (profile.getAllyFlags().containsKey(targetProfile.getProfileId())) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("already-allied"));
-                                                                        AllyManagementGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
+                                                        if (profile.getAllyFlags().containsKey(targetProfile.getProfileId())) {
+                                                                p.sendMessage(plugin.getConfigManager()
+                                                                                .getMessage("already-allied"));
+                                                                AllyManagementGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
 
-                                                                plugin.getClaimManager().sendAllyInvite(p, targetProfile);
-                                                                p.closeInventory();
-                                                        });
-                                                });
+                                                        plugin.getClaimManager().sendAllyInvite(p, targetProfile);
+                                                        AllyManagementGUI.open(p, profile, plugin);
+                                                }, () -> AllyManagementGUI.open(p, profile, plugin));
                                         }));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
