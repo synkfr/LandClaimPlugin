@@ -39,7 +39,13 @@
 - [x] Verify compilation succeeds with Maven <!-- id: 27 -->
 - [x] Commit the changes <!-- id: 28 -->
 
+# Follow-up: Add Tab-Completion for /claim leave command
+- [x] Create `ClaimLeaveSuggestions.java` suggesting claims a player belongs to <!-- id: 29 -->
+- [x] Register suggestion provider in `/claim leave` subcommand inside `ClaimCommand.java` <!-- id: 30 -->
+- [x] Verify compilation succeeds with Maven <!-- id: 31 -->
+- [x] Commit the changes <!-- id: 32 -->
+
 ## Review
-- [x] Banned claim names are rejected with a proper message on creation and renaming.
+- [x] Tab-completion for `/claim leave` suggests exact leavable claims.
 - [x] Project builds successfully.
 - [x] Changes are logically committed and pushed.

@@ -357,7 +357,7 @@ public class ClaimCommand implements LandClaimCommand {
 
         // ========== /claim leave <claim name> ==========
         manager.command(claimBuilder.literal("leave")
-                .required("name", StringParser.greedyStringParser())
+                .required("name", StringParser.greedyStringParser(), ClaimLeaveSuggestions.get(plugin))
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.leave", plugin)) return;
