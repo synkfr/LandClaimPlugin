@@ -78,9 +78,15 @@
 
 # Follow-up: Bump Version, Update Docs, and Release to Master
 - [x] Bump version to `2.3.0` inside `pom.xml`, `plugin.yml`, docs, and `CHANGELOG.md` <!-- id: 43 -->
-- [ ] Merge `v2` branch changes into `master` and push to master remote <!-- id: 44 -->
-- [ ] Verify that master branch builds successfully via Maven <!-- id: 45 -->
-- [ ] Document results in tasks/todo.md and commit changes <!-- id: 46 -->
+- [x] Merge `v2` branch changes into `master` and push to master remote <!-- id: 44 -->
+- [x] Verify that master branch builds successfully via Maven <!-- id: 45 -->
+- [x] Document results in tasks/todo.md and commit changes <!-- id: 46 -->
+
+## Review
+- [x] Bumped version to `2.3.0` globally in `pom.xml`, `plugin.yml`, `docs/DEVELOPMENT.md`, `docs/guide/api.md`, and `CHANGELOG.md`.
+- [x] Successfully merged `v2` into `master` branch.
+- [x] Verified build compiles and shades cleanly on `master` branch via Maven.
+- [x] Pushed all updates to remote `origin/master` branch.
 
 
 
