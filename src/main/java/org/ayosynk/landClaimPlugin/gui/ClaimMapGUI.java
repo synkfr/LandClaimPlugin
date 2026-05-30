@@ -58,9 +58,10 @@ public class ClaimMapGUI {
                                                                 });
                                         } else if (ownerProfile.getProfileId().equals(player.getUniqueId())) {
                                                 // Your Claim
-                                                currentLore = config.yourClaim.lore;
+                                                String processedName = processText(config.yourClaim.name, ownerProfile, player);
+                                                currentLore = processLore(config.yourClaim.lore, ownerProfile, player);
                                                 slot = GuiHelper.buildSlot(config.yourClaim.material,
-                                                                config.yourClaim.name, currentLore,
+                                                                processedName, currentLore,
                                                                 (p, e) -> {
                                                                         org.bukkit.World w = Bukkit.getWorld(world);
                                                                         if (w != null) {
@@ -76,22 +77,22 @@ public class ClaimMapGUI {
                                         } else if (ownerProfile.isMember(player.getUniqueId())
                                                         || ownerProfile.isTrusted(player.getUniqueId())) {
                                                 // Member/Trusted
-                                                String ownerName = ownerProfile.getColoredOwnerName();
-                                                currentLore = processLore(config.memberClaim.lore, ownerName);
+                                                String processedName = processText(config.memberClaim.name, ownerProfile, player);
+                                                currentLore = processLore(config.memberClaim.lore, ownerProfile, player);
                                                 slot = GuiHelper.buildSlot(config.memberClaim.material,
-                                                                config.memberClaim.name, currentLore);
+                                                                processedName, currentLore);
                                         } else if (profile != null && profile.hasAlly(ownerProfile.getProfileId())) {
                                                 // Ally
-                                                String ownerName = ownerProfile.getColoredOwnerName();
-                                                currentLore = processLore(config.allyClaim.lore, ownerName);
+                                                String processedName = processText(config.allyClaim.name, ownerProfile, player);
+                                                currentLore = processLore(config.allyClaim.lore, ownerProfile, player);
                                                 slot = GuiHelper.buildSlot(config.allyClaim.material,
-                                                                config.allyClaim.name, currentLore);
+                                                                processedName, currentLore);
                                         } else {
                                                 // Other
-                                                String ownerName = ownerProfile.getColoredOwnerName();
-                                                currentLore = processLore(config.otherClaim.lore, ownerName);
+                                                String processedName = processText(config.otherClaim.name, ownerProfile, player);
+                                                currentLore = processLore(config.otherClaim.lore, ownerProfile, player);
                                                 slot = GuiHelper.buildSlot(config.otherClaim.material,
-                                                                config.otherClaim.name, currentLore);
+                                                                processedName, currentLore);
                                         }
 
                                         // If this is the player's current chunk, highlight it or add indicator
@@ -132,15 +133,23 @@ public class ClaimMapGUI {
                         gui.setItem(51, infoSlot.item(), infoSlot.action());
 
                         gui.open(player);
-                });
+                 });
         }
 
-        private static java.util.List<String> processLore(java.util.List<String> lore, String owner) {
-                if (owner == null)
-                        owner = "Unknown";
+        private static String processText(String text, ClaimProfile ownerProfile, Player player) {
+                if (text == null)
+                        return null;
+                if (ownerProfile == null)
+                        return text;
+                return GuiHelper.replacePlaceholders(text, ownerProfile, player, ownerProfile.getColoredOwnerName(), ownerProfile.getColoredName());
+        }
+
+        private static java.util.List<String> processLore(java.util.List<String> lore, ClaimProfile ownerProfile, Player player) {
                 java.util.List<String> processed = new java.util.ArrayList<>();
-                for (String line : lore) {
-                        processed.add(line.replace("{owner}", owner));
+                if (lore != null) {
+                        for (String line : lore) {
+                                processed.add(processText(line, ownerProfile, player));
+                        }
                 }
                 return processed;
         }

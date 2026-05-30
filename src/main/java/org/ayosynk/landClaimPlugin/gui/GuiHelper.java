@@ -76,12 +76,19 @@ public final class GuiHelper {
     public static String replacePlaceholders(String text, ClaimProfile profile, Player player,
             String ownerName, String claimName) {
         return text.replace("{claim_name}", claimName)
+                .replace("<claim_name>", claimName)
                 .replace("{owner}", ownerName)
+                .replace("<owner>", ownerName)
                 .replace("{size}", String.valueOf(profile.getOwnedChunks().size()))
+                .replace("<size>", String.valueOf(profile.getOwnedChunks().size()))
                 .replace("{members}", String.valueOf(profile.getMemberRoles().size()))
+                .replace("<members>", String.valueOf(profile.getMemberRoles().size()))
                 .replace("{world}", player.getWorld().getName())
+                .replace("<world>", player.getWorld().getName())
                 .replace("{x}", String.valueOf(player.getLocation().getBlockX()))
-                .replace("{z}", String.valueOf(player.getLocation().getBlockZ()));
+                .replace("<x>", String.valueOf(player.getLocation().getBlockX()))
+                .replace("{z}", String.valueOf(player.getLocation().getBlockZ()))
+                .replace("<z>", String.valueOf(player.getLocation().getBlockZ()));
     }
 
     // --- Core builder logic ---

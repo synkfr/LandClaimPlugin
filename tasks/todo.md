@@ -98,5 +98,16 @@
 - [x] This fully resolves the issue where administrators opening another player's claim menu had all interactive features locked out or replaced with filler blocks.
 - [x] Verified compilation success via Maven.
 
+# Follow-up: Fix Map GUI <owner> Placeholder Replacement
+- [x] Update `processLore` in `ClaimMapGUI.java` to replace `<owner>` along with `{owner}` <!-- id: 50 -->
+- [x] Update `replacePlaceholders` in `GuiHelper.java` to support both curly brace and angle bracket formats for all placeholders <!-- id: 51 -->
+- [x] Verify that building compiles successfully via Maven <!-- id: 52 -->
+- [x] Document results in tasks/todo.md and commit changes <!-- id: 53 -->
+
+## Review
+- [x] Fully processed `<owner>` and `{owner}` placeholders in `ClaimMapGUI.java` for both slot names and lore of all claim types (Member, Ally, Other, and Your Claim).
+- [x] Expanded `replacePlaceholders` in `GuiHelper.java` to dynamically support curly brace (`{placeholder}`) and angle bracket (`<placeholder>`) formats for all placeholders.
+- [x] Verified compilation success using Maven with no errors or warnings on the updated structures.
+
 
 
