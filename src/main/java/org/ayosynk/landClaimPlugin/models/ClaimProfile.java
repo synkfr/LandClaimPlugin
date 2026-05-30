@@ -137,6 +137,9 @@ public class ClaimProfile {
     }
 
     public String getDisplayOwnerName() {
+        if (realOwnerId.equals(ADMIN_PROFILE_ID)) {
+            return "Admin";
+        }
         if (ownerAlias != null && !ownerAlias.isEmpty()) {
             return ownerAlias;
         }

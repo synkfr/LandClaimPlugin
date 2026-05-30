@@ -120,7 +120,8 @@ public class AdminCommand implements LandClaimCommand {
 
                     if (claimManager.isChunkClaimed(pos)) {
                         UUID ownerId = claimManager.getChunkOwner(pos);
-                        String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
+                        ClaimProfile existingProfile = claimManager.getProfile(ownerId);
+                        String ownerName = existingProfile != null ? existingProfile.getDisplayOwnerName() : Bukkit.getOfflinePlayer(ownerId).getName();
                         player.sendMessage(configManager.getMessage("admin-already-claimed", "<owner>", ownerName != null ? ownerName : "Unknown"));
                         return;
                     }
@@ -218,9 +219,7 @@ public class AdminCommand implements LandClaimCommand {
             player.sendMessage(configManager.getMessage("not-in-claim"));
             return;
         }
-        String ownerName = Bukkit.getOfflinePlayer(profile.getProfileId()).getName();
-        if (ownerName == null)
-            ownerName = "Unknown";
+        String ownerName = profile.getDisplayOwnerName();
 
         player.sendMessage(
                 configManager.getMessage("admin-claim-info-owned-by", "<owner>", ownerName, "<uuid>",
@@ -316,8 +315,7 @@ public class AdminCommand implements LandClaimCommand {
             for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
                 if (profile.isTrusted(targetId)) {
                     foundAny = true;
-                    String ownerName = Bukkit.getOfflinePlayer(profile.getProfileId()).getName();
-                    if (ownerName == null) ownerName = profile.getProfileId().toString();
+                    String ownerName = profile.getDisplayOwnerName();
                     String safeOwnerName = escapeMiniMessage(ownerName);
                     sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
                             .deserialize("<gray>- <gold>" + safeOwnerName));

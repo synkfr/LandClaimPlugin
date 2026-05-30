@@ -352,7 +352,8 @@ public class ClaimManager {
         ChunkPosition pos = new ChunkPosition(chunk);
         if (isChunkClaimed(pos)) {
             UUID owner = getChunkOwner(pos);
-            String ownerName = plugin.getServer().getOfflinePlayer(owner).getName();
+            ClaimProfile ownerProfile = getProfile(owner);
+            String ownerName = ownerProfile != null ? ownerProfile.getDisplayOwnerName() : plugin.getServer().getOfflinePlayer(owner).getName();
             player.sendMessage(
                     configManager.getMessage("already-claimed", "<owner>", ownerName != null ? ownerName : "Unknown"));
             return false;
@@ -488,7 +489,8 @@ public class ClaimManager {
         for (ChunkPosition pos : chunksToClaim) {
             if (isChunkClaimed(pos)) {
                 UUID owner = getChunkOwner(pos);
-                String ownerName = plugin.getServer().getOfflinePlayer(owner).getName();
+                ClaimProfile ownerProfile = getProfile(owner);
+                String ownerName = ownerProfile != null ? ownerProfile.getDisplayOwnerName() : plugin.getServer().getOfflinePlayer(owner).getName();
                 player.sendMessage(
                         configManager.getMessage("already-claimed", "<owner>",
                                 ownerName != null ? ownerName : "Unknown"));

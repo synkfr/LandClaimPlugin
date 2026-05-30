@@ -108,6 +108,13 @@
 - [x] Fully processed `<owner>` and `{owner}` placeholders in `ClaimMapGUI.java` for both slot names and lore of all claim types (Member, Ally, Other, and Your Claim).
 - [x] Expanded `replacePlaceholders` in `GuiHelper.java` to dynamically support curly brace (`{placeholder}`) and angle bracket (`<placeholder>`) formats for all placeholders.
 - [x] Verified compilation success using Maven with no errors or warnings on the updated structures.
+# Follow-up: Fix Admin Action Owner Display Names
+- [x] Check if profile ID or realOwnerId is `ADMIN_PROFILE_ID` inside `getDisplayOwnerName()` of `ClaimProfile.java` and return `"Admin"` <!-- id: 54 -->
+- [x] Refactor all raw `Bukkit.getOfflinePlayer(uuid).getName()` bypasses in `AdminCommand.java` and `ClaimManager.java` to fetch display owner names through profile getters <!-- id: 55 -->
+- [x] Verify that building compiles successfully via Maven <!-- id: 56 -->
+- [x] Document results in tasks/todo.md and commit changes <!-- id: 57 -->
 
-
-
+## Review
+- [x] Corrected `getDisplayOwnerName()` in `ClaimProfile.java` to dynamically check if the profile's owner ID is the `ADMIN_PROFILE_ID` and correctly return `"Admin"`.
+- [x] Refactored `AdminCommand.java` and `ClaimManager.java` to fetch proper display/colored owner names from active claim profiles instead of using raw `OfflinePlayer` names (which evaluate to null and fell back to raw UUIDs or `"Unknown"`).
+- [x] Verified complete build compilation success.
