@@ -100,8 +100,8 @@ public class ClaimProfile {
     // --- Owner ---
     
     public boolean canManage(org.bukkit.entity.Player player) {
-        if (isOwner(player.getUniqueId())) return true;
-        return profileId.equals(ADMIN_PROFILE_ID) && player.hasPermission("landclaim.admin");
+        if (player.hasPermission("landclaim.admin")) return true;
+        return isOwner(player.getUniqueId());
     }
 
     public UUID getProfileId() {

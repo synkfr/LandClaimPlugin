@@ -88,5 +88,15 @@
 - [x] Verified build compiles and shades cleanly on `master` branch via Maven.
 - [x] Pushed all updates to remote `origin/master` branch.
 
+# Follow-up: Fix Admin Menu Bypass for Other Player Claims
+- [x] Update `canManage(Player)` in `ClaimProfile.java` to allow players with `landclaim.admin` permission <!-- id: 47 -->
+- [x] Verify that building compiles successfully via Maven <!-- id: 48 -->
+- [x] Document results in tasks/todo.md and commit changes <!-- id: 49 -->
+
+## Review
+- [x] Corrected `canManage(Player)` in `ClaimProfile` to grant full control to players with `landclaim.admin` permission.
+- [x] This fully resolves the issue where administrators opening another player's claim menu had all interactive features locked out or replaced with filler blocks.
+- [x] Verified compilation success via Maven.
+
 
 
