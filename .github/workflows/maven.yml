@@ -2,7 +2,7 @@ name: Build
 
 # Triggers:
 #  - push to master        -> dev build (pre-release, updates single "Dev Build (Latest)" tag)
-#  - push of a v* tag      -> stable release (e.g. v2.3.0)
+#  - push of a v* tag      -> stable release (e.g. v2.4.0)
 #  - pull_request to master-> build + artifact only, no release
 #  - manual dispatch       -> dev or release build, your choice
 on:
@@ -62,6 +62,22 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA"       >> "$GITHUB_OUTPUT"
 
+      # Rename the shaded JAR into a per-build-type name so dev and release
+      # artifacts are easy to tell apart at a glance:
+      #   dev:    LandClaimPlugin-<version>-dev.jar
+      #   release: LandClaim-<version>-release.jar
+      - name: Rename JAR for dev build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          cp "target/LandClaimPlugin-${{ steps.meta.outputs.version }}.jar" \
+             "target/LandClaimPlugin-${{ steps.meta.outputs.version }}-dev.jar"
+
+      - name: Rename JAR for release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cp "target/LandClaimPlugin-${{ steps.meta.outputs.version }}.jar" \
+             "target/LandClaim-${{ steps.meta.outputs.version }}-release.jar"
+
       # ---------- Pull-request builds ----------
       # Build only; no release, no tag. Just keep the JAR for the run.
       - name: Upload PR Artifact
@@ -83,9 +99,8 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: LandClaimPlugin-dev-${{ steps.meta.outputs.sha }}
-          # Only the shaded uber-jar — skip the maven-shade-plugin's
-          # 'original-*' intermediate that lives next to it.
-          path: target/LandClaimPlugin-*.jar
+          # The renamed dev jar, e.g. LandClaimPlugin-2.4.0-dev.jar
+          path: target/LandClaimPlugin-${{ steps.meta.outputs.version }}-dev.jar
           if-no-files-found: error
           retention-days: 14
 
@@ -98,9 +113,8 @@ jobs:
           prerelease: true
           overwrite_files: true
           fail_on_unmatched_files: true
-          # Only the shaded uber-jar — skip the maven-shade-plugin's
-          # 'original-*' intermediate that lives next to it.
-          files: target/LandClaimPlugin-*.jar
+          # The renamed dev jar, e.g. LandClaimPlugin-2.4.0-dev.jar
+          files: target/LandClaimPlugin-${{ steps.meta.outputs.version }}-dev.jar
           body: |
             🛠️ Latest development build from `master`.
 
@@ -116,16 +130,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ---------- Stable release on v* tag push ----------
-      # Each tag (e.g. v2.3.0) becomes its own proper GitHub release with
+      # Each tag (e.g. v2.4.0) becomes its own proper GitHub release with
       # auto-generated notes and a long-retention artifact.
       - name: Upload Release Artifact
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v5
         with:
-          name: LandClaimPlugin-${{ steps.meta.outputs.version }}
-          # Only the shaded uber-jar — skip the maven-shade-plugin's
-          # 'original-*' intermediate that lives next to it.
-          path: target/LandClaimPlugin-*.jar
+          name: LandClaim-${{ steps.meta.outputs.version }}
+          # The renamed release jar, e.g. LandClaim-2.4.0-release.jar
+          path: target/LandClaim-${{ steps.meta.outputs.version }}-release.jar
           if-no-files-found: error
           retention-days: 90
 
@@ -137,8 +150,7 @@ jobs:
           name: Release ${{ steps.meta.outputs.version }}
           generate_release_notes: true
           fail_on_unmatched_files: true
-          # Only the shaded uber-jar — skip the maven-shade-plugin's
-          # 'original-*' intermediate that lives next to it.
-          files: target/LandClaimPlugin-*.jar
+          # The renamed release jar, e.g. LandClaim-2.4.0-release.jar
+          files: target/LandClaim-${{ steps.meta.outputs.version }}-release.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
