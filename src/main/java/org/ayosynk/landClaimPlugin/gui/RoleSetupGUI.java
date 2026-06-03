@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSetupConfig;
@@ -17,7 +18,7 @@ import java.util.UUID;
 public class RoleSetupGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Role role) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         RoleSetupConfig config = plugin.getConfigManager().getRoleSetupConfig();
 
                         // Setup a temporary role representation if creating new
@@ -49,7 +50,7 @@ public class RoleSetupGUI {
                                         config.setName.lore, (p, e) -> {
                                                 p.closeInventory();
                                                 AnvilInputGUI.open(plugin, p, "Role Name", workingRole.getName(), input -> {
-                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                        FoliaScheduler.runTask(plugin, () -> {
                                                                 if (input == null) {
                                                                         p.sendMessage(GuiHelper.MM.deserialize("<red>Operation cancelled."));
                                                                 } else {
@@ -76,7 +77,7 @@ public class RoleSetupGUI {
                                         config.setPriority.lore, (p, e) -> {
                                                 p.closeInventory();
                                                 AnvilInputGUI.open(plugin, p, "Priority", String.valueOf(workingRole.getPriority()), input -> {
-                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                        FoliaScheduler.runTask(plugin, () -> {
                                                                 if (input == null) {
                                                                         p.sendMessage(GuiHelper.MM.deserialize("<red>Operation cancelled."));
                                                                 } else {

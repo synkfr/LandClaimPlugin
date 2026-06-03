@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.RenameClaimConfig;
@@ -18,7 +19,7 @@ public class RenameClaimGUI {
         private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9 ]{3,32}$");
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         RenameClaimConfig config = plugin.getConfigManager().getRenameClaimConfig();
 
                         String[] structure = {
@@ -41,7 +42,7 @@ public class RenameClaimGUI {
                                         config.changeName.lore, (p, e) -> {
                                                 p.closeInventory();
                                                 AnvilInputGUI.open(plugin, p, "Rename Claim", profile.getName(), input -> {
-                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                        FoliaScheduler.runTask(plugin, () -> {
                                                                 if (input == null) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("rename-cancelled"));
@@ -124,7 +125,7 @@ public class RenameClaimGUI {
                                                                 p.closeInventory();
                                                                 String currentAlias = profile.getOwnerAlias() != null ? profile.getOwnerAlias() : "reset";
                                                                 AnvilInputGUI.open(plugin, p, "Set Owner Alias", currentAlias, input -> {
-                                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                                        FoliaScheduler.runTask(plugin, () -> {
                                                                                 if (input == null || input.isEmpty() || input.equals(currentAlias)) {
                                                                                         p.sendMessage(plugin.getConfigManager().getMessage("rename-cancelled"));
                                                                                         RenameClaimGUI.open(p, profile, plugin);
@@ -154,7 +155,7 @@ public class RenameClaimGUI {
                                                         }));
 
                         Component title = GuiHelper.MM.deserialize(config.title);
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+                        FoliaScheduler.runTask(plugin, () -> {
                                 CustomGui gui = new CustomGui(title, 4);
                                 gui.fillFromStructure(structure, ingredients);
                                 gui.open(player);

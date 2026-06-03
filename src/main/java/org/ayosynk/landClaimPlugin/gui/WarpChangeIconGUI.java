@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.WarpChangeIconConfig;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class WarpChangeIconGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Warp warp) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         WarpChangeIconConfig config = plugin.getConfigManager().getWarpChangeIconConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();
@@ -89,7 +90,7 @@ public class WarpChangeIconGUI {
                                         GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
                                                         config.navFill.lore));
 
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+                        FoliaScheduler.runTask(plugin, () -> {
                                 gui.setContent(contentItems, player);
                                 gui.open(player);
                         });

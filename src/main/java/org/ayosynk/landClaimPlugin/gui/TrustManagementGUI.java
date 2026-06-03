@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
@@ -24,7 +25,7 @@ public class TrustManagementGUI {
                 if (!GuiHelper.checkMenuPermission(player, "trusted", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         TrustManagementConfig config = plugin.getConfigManager().getTrustManagementConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();
@@ -61,7 +62,7 @@ public class TrustManagementGUI {
                                                 return (p, e) -> {
                                                         if (e.getClick() == ClickType.RIGHT) {
                                                                 // Right-click → confirmation → remove
-                                                                Bukkit.getScheduler().runTask(plugin,
+                                                                FoliaScheduler.runTask(plugin,
                                                                                 () -> ConfirmationGUI.open(p,
                                                                                                 "<red>Remove " + displayName
                                                                                                                 + "?",

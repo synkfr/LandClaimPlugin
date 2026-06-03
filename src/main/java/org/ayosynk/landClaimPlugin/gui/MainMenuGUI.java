@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
@@ -18,7 +19,7 @@ public class MainMenuGUI {
                 if (!GuiHelper.checkMenuPermission(player, "main", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         String ownerName = profile.getProfileId() != null
                                         ? profile.getColoredOwnerName()
                                         : "Unknown";

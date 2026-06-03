@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.RoleManagementConfig;
@@ -27,7 +28,7 @@ public class RoleManagementGUI {
                 if (!GuiHelper.checkMenuPermission(player, "roles", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         RoleManagementConfig config = plugin.getConfigManager().getRoleManagementConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();
@@ -86,7 +87,7 @@ public class RoleManagementGUI {
                                                                 }
 
                                                                 // Delete Role Confirmation
-                                                                Bukkit.getScheduler().runTask(plugin, () -> {
+                                                                FoliaScheduler.runTask(plugin, () -> {
                                                                         ConfirmationGUI.open(p,
                                                                                         "<red>Delete role " + roleName
                                                                                                         + "?",

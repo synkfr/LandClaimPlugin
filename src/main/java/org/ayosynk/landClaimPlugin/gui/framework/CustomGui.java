@@ -1,6 +1,7 @@
 package org.ayosynk.landClaimPlugin.gui.framework;
 
 import net.kyori.adventure.text.Component;
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -18,8 +19,9 @@ import java.util.Map;
  * listener. Click dispatch, slot management, and lifecycle are all handled
  * internally — individual GUI classes only declare structure + items.
  * <p>
- * <b>Paper safety:</b> {@link #open(Player)} always schedules on the main
- * thread via {@code runTask()}.
+ * <b>Folia / Paper safety:</b> {@link #open(Player)} always schedules on the
+ * appropriate thread via {@link FoliaScheduler#runForPlayer} — on Paper that is
+ * the main thread, on Folia that is the player's region thread.
  */
 public class CustomGui implements InventoryHolder {
 
@@ -99,13 +101,18 @@ public class CustomGui implements InventoryHolder {
 
     /**
      * Opens this GUI for the player.
-     * <b>Always schedules on the main thread</b> — safe to call from async.
+     * <b>Always schedules on the appropriate thread</b> — safe to call from
+     * async. On Paper, runs on the main thread; on Folia, on the player's
+     * region thread.
      */
     public void open(Player player) {
         if (plugin == null) {
             throw new IllegalStateException("CustomGui.setPlugin() was not called during onEnable!");
         }
-        if (!Bukkit.isPrimaryThread()) {
+        if (FoliaScheduler.isFolia()) {
+            // Folia: route through the player's region scheduler
+            FoliaScheduler.runForPlayer(plugin, player, () -> openSync(player));
+        } else if (!Bukkit.isPrimaryThread()) {
             Bukkit.getScheduler().runTask(plugin, () -> openSync(player));
         } else {
             openSync(player);

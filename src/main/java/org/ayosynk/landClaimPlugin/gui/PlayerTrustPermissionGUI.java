@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
@@ -23,7 +24,7 @@ import java.util.*;
 public class PlayerTrustPermissionGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, UUID targetPlayerId) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         // Reuse the same flag catalog as visitor settings
                         VisitorSettingsConfig config = plugin.getConfigManager().getVisitorSettingsConfig();
 

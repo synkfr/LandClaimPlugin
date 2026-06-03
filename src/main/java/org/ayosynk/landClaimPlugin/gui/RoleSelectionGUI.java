@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.RoleSelectionConfig;
@@ -25,7 +26,7 @@ public class RoleSelectionGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, UUID targetPlayerId,
                         String targetPlayerName) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         RoleSelectionConfig config = plugin.getConfigManager().getRoleSelectionConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();

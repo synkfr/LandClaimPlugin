@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.TitleSettingsConfig;
@@ -18,7 +19,7 @@ import java.util.Map;
 public class TitleToggleGUI {
 
     public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             TitleSettingsConfig config = plugin.getConfigManager().getTitleSettingsConfig();
 
             String[] structure = {
@@ -80,7 +81,7 @@ public class TitleToggleGUI {
                                                     plugin.getConfigManager()
                                                             .getMessagesConfig().titleUpdated));
                                         }
-                                        Bukkit.getScheduler().runTask(plugin,
+                                        FoliaScheduler.runTask(plugin,
                                                 () -> open(p, profile, plugin));
                                     });
                         }
@@ -120,7 +121,7 @@ public class TitleToggleGUI {
                                                     plugin.getConfigManager()
                                                             .getMessagesConfig().titleUpdated));
                                         }
-                                        Bukkit.getScheduler().runTask(plugin,
+                                        FoliaScheduler.runTask(plugin,
                                                 () -> open(p, profile, plugin));
                                     });
                         }

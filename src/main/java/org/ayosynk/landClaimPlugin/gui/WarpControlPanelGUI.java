@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class WarpControlPanelGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Warp warp) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         WarpControlPanelConfig config = plugin.getConfigManager().getWarpControlPanelConfig();
 
                         String[] structure = {
@@ -70,7 +71,7 @@ public class WarpControlPanelGUI {
                                         java.util.List.of("<gray>Coming Soon...")));
 
                         Component title = GuiHelper.MM.deserialize(config.title.replace("{name}", warp.getName()));
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+                        FoliaScheduler.runTask(plugin, () -> {
                                 CustomGui gui = new CustomGui(title, 3);
                                 gui.fillFromStructure(structure, ingredients);
                                 gui.open(player);

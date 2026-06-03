@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimMapInfoConfig;
@@ -15,7 +16,7 @@ import java.util.Map;
 public class ClaimMapInfoGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         ClaimMapInfoConfig config = plugin.getConfigManager().getClaimMapInfoConfig();
 
                         String[] structure = {

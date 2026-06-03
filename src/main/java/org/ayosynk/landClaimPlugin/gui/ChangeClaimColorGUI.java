@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.ChangeClaimColorConfig;
@@ -37,7 +38,7 @@ public class ChangeClaimColorGUI {
                         Map.entry("YELLOW", "#FED83D"));
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         ChangeClaimColorConfig config = plugin.getConfigManager().getChangeClaimColorConfig();
 
                         String[] structure = {
@@ -66,7 +67,7 @@ public class ChangeClaimColorGUI {
                                                 p.closeInventory();
                                                 p.closeInventory();
                                                 AnvilInputGUI.open(plugin, p, "Hex Color", profile.getClaimColor() != null ? profile.getClaimColor() : "#00FF00", input -> {
-                                                        Bukkit.getScheduler().runTask(plugin, () -> {
+                                                        FoliaScheduler.runTask(plugin, () -> {
                                                                 if (input == null) {
                                                                         p.sendMessage(plugin.getConfigManager()
                                                                                         .getMessage("rename-cancelled"));
@@ -108,7 +109,7 @@ public class ChangeClaimColorGUI {
                         ingredients.put('Y', buildColorSlot(config.colorYellow, "YELLOW", profile, plugin));
 
                         Component title = GuiHelper.MM.deserialize(config.title);
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+                        FoliaScheduler.runTask(plugin, () -> {
                                 CustomGui gui = new CustomGui(title, 5);
                                 gui.fillFromStructure(structure, ingredients);
                                 gui.open(player);

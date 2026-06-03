@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimSettingsConfig;
@@ -18,7 +19,7 @@ public class ClaimSettingsGUI {
                 if (!GuiHelper.checkMenuPermission(player, "settings", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         String ownerName = profile.getProfileId() != null
                                         ? profile.getColoredOwnerName()
                                         : "Unknown";
@@ -77,15 +78,21 @@ public class ClaimSettingsGUI {
                                                 profile.setPvpEnabled(newState);
                                                 profile.setPvpTimerEnd(0); // Permanent via GUI
                                                 plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
-                                                
+
                                                 String messageKey = newState ? "pvp-enabled" : "pvp-disabled";
                                                 String rawMessage = plugin.getConfigManager().getMessage(messageKey);
 
+                                                // Folia: player.getLocation() requires the player's region thread.
+                                                // Dispatch per-player so the location read is safe.
                                                 for (Player p2 : Bukkit.getOnlinePlayers()) {
-                                                        org.ayosynk.landClaimPlugin.models.ChunkPosition pPos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(p2.getLocation());
-                                                        if (profile.ownsChunk(pPos)) {
-                                                                p2.sendMessage(rawMessage);
-                                                        }
+                                                        final Player target = p2;
+                                                        FoliaScheduler.runForPlayer(plugin, target, () -> {
+                                                                org.ayosynk.landClaimPlugin.models.ChunkPosition pPos =
+                                                                        new org.ayosynk.landClaimPlugin.models.ChunkPosition(target.getLocation());
+                                                                if (profile.ownsChunk(pPos)) {
+                                                                        target.sendMessage(rawMessage);
+                                                                }
+                                                        });
                                                 }
 
                                                 p.closeInventory();

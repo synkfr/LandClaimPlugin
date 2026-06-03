@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.AllyPremissionsConfig;
@@ -24,7 +25,7 @@ public class AllyPremissionsGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin,
                         ClaimProfile targetAllyProfile) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         AllyPremissionsConfig config = plugin.getConfigManager().getAllyPremissionsConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();

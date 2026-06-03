@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.gui.framework.ClickAction;
@@ -25,7 +26,7 @@ public class ProfileSelectorGUI {
         if (!GuiHelper.checkMenuPermission(player, "profiles", plugin)) {
             return;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             ClaimPlayer cp = plugin.getCacheManager().getPlayerCache().getIfPresent(player.getUniqueId());
             if (cp == null) return;
             

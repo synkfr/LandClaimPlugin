@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.PlayerControlPanelConfig;
@@ -19,7 +20,7 @@ public class PlayerControlPanelGUI {
 
     public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, UUID targetPlayerId,
             String targetPlayerName) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             PlayerControlPanelConfig config = plugin.getConfigManager().getPlayerControlPanelConfig();
 
             String[] structure = {
@@ -41,7 +42,7 @@ public class PlayerControlPanelGUI {
                     p.sendMessage(GuiHelper.MM.deserialize("<red>Only the claim owner can transfer ownership."));
                     return;
                 }
-                Bukkit.getScheduler().runTask(plugin, () -> {
+                FoliaScheduler.runTask(plugin, () -> {
                     ConfirmationGUI.open(p, "<red>Transfer to " + targetPlayerName + "?",
                             () -> {
                                 plugin.getClaimManager().transferOwnership(profile.getProfileId(), targetPlayerId);
@@ -53,7 +54,7 @@ public class PlayerControlPanelGUI {
             }));
             ingredients.put('K', buildPlayerSlotWithAction(config.kickPlayer, targetPlayerName, (p, e) -> {
                 // Kick Member
-                Bukkit.getScheduler().runTask(plugin, () -> {
+                FoliaScheduler.runTask(plugin, () -> {
                     ConfirmationGUI.open(p, "<red>Kick " + targetPlayerName + " from claim?",
                             () -> {
                                 profile.removeMember(targetPlayerId);

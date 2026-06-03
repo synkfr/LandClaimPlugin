@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimMapConfig;
@@ -15,14 +16,18 @@ public class ClaimMapGUI {
                 if (!GuiHelper.checkMenuPermission(player, "map", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                // Capture the player's current chunk position synchronously (on the player's
+                // region thread on Folia, or main thread on Paper). Reading
+                // player.getLocation() here is safe.
+                org.ayosynk.landClaimPlugin.models.ChunkPosition centerSync = new org.ayosynk.landClaimPlugin.models.ChunkPosition(
+                                player.getLocation());
+                final String world = centerSync.world();
+                final int centerX = centerSync.x();
+                final int centerZ = centerSync.z();
+
+                FoliaScheduler.runAsync(plugin, () -> {
                         ClaimMapConfig config = plugin.getConfigManager().getClaimMapConfig();
                         org.ayosynk.landClaimPlugin.managers.ClaimManager claimManager = plugin.getClaimManager();
-                        org.ayosynk.landClaimPlugin.models.ChunkPosition center = new org.ayosynk.landClaimPlugin.models.ChunkPosition(
-                                        player.getLocation());
-                        String world = center.world();
-                        int centerX = center.x();
-                        int centerZ = center.z();
 
                         Component title = GuiHelper.MM.deserialize(config.title);
                         CustomGui gui = new CustomGui(title, 6);
@@ -45,15 +50,20 @@ public class ClaimMapGUI {
                                                 slot = GuiHelper.buildSlot(config.wilderness.material,
                                                                 config.wilderness.name, currentLore,
                                                                 (p, e) -> {
+                                                                        // Folia: chunk operations need the
+                                                                        // region's thread. Use runAtLocation
+                                                                        // to dispatch safely.
                                                                         org.bukkit.World w = Bukkit.getWorld(world);
                                                                         if (w != null) {
-                                                                                org.bukkit.Chunk chunk = w
-                                                                                                .getChunkAtAsync(chunkX,
-                                                                                                                chunkZ)
-                                                                                                .join();
-                                                                                if (claimManager.claimChunk(p, chunk)) {
-                                                                                        open(p, profile, plugin);
-                                                                                }
+                                                                                int bx = (chunkX << 4) + 8;
+                                                                                int bz = (chunkZ << 4) + 8;
+                                                                                org.bukkit.Location chunkLoc = new org.bukkit.Location(w, bx, 64, bz);
+                                                                                FoliaScheduler.runAtLocation(plugin, chunkLoc, () -> {
+                                                                                        org.bukkit.Chunk chunk = w.getChunkAt(chunkX, chunkZ);
+                                                                                        if (claimManager.claimChunk(p, chunk)) {
+                                                                                                open(p, profile, plugin);
+                                                                                        }
+                                                                                });
                                                                         }
                                                                 });
                                         } else if (ownerProfile.getProfileId().equals(player.getUniqueId())) {
@@ -65,13 +75,15 @@ public class ClaimMapGUI {
                                                                 (p, e) -> {
                                                                         org.bukkit.World w = Bukkit.getWorld(world);
                                                                         if (w != null) {
-                                                                                org.bukkit.Chunk chunk = w
-                                                                                                .getChunkAtAsync(chunkX,
-                                                                                                                chunkZ)
-                                                                                                .join();
-                                                                                if (claimManager.unclaimChunk(chunk)) {
-                                                                                        open(p, profile, plugin);
-                                                                                }
+                                                                                int bx = (chunkX << 4) + 8;
+                                                                                int bz = (chunkZ << 4) + 8;
+                                                                                org.bukkit.Location chunkLoc = new org.bukkit.Location(w, bx, 64, bz);
+                                                                                FoliaScheduler.runAtLocation(plugin, chunkLoc, () -> {
+                                                                                        org.bukkit.Chunk chunk = w.getChunkAt(chunkX, chunkZ);
+                                                                                        if (claimManager.unclaimChunk(chunk)) {
+                                                                                                open(p, profile, plugin);
+                                                                                        }
+                                                                                });
                                                                         }
                                                                 });
                                         } else if (ownerProfile.isMember(player.getUniqueId())

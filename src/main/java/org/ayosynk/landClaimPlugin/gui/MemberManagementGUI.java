@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.MemberManagementConfig;
@@ -22,7 +23,7 @@ public class MemberManagementGUI {
                 if (!GuiHelper.checkMenuPermission(player, "members", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         MemberManagementConfig config = plugin.getConfigManager().getMemberManagementConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();

@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.OnlinePlayerSelectorConfig;
@@ -22,7 +23,7 @@ import java.util.function.Consumer;
 public class OnlinePlayerSelectorGUI {
 
     public static void open(Player player, LandClaimPlugin plugin, Consumer<Player> onSelect, Runnable onBack) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             OnlinePlayerSelectorConfig config = plugin.getConfigManager().getOnlinePlayerSelectorConfig();
 
             List<GuiItem> contentItems = new ArrayList<>();

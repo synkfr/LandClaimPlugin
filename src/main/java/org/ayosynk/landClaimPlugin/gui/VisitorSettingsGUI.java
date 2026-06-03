@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
@@ -23,7 +24,7 @@ public class VisitorSettingsGUI {
                 if (!GuiHelper.checkMenuPermission(player, "visitors", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         VisitorSettingsConfig config = plugin.getConfigManager().getVisitorSettingsConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();

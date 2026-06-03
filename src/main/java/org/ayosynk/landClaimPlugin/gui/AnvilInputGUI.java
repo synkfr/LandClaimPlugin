@@ -89,7 +89,8 @@ public class AnvilInputGUI implements Listener {
         view.getTopInventory().clear();
 
         // Delay callback slightly so inventory close processes finish
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
+        // Route through the player's region thread on Folia, main thread on Paper.
+        org.ayosynk.landClaimPlugin.util.FoliaScheduler.runForPlayer(plugin, player, () -> {
             if (player.getOpenInventory().getTopInventory().equals(view.getTopInventory())) {
                 player.closeInventory();
             }

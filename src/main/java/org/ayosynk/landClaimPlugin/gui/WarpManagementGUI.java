@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.WarpManagementConfig;
@@ -25,7 +26,7 @@ public class WarpManagementGUI {
                 if (!GuiHelper.checkMenuPermission(player, "warps", plugin)) {
                         return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                FoliaScheduler.runAsync(plugin, () -> {
                         WarpManagementConfig config = plugin.getConfigManager().getWarpManagementConfig();
 
                         List<GuiItem> contentItems = new ArrayList<>();
@@ -95,7 +96,7 @@ public class WarpManagementGUI {
                                         GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
                                                         config.navFill.lore));
 
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+                        FoliaScheduler.runTask(plugin, () -> {
                                 gui.setContent(contentItems, player);
                                 gui.open(player);
                         });

@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.gui;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import net.kyori.adventure.text.Component;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.config.menus.RoleEditConfig;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class RoleEditGUI {
 
     public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Role role, boolean isNew) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             // Layout config
             RoleEditConfig config = plugin.getConfigManager().getRoleEditConfig();
             // We reuse the flags catalog from VisitorSettingsConfig
