@@ -69,7 +69,10 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: LandClaimPlugin-pr-${{ steps.meta.outputs.sha }}
-          path: target/*.jar
+          # Only the shaded uber-jar — skip the maven-shade-plugin's
+          # 'original-*' intermediate that lives next to it.
+          path: target/LandClaimPlugin-*.jar
+          if-no-files-found: error
           retention-days: 7
 
       # ---------- Pre-release: dev build on master ----------
@@ -80,7 +83,10 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: LandClaimPlugin-dev-${{ steps.meta.outputs.sha }}
-          path: target/*.jar
+          # Only the shaded uber-jar — skip the maven-shade-plugin's
+          # 'original-*' intermediate that lives next to it.
+          path: target/LandClaimPlugin-*.jar
+          if-no-files-found: error
           retention-days: 14
 
       - name: Publish Dev Build (Latest)
@@ -92,7 +98,9 @@ jobs:
           prerelease: true
           overwrite_files: true
           fail_on_unmatched_files: true
-          files: target/*.jar
+          # Only the shaded uber-jar — skip the maven-shade-plugin's
+          # 'original-*' intermediate that lives next to it.
+          files: target/LandClaimPlugin-*.jar
           body: |
             🛠️ Latest development build from `master`.
 
@@ -115,7 +123,10 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: LandClaimPlugin-${{ steps.meta.outputs.version }}
-          path: target/*.jar
+          # Only the shaded uber-jar — skip the maven-shade-plugin's
+          # 'original-*' intermediate that lives next to it.
+          path: target/LandClaimPlugin-*.jar
+          if-no-files-found: error
           retention-days: 90
 
       - name: Publish Release
@@ -126,6 +137,8 @@ jobs:
           name: Release ${{ steps.meta.outputs.version }}
           generate_release_notes: true
           fail_on_unmatched_files: true
-          files: target/*.jar
+          # Only the shaded uber-jar — skip the maven-shade-plugin's
+          # 'original-*' intermediate that lives next to it.
+          files: target/LandClaimPlugin-*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
