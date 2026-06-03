@@ -3,6 +3,7 @@ version: "2.3.0"
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: "1.21"
 author: AyoSynk
+folia-supported: true
 soft-depend: [WorldGuard, BlueMap, dynmap, Vault]
 permissions:
   landclaim.*:
