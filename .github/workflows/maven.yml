@@ -1,23 +1,48 @@
-name: Build LandClaimPlugin
+name: Build
 
+# Triggers:
+#  - push to master        -> dev build (pre-release, updates single "Dev Build (Latest)" tag)
+#  - push of a v* tag      -> stable release (e.g. v2.3.0)
+#  - pull_request to master-> build + artifact only, no release
+#  - manual dispatch       -> dev or release build, your choice
 on:
   push:
     branches: ["master"]
+    tags: ["v*"]
   pull_request:
+    branches: ["master"]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - release
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+# Don't let two releases fight over the same tag.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: write   # required to create tags / releases
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # full history so release notes are accurate
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -27,21 +52,80 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: mvn -B clean package --file pom.xml
 
-      - name: Upload Artifact
+      - name: Extract project metadata
+        id: meta
+        run: |
+          VERSION=$(mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null | tail -1)
+          SHA=$(git rev-parse --short HEAD)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA"       >> "$GITHUB_OUTPUT"
+
+      # ---------- Pull-request builds ----------
+      # Build only; no release, no tag. Just keep the JAR for the run.
+      - name: Upload PR Artifact
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v5
         with:
-          name: LandClaimPlugin-dev-${{ github.run_number }}
+          name: LandClaimPlugin-pr-${{ steps.meta.outputs.sha }}
           path: target/*.jar
+          retention-days: 7
 
-      - name: Create Dev Release
-        if: github.event_name == 'push'
+      # ---------- Pre-release: dev build on master ----------
+      # Reuses a single tag ('dev-latest') and updates the same release each run, so
+      # the tag list stays clean and users have one stable URL to grab the bleeding edge.
+      - name: Upload Dev Artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v5
+        with:
+          name: LandClaimPlugin-dev-${{ steps.meta.outputs.sha }}
+          path: target/*.jar
+          retention-days: 14
+
+      - name: Publish Dev Build (Latest)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dev-${{ github.run_number }}
-          name: Dev Build ${{ github.run_number }}
+          tag_name: dev-latest
+          name: Dev Build (Latest)
           prerelease: true
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: target/*.jar
+          body: |
+            🛠️ Latest development build from `master`.
+
+            | | |
+            |---|---|
+            | **Version** | `${{ steps.meta.outputs.version }}` |
+            | **Commit**  | `${{ steps.meta.outputs.sha }}` |
+            | **Run**     | #${{ github.run_number }} |
+            | **Built**   | ${{ github.event.head_commit.timestamp }} |
+
+            ⚠️ This is a pre-release from the bleeding edge of `master`. Use at your own risk.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------- Stable release on v* tag push ----------
+      # Each tag (e.g. v2.3.0) becomes its own proper GitHub release with
+      # auto-generated notes and a long-retention artifact.
+      - name: Upload Release Artifact
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v5
+        with:
+          name: LandClaimPlugin-${{ steps.meta.outputs.version }}
+          path: target/*.jar
+          retention-days: 90
+
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.meta.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
           files: target/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
