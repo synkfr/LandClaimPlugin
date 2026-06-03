@@ -89,7 +89,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.create", plugin)) return;
                     String name = context.get("name");
-                    FoliaScheduler.runTask(plugin, () -> createProfile(player, name));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> createProfile(player, name));
                 }));
 
         // /claim menu — prioritize current location if admin, then player's own profile
@@ -103,7 +103,7 @@ public class ClaimCommand implements LandClaimCommand {
                     // Priority 1: Current location if they have ADMIN_MENU flag or are owner
                     if (profileAtLoc != null && (profileAtLoc.isOwner(player.getUniqueId()) || 
                             org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profileAtLoc, player.getUniqueId(), "ADMIN_MENU"))) {
-                        FoliaScheduler.runTask(plugin, () -> MainMenuGUI.open(player, profileAtLoc, plugin));
+                        FoliaScheduler.runForPlayer(plugin, player, () -> MainMenuGUI.open(player, profileAtLoc, plugin));
                         return;
                     }
 
@@ -113,7 +113,7 @@ public class ClaimCommand implements LandClaimCommand {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
-                    FoliaScheduler.runTask(plugin, () -> MainMenuGUI.open(player, ownProfile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> MainMenuGUI.open(player, ownProfile, plugin));
                 }));
 
         // /claim settings — alias for /claim menu
@@ -126,7 +126,7 @@ public class ClaimCommand implements LandClaimCommand {
                     
                     if (profileAtLoc != null && (profileAtLoc.isOwner(player.getUniqueId()) || 
                             org.ayosynk.landClaimPlugin.managers.PermissionResolver.hasPermission(profileAtLoc, player.getUniqueId(), "ADMIN_MENU"))) {
-                        FoliaScheduler.runTask(plugin, () -> MainMenuGUI.open(player, profileAtLoc, plugin));
+                        FoliaScheduler.runForPlayer(plugin, player, () -> MainMenuGUI.open(player, profileAtLoc, plugin));
                         return;
                     }
 
@@ -135,7 +135,7 @@ public class ClaimCommand implements LandClaimCommand {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
-                    FoliaScheduler.runTask(plugin, () -> MainMenuGUI.open(player, ownProfile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> MainMenuGUI.open(player, ownProfile, plugin));
                 }));
 
         // /claim info
@@ -143,7 +143,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.info", plugin)) return;
-                    FoliaScheduler.runTask(plugin, () -> sendClaimInfo(player));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> sendClaimInfo(player));
                 }));
 
         // /claim setwarp <name>
@@ -153,7 +153,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.setwarp", plugin)) return;
                     String name = context.get("name");
-                    FoliaScheduler.runTask(plugin, () -> setWarp(player, name));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> setWarp(player, name));
                 }));
 
         // /claim delwarp <name>
@@ -163,7 +163,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.delwarp", plugin)) return;
                     String name = context.get("name");
-                    FoliaScheduler.runTask(plugin, () -> delWarp(player, name));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> delWarp(player, name));
                 }));
 
         // /claim warp <name>
@@ -173,7 +173,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.warp", plugin)) return;
                     String name = context.get("name");
-                    FoliaScheduler.runTask(plugin, () -> teleportToWarp(player, name));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> teleportToWarp(player, name));
                 }));
 
         // /claim warps
@@ -185,7 +185,7 @@ public class ClaimCommand implements LandClaimCommand {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
                     }
-                    FoliaScheduler.runTask(plugin, () -> WarpManagementGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> WarpManagementGUI.open(player, profile, plugin));
                 }));
 
         // /claim profiles
@@ -196,7 +196,7 @@ public class ClaimCommand implements LandClaimCommand {
                         player.sendMessage(configManager.getMessage("multi-profiles-disabled"));
                         return;
                     }
-                    FoliaScheduler.runTask(plugin, () -> org.ayosynk.landClaimPlugin.gui.ProfileSelectorGUI.open(player, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> org.ayosynk.landClaimPlugin.gui.ProfileSelectorGUI.open(player, plugin));
                 }));
 
         // /claim pvp <on|off> [time_seconds]
@@ -220,7 +220,7 @@ public class ClaimCommand implements LandClaimCommand {
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
                     if (!checkMenuPermission(player, profile, "MANAGE_SETTINGS")) return;
-                    FoliaScheduler.runTask(plugin, () -> ClaimSettingsGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> ClaimSettingsGUI.open(player, profile, plugin));
                 }));
 
         // /claim menu members
@@ -230,7 +230,7 @@ public class ClaimCommand implements LandClaimCommand {
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
                     if (!checkMenuPermission(player, profile, "MANAGE_MEMBERS")) return;
-                    FoliaScheduler.runTask(plugin, () -> MemberManagementGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> MemberManagementGUI.open(player, profile, plugin));
                 }));
 
         // /claim menu roles
@@ -240,7 +240,7 @@ public class ClaimCommand implements LandClaimCommand {
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
                     if (!checkMenuPermission(player, profile, "MANAGE_ROLES")) return;
-                    FoliaScheduler.runTask(plugin, () -> RoleManagementGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> RoleManagementGUI.open(player, profile, plugin));
                 }));
 
         // /claim menu trusted
@@ -250,7 +250,7 @@ public class ClaimCommand implements LandClaimCommand {
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
                     if (!checkMenuPermission(player, profile, "MANAGE_MEMBERS")) return;
-                    FoliaScheduler.runTask(plugin, () -> TrustManagementGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> TrustManagementGUI.open(player, profile, plugin));
                 }));
 
         // /claim menu visitors
@@ -260,7 +260,7 @@ public class ClaimCommand implements LandClaimCommand {
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
                     if (!checkMenuPermission(player, profile, "MANAGE_SETTINGS")) return;
-                    FoliaScheduler.runTask(plugin, () -> VisitorSettingsGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> VisitorSettingsGUI.open(player, profile, plugin));
                 }));
 
         // /claim menu allies
@@ -270,7 +270,7 @@ public class ClaimCommand implements LandClaimCommand {
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
                     if (!checkMenuPermission(player, profile, "MANAGE_SETTINGS")) return;
-                    FoliaScheduler.runTask(plugin, () -> AllyManagementGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> AllyManagementGUI.open(player, profile, plugin));
                 }));
 
         // /claim menu map
@@ -279,7 +279,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
-                    FoliaScheduler.runTask(plugin, () -> ClaimMapGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> ClaimMapGUI.open(player, profile, plugin));
                 }));
 
         // /claim menu warps
@@ -288,7 +288,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
-                    FoliaScheduler.runTask(plugin, () -> WarpManagementGUI.open(player, profile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> WarpManagementGUI.open(player, profile, plugin));
                 }));
 
         // ========== /claim rename <name> ==========
@@ -298,7 +298,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.rename", plugin)) return;
                     String name = context.get("name");
-                    FoliaScheduler.runTask(plugin, () -> renameClaim(player, name));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> renameClaim(player, name));
                 }));
 
         // ========== /claim color <color> ==========
@@ -328,7 +328,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.color", plugin)) return;
                     String color = context.get("color");
-                    FoliaScheduler.runTask(plugin, () -> changeClaimColor(player, color));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> changeClaimColor(player, color));
                 }));
 
         // ========== /claim visualization <mode> — alias for /claim toggle ==========
@@ -353,7 +353,7 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
-                    FoliaScheduler.runTask(plugin, () -> unclaimAll(player));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> unclaimAll(player));
                 }));
 
         // ========== /claim leave <claim name> ==========
@@ -363,7 +363,7 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.leave", plugin)) return;
                     String name = context.get("name");
-                    FoliaScheduler.runTask(plugin, () -> leaveClaim(player, name));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> leaveClaim(player, name));
                 }));
     }
 
@@ -385,7 +385,7 @@ public class ClaimCommand implements LandClaimCommand {
     // --- Private Helpers ---
 
     private void claimCurrentChunk(Player player) {
-        FoliaScheduler.runTask(plugin, () -> {
+        FoliaScheduler.runForPlayer(plugin, player, () -> {
             Chunk chunk = player.getLocation().getChunk();
             if (claimManager.claimChunk(player, chunk)) {
                 player.sendMessage(configManager.getMessage("chunk-claimed"));
@@ -494,7 +494,7 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void toggleVisibility(Player player) {
-        FoliaScheduler.runTask(plugin, () -> {
+        FoliaScheduler.runForPlayer(plugin, player, () -> {
             boolean isVisible = visualizationManager.toggleVisualization(player);
             if (isVisible) {
                 player.sendMessage(configManager.getMessage("claim-visibility-toggled"));
@@ -505,7 +505,7 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void toggleVisualizationMode(Player player, String mode) {
-        FoliaScheduler.runTask(plugin, () -> {
+        FoliaScheduler.runForPlayer(plugin, player, () -> {
             ClaimProfile profile = claimManager.getActiveProfile(player);
             if (profile == null) {
                 player.sendMessage(configManager.getMessage("no-profile"));

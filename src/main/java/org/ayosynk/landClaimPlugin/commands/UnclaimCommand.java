@@ -52,7 +52,7 @@ public class UnclaimCommand implements LandClaimCommand {
     }
 
     private void unclaimCurrentChunk(Player player) {
-        FoliaScheduler.runTask(plugin, () -> {
+        FoliaScheduler.runForPlayer(plugin, player, () -> {
             Chunk chunk = player.getLocation().getChunk();
             ChunkPosition pos = new ChunkPosition(chunk);
 

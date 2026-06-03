@@ -8,6 +8,7 @@ import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 
 import org.ayosynk.landClaimPlugin.managers.VisualizationManager;
 import org.ayosynk.landClaimPlugin.managers.WarpManager;
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.execution.ExecutionCoordinator;
@@ -26,13 +27,23 @@ import java.util.concurrent.TimeUnit;
 /**
  * Central command registry and coordinator.
  *
- * Uses a custom ExecutionCoordinator.builder() with per-phase thread isolation:
- * - Parsing: nonSchedulingExecutor (calling thread) — lightweight tokenization
- * - Suggestions: nonSchedulingExecutor (calling thread) — prevents deadlocks
- * - Execution: dedicated daemon thread pool — heavy I/O, DB, GUI building off
- * main thread
+ * <p>Uses a custom {@link ExecutionCoordinator} with per-phase thread isolation:</p>
+ * <ul>
+ *   <li>Parsing: non-scheduling executor (calling thread) — lightweight tokenization</li>
+ *   <li>Suggestions: non-scheduling executor (calling thread) — prevents deadlocks</li>
+ *   <li>Execution:
+ *     <ul>
+ *       <li><b>Paper</b>: dedicated 4-thread daemon pool (off main thread for DB/GUI work)</li>
+ *       <li><b>Folia</b>: {@code simpleCoordinator()} so handlers run on the calling
+ *           thread, which is the player's region thread. The dedicated pool is unsafe on
+ *           Folia because pool threads are not region threads, and any
+ *           {@code player.getLocation() / new ChunkPosition(...)} call would fail the
+ *           Folia main-thread check.</li>
+ *     </ul>
+ *   </li>
+ * </ul>
  *
- * Each command group is a separate LandClaimCommand implementation registered
+ * Each command group is a separate {@link LandClaimCommand} implementation registered
  * modularly.
  */
 public class CommandHandler {
@@ -44,21 +55,27 @@ public class CommandHandler {
             ConfigManager configManager,
             VisualizationManager visualizationManager, WarpManager warpManager) {
 
-        // Dedicated thread pool for async command execution (4 daemon threads)
-        commandExecutor = Executors.newFixedThreadPool(4, r -> {
-            Thread t = new Thread(r, "LandClaim-Command-Worker");
-            t.setDaemon(true);
-            return t;
-        });
+        ExecutionCoordinator<Source> coordinator;
+        if (FoliaScheduler.isFolia()) {
+            // Folia: let handlers run on the calling thread (the player's region thread).
+            // Command handlers that need to do region-mutating work must explicitly route
+            // via FoliaScheduler.runForPlayer / runAtLocation.
+            coordinator = ExecutionCoordinator.simpleCoordinator();
+            commandExecutor = null;
+        } else {
+            // Paper: dedicated thread pool for off-main-thread command execution.
+            commandExecutor = Executors.newFixedThreadPool(4, r -> {
+                Thread t = new Thread(r, "LandClaim-Command-Worker");
+                t.setDaemon(true);
+                return t;
+            });
 
-        // Custom ExecutionCoordinator — the critical optimization
-        // Parsing & suggestions stay on calling thread (prevents deadlocks)
-        // Execution routes to our dedicated worker pool (off main thread)
-        ExecutionCoordinator<Source> coordinator = ExecutionCoordinator.<Source>builder()
-                .parsingExecutor(ExecutionCoordinator.nonSchedulingExecutor())
-                .suggestionsExecutor(ExecutionCoordinator.nonSchedulingExecutor())
-                .executionSchedulingExecutor(commandExecutor)
-                .build();
+            coordinator = ExecutionCoordinator.<Source>builder()
+                    .parsingExecutor(ExecutionCoordinator.nonSchedulingExecutor())
+                    .suggestionsExecutor(ExecutionCoordinator.nonSchedulingExecutor())
+                    .executionSchedulingExecutor(commandExecutor)
+                    .build();
+        }
 
         PaperCommandManager<Source> commandManager;
         try {
@@ -129,6 +146,7 @@ public class CommandHandler {
     /**
      * Gracefully shuts down the command executor thread pool.
      * Call this from LandClaimPlugin.onDisable().
+     * No-op on Folia (no dedicated pool was created).
      */
     public void shutdown() {
         if (commandExecutor != null && !commandExecutor.isShutdown()) {

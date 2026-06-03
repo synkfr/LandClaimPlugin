@@ -159,7 +159,7 @@ public class AdminCommand implements LandClaimCommand {
                     }
 
                     final ClaimProfile finalProfile = adminProfile;
-                    FoliaScheduler.runTask(plugin, () -> MainMenuGUI.open(player, finalProfile, plugin));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> MainMenuGUI.open(player, finalProfile, plugin));
                 }));
 
         // /claim admin reload
@@ -229,7 +229,7 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminUnclaimCurrentChunk(Player player) {
-        FoliaScheduler.runTask(plugin, () -> {
+        FoliaScheduler.runForPlayer(plugin, player, () -> {
             Chunk chunk = player.getLocation().getChunk();
             ChunkPosition pos = new ChunkPosition(chunk);
 
