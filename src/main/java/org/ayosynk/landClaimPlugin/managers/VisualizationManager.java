@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.managers;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
@@ -12,7 +13,6 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Transformation;
 
 import org.joml.Vector3f;
@@ -62,53 +62,45 @@ public class VisualizationManager {
     }
 
     private void startVisualizationTask() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                long now = System.currentTimeMillis();
+        // The "tick" body splits into two parts:
+        //   1) Global bookkeeping (cleanup of expired temporary timers) — safe anywhere
+        //   2) Per-player particle respawn — must run on each player's region thread on Folia
+        // runPlayerTaskTimer dispatches per-player work to the correct thread on Folia and
+        // runs the global bookkeeping on the global region (or main thread on Paper).
+        FoliaScheduler.runTaskTimer(plugin, () -> {
+            long now = System.currentTimeMillis();
 
-                // Clean up expired temporary timers (thread-safe with ConcurrentHashMap)
-                for (Iterator<Map.Entry<UUID, Long>> it = temporaryTimers.entrySet().iterator(); it.hasNext();) {
-                    Map.Entry<UUID, Long> entry = it.next();
-                    if (now > entry.getValue()) {
-                        it.remove();
-                        if (!visualizationActive.containsKey(entry.getKey())) {
-                            clearDisplays(entry.getKey());
-                        } else {
-                            redrawDisplays(Bukkit.getPlayer(entry.getKey()));
+            // Clean up expired temporary timers (thread-safe with ConcurrentHashMap)
+            for (Iterator<Map.Entry<UUID, Long>> it = temporaryTimers.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<UUID, Long> entry = it.next();
+                if (now > entry.getValue()) {
+                    UUID pid = entry.getKey();
+                    it.remove();
+                    if (!visualizationActive.containsKey(pid)) {
+                        clearDisplays(pid);
+                    } else {
+                        Player p = Bukkit.getPlayer(pid);
+                        if (p != null) {
+                            redrawDisplays(p);
                         }
                     }
                 }
-
-                // Respawn particles for players using PARTICLE mode
-                // Note: We iterate a snapshot to avoid concurrent modification issues
-                new HashSet<>(visualizationActive.keySet()).forEach(playerId -> {
-                    Player player = Bukkit.getPlayer(playerId);
-                    if (player == null || !player.isOnline())
-                        return;
-
-                    ClaimProfile profile = claimManager.getProfile(playerId);
-                    if (profile == null)
-                        return;
-
-                    if ("PARTICLE".equals(profile.getVisualizationMode())) {
-                        spawnParticles(player, profile);
-                    }
-                });
-
-                // Also respawn particles for temporary timers
-                new HashSet<>(temporaryTimers.keySet()).forEach(playerId -> {
-                    Player player = Bukkit.getPlayer(playerId);
-                    if (player == null || !player.isOnline())
-                        return;
-
-                    ClaimProfile profile = claimManager.getProfile(playerId);
-                    if (profile != null && "PARTICLE".equals(profile.getVisualizationMode())) {
-                        spawnParticles(player, profile);
-                    }
-                });
             }
-        }.runTaskTimer(plugin, 40L, 40L); // Run every 2 seconds instead of every 1 second
+        }, 40L, 40L);
+
+        FoliaScheduler.runPlayerTaskTimer(plugin, player -> {
+            if (player == null || !player.isOnline()) return;
+            UUID playerId = player.getUniqueId();
+            boolean inActive = visualizationActive.containsKey(playerId);
+            boolean inTemp = temporaryTimers.containsKey(playerId);
+            if (!inActive && !inTemp) return;
+
+            ClaimProfile profile = claimManager.getProfile(playerId);
+            if (profile == null) return;
+            if ("PARTICLE".equals(profile.getVisualizationMode())) {
+                spawnParticles(player, profile);
+            }
+        }, 40L, 40L);
     }
 
     public boolean toggleVisualization(Player player) {
@@ -337,7 +329,9 @@ public class VisualizationManager {
         List<BlockDisplay> displays = new ArrayList<>();
         World world = player.getWorld();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        // On Folia, spawning entities and showing them to a player must run on the player's
+        // region thread. The work is region-mutating (world.spawn, player.showEntity).
+        FoliaScheduler.runForPlayer(plugin, player, () -> {
             final org.bukkit.block.data.BlockData blockData = Bukkit.createBlockData(material);
             final org.joml.AxisAngle4f emptyRotation = new org.joml.AxisAngle4f();
 
@@ -381,7 +375,12 @@ public class VisualizationManager {
     }
 
     private void clearDisplays(UUID playerId) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        // Removing entities (BlockDisplay) must run on the entity's region thread on Folia.
+        // The displays are owned by the player's region (they're visible only to that player
+        // and spawned in chunks near them), so we route to the player's region. If the player
+        // has logged out, fall back to a global-region task to clear stale entries.
+        Player player = Bukkit.getPlayer(playerId);
+        Runnable work = () -> {
             List<BlockDisplay> displays = activeDisplays.remove(playerId);
             if (displays != null) {
                 for (BlockDisplay display : displays) {
@@ -390,7 +389,12 @@ public class VisualizationManager {
                     }
                 }
             }
-        });
+        };
+        if (player != null) {
+            FoliaScheduler.runForPlayer(plugin, player, work);
+        } else {
+            FoliaScheduler.runTask(plugin, work);
+        }
     }
 
     // --- Caching and Edge Merging ---

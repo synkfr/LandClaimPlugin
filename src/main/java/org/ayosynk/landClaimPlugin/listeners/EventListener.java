@@ -9,12 +9,12 @@ import org.ayosynk.landClaimPlugin.managers.PermissionResolver;
 
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,14 +40,9 @@ public class EventListener implements Listener {
 
     private void startActionBarTask() {
         int interval = configManager.getActionBarUpdateInterval();
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : plugin.getServer().getOnlinePlayers()) {
-                    updateActionBar(player);
-                }
-            }
-        }.runTaskTimer(plugin, 0, interval);
+        // Folia: dispatch per-player work to each player's region thread.
+        // Paper: a single global timer that iterates online players.
+        FoliaScheduler.runPlayerTaskTimer(plugin, this::updateActionBar, 0, interval);
     }
 
     private void updateActionBar(Player player) {

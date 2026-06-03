@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.managers;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.hooks.map.BlueMapHook;
 import org.ayosynk.landClaimPlugin.hooks.map.DynmapHook;
@@ -36,7 +37,7 @@ public class HookManager {
             plugin.getLogger().info("WorldGuard detected. Enabling region gap protection.");
         }
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        FoliaScheduler.runTask(plugin, () -> {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                 new org.ayosynk.landClaimPlugin.hooks.papi.LandClaimExpansion(plugin).register();
                 plugin.getLogger().info("PlaceholderAPI detected. Expansion registered.");
