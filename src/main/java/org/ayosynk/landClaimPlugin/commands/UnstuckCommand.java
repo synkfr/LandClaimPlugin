@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.commands;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
@@ -34,13 +35,15 @@ public class UnstuckCommand implements LandClaimCommand {
                 .handler(ctx -> {
                     Player player = ctx.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unstuck", plugin)) return;
-                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> unstuckPlayer(player));
+                    // Capture the start position synchronously, on the player's region thread
+                    // (this is where commands run on both Paper and Folia). Reading
+                    // player.getLocation() here is safe.
+                    ChunkPosition startPos = new ChunkPosition(player.getLocation().getChunk());
+                    FoliaScheduler.runAsync(plugin, () -> unstuckPlayer(player, startPos));
                 }));
     }
 
-    private void unstuckPlayer(Player player) {
-        ChunkPosition startPos = new ChunkPosition(player.getLocation().getChunk());
-
+    private void unstuckPlayer(Player player, ChunkPosition startPos) {
         if (!claimManager.isChunkClaimed(startPos)) {
             player.sendMessage(configManager.getMessage("unstuck-not-in-claim"));
             return;
@@ -80,22 +83,30 @@ public class UnstuckCommand implements LandClaimCommand {
 
         if (safeChunk != null) {
             final ChunkPosition target = safeChunk;
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            // Folia: getHighestBlockYAt and teleportAsync both need the region thread that
+            // owns the target location. Use runAtLocation to dispatch to that region.
+            final Player targetPlayer = player;
+            FoliaScheduler.runTask(plugin, () -> {
                 World world = Bukkit.getWorld(target.world());
-                if (world != null) {
-                    int blockX = (target.x() << 4) + 8;
-                    int blockZ = (target.z() << 4) + 8;
+                if (world == null) {
+                    targetPlayer.sendMessage(configManager.getMessage("unstuck-failed"));
+                    return;
+                }
+                int blockX = (target.x() << 4) + 8;
+                int blockZ = (target.z() << 4) + 8;
+                Location candidate = new Location(world, blockX + 0.5, 0, blockZ + 0.5);
+                // Route getHighestBlockYAt + teleportAsync through the region's thread.
+                FoliaScheduler.runAtLocation(plugin, candidate, () -> {
                     int blockY = world.getHighestBlockYAt(blockX, blockZ);
-
                     Location safeLoc = new Location(world, blockX + 0.5, blockY + 1.0, blockZ + 0.5);
-                    player.teleportAsync(safeLoc).thenAccept(success -> {
+                    targetPlayer.teleportAsync(safeLoc).thenAccept(success -> {
                         if (success) {
-                            player.sendMessage(configManager.getMessage("unstuck-success"));
+                            targetPlayer.sendMessage(configManager.getMessage("unstuck-success"));
                         } else {
-                            player.sendMessage(configManager.getMessage("unstuck-failed"));
+                            targetPlayer.sendMessage(configManager.getMessage("unstuck-failed"));
                         }
                     });
-                }
+                });
             });
         } else {
             player.sendMessage(configManager.getMessage("unstuck-failed"));

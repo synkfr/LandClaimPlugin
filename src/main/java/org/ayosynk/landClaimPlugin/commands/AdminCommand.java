@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.commands;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
@@ -158,7 +159,7 @@ public class AdminCommand implements LandClaimCommand {
                     }
 
                     final ClaimProfile finalProfile = adminProfile;
-                    Bukkit.getScheduler().runTask(plugin, () -> MainMenuGUI.open(player, finalProfile, plugin));
+                    FoliaScheduler.runTask(plugin, () -> MainMenuGUI.open(player, finalProfile, plugin));
                 }));
 
         // /claim admin reload
@@ -171,7 +172,7 @@ public class AdminCommand implements LandClaimCommand {
                 }));
     }
     private void adminAddChunk(Player sender, int amount, String targetName) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             @SuppressWarnings("deprecation")
             OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
             
@@ -228,7 +229,7 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminUnclaimCurrentChunk(Player player) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        FoliaScheduler.runTask(plugin, () -> {
             Chunk chunk = player.getLocation().getChunk();
             ChunkPosition pos = new ChunkPosition(chunk);
 
@@ -264,7 +265,7 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminTrustList(Player sender, String ownerName) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             @SuppressWarnings("deprecation")
             OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerName);
             if (owner == null || owner.getUniqueId() == null) {
@@ -298,7 +299,7 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminTrustWho(Player sender, String playerName) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             @SuppressWarnings("deprecation")
             OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
             if (target == null || target.getUniqueId() == null) {
@@ -330,7 +331,7 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminSetAlias(Player sender, String claimName, String alias) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        FoliaScheduler.runAsync(plugin, () -> {
             ClaimProfile profile = claimManager.getProfileByNameOrOwner(claimName);
             if (profile == null) {
                 sender.sendMessage(configManager.getMessage("no-profile-found"));

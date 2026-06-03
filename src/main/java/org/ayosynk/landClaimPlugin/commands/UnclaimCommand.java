@@ -1,5 +1,6 @@
 package org.ayosynk.landClaimPlugin.commands;
 
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
@@ -51,7 +52,7 @@ public class UnclaimCommand implements LandClaimCommand {
     }
 
     private void unclaimCurrentChunk(Player player) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        FoliaScheduler.runTask(plugin, () -> {
             Chunk chunk = player.getLocation().getChunk();
             ChunkPosition pos = new ChunkPosition(chunk);
 
