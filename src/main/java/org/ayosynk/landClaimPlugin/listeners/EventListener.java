@@ -42,7 +42,9 @@ public class EventListener implements Listener {
         int interval = configManager.getActionBarUpdateInterval();
         // Folia: dispatch per-player work to each player's region thread.
         // Paper: a single global timer that iterates online players.
-        FoliaScheduler.runPlayerTaskTimer(plugin, this::updateActionBar, 0, interval);
+        // Initial delay is 1 tick (not 0): Folia's GlobalRegionScheduler.runAtFixedRate
+        // rejects delays <= 0. On Paper, delay=1 just means "fire next tick" — same effect.
+        FoliaScheduler.runPlayerTaskTimer(plugin, this::updateActionBar, 1L, interval);
     }
 
     private void updateActionBar(Player player) {

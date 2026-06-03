@@ -151,7 +151,9 @@ public final class FoliaScheduler {
         if (IS_FOLIA) {
             try {
                 GlobalRegionScheduler scheduler = (GlobalRegionScheduler) GLOBAL_REGION_SCHEDULER_METHOD.invoke(Bukkit.getServer());
-                ScheduledTask task = scheduler.runAtFixedRate(plugin, (Consumer<ScheduledTask>) t -> runnable.run(), delay, period);
+                // Folia's runAtFixedRate requires initial delay > 0; clamp "start ASAP" (0/negative) to 1.
+                long safeDelay = Math.max(1L, delay);
+                ScheduledTask task = scheduler.runAtFixedRate(plugin, (Consumer<ScheduledTask>) t -> runnable.run(), safeDelay, period);
                 return new ScheduledHandle(task, ScheduledHandle.Type.GLOBAL);
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException("Failed to schedule repeating global task on Folia", e);
@@ -177,6 +179,8 @@ public final class FoliaScheduler {
             // tasks that previously iterated online players on the main thread.
             try {
                 GlobalRegionScheduler scheduler = (GlobalRegionScheduler) GLOBAL_REGION_SCHEDULER_METHOD.invoke(Bukkit.getServer());
+                // Folia's runAtFixedRate requires initial delay > 0; clamp "start ASAP" (0/negative) to 1.
+                long safeDelay = Math.max(1L, delay);
                 ScheduledTask task = scheduler.runAtFixedRate(plugin, (Consumer<ScheduledTask>) t -> {
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         try {
@@ -187,7 +191,7 @@ public final class FoliaScheduler {
                             // Best-effort: skip this player if the scheduler isn't available
                         }
                     }
-                }, delay, period);
+                }, safeDelay, period);
                 return new ScheduledHandle(task, ScheduledHandle.Type.GLOBAL);
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException("Failed to schedule player task timer on Folia", e);
@@ -219,13 +223,15 @@ public final class FoliaScheduler {
                         break;
                     }
                 }
+                // Folia's runAtFixedRate requires initial delay > 0; clamp "start ASAP" (0/negative) to 1.
+                long safeDelay = Math.max(1L, delay);
                 if (runAtFixedRate != null) {
                     ScheduledTask task = (ScheduledTask) runAtFixedRate.invoke(playerScheduler,
-                            plugin, (Consumer<ScheduledTask>) t -> runnable.run(), delay, period, TimeUnit.MILLISECONDS);
+                            plugin, (Consumer<ScheduledTask>) t -> runnable.run(), safeDelay, period, TimeUnit.MILLISECONDS);
                     return new ScheduledHandle(task, ScheduledHandle.Type.PLAYER);
                 } else {
                     // Fallback: chain runDelayed calls
-                    schedulePerPlayerRecurring(playerScheduler, plugin, target, runnable, delay, period);
+                    schedulePerPlayerRecurring(playerScheduler, plugin, target, runnable, safeDelay, period);
                     return new ScheduledHandle(null, ScheduledHandle.Type.PLAYER_RECURRING);
                 }
             } catch (ReflectiveOperationException e) {
