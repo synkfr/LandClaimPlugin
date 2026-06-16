@@ -198,6 +198,14 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
 
     public void reloadPlugin() {
         configManager.reloadMainConfig();
+        if (hookManager != null) {
+            hookManager.refreshMapHooks();
+        }
+        if (visualizationManager != null) {
+            for (org.bukkit.entity.Player p : org.bukkit.Bukkit.getOnlinePlayers()) {
+                visualizationManager.invalidateCache(p.getUniqueId());
+            }
+        }
     }
 
     // --- LandClaimAPI Implementation (delegated to apiDelegate) ---

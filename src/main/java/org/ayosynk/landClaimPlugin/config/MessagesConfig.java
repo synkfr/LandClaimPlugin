@@ -196,4 +196,8 @@ public class MessagesConfig extends OkaeriConfig {
     public String titleLeavePrompt = "<yellow>Type the new leave title in chat (or 'cancel' to abort):";
     public String titleUpdated = "<green>Claim title successfully updated!";
     public String titleCancelled = "<gray>Title update cancelled.";
+
+    // --- Geyser MC / Bedrock Support ---
+    public String geyserChatPrompt = "<yellow>[Bedrock] Please type '<title>' in chat (or type 'cancel' to abort):";
+    public String geyserChatCancelled = "<red>[Bedrock] Input cancelled.";
 }

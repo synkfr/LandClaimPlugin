@@ -199,6 +199,15 @@ public class ClaimCommand implements LandClaimCommand {
                     FoliaScheduler.runForPlayer(plugin, player, () -> org.ayosynk.landClaimPlugin.gui.ProfileSelectorGUI.open(player, plugin));
                 }));
 
+        // /claim reload
+        manager.command(claimBuilder.literal("reload")
+                .permission("landclaim.admin")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    plugin.reloadPlugin();
+                    player.sendMessage(configManager.getMessage("reloaded"));
+                }));
+
         // /claim pvp <on|off> [time_seconds]
         manager.command(claimBuilder.literal("pvp")
                 .required("state", org.incendo.cloud.parser.standard.StringParser.stringParser(), (context, input) -> java.util.concurrent.CompletableFuture.completedFuture(java.util.Arrays.asList(org.incendo.cloud.suggestion.Suggestion.suggestion("on"), org.incendo.cloud.suggestion.Suggestion.suggestion("off"))))

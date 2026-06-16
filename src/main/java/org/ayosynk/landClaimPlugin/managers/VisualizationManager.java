@@ -97,7 +97,11 @@ public class VisualizationManager {
 
             ClaimProfile profile = claimManager.getProfile(playerId);
             if (profile == null) return;
-            if ("PARTICLE".equals(profile.getVisualizationMode())) {
+            String visMode = profile.getVisualizationMode();
+            if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
+                visMode = "PARTICLE";
+            }
+            if ("PARTICLE".equals(visMode)) {
                 spawnParticles(player, profile);
             }
         }, 40L, 40L);
@@ -176,6 +180,10 @@ public class VisualizationManager {
         String visMode = ownProfile != null ? ownProfile.getVisualizationMode() : "DISPLAY_ENTITY";
         if (visMode == null)
             visMode = "DISPLAY_ENTITY";
+
+        if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
+            visMode = "PARTICLE";
+        }
 
         if ("PARTICLE".equals(visMode)) {
             // Particles are spawned by the repeating task; just ensure edges are cached

@@ -99,6 +99,44 @@ public class AnvilInputGUI implements Listener {
     }
 
     public static void open(LandClaimPlugin plugin, Player player, String title, String initialText, Consumer<String> callback) {
-        new AnvilInputGUI(plugin, player, title, initialText, callback);
+        if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
+            player.closeInventory();
+            player.sendMessage(plugin.getConfigManager().getMessage("geyser-chat-prompt", "<title>", title));
+
+            plugin.getServer().getPluginManager().registerEvents(new Listener() {
+                private boolean handled = false;
+
+                private void handleInput(Player p, String message, org.bukkit.event.Cancellable event) {
+                    if (handled) return;
+                    handled = true;
+                    event.setCancelled(true);
+                    HandlerList.unregisterAll(this);
+
+                    if (message.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(plugin.getConfigManager().getMessage("geyser-chat-cancelled"));
+                        callback.accept(null);
+                    } else {
+                        callback.accept(message);
+                    }
+                }
+
+                @EventHandler(priority = org.bukkit.event.EventPriority.LOWEST)
+                public void onLegacyChat(org.bukkit.event.player.AsyncPlayerChatEvent event) {
+                    if (event.getPlayer().getUniqueId().equals(player.getUniqueId())) {
+                        handleInput(event.getPlayer(), event.getMessage(), event);
+                    }
+                }
+
+                @EventHandler(priority = org.bukkit.event.EventPriority.LOWEST)
+                public void onModernChat(io.papermc.paper.event.player.AsyncChatEvent event) {
+                    if (event.getPlayer().getUniqueId().equals(player.getUniqueId())) {
+                        String plainText = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(event.originalMessage());
+                        handleInput(event.getPlayer(), plainText, event);
+                    }
+                }
+            }, plugin);
+        } else {
+            new AnvilInputGUI(plugin, player, title, initialText, callback);
+        }
     }
 }

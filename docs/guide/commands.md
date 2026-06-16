@@ -93,6 +93,7 @@ These commands respect the same permission checks as clicking the GUI buttons.
 | `/claim admin trust list <owner>` | List players trusted by this owner |
 | `/claim admin trust who <player>` | List claims where this player is trusted |
 | `/claim admin reload` | Reload the plugin configuration and messages |
+| `/claim reload` | Reload the plugin configuration and messages (Root Shortcut) |
 
 ## Permissions
 
