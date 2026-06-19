@@ -52,6 +52,10 @@ public class MessagesConfig extends OkaeriConfig {
     public String warpLimitReached = "<red>You have reached your warp limit.";
     public String warpLocationUpdated = "<green>Warp <gold><name></gold> location updated!";
     public String warpIconUpdated = "<green>Warp <gold><name></gold> icon updated!";
+    public String warpMadePublic = "<green>Warp <gold><name></gold> is now <aqua>public<green>. Other players can find it via <gold>/claim publicwarps<green>.";
+    public String warpMadePrivate = "<yellow>Warp <gold><name></gold> is now private. Only your claim members can use it.";
+    public String publicwarpsNoWarps = "<gray>No public warps are available right now. Ask a claim owner to publish one!";
+    public String publicwarpsTeleported = "<green>Teleported to <gold><owner></gold>'s warp <gold><name></gold>.";
     public String notInOwnClaim = "<red>You must be in your own claim to set a warp.";
     public String unstuckCooldown = "<red>You must wait <seconds> seconds before using unstuck again.";
     public String unstuckSuccess = "<green>You have been safely unstuck.";

@@ -67,8 +67,26 @@ public class WarpControlPanelGUI {
                                                                 "<name>", warp.getName()));
                                                 WarpManagementGUI.open(p, profile, plugin);
                                         }));
-                        ingredients.put('S', GuiHelper.buildSlot("BARRIER", "<red>Warp Privacy",
-                                        java.util.List.of("<gray>Coming Soon...")));
+                        // Privacy toggle — dynamic item: shows "Make Public" when private,
+                        // "Make Private" when public. Click flips the flag and refreshes.
+                        org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig.ItemConfig privacyConfig =
+                                warp.isPublic() ? config.makePrivate : config.makePublic;
+                        ingredients.put('S', GuiHelper.buildSlot(privacyConfig.material, privacyConfig.name,
+                                        privacyConfig.lore, (p, e) -> {
+                                                p.closeInventory();
+                                                Boolean newValue = plugin.getWarpManager()
+                                                                .toggleWarpPublic(profile.getProfileId(), warp.getName());
+                                                if (newValue == null) {
+                                                        p.sendMessage(plugin.getConfigManager().getMessage(
+                                                                        "warp-not-found", "<name>", warp.getName()));
+                                                        return;
+                                                }
+                                                warp.setPublic(newValue);
+                                                p.sendMessage(plugin.getConfigManager().getMessage(
+                                                                newValue ? "warp-made-public" : "warp-made-private",
+                                                                "<name>", warp.getName()));
+                                                WarpControlPanelGUI.open(p, profile, plugin, warp);
+                                        }));
 
                         Component title = GuiHelper.MM.deserialize(config.title.replace("{name}", warp.getName()));
                         FoliaScheduler.runTask(plugin, () -> {

@@ -21,6 +21,7 @@ import org.ayosynk.landClaimPlugin.config.menus.RoleSelectionConfig;
 import org.ayosynk.landClaimPlugin.config.menus.WarpManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.WarpControlPanelConfig;
 import org.ayosynk.landClaimPlugin.config.menus.WarpChangeIconConfig;
+import org.ayosynk.landClaimPlugin.config.menus.PublicWarpsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyControlPanelConfig;
 import org.ayosynk.landClaimPlugin.config.menus.AllyPremissionsConfig;
@@ -54,6 +55,7 @@ public class ConfigManager {
     private WarpManagementConfig warpManagementConfig;
     private WarpControlPanelConfig warpControlPanelConfig;
     private WarpChangeIconConfig warpChangeIconConfig;
+    private PublicWarpsConfig publicWarpsConfig;
     private AllyManagementConfig allyManagementConfig;
     private AllyControlPanelConfig allyControlPanelConfig;
     private AllyPremissionsConfig allyPremissionsConfig;
@@ -226,6 +228,13 @@ public class ConfigManager {
             it.load(true);
         });
 
+        this.publicWarpsConfig = eu.okaeri.configs.ConfigManager.create(PublicWarpsConfig.class, (it) -> {
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
+            it.withBindFile(new File(plugin.getDataFolder(), "menus/PublicWarps.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+
         this.allyManagementConfig = eu.okaeri.configs.ConfigManager.create(AllyManagementConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
             it.withBindFile(new File(plugin.getDataFolder(), "menus/AllyManagement.yml"));
@@ -392,6 +401,10 @@ public class ConfigManager {
 
     public WarpChangeIconConfig getWarpChangeIconConfig() {
         return warpChangeIconConfig;
+    }
+
+    public PublicWarpsConfig getPublicWarpsConfig() {
+        return publicWarpsConfig;
     }
 
     public AllyManagementConfig getAllyManagementConfig() {

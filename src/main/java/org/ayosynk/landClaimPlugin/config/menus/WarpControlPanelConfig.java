@@ -36,6 +36,22 @@ public class WarpControlPanelConfig extends OkaeriConfig {
             "<red><bold>Delete Warp",
             List.of("<gray>Permanently delete this warp."));
 
+    @Comment("Privacy toggle — shown when the warp is private. Click to make it public.")
+    public ItemConfig makePublic = new ItemConfig(
+            "LIME_WOOL",
+            "<green><bold>Make Public",
+            List.of("<gray>Publish this warp to the server-wide",
+                    "<gray>public warps list. Any player can",
+                    "<gray>teleport to it via /claim publicwarps."));
+
+    @Comment("Privacy toggle — shown when the warp is public. Click to make it private.")
+    public ItemConfig makePrivate = new ItemConfig(
+            "GRAY_WOOL",
+            "<gray><bold>Make Private",
+            List.of("<gray>Hide this warp from the server-wide",
+                    "<gray>public warps list. Only your claim",
+                    "<gray>members will be able to use it."));
+
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
             "SPECTRAL_ARROW",

@@ -39,11 +39,34 @@ public class WarpManager {
     }
 
     public boolean setWarp(UUID ownerId, String name, Location location, Material icon) {
+        return setWarp(ownerId, name, location, icon, false);
+    }
+
+    public boolean setWarp(UUID ownerId, String name, Location location, Material icon, boolean isPublic) {
         Map<String, Warp> warps = playerWarps.computeIfAbsent(ownerId, k -> new HashMap<>());
-        Warp warp = new Warp(name, location, icon);
-        warps.put(name.toLowerCase(), warp);
+        // Preserve existing public flag if we're updating the warp in-place.
+        String key = name.toLowerCase();
+        Warp existing = warps.get(key);
+        boolean wasPublic = existing != null && existing.isPublic();
+        Warp warp = new Warp(name, location, icon, isPublic || wasPublic);
+        warps.put(key, warp);
         plugin.getDatabaseManager().getWarpDao().saveWarp(ownerId, warp);
         return true;
+    }
+
+    /**
+     * Toggle the public flag on a warp and persist the change.
+     * Returns the new flag value, or {@code null} if the warp doesn't exist.
+     */
+    public Boolean toggleWarpPublic(UUID ownerId, String name) {
+        Map<String, Warp> warps = playerWarps.get(ownerId);
+        if (warps == null) return null;
+        Warp warp = warps.get(name.toLowerCase());
+        if (warp == null) return null;
+        boolean newValue = !warp.isPublic();
+        warp.setPublic(newValue);
+        plugin.getDatabaseManager().getWarpDao().saveWarp(ownerId, warp);
+        return newValue;
     }
 
     public boolean deleteWarp(UUID ownerId, String name) {
@@ -67,6 +90,47 @@ public class WarpManager {
 
     public Map<String, Warp> getWarps(UUID ownerId) {
         return playerWarps.getOrDefault(ownerId, Collections.emptyMap());
+    }
+
+    /**
+     * Return every warp across every owner that has been marked public.
+     * Result is a snapshot map (owner UUID -> warp name -> Warp). The
+     * snapshot is taken under the per-owner map's monitor; subsequent
+     * toggles of a warp's public flag will not retroactively change the
+     * returned collection.
+     */
+    public Map<UUID, Map<String, Warp>> getAllPublicWarps() {
+        Map<UUID, Map<String, Warp>> publicWarps = new HashMap<>();
+        for (Map.Entry<UUID, Map<String, Warp>> ownerEntry : playerWarps.entrySet()) {
+            Map<String, Warp> ownerPublic = null;
+            for (Map.Entry<String, Warp> warpEntry : ownerEntry.getValue().entrySet()) {
+                if (warpEntry.getValue().isPublic()) {
+                    if (ownerPublic == null) {
+                        ownerPublic = new HashMap<>();
+                        publicWarps.put(ownerEntry.getKey(), ownerPublic);
+                    }
+                    ownerPublic.put(warpEntry.getKey(), warpEntry.getValue());
+                }
+            }
+        }
+        return publicWarps;
+    }
+
+    /**
+     * Find a public warp by its name across all owners. Returns the first
+     * match found. Useful for resolving "warp name only" lookups (e.g.
+     * the public warps GUI click action or future commands).
+     */
+    public java.util.Map.Entry<UUID, Warp> findPublicWarp(String name) {
+        if (name == null) return null;
+        String needle = name.toLowerCase();
+        for (Map.Entry<UUID, Map<String, Warp>> ownerEntry : playerWarps.entrySet()) {
+            Warp warp = ownerEntry.getValue().get(needle);
+            if (warp != null && warp.isPublic()) {
+                return new java.util.AbstractMap.SimpleEntry<>(ownerEntry.getKey(), warp);
+            }
+        }
+        return null;
     }
 
     public int getWarpLimit(Player player) {

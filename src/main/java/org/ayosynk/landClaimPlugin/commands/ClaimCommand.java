@@ -146,14 +146,27 @@ public class ClaimCommand implements LandClaimCommand {
                     FoliaScheduler.runForPlayer(plugin, player, () -> sendClaimInfo(player));
                 }));
 
-        // /claim setwarp <name>
+        // /claim setwarp <name> [public|private]
         manager.command(claimBuilder.literal("setwarp")
                 .required("name", StringParser.stringParser())
+                .optional("visibility", StringParser.stringParser(), (context, input) -> java.util.concurrent.CompletableFuture.completedFuture(java.util.Arrays.asList(
+                        org.incendo.cloud.suggestion.Suggestion.suggestion("public"),
+                        org.incendo.cloud.suggestion.Suggestion.suggestion("private"))))
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.setwarp", plugin)) return;
                     String name = context.get("name");
-                    FoliaScheduler.runForPlayer(plugin, player, () -> setWarp(player, name));
+                    String visibility = context.getOrDefault("visibility", null);
+                    boolean makePublic = visibility != null && visibility.equalsIgnoreCase("public");
+                    FoliaScheduler.runForPlayer(plugin, player, () -> setWarp(player, name, makePublic));
+                }));
+
+        // /claim publicwarps
+        manager.command(claimBuilder.literal("publicwarps")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.warp", plugin)) return;
+                    FoliaScheduler.runForPlayer(plugin, player, () -> PublicWarpsGUI.open(player, plugin));
                 }));
 
         // /claim delwarp <name>
@@ -673,6 +686,10 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void setWarp(Player player, String name) {
+        setWarp(player, name, false);
+    }
+
+    private void setWarp(Player player, String name, boolean makePublic) {
         ClaimProfile profile = claimManager.getActiveProfile(player);
         if (profile == null) {
             player.sendMessage(configManager.getMessage("no-profile"));
@@ -693,9 +710,18 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        plugin.getWarpManager().setWarp(player.getUniqueId(), name, player.getLocation(), Material.ENDER_PEARL);
-        profile.addWarp(new Warp(name, player.getLocation(), Material.ENDER_PEARL));
+        // Preserve the public flag if the warp already exists with a different state.
+        org.ayosynk.landClaimPlugin.models.Warp existing = plugin.getWarpManager()
+                .getWarp(player.getUniqueId(), name);
+        boolean finalPublic = makePublic || (existing != null && existing.isPublic());
+
+        plugin.getWarpManager().setWarp(player.getUniqueId(), name, player.getLocation(),
+                Material.ENDER_PEARL, finalPublic);
+        profile.addWarp(new Warp(name, player.getLocation(), Material.ENDER_PEARL, finalPublic));
         player.sendMessage(configManager.getMessage("warp-set", "<name>", name));
+        if (finalPublic) {
+            player.sendMessage(configManager.getMessage("warp-made-public", "<name>", name));
+        }
     }
 
     private void delWarp(Player player, String name) {

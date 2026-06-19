@@ -39,6 +39,7 @@ public class SQLWarpDao implements WarpDao {
                 "yaw FLOAT NOT NULL," +
                 "pitch FLOAT NOT NULL," +
                 "icon VARCHAR(64) NOT NULL," +
+                "is_public BOOLEAN NOT NULL DEFAULT FALSE," +
                 "PRIMARY KEY (owner_id, name))";
 
         try (Connection conn = dbManager.getConnection();
@@ -63,6 +64,15 @@ public class SQLWarpDao implements WarpDao {
             stmt.execute();
         } catch (SQLException ignored) {
         }
+
+        // Migration step: add is_public column for the public-warps feature.
+        // Existing rows get the DEFAULT (false), so no data loss.
+        try (Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(
+                        "ALTER TABLE " + tablePrefix + "warps ADD COLUMN is_public BOOLEAN NOT NULL DEFAULT FALSE")) {
+            stmt.execute();
+        } catch (SQLException ignored) {
+        }
     }
 
     @Override
@@ -70,7 +80,7 @@ public class SQLWarpDao implements WarpDao {
         return CompletableFuture.supplyAsync(() -> {
             Map<UUID, Map<String, Warp>> allWarps = new HashMap<>();
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
-            String sql = "SELECT * FROM " + tablePrefix + "warps";
+            String sql = "SELECT owner_id, name, world, x, y, z, yaw, pitch, icon, is_public FROM " + tablePrefix + "warps";
 
             try (Connection conn = dbManager.getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql);
@@ -87,9 +97,10 @@ public class SQLWarpDao implements WarpDao {
                     float pitch = rs.getFloat("pitch");
                     String iconName = rs.getString("icon");
                     Material icon = Material.valueOf(iconName);
+                    boolean isPublic = rs.getBoolean("is_public");
 
                     Location loc = new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch);
-                    Warp warp = new Warp(name, loc, icon);
+                    Warp warp = new Warp(name, loc, icon, isPublic);
 
                     allWarps.computeIfAbsent(ownerId, k -> new HashMap<>()).put(name, warp);
                 }
@@ -106,13 +117,13 @@ public class SQLWarpDao implements WarpDao {
     public void saveWarp(UUID ownerId, Warp warp) {
         CompletableFuture.runAsync(() -> {
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
-            String sql = "REPLACE INTO " + tablePrefix + "warps (owner_id, name, world, x, y, z, yaw, pitch, icon) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "REPLACE INTO " + tablePrefix + "warps (owner_id, name, world, x, y, z, yaw, pitch, icon, is_public) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             if (dbManager.isMySQL()) {
-                sql = "INSERT INTO " + tablePrefix + "warps (owner_id, name, world, x, y, z, yaw, pitch, icon) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE world=VALUES(world), x=VALUES(x), y=VALUES(y), z=VALUES(z), yaw=VALUES(yaw), pitch=VALUES(pitch), icon=VALUES(icon)";
+                sql = "INSERT INTO " + tablePrefix + "warps (owner_id, name, world, x, y, z, yaw, pitch, icon, is_public) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE world=VALUES(world), x=VALUES(x), y=VALUES(y), z=VALUES(z), yaw=VALUES(yaw), pitch=VALUES(pitch), icon=VALUES(icon), is_public=VALUES(is_public)";
             }
 
             try (Connection conn = dbManager.getConnection();
@@ -128,6 +139,7 @@ public class SQLWarpDao implements WarpDao {
                 stmt.setFloat(7, location.getYaw());
                 stmt.setFloat(8, location.getPitch());
                 stmt.setString(9, warp.getIcon().name());
+                stmt.setBoolean(10, warp.isPublic());
                 stmt.executeUpdate();
 
             } catch (SQLException e) {
