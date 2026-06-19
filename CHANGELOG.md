@@ -2,6 +2,26 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [2.5.0] - 2026-06-19
+
+### Added
+- **Per-Claim Ban System:** Owners can now permanently ban a player from entering or interacting with their claim. Banned players lose every flag, are physically pushed back at chunk boundaries, and (if online at the moment of the ban) are teleported outside the claim. Survives server restarts and is independent of role/trust removal. New commands:
+  - `/claim ban <player>` — ban a player from your active claim
+  - `/claim unban <player>` — reverse a ban
+  - `/claim banlist` — list all banned players
+  - `landclaim.ban` permission (default `true`)
+  - "Ban" button added to the Player Control Panel GUI alongside Kick/Transfer.
+- **Geyser 2.x Native Form Support:** Bedrock players now get native Bedrock UI forms (SimpleForm, CustomForm, ModalForm) when the plugin would otherwise prompt them. Reflection-based, no hard Geyser dependency.
+  - `AnvilInputGUI` (rename, color, role name, etc.) → CustomForm text input
+  - `/claim abandon` → ModalForm confirmation
+  - `/unclaim all` → ModalForm confirmation
+  - `/claim ban <player>` → ModalForm confirmation
+  - Geyser-Spigot and Floodgate added to `soft-depend`. `PluginConfig.geyserForms` (default `true`) master-toggles the form path.
+
+### Bug Fixes
+- **SquareMap markers not appearing after claiming:** The world-name comparison was a strict string equality, but SquareMap's `WorldIdentifier.asString()` can return the namespaced form (`minecraft:overworld`) while `ChunkPosition.world()` stores the plain Bukkit world name. The filter now tolerates namespace prefix and case differences, so newly claimed chunks are visible on the live map.
+- **SquareMap silent activation failure:** The original `SquaremapHook` checked for the plugin once and would silently stay inactive if SquareMap loaded after LandClaimPlugin. The hook now (a) listens for `PluginEnableEvent` so it activates when SquareMap enables later, and (b) retries `SquaremapProvider.get()` on the next tick if the API isn't yet registered. `soft-depend` now also includes `squaremap` and `Pl3xMap` so the server orders them ahead of LandClaimPlugin.
+
 ## [2.3.0] - 2026-05-29
 
 ### Added

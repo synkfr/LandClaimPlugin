@@ -35,3 +35,30 @@ A:
 
 **Q: Does `/claim unstuck` work everywhere?**
 A: `/claim unstuck` only works when a player is trapped inside a claim (either their own or someone else's). It uses an asynchronous Breadth-First Search (BFS) algorithm to find the nearest safe wilderness block without teleporting them into walls or lava. It respects a configurable cooldown to prevent abuse during combat.
+
+## Members, Trust, and Bans
+
+**Q: What's the difference between `/claim member kick`, `/claim trust remove`, and `/claim ban`?**
+A:
+- **`/claim member kick`** removes the player from the claim's member list. They can still enter as a visitor (subject to the visitor flag settings).
+- **`/claim trust remove`** removes the player from the trusted list. Same as kick — they fall back to visitor permissions.
+- **`/claim ban`** is a hard denial. Banned players cannot enter the claim at all — the `PlayerMoveEvent` handler pushes them back to the previous chunk at the boundary. They also lose every flag check, so even if they somehow teleport in, they can't break blocks, open chests, or interact. If the banned player is online and inside the claim at the moment of the ban, the plugin teleports them out via BFS to the nearest safe wilderness.
+
+Bans persist across server restarts. Use `/claim unban <player>` to remove a ban, and `/claim banlist` to see all current bans.
+
+---
+
+## Geyser / Bedrock Players
+
+**Q: My server has Geyser/Floodgate. Do Bedrock players get a different UI?**
+A: Yes. When Geyser 2.x is installed, Bedrock players receive native Bedrock forms instead of the Java-only fallbacks. This affects:
+- Anvil-based text input (rename claim, change color, role names) → **CustomForm** with a text field
+- `/claim abandon` confirmation → **ModalForm** with Confirm / Cancel buttons
+- `/unclaim all` confirmation → **ModalForm**
+- `/claim ban` confirmation → **ModalForm**
+
+If Geyser is not installed (or `geyserForms: false` in `config.yml`), Bedrock players fall back to the Java chat-prompt flow. This is controlled by `PluginConfig.geyserForms`.
+
+**Q: My Bedrock player can't see the claim boundary visualization.**
+A: The VisualizationManager automatically switches Bedrock players to particle-based visualization instead of display-entity blocks, since Bedrock clients don't render display entities as expected. This happens transparently — no action needed from the server admin.
+

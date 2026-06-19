@@ -103,6 +103,24 @@ Supported maps: `dynmap`, `bluemap`, `squaremap`, `pl3xmap`
 |-----|------|---------|-------------|
 | `actionbarUpdateInterval` | Integer | `20` | Ticks between actionbar updates |
 
+### Bedrock / Geyser Support
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `geyserForms` | Boolean | `true` | When Geyser 2.x is installed, Bedrock players receive native Bedrock forms (CustomForm text input for renames/colors, ModalForm confirmations for abandon/ban/unclaim-all) instead of Java-only chat-prompt fallbacks. If Geyser is not installed, this option has no effect. |
+
+::: tip
+Geyser-Spigot and Floodgate are listed in `soft-depend` so the server attempts to load them before LandClaimPlugin. The Bedrock form code is reflection-based — it does not introduce a hard dependency on either plugin.
+:::
+
+::: note Map plugins
+The `squaremap` and `Pl3xMap` hooks both wait for the corresponding plugin's `PluginEnableEvent` and retry their API call on the next tick if the API isn't ready yet. Markers should appear automatically after a `/claim reload` or after a fresh claim. If you do not see your claims on the live map:
+
+1. Confirm the world is enabled in your map plugin's config (e.g. `squaremap/config.yml`'s `worlds:` section).
+2. Confirm the chunk is in the same Bukkit world name the map plugin reports (the plugin handles `minecraft:world` ↔ `world` automatically).
+3. Run `/claim admin reload` to force a full map refresh.
+:::
+
 ---
 
 ## Permission Flags

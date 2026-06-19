@@ -61,6 +61,22 @@ These commands respect the same permission checks as clicking the GUI buttons.
 | `/claim trust remove <player>` | Remove a trusted player |
 | `/claim trust list` | List all trusted players and their flags |
 
+## Ban Commands
+
+| Command | Description |
+|---|---|
+| `/claim ban <player>` | Ban a player from your active claim. Banned players lose every flag, are blocked from entering any of the claim's chunks, and (if online) are teleported outside. Use `/claim unban` to reverse. |
+| `/claim unban <player>` | Remove a player's ban from your active claim. |
+| `/claim banlist` | List all players currently banned from your active claim. |
+
+::: tip Ban vs. Kick
+`/claim member kick` removes a player from the member list but still allows them to enter as a visitor. `/claim ban` is a hard denial — the player cannot enter the claim at all, even as a visitor. Use ban for players who have been harassing other members.
+:::
+
+::: note Bedrock players
+Ban confirmations, abandon confirmations, unclaim-all confirmations, and AnvilInputGUI text prompts all send **native Bedrock forms** to Bedrock players when Geyser 2.x is installed, instead of the Java-only chat-prompt fallback.
+:::
+
 ## Ally Commands
 
 | Command | Description |
@@ -108,6 +124,7 @@ These commands respect the same permission checks as clicking the GUI buttons.
 | `landclaim.member` | Access to member subcommands | `true` |
 | `landclaim.trust` | Access to trust subcommands | `true` |
 | `landclaim.ally` | Access to ally subcommands | `true` |
+| `landclaim.ban` | Ban / unban players from your claim | `true` |
 | `landclaim.abandon` | Abandon active claim profile | `true` |
 | `landclaim.create` | Create new claim profiles | `true` |
 | `landclaim.visible` | Toggle boundary visibility | `true` |

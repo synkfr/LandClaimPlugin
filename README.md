@@ -52,6 +52,8 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 ### Social Systems
 - **Member System** — Invite players to join your claim, assign them roles, and manage access
 - **Ally System** — Form mutual alliances between claims with configurable inter-claim permissions
+- **Trust System** — Grant individual players per-player permission overrides
+- **Ban System** — Hard-deny a player from entering or interacting with your claim. Banned players are physically pushed back at chunk boundaries and (if online at the moment of the ban) teleported outside. Survives server restarts.
 - **Warp System** — Set named warps within your claims with custom icons and per-player limits
 
 ### Protection
@@ -95,6 +97,12 @@ Respect WorldGuard regions when players attempt to claim land.
 - **Volumetric Intersection Check:** 100% accurate 3D boundary checking to prevent players from claiming over your spawn or protected areas.
 - **Gap Enforcement:** Configurable required distance between claims and WorldGuard regions.
 - **Custom Flag Support:** Apply the custom `allow-land-claims` WorldGuard state flag to regions (e.g., Wilderness/Warzone) to explicitly allow players to claim land inside them, overriding the gap and intersection protections!
+
+### 🎮 Bedrock / Geyser Support
+Bedrock players get a tailored UI when Geyser 2.x is installed. No hard Geyser dependency — the plugin uses reflection to detect the form API and falls back to the Java-only chat prompts if Geyser is missing.
+- **CustomForm text input** for anvil-based prompts (rename, color, role name)
+- **ModalForm confirmation** for destructive actions (abandon, unclaim all, ban)
+- Visualization automatically switches to particle mode for Bedrock clients
 
 ### Technical
 - **Cloud Command Framework** — Async command execution with dedicated thread pools
