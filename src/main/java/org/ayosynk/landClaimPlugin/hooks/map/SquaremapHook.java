@@ -3,11 +3,17 @@ package org.ayosynk.landClaimPlugin.hooks.map;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginEnableEvent;
 import xyz.jpenilla.squaremap.api.Key;
 
 import xyz.jpenilla.squaremap.api.Point;
 import xyz.jpenilla.squaremap.api.SimpleLayerProvider;
+import xyz.jpenilla.squaremap.api.Squaremap;
 import xyz.jpenilla.squaremap.api.SquaremapProvider;
 import xyz.jpenilla.squaremap.api.marker.Marker;
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions;
@@ -20,16 +26,52 @@ public class SquaremapHook {
     private final ClaimManager claimManager;
     private final Key layerKey;
     private boolean active = false;
+    private final EnableListener enableListener;
 
     public SquaremapHook(LandClaimPlugin plugin, ClaimManager claimManager) {
         this.plugin = plugin;
         this.claimManager = claimManager;
         this.layerKey = Key.of("landclaims");
+        this.enableListener = new EnableListener();
 
-        if (Bukkit.getPluginManager().getPlugin("squaremap") != null) {
-            active = true;
-            plugin.getLogger().info("Squaremap integration enabled.");
-            update();
+        // squaremap may load *after* LandClaimPlugin. Hook the PluginEnableEvent
+        // and try to activate immediately if it's already loaded.
+        Bukkit.getPluginManager().registerEvents(enableListener, plugin);
+        tryActivate();
+    }
+
+    private void tryActivate() {
+        if (active)
+            return;
+        if (Bukkit.getPluginManager().getPlugin("squaremap") == null)
+            return;
+        Squaremap api;
+        try {
+            api = SquaremapProvider.get();
+        } catch (Throwable t) {
+            // API not ready yet — squaremap loaded but its provider hasn't registered.
+            // We'll retry on the next tick.
+            FoliaScheduler.runTaskLater(plugin, this::tryActivate, 1L);
+            return;
+        }
+        if (api == null) {
+            FoliaScheduler.runTaskLater(plugin, this::tryActivate, 1L);
+            return;
+        }
+
+        active = true;
+        HandlerList.unregisterAll(enableListener);
+        plugin.getLogger().info("Squaremap integration enabled.");
+        update();
+    }
+
+    private final class EnableListener implements Listener {
+        @EventHandler
+        public void onPluginEnable(PluginEnableEvent event) {
+            if ("squaremap".equalsIgnoreCase(event.getPlugin().getName())) {
+                // squaremap is now enabled — give it a tick to register its API provider
+                FoliaScheduler.runTaskLater(plugin, SquaremapHook.this::tryActivate, 1L);
+            }
         }
     }
 
@@ -56,8 +98,11 @@ public class SquaremapHook {
                     continue;
 
                 String playerName = profile.getDisplayOwnerName();
+                String mapWorldName = mapWorld.identifier().asString();
+                // SquareMap's identifier is sometimes namespaced ("minecraft:overworld") while
+                // ChunkPosition stores the plain Bukkit world name. Compare both forms.
                 Set<ChunkPosition> claims = profile.getOwnedChunks().stream()
-                        .filter(pos -> pos.world().equals(mapWorld.identifier().asString()))
+                        .filter(pos -> worldsMatch(pos.world(), mapWorldName))
                         .collect(java.util.stream.Collectors.toSet());
 
                 if (claims.isEmpty())
@@ -209,5 +254,22 @@ public class SquaremapHook {
 
     public boolean isActive() {
         return active;
+    }
+
+    /**
+     * Compare a ChunkPosition's world name with a SquareMap world identifier.
+     * Tolerates namespace prefix and case differences, both of which can occur
+     * depending on the SquareMap version and Bukkit world container.
+     */
+    private static boolean worldsMatch(String bukkitWorld, String mapWorldId) {
+        if (bukkitWorld == null || mapWorldId == null) return false;
+        if (bukkitWorld.equalsIgnoreCase(mapWorldId)) return true;
+        // Strip "minecraft:" or any other namespace prefix SquareMap might add.
+        String simple = mapWorldId;
+        int colon = simple.indexOf(':');
+        if (colon >= 0) {
+            simple = simple.substring(colon + 1);
+        }
+        return bukkitWorld.equalsIgnoreCase(simple);
     }
 }
