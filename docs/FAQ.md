@@ -62,3 +62,18 @@ If Geyser is not installed (or `geyserForms: false` in `config.yml`), Bedrock pl
 **Q: My Bedrock player can't see the claim boundary visualization.**
 A: The VisualizationManager automatically switches Bedrock players to particle-based visualization instead of display-entity blocks, since Bedrock clients don't render display entities as expected. This happens transparently — no action needed from the server admin.
 
+---
+
+## Wilderness Protection
+
+**Q: How do I make it so players can only build inside their claims? I want a towny / clan-style server.**
+A: Set `wildernessProtection.enabled: true` in `config.yml`. When enabled, every block/entity interaction flag is denied in unclaimed chunks. Players can still walk, chat, fight, and use items, but cannot break, place, ignite, use buckets, modify signs, open containers, use doors, ride vehicles, or harm/interact with entities outside of any claim. Admins (`landclaim.admin`) always bypass.
+
+You can exempt specific worlds (e.g. a creative build world) by adding them to `wildernessProtection.exceptionWorlds`. The list takes plain Bukkit world names, not the namespaced key — so `world` and `world_nether`, not `minecraft:overworld`.
+
+**Q: Does wilderness protection affect PvP?**
+A: No. The `PvpProtectionListener` has its own logic (claim-by-claim PvP toggle via `/claim pvp`) and wilderness protection does not change it. To disable PvP in the wilderness, use a separate anti-PvP plugin or set up a spawn-protection area via a `blockWorld` entry.
+
+**Q: Can I let specific non-admin players bypass wilderness protection?**
+A: Not in the current implementation — only `landclaim.admin` bypasses. If you need a finer-grained bypass (e.g. give builders the right to terraform the wilderness), grant them `landclaim.admin` and rely on a separate permission plugin to scope what they can do with that power.
+

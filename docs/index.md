@@ -31,4 +31,6 @@ features:
     details: Native Bedrock forms (CustomForm, ModalForm) for renames, colors, and confirmations when Geyser 2.x is installed — no hard Geyser dependency.
   - title: 🛡️ WorldGuard Support
     details: Volumetric intersection checks, gap enforcement, and custom allow-land-claims flag support.
+  - title: 🏞️ Wilderness Protection
+    details: Opt-in flag that flips the default — players can only build, break, and interact inside claims. Perfect for towny / clan-style servers.
 ---

@@ -66,6 +66,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **PvP Protection** — Disable PvP inside claims
 - **Vehicle Protection** — Prevent unauthorized vehicle use and destruction
 - **Command Blocking** — Block specific commands inside other players' claims
+- **Wilderness Protection** — Opt-in `wildernessProtection.enabled` flag flips the default: players can only build/break inside claims, never in unclaimed chunks. Designed for clan/town-style servers.
 
 ### Customization
 - **Owner Alias** — Set a custom display name to replace your Minecraft username in UI elements, map hooks, and titles

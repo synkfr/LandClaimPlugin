@@ -17,6 +17,7 @@ All notable changes to LandClaimPlugin will be documented in this file.
   - `/unclaim all` → ModalForm confirmation
   - `/claim ban <player>` → ModalForm confirmation
   - Geyser-Spigot and Floodgate added to `soft-depend`. `PluginConfig.geyserForms` (default `true`) master-toggles the form path.
+- **Wilderness Protection:** New opt-in `wildernessProtection.enabled` config flips the default behavior so players can no longer build, break, ignite, use buckets/fertilizer, modify signs, open containers, use doors, ride vehicles, or harm/interact with entities in unclaimed chunks. Designed for "clan-only" or "town" servers where building/breaking is restricted to claimed land. Admins (`landclaim.admin`) always bypass. The `wildernessProtection.exceptionWorlds` list lets you exempt specific worlds (e.g. a creative build world). Affects `BlockProtectionListener`, `EntityProtectionListener`, `ItemProtectionListener`, `InteractProtectionListener`, and `VehicleProtectionListener`. New `wilderness-protected` message key.
 
 ### Bug Fixes
 - **SquareMap markers not appearing after claiming:** The world-name comparison was a strict string equality, but SquareMap's `WorldIdentifier.asString()` can return the namespaced form (`minecraft:overworld`) while `ChunkPosition.world()` stores the plain Bukkit world name. The filter now tolerates namespace prefix and case differences, so newly claimed chunks are visible on the live map.

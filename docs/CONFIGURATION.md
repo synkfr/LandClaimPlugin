@@ -121,6 +121,21 @@ The `squaremap` and `Pl3xMap` hooks both wait for the corresponding plugin's `Pl
 3. Run `/claim admin reload` to force a full map refresh.
 :::
 
+### Wilderness Protection
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `wildernessProtection.enabled` | Boolean | `false` | When `true`, players cannot break, place, ignite, use buckets, modify signs, open containers, use doors, ride vehicles, or harm/interact with entities in unclaimed chunks. Designed for "clan-only" or "town" servers where building/breaking is restricted to claimed land. Admins (`landclaim.admin`) always bypass. |
+| `wildernessProtection.exceptionWorlds` | List | `[]` | Worlds where wilderness protection does not apply. Use the plain Bukkit world name (e.g. `world`, `world_nether`). Useful for exempting a creative build world. |
+
+::: tip Use case
+Enable wilderness protection on a towny-style survival server where the only safe place to build is inside a clan claim. Players can still walk, chat, and fight in the wilderness, but cannot modify the world until they find a claim or get admin help.
+:::
+
+::: warning PvP / explosions
+Wilderness protection does not affect PvP (`PvpProtectionListener`) or explosion damage (`ExplosionProtectionListener`) — those listeners have their own logic. To make wilderness fully off-limits, combine this with a `blockWorld` entry for the world, or use another plugin to disable PvP/mob spawning.
+:::
+
 ---
 
 ## Permission Flags
