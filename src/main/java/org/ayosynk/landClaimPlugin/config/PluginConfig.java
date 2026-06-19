@@ -153,6 +153,15 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Interval in server ticks (20 ticks = 1 second) for updating the player action bar display (boundary titles, claim status, etc.).")
     public int actionbarUpdateInterval = 20;
 
+    @Comment({
+        "Geyser / Bedrock form support.",
+        "When enabled and Geyser 2.x is installed, Bedrock players receive native Bedrock forms",
+        "(e.g. a text input form for claim renaming, a yes/no confirmation for dangerous actions)",
+        "instead of Java-only fallbacks (chat prompts, clickable chat messages).",
+        "If Geyser is not installed, this option has no effect and Java fallbacks are used."
+    })
+    public boolean geyserForms = true;
+
     @Comment("Default maximum claim warps a player can set (can be bypassed with landclaim.warps.limit.X permission).")
     public int maxWarps = 3;
 

@@ -1,12 +1,12 @@
 package org.ayosynk.landClaimPlugin.commands;
 
 import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
+import org.ayosynk.landClaimPlugin.util.GeyserFormHelper;
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
@@ -16,6 +16,8 @@ import org.incendo.cloud.paper.util.sender.Source;
 
 /**
  * Handles: /unclaim, /unclaim all
+ *
+ * <p>Bedrock players with Geyser forms get a ModalForm confirmation before /unclaim all.</p>
  */
 public class UnclaimCommand implements LandClaimCommand {
 
@@ -47,8 +49,42 @@ public class UnclaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
-                    player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
+                    promptUnclaimAll(player);
                 }));
+    }
+
+    private void promptUnclaimAll(Player player) {
+        if (GeyserFormHelper.shouldUseForms(player)) {
+            String title = configManager.getMessage("geyser-confirm-title");
+            String content = configManager.getMessage("geyser-unclaim-all-content");
+            GeyserFormHelper.sendModalForm(player, title, content, "Confirm", "Cancel", confirmed -> {
+                if (!confirmed) {
+                    player.sendMessage(configManager.getMessage("geyser-form-cancelled"));
+                    return;
+                }
+                FoliaScheduler.runForPlayer(plugin, player, () -> performUnclaimAll(player));
+            });
+        } else {
+            player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
+        }
+    }
+
+    private void performUnclaimAll(Player player) {
+        ClaimProfile profile = claimManager.getActiveProfile(player);
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return;
+        }
+        if (!profile.isOwner(player.getUniqueId())) {
+            player.sendMessage(configManager.getMessage("not-owner"));
+            return;
+        }
+        int chunks = claimManager.abandonProfile(profile.getProfileId());
+        player.sendMessage(configManager.getMessage("profile-abandoned",
+                "<chunks>", String.valueOf(chunks)));
+        plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
+        plugin.getHookManager().refreshMapHooks();
+        plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
     }
 
     private void unclaimCurrentChunk(Player player) {

@@ -4,6 +4,8 @@ import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
+import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
+import org.ayosynk.landClaimPlugin.util.GeyserFormHelper;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
@@ -15,6 +17,10 @@ import java.util.UUID;
 /**
  * Handles: /claim abandon
  * Atomically deletes the player's entire ClaimProfile.
+ *
+ * <p>For Bedrock players with Geyser forms enabled, a ModalForm confirmation is shown
+ * before destructive actions are taken. Java players use the existing /confirm-style
+ * flow (no change in UX).</p>
  */
 public class AbandonCommand implements LandClaimCommand {
 
@@ -48,13 +54,39 @@ public class AbandonCommand implements LandClaimCommand {
                         return;
                     }
 
-                    int chunksDeleted = claimManager.abandonProfile(profile.getProfileId());
-                    player.sendMessage(configManager.getMessage("profile-abandoned",
-                            "<chunks>", String.valueOf(chunksDeleted)));
-
-                    plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
-                    plugin.getHookManager().refreshMapHooks();
-                    plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
+                    if (GeyserFormHelper.shouldUseForms(player)) {
+                        showAbandonForm(player, profile);
+                    } else {
+                        performAbandon(player, profile);
+                    }
                 }));
+    }
+
+    private void showAbandonForm(Player player, ClaimProfile profile) {
+        String title = configManager.getMessage("geyser-confirm-title");
+        String content = configManager.getMessage("geyser-abandon-content");
+        GeyserFormHelper.sendModalForm(player, title, content, "Confirm", "Cancel", confirmed -> {
+            if (!confirmed) {
+                player.sendMessage(configManager.getMessage("geyser-form-cancelled"));
+                return;
+            }
+            FoliaScheduler.runForPlayer(plugin, player, () -> performAbandon(player, profile));
+        });
+    }
+
+    private void performAbandon(Player player, ClaimProfile profile) {
+        UUID playerId = player.getUniqueId();
+        if (!profile.isOwner(playerId)) {
+            player.sendMessage(configManager.getMessage("not-owner"));
+            return;
+        }
+
+        int chunksDeleted = claimManager.abandonProfile(profile.getProfileId());
+        player.sendMessage(configManager.getMessage("profile-abandoned",
+                "<chunks>", String.valueOf(chunksDeleted)));
+
+        plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
+        plugin.getHookManager().refreshMapHooks();
+        plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
     }
 }

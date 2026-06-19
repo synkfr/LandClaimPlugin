@@ -99,7 +99,30 @@ public class AnvilInputGUI implements Listener {
     }
 
     public static void open(LandClaimPlugin plugin, Player player, String title, String initialText, Consumer<String> callback) {
+        // Bedrock player path: prefer a native Geyser CustomForm text input if available.
+        // Falls back to the chat-prompt listener if Geyser forms are disabled or unavailable.
         if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
+            if (plugin.getConfigManager().getPluginConfig().geyserForms
+                    && org.ayosynk.landClaimPlugin.util.GeyserFormHelper.isAvailable()) {
+                player.closeInventory();
+                player.sendMessage(plugin.getConfigManager().getMessage("geyser-form-sent", "<title>", title));
+
+                org.ayosynk.landClaimPlugin.util.GeyserFormHelper.sendCustomFormTextInput(
+                        player, title, "", title, initialText, result -> {
+                            // Route the callback back through the player's region thread on Folia.
+                            org.ayosynk.landClaimPlugin.util.FoliaScheduler.runForPlayer(plugin, player, () -> {
+                                if (result == null) {
+                                    player.sendMessage(plugin.getConfigManager().getMessage("geyser-form-cancelled"));
+                                    callback.accept(null);
+                                } else {
+                                    callback.accept(result);
+                                }
+                            });
+                        });
+                return;
+            }
+
+            // Chat-prompt fallback (no Geyser forms).
             player.closeInventory();
             player.sendMessage(plugin.getConfigManager().getMessage("geyser-chat-prompt", "<title>", title));
 
