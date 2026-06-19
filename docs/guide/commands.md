@@ -91,9 +91,12 @@ Ban confirmations, abandon confirmations, unclaim-all confirmations, and AnvilIn
 | Command | Description |
 |---|---|
 | `/claim setwarp <name>` | Set a warp at your current location |
+| `/claim setwarp <name> public` | Set a warp and publish it to the server-wide public warps list |
+| `/claim setwarp <name> private` | Set a warp explicitly as private (default; useful after toggling) |
 | `/claim delwarp <name>` | Delete a warp |
 | `/claim warp <name>` | Teleport to a warp |
 | `/claim warps` | Open the warp management GUI |
+| `/claim publicwarps` | Open the server-wide public warps browser — any player can teleport to a public warp |
 
 ## Admin Commands
 

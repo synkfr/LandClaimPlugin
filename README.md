@@ -55,6 +55,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **Trust System** — Grant individual players per-player permission overrides
 - **Ban System** — Hard-deny a player from entering or interacting with your claim. Banned players are physically pushed back at chunk boundaries and (if online at the moment of the ban) teleported outside. Survives server restarts.
 - **Warp System** — Set named warps within your claims with custom icons and per-player limits
+- **Public Warps** — Publish any of your warps to the server-wide public list. Other players can browse and teleport via `/claim publicwarps`.
 
 ### Protection
 - **Block Protection** — Prevent unauthorized breaking and placing
