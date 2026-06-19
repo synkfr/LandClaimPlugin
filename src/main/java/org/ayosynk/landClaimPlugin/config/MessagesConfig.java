@@ -8,6 +8,7 @@ import eu.okaeri.configs.annotation.*;
 public class MessagesConfig extends OkaeriConfig {
 
     public String accessDenied = "<red>You do not have permission to do this.";
+    public String wildernessProtected = "<red>You cannot do this in the wilderness. Find a claim or ask an admin.";
     public String chunkClaimed = "<green>Chunk successfully claimed!";
     public String chunkUnclaimed = "<green>Chunk successfully unclaimed!";
     public String notOwner = "<red>You do not own this claim.";

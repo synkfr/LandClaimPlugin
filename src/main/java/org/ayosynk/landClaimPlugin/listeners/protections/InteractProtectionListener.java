@@ -5,6 +5,7 @@ import org.ayosynk.landClaimPlugin.managers.BlockPermissionResolver;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 import org.ayosynk.landClaimPlugin.managers.PermissionResolver;
+import org.ayosynk.landClaimPlugin.managers.WildernessProtection;
 
 import org.ayosynk.landClaimPlugin.models.BlockPermission;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
@@ -40,6 +41,13 @@ public class InteractProtectionListener implements Listener {
 
             event.setCancelled(true);
             player.sendMessage(configManager.getMessage("access-denied"));
+            return false;
+        }
+
+        // No claim at this chunk — fall through to wilderness protection.
+        if (WildernessProtection.isDenied(block.getWorld(), player, permission)) {
+            event.setCancelled(true);
+            player.sendMessage(configManager.getMessage("wilderness-protected"));
             return false;
         }
 

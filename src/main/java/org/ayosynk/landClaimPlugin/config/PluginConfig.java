@@ -85,6 +85,26 @@ public class PluginConfig extends OkaeriConfig {
         public double borderOpacity = 0.8;
     }
 
+    @Comment({
+        "Wilderness Protection",
+        "When enabled, players are blocked from breaking/placing blocks and interacting",
+        "with the world OUTSIDE of any claim. Use this for 'clan-only' or 'town' servers",
+        "where building/breaking is restricted to claimed land only.",
+        "Players with the 'landclaim.admin' permission always bypass wilderness protection."
+    })
+    public WildernessProtectionConfig wildernessProtection = new WildernessProtectionConfig();
+
+    public static class WildernessProtectionConfig extends OkaeriConfig {
+        @Comment("Master toggle. When true, every block/entity interaction flag is denied in unclaimed chunks.")
+        public boolean enabled = false;
+
+        @Comment({
+            "Worlds where wilderness protection does not apply (e.g. a creative build world or a",
+            "resource-gathering dimension). Use the Bukkit world name (e.g. 'world', 'world_nether')."
+        })
+        public java.util.List<String> exceptionWorlds = java.util.List.of();
+    }
+
     @Comment("Default maximum number of chunks a player is allowed to claim (can be bypassed with landclaim.limit.X permission).")
     public int chunkClaimLimit = 5;
     
