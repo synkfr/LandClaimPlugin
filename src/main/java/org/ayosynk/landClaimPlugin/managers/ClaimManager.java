@@ -343,6 +343,13 @@ public class ClaimManager {
      * Supports Delegated Claiming if the player has the CLAIM_LAND role flag.
      */
     public boolean claimChunk(Player player, Chunk chunk) {
+        // Enforce landclaim.claim at the lowest level so /claim, auto-claim,
+        // the claim-map GUI click, and any API caller all respect the permission.
+        if (!player.hasPermission("landclaim.claim") && !player.hasPermission("landclaim.admin")) {
+            player.sendMessage(configManager.getMessage("access-denied"));
+            return false;
+        }
+
         String worldName = chunk.getWorld().getName();
         if (configManager.isWorldBlocked(worldName)) {
             player.sendMessage(configManager.getMessage("world-blocked"));
@@ -446,6 +453,13 @@ public class ClaimManager {
      * Claim multiple chunks at once (for selection-based claiming).
      */
     public int claimChunks(Player player, Set<ChunkPosition> chunksToClaim) {
+        // Enforce landclaim.claim at the lowest level so /claim, auto-claim,
+        // the claim-map GUI click, and any API caller all respect the permission.
+        if (!player.hasPermission("landclaim.claim") && !player.hasPermission("landclaim.admin")) {
+            player.sendMessage(configManager.getMessage("access-denied"));
+            return 0;
+        }
+
         if (chunksToClaim.isEmpty())
             return 0;
 
