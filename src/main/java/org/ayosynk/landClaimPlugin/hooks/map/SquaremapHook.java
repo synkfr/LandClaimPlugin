@@ -92,17 +92,21 @@ public class SquaremapHook {
                 mapWorld.layerRegistry().register(layerKey, provider);
             }
 
+            String mapWorldId = mapWorld.identifier().asString();
+            int[] worldMarkerCount = {0};
+
             for (UUID playerId : getAllPlayerIds()) {
                 org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);
                 if (profile == null)
                     continue;
 
                 String playerName = profile.getDisplayOwnerName();
-                String mapWorldName = mapWorld.identifier().asString();
-                // SquareMap's identifier is sometimes namespaced ("minecraft:overworld") while
-                // ChunkPosition stores the plain Bukkit world name. Compare both forms.
+                // SquareMap's identifier is the namespaced key (e.g. "minecraft:overworld") while
+                // ChunkPosition stores the plain Bukkit *level* name (e.g. "world"). Compare both
+                // forms: the chunk world as-is, the chunk world as a key, and the identifier
+                // with its namespace prefix stripped.
                 Set<ChunkPosition> claims = profile.getOwnedChunks().stream()
-                        .filter(pos -> worldsMatch(pos.world(), mapWorldName))
+                        .filter(pos -> worldsMatch(pos.world(), mapWorldId))
                         .collect(java.util.stream.Collectors.toSet());
 
                 if (claims.isEmpty())
@@ -155,7 +159,14 @@ public class SquaremapHook {
 
                     provider.addMarker(Key.of(playerId.toString() + "_" + i), marker);
                     i++;
+                    worldMarkerCount[0]++;
                 }
+            }
+
+            if (worldMarkerCount[0] > 0) {
+                plugin.getLogger().info("SquareMap: rendered " + worldMarkerCount[0] + " claim marker(s) in world '" + mapWorldId + "'.");
+            } else {
+                plugin.getLogger().fine("SquareMap: no claims matched world '" + mapWorldId + "'.");
             }
         });
     }
@@ -258,18 +269,45 @@ public class SquaremapHook {
 
     /**
      * Compare a ChunkPosition's world name with a SquareMap world identifier.
-     * Tolerates namespace prefix and case differences, both of which can occur
-     * depending on the SquareMap version and Bukkit world container.
+     *
+     * <p>SquareMap's {@code WorldIdentifier.asString()} always returns the namespaced
+     * key (e.g. {@code minecraft:overworld}), while {@code ChunkPosition.world()}
+     * stores the plain Bukkit level name (e.g. {@code world} — the name set in
+     * {@code server.properties}). A straight string comparison will fail, so this
+     * helper tries all reasonable interpretations:</p>
+     *
+     * <ol>
+     *   <li>Direct case-insensitive match ({@code world} == {@code world})</li>
+     *   <li>Chunk world as the namespaced key ({@code world} → {@code minecraft:world} == {@code minecraft:world})</li>
+     *   <li>Identifier with the namespace prefix stripped ({@code minecraft:overworld} → {@code overworld} == {@code world})</li>
+     *   <li>Direct match between the chunk's namespaced key and the identifier
+     *       ({@code world} → {@code minecraft:overworld} == {@code minecraft:overworld})</li>
+     * </ol>
      */
     private static boolean worldsMatch(String bukkitWorld, String mapWorldId) {
         if (bukkitWorld == null || mapWorldId == null) return false;
         if (bukkitWorld.equalsIgnoreCase(mapWorldId)) return true;
-        // Strip "minecraft:" or any other namespace prefix SquareMap might add.
+
+        // Strip namespace prefix from the SquareMap identifier and try again.
         String simple = mapWorldId;
         int colon = simple.indexOf(':');
         if (colon >= 0) {
             simple = simple.substring(colon + 1);
         }
-        return bukkitWorld.equalsIgnoreCase(simple);
+        if (bukkitWorld.equalsIgnoreCase(simple)) return true;
+
+        // Resolve the Bukkit world for the chunk and compare its namespaced key
+        // directly against SquareMap's identifier. This is the case the server
+        // hits: level-name "world" → key "minecraft:overworld" → SquareMap id
+        // "minecraft:overworld".
+        org.bukkit.World chunkWorld = org.bukkit.Bukkit.getWorld(bukkitWorld);
+        if (chunkWorld != null) {
+            String chunkKey = chunkWorld.getKey().toString();
+            if (chunkKey.equalsIgnoreCase(mapWorldId)) return true;
+            // Also try the chunk's simple key (no namespace) against the map id.
+            String chunkSimple = chunkWorld.getKey().getKey();
+            if (chunkSimple.equalsIgnoreCase(simple)) return true;
+        }
+        return false;
     }
 }
