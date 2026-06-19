@@ -40,6 +40,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String actionbarOwnedByOther = "<gradient:#ff416c:#ff4b2b>🔒 <owner>'s Claim 🔒</gradient>";
     public String actionbarTrusted = "<gradient:#f6d365:#fda085>🤝 <owner>'s Claim 🤝</gradient> <gray>(Trusted)</gray>";
     public String actionbarAdmin = "<gradient:#ff416c:#ff4b2b>🛡️ <owner>'s Claim 🛡️</gradient> <gray>(Admin Override)</gray>";
+    public String actionbarBanned = "<gradient:#8a0303:#ff416c>⛔ Banned from <owner>'s Claim ⛔</gradient>";
 
     @Comment("Variables: <player>, <count>, <limit>, <seconds>, <world>, <x>, <z>")
 
@@ -102,6 +103,18 @@ public class MessagesConfig extends OkaeriConfig {
     public String memberInvited = "<green>You have invited <gold><player></gold> to your claim.";
     public String memberInviteReceived = "<green>You have been invited to <gold><owner></gold>'s claim!\n<gray>[<green><click:run_command:'/claim accept'><hover:show_text:'Click to accept the invite!'>Accept</hover></click></green>] [<red><click:run_command:'/claim deny'><hover:show_text:'Click to deny the invite'>Deny</hover></click></red>]</gray>";
     public String memberKicked = "<red>You have kicked <gold><player></gold> from the claim.";
+    public String playerBanned = "<dark_red>Banned <gold><player></gold> from your claim. They can no longer enter.";
+    public String playerUnbanned = "<green>Unbanned <gold><player></gold>. They may enter your claim again.";
+    public String alreadyBanned = "<red><gold><player></gold> is already banned from this claim.";
+    public String notBanned = "<red><gold><player></gold> is not banned from this claim.";
+    public String cannotBanSelf = "<red>You cannot ban yourself from your own claim.";
+    public String bannedFromClaim = "<dark_red>You have been banned from <gold><owner></gold>'s claim. Entry denied.";
+    public String unbannedByOwner = "<green><gold><owner></gold> has unbanned you from their claim.";
+    public String bannedTeleportedOut = "<dark_red>You were ejected from <gold><owner></gold>'s claim (you are banned).";
+    public String bannedNoEscape = "<red>Could not find a safe location outside the claim. Try /claim unstuck.";
+    public String banlistEmpty = "<gray>No players are currently banned from your claim.";
+    public String banlistHeader = "<dark_red><bold>Banned players:</bold>";
+    public String banlistEntry = "<dark_red>- <gold><player>";
     public String inviteAcceptedOwner = "<green><gold><player></gold> has accepted your invite and joined the claim!";
     public String inviteAcceptedTarget = "<green>You joined <gold><owner></gold>'s claim!";
     public String inviteDeniedTarget = "<red>You denied the invite to <gold><owner></gold>'s claim.";
@@ -123,7 +136,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String notAllied = "<red>You are not allied with that claim.";
     public String allyRemoved = "<red>Alliance with <gold><name></gold> has been removed.";
 
-    public String trustAdded = "<green>Added trust to <player>";
+    public String trustAdded = "<green>Added trust to <player>.\n<yellow>Open <gold>/claim<yellow> → <gold>Trust Management<yellow> and left-click <player>'s head to grant per-player flags (block break/place, etc.).";
     public String trustRemoved = "<red>Removed trust from <player>";
     public String claimVisibilityToggled = "<green>Claim visibility toggled.";
     public String adminBypassedUnclaim = "<green>Bypassed ownership and unclaimed chunk.";
@@ -200,4 +213,16 @@ public class MessagesConfig extends OkaeriConfig {
     // --- Geyser MC / Bedrock Support ---
     public String geyserChatPrompt = "<yellow>[Bedrock] Please type '<title>' in chat (or type 'cancel' to abort):";
     public String geyserChatCancelled = "<red>[Bedrock] Input cancelled.";
+    public String geyserFormSent = "<yellow>[Bedrock] A form for '<title>' has been sent. Please check your screen.";
+    public String geyserFormCancelled = "<red>[Bedrock] Form closed.";
+
+    // --- Bedrock confirmation dialogs ---
+    @Comment("Used when Bedrock players need to confirm a destructive action (e.g. abandoning a claim, unclaiming all).")
+    public String geyserConfirmTitle = "<gold>Confirm Action";
+    @Comment("Shown on the ModalForm when a Bedrock player attempts /claim abandon.")
+    public String geyserAbandonContent = "<red>Are you sure you want to abandon your claim?\n<gray>This will release all of your claimed chunks.";
+    @Comment("Shown on the ModalForm when a Bedrock player attempts /unclaim all or /claim unclaimall.")
+    public String geyserUnclaimAllContent = "<red>Are you sure you want to unclaim ALL of your claimed chunks?\n<gray>This action cannot be undone.";
+    @Comment("Shown on the ModalForm when a Bedrock player attempts to ban another player from their claim.")
+    public String geyserBanContent = "<red>Ban <gold><player></gold> from your claim?\n<gray>They will no longer be able to enter.";
 }

@@ -27,7 +27,7 @@ public class PlayerControlPanelGUI {
                     "F F F F F F F F F",
                     "F F C F T F K F F",
                     "F F F F F F F F F",
-                    ". . . B B B . . ."
+                    ". . . X B B B . ."
             };
 
             Map<Character, SlotDefinition> ingredients = new HashMap<>();
@@ -63,6 +63,24 @@ public class PlayerControlPanelGUI {
                                 p.sendMessage(GuiHelper.MM
                                         .deserialize("<yellow>Kicked " + targetPlayerName + " from the claim."));
                                 MemberManagementGUI.open(p, profile, plugin);
+                            },
+                            () -> PlayerControlPanelGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName));
+                });
+            }));
+            ingredients.put('X', buildPlayerSlotWithAction(config.banPlayer, targetPlayerName, (p, e) -> {
+                // Ban Player — confirmed in a ConfirmationGUI, then handed to BanCommand so
+                // the same Bedrock-form path is used and the player is ejected if online.
+                if (profile.isBanned(targetPlayerId)) {
+                    p.sendMessage(GuiHelper.MM.deserialize("<red>That player is already banned."));
+                    return;
+                }
+                FoliaScheduler.runTask(plugin, () -> {
+                    ConfirmationGUI.open(p, "<dark_red>Ban " + targetPlayerName + " from your claim?",
+                            () -> {
+                                org.ayosynk.landClaimPlugin.commands.BanCommand banCmd =
+                                        new org.ayosynk.landClaimPlugin.commands.BanCommand(plugin,
+                                                plugin.getClaimManager(), plugin.getConfigManager());
+                                banCmd.applyBan(p, profile, targetPlayerId, targetPlayerName);
                             },
                             () -> PlayerControlPanelGUI.open(p, profile, plugin, targetPlayerId, targetPlayerName));
                 });

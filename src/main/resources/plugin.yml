@@ -1,10 +1,10 @@
 name: LandClaimPlugin
-version: "2.4.0"
+version: "2.5.0"
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: "1.21"
 author: AyoSynk
 folia-supported: true
-soft-depend: [WorldGuard, BlueMap, dynmap, Vault]
+soft-depend: [WorldGuard, BlueMap, dynmap, squaremap, Pl3xMap, Geyser-Spigot, floodgate, Vault]
 permissions:
   landclaim.*:
     description: All landclaim permissions
@@ -30,12 +30,16 @@ permissions:
       landclaim.color: true
       landclaim.unclaimall: true
       landclaim.leave: true
+      landclaim.ban: true
   landclaim.claim:
     description: Basic claiming permission
     default: true
   landclaim.admin:
     description: Bypass protection and limits
     default: op
+  landclaim.ban:
+    description: Ban / unban players from your claim
+    default: true
   landclaim.limit.*:
     description: All claim limit permissions
     default: false

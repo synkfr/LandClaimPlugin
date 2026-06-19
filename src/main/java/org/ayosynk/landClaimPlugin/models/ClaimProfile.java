@@ -26,6 +26,7 @@ public class ClaimProfile {
     private final Map<String, Role> roles = new HashMap<>();
     private final Map<UUID, String> memberRoles = new HashMap<>();
     private final Map<UUID, Set<String>> allyFlags = new HashMap<>();
+    private final Set<UUID> bannedPlayers = new HashSet<>();
     private final Map<String, Warp> warps = new HashMap<>();
     private String claimColor; // Hex color string, e.g. "#00FF00", nullable (falls back to default)
     private String visualizationMode = "DISPLAY_ENTITY"; // "DISPLAY_ENTITY" or "PARTICLE"
@@ -295,6 +296,32 @@ public class ClaimProfile {
 
     public void removeAlly(UUID allyOwnerId) {
         allyFlags.remove(allyOwnerId);
+    }
+
+    // --- Banned Players (hard entry denial) ---
+
+    /**
+     * Banned players are denied every flag and physically prevented from entering any
+     * chunk owned by this profile. Unlike removing trust or membership, a ban persists
+     * until the owner explicitly unbans the player — even if the player re-invites
+     * themselves through a different path.
+     */
+    public Set<UUID> getBannedPlayers() {
+        return bannedPlayers;
+    }
+
+    public boolean isBanned(UUID playerId) {
+        return playerId != null && bannedPlayers.contains(playerId);
+    }
+
+    public void addBannedPlayer(UUID playerId) {
+        if (playerId == null) return;
+        bannedPlayers.add(playerId);
+    }
+
+    public void removeBannedPlayer(UUID playerId) {
+        if (playerId == null) return;
+        bannedPlayers.remove(playerId);
     }
 
     // --- Warps ---

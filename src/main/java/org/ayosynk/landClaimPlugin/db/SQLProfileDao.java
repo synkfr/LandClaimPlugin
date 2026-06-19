@@ -76,7 +76,13 @@ public class SQLProfileDao implements ProfileDao {
                         + "owner_id VARCHAR(36) NOT NULL,"
                         + "ally_id VARCHAR(36) NOT NULL,"
                         + "flags TEXT NOT NULL,"
-                        + "PRIMARY KEY (owner_id, ally_id))"
+                        + "PRIMARY KEY (owner_id, ally_id))",
+
+                "CREATE TABLE IF NOT EXISTS " + p + "profile_banned_players ("
+                        + "owner_id VARCHAR(36) NOT NULL,"
+                        + "player_id VARCHAR(36) NOT NULL,"
+                        + "banned_at BIGINT NOT NULL DEFAULT 0,"
+                        + "PRIMARY KEY (owner_id, player_id))"
         };
 
         try (Connection conn = dbManager.getDatabase().getConnection()) {
@@ -262,6 +268,26 @@ public class SQLProfileDao implements ProfileDao {
                     }
                 }
 
+                // 8. Clear and re-insert banned players
+                clearTable(conn, p + "profile_banned_players", "owner_id", oid);
+                if (!profile.getBannedPlayers().isEmpty()) {
+                    String insertBanned = sqlite
+                            ? "INSERT OR REPLACE INTO " + p
+                                    + "profile_banned_players (owner_id, player_id, banned_at) VALUES (?, ?, ?)"
+                            : "INSERT INTO " + p
+                                    + "profile_banned_players (owner_id, player_id, banned_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE banned_at=VALUES(banned_at)";
+                    try (PreparedStatement stmt = conn.prepareStatement(insertBanned)) {
+                        long now = System.currentTimeMillis();
+                        for (UUID bannedId : profile.getBannedPlayers()) {
+                            stmt.setString(1, oid);
+                            stmt.setString(2, bannedId.toString());
+                            stmt.setLong(3, now);
+                            stmt.addBatch();
+                        }
+                        stmt.executeBatch();
+                    }
+                }
+
                 conn.commit();
                 conn.setAutoCommit(true);
             } catch (SQLException e) {
@@ -295,6 +321,7 @@ public class SQLProfileDao implements ProfileDao {
                 conn.setAutoCommit(false);
 
                 clearTable(conn, p + "profile_ally_flags", "owner_id", oid);
+                clearTable(conn, p + "profile_banned_players", "owner_id", oid);
                 clearTable(conn, p + "profile_member_roles", "owner_id", oid);
                 clearTable(conn, p + "profile_roles", "owner_id", oid);
                 clearTable(conn, p + "profile_trusted_players", "owner_id", oid);
@@ -389,6 +416,7 @@ public class SQLProfileDao implements ProfileDao {
                 loadRoles(conn, p, profile);
                 loadMemberRoles(conn, p, profile);
                 loadAllyFlags(conn, p, profile);
+                loadBannedPlayers(conn, p, profile);
 
                 // Load warps from WarpManager to keep ClaimProfile in sync
                 Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager().getWarps(ownerId);
@@ -449,6 +477,7 @@ public class SQLProfileDao implements ProfileDao {
                     loadRoles(conn, p, profile);
                     loadMemberRoles(conn, p, profile);
                     loadAllyFlags(conn, p, profile);
+                    loadBannedPlayers(conn, p, profile);
 
                     // Load warps from WarpManager to keep ClaimProfile in sync
                     Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager()
@@ -616,6 +645,18 @@ public class SQLProfileDao implements ProfileDao {
         try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM " + table + " WHERE " + column + " = ?")) {
             stmt.setString(1, value);
             stmt.executeUpdate();
+        }
+    }
+
+    private void loadBannedPlayers(Connection conn, String p, ClaimProfile profile) throws SQLException {
+        try (PreparedStatement stmt = conn
+                .prepareStatement("SELECT player_id FROM " + p + "profile_banned_players WHERE owner_id = ?")) {
+            stmt.setString(1, profile.getProfileId().toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    profile.addBannedPlayer(UUID.fromString(rs.getString("player_id")));
+                }
+            }
         }
     }
 }

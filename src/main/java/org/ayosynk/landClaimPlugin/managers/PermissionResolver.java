@@ -24,6 +24,12 @@ public class PermissionResolver {
         if (playerId == null)
             return false;
 
+        // 0. Banned players are denied every flag — they are not welcome in the claim
+        //    at all. Checked first so an admin-bypass permission or role membership
+        //    cannot accidentally grant a banned player back their access.
+        if (profile.isBanned(playerId))
+            return false;
+
         // 1. Owner always passes
         if (profile.isOwner(playerId))
             return true;
@@ -86,6 +92,8 @@ public class PermissionResolver {
             return "wilderness";
         if (profile.isOwner(playerId))
             return "owner";
+        if (profile.isBanned(playerId))
+            return "banned";
         if (profile.getMemberRole(playerId) != null)
             return "member";
         if (profile.isTrusted(playerId))

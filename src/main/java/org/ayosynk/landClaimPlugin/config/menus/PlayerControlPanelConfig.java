@@ -36,6 +36,12 @@ public class PlayerControlPanelConfig extends OkaeriConfig {
             "<red>Kick <Player>",
             List.of("<gray>Remove this player from the claim."));
 
+    @Comment("Ban Player Button — blocks entry to the claim entirely.")
+    public ItemConfig banPlayer = new ItemConfig(
+            "BARRIER",
+            "<dark_red><bold>Ban <Player>",
+            List.of("<gray>Block this player from entering", "<gray>your claim. Use /claim unban to reverse."));
+
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
             "SPECTRAL_ARROW",

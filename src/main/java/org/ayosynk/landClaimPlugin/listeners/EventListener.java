@@ -129,7 +129,12 @@ public class EventListener implements Listener {
                             .replace("<name>", claimName);
                 } else {
                     String status = PermissionResolver.getPlayerStatus(newProfile, playerId);
-                    if (status.equals("member") || status.equals("trusted")) {
+                    if (status.equals("banned")) {
+                        message = configManager.getActionBarMessage("actionbar-banned")
+                                .replace("<owner>", ownerName)
+                                .replace("<claim>", claimName)
+                                .replace("<name>", claimName);
+                    } else if (status.equals("member") || status.equals("trusted")) {
                         message = configManager.getActionBarMessage("actionbar-trusted")
                                 .replace("<owner>", ownerName)
                                 .replace("<claim>", claimName)
@@ -179,6 +184,17 @@ public class EventListener implements Listener {
 
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
+
+        // Ban enforcement: if the player is banned from the destination claim, push
+        // them back to their previous position. Admins with landclaim.admin bypass
+        // this — they're not subject to a regular player's ban list.
+        if (!player.hasPermission("landclaim.admin")) {
+            ClaimProfile toProfile = claimManager.getProfileAt(new ChunkPosition(toChunk));
+            if (toProfile != null && toProfile.isBanned(playerId)) {
+                event.setTo(from);
+                return;
+            }
+        }
 
         // Instantly update action bar and titles on chunk crossing
         updateActionBar(player);
@@ -242,5 +258,84 @@ public class EventListener implements Listener {
         lastActionBarMap.remove(playerId);
         lastClaimStatusMap.remove(playerId);
         lastPlayerStatusMap.remove(playerId);
+    }
+
+    /**
+     * Teleport a banned player out of a claim they are currently standing in.
+     * Used by the ban flow when a player is banned while still inside the claim
+     * (e.g. an owner bans a member who happens to be online). Looks at the four
+     * adjacent chunks first; falls back to a small BFS if all are claimed.
+     */
+    public void ejectBannedPlayer(Player player, ClaimProfile bannedFrom) {
+        if (player == null || !player.isOnline() || bannedFrom == null) return;
+
+        FoliaScheduler.runForPlayer(plugin, player, () -> {
+            ChunkPosition current = new ChunkPosition(player.getLocation().getChunk());
+
+            // Already outside? Nothing to do.
+            if (!bannedFrom.ownsChunk(current) && !isAdjacentTo(current, bannedFrom)) {
+                return;
+            }
+
+            ChunkPosition safe = findNearbySafeChunk(current, bannedFrom);
+            if (safe == null) {
+                player.sendMessage(configManager.getMessage("banned-no-escape"));
+                return;
+            }
+
+            final ChunkPosition target = safe;
+            FoliaScheduler.runForPlayer(plugin, player, () -> {
+                org.bukkit.World world = player.getWorld();
+                int blockX = (target.x() << 4) + 8;
+                int blockZ = (target.z() << 4) + 8;
+                FoliaScheduler.runAtLocation(plugin,
+                        new org.bukkit.Location(world, blockX + 0.5, 0, blockZ + 0.5), () -> {
+                    int blockY = world.getHighestBlockYAt(blockX, blockZ);
+                    org.bukkit.Location safeLoc = new org.bukkit.Location(world, blockX + 0.5, blockY + 1.0, blockZ + 0.5);
+                    player.teleportAsync(safeLoc).thenAccept(success -> {
+                        if (success) {
+                            player.sendMessage(configManager.getMessage("banned-teleported-out",
+                                    "<owner>", bannedFrom.getDisplayOwnerName()));
+                        }
+                    });
+                });
+            });
+        });
+    }
+
+    private boolean isAdjacentTo(ChunkPosition pos, ClaimProfile profile) {
+        for (ChunkPosition neighbor : pos.getNeighbors(false)) {
+            if (profile.ownsChunk(neighbor)) return true;
+        }
+        return false;
+    }
+
+    private ChunkPosition findNearbySafeChunk(ChunkPosition start, ClaimProfile profile) {
+        // BFS outward up to 16 chunks — well past any normal claim footprint.
+        java.util.Set<ChunkPosition> visited = new java.util.HashSet<>();
+        java.util.Queue<ChunkPosition> queue = new java.util.LinkedList<>();
+        queue.add(start);
+        visited.add(start);
+
+        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        int maxRadius = 16;
+
+        while (!queue.isEmpty()) {
+            ChunkPosition current = queue.poll();
+            if (!profile.ownsChunk(current)) {
+                return current;
+            }
+            if (Math.abs(current.x() - start.x()) > maxRadius
+                    || Math.abs(current.z() - start.z()) > maxRadius) {
+                continue;
+            }
+            for (int[] dir : dirs) {
+                ChunkPosition neighbor = new ChunkPosition(current.world(), current.x() + dir[0], current.z() + dir[1]);
+                if (visited.add(neighbor)) {
+                    queue.add(neighbor);
+                }
+            }
+        }
+        return null;
     }
 }
