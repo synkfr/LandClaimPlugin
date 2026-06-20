@@ -87,15 +87,19 @@ public class PluginConfig extends OkaeriConfig {
 
     @Comment({
         "Wilderness Protection",
-        "When enabled, players are blocked from breaking/placing blocks and interacting",
-        "with the world OUTSIDE of any claim. Use this for 'clan-only' or 'town' servers",
-        "where building/breaking is restricted to claimed land only.",
-        "Players with the 'landclaim.admin' permission always bypass wilderness protection."
+        "When enabled, the flags listed in 'deniedFlags' are blocked in unclaimed",
+        "chunks. Use this for 'clan-only' or 'town' servers where building/breaking",
+        "is restricted to claimed land only.",
+        "Players with the 'landclaim.admin' permission always bypass wilderness protection.",
+        "The default list contains build / interaction flags only — combat flags",
+        "(DAMAGE_ANIMALS, DAMAGE_MONSTERS, BREED_ANIMALS, etc.) are NOT denied by",
+        "default so players can still hunt and fight mobs in the wilderness. PvP",
+        "in the wilderness is handled by PvpProtectionListener and is also unaffected."
     })
     public WildernessProtectionConfig wildernessProtection = new WildernessProtectionConfig();
 
     public static class WildernessProtectionConfig extends OkaeriConfig {
-        @Comment("Master toggle. When true, every block/entity interaction flag is denied in unclaimed chunks.")
+        @Comment("Master toggle. When true, the flags in 'deniedFlags' are denied in unclaimed chunks.")
         public boolean enabled = false;
 
         @Comment({
@@ -103,6 +107,34 @@ public class PluginConfig extends OkaeriConfig {
             "resource-gathering dimension). Use the Bukkit world name (e.g. 'world', 'world_nether')."
         })
         public java.util.List<String> exceptionWorlds = java.util.List.of();
+
+        @Comment({
+            "List of permission flags denied in the wilderness when 'enabled' is true.",
+            "Default: build / interaction flags only. Combat flags (DAMAGE_ANIMALS, DAMAGE_MONSTERS,",
+            "BREED_ANIMALS, SHEAR_ENTITIES, TRADE_VILLAGERS, FEED_ANIMALS, LEASH_ENTITIES), PvP,",
+            "item pickup/drop, projectile use, and vehicle use are NOT in the default list — players",
+            "can still hunt mobs, drop items, throw ender pearls, etc. in the wilderness.",
+            "Add a flag here to deny it; remove a flag to allow it. Matching is case-insensitive."
+        })
+        public java.util.List<String> deniedFlags = java.util.List.of(
+                "BLOCK_BREAK",
+                "BLOCK_PLACE",
+                "BLOCK_IGNITE",
+                "USE_BUCKETS",
+                "USE_FERTILIZER",
+                "MODIFY_SIGNS",
+                "USE_DOORS",
+                "USE_TRAPDOORS",
+                "USE_FENCE_GATES",
+                "USE_CONTAINERS",
+                "USE_WORKSTATIONS",
+                "USE_BEDS",
+                "USE_REDSTONE",
+                "USE_LECTERNS",
+                "USE_BELLS",
+                "TRAMPLE_CROPS",
+                "MODIFY_ARMOR_STANDS",
+                "MODIFY_ITEM_FRAMES");
     }
 
     @Comment("Default maximum number of chunks a player is allowed to claim (can be bypassed with landclaim.limit.X permission).")
@@ -184,6 +216,19 @@ public class PluginConfig extends OkaeriConfig {
 
     @Comment("Default maximum claim warps a player can set (can be bypassed with landclaim.warps.limit.X permission).")
     public int maxWarps = 3;
+
+    @Comment({
+        "Force-enable PvP across every claim, server-wide.",
+        "When true, PvpProtectionListener always allows PvP regardless of the",
+        "per-claim pvpEnabled flag, and /claim pvp refuses to toggle. Useful for",
+        "PvP-focused servers that don't want owners opting out.",
+        "When false (default), each claim's pvpEnabled flag is honored normally."
+    })
+    public PvpConfig pvp = new PvpConfig();
+
+    public static class PvpConfig extends OkaeriConfig {
+        public boolean forceEnabled = false;
+    }
 
     @Comment({
         "LuckPerms / Bukkit Permissions Bypass",

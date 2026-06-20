@@ -228,6 +228,11 @@ public class ClaimCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.pvp", plugin)) return;
+                    // Refuse the toggle if PvP is force-enabled server-wide.
+                    if (configManager.getPluginConfig().pvp.forceEnabled) {
+                        player.sendMessage(configManager.getMessage("pvp-force-locked"));
+                        return;
+                    }
                     String state = context.get("state");
                     Integer time = context.getOrDefault("time", null);
                     togglePvp(player, state.equalsIgnoreCase("on"), time);

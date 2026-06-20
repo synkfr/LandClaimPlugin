@@ -72,6 +72,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String pvpEnabled = "<red><b>[!]</b> PvP has been ENABLED in this claim!";
     public String pvpEnabledTemp = "<red><b>[!]</b> PvP has been ENABLED in this claim for <time> seconds!";
     public String pvpDisabled = "<green><b>[!]</b> PvP has been DISABLED in this claim. You are safe again.";
+    public String pvpForceLocked = "<red>PvP is forced on by the server config and cannot be toggled per-claim.";
     public String worldBlocked = "<red>You cannot claim land in this world.";
     public String alreadyClaimed = "<red>This chunk is already claimed by <owner>.";
     public String nameAlreadyInUse = "<red>That claim name is already taken. Please choose another one.";

@@ -27,6 +27,11 @@ public class PvpProtectionListener implements Listener {
     }
 
     private boolean isPvpAllowed(Location location) {
+        // Force-enabled via config: PvP is always allowed regardless of per-claim
+        // pvpEnabled. The /claim pvp command also refuses to toggle when this is set.
+        if (configManager.getPluginConfig().pvp.forceEnabled) {
+            return true;
+        }
         ChunkPosition pos = new ChunkPosition(location);
         org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfileAt(pos);
         if (profile != null) {

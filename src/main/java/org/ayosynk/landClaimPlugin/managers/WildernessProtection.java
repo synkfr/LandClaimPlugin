@@ -5,10 +5,13 @@ import org.ayosynk.landClaimPlugin.config.PluginConfig;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 /**
- * Central gate for "wilderness protection" — when enabled, all block/entity
- * interactions in unclaimed chunks are denied. Used by the protection
- * listeners to short-circuit before reaching {@code PermissionResolver}.
+ * Central gate for "wilderness protection" — when enabled, the flags
+ * listed in {@code wildernessProtection.deniedFlags} are denied in
+ * unclaimed chunks. Used by the protection listeners to short-circuit
+ * before reaching {@code PermissionResolver}.
  *
  * <p>Decisions are made in this order, first match wins:</p>
  * <ol>
@@ -16,13 +19,17 @@ import org.bukkit.entity.Player;
  *   <li>{@code wildernessProtection.enabled} is {@code false} — allow.</li>
  *   <li>Player has {@code landclaim.admin} — allow (admin bypass).</li>
  *   <li>World is in {@code exceptionWorlds} — allow.</li>
- *   <li>Otherwise — deny (the caller should cancel the event and notify).</li>
+ *   <li>{@code flag} is in {@code deniedFlags} — deny.</li>
+ *   <li>Otherwise — allow.</li>
  * </ol>
  *
- * <p>The flag parameter is currently ignored because the simple config
- * blocks all interactions uniformly. It's part of the API so future
- * per-flag configuration (e.g. "allow USE_DOORS in wilderness") can be
- * added without changing call sites.</p>
+ * <p>The default {@code deniedFlags} list contains build / interaction flags
+ * only (BLOCK_BREAK, BLOCK_PLACE, USE_CONTAINERS, USE_DOORS, etc.). Combat
+ * flags (DAMAGE_ANIMALS, DAMAGE_MONSTERS, BREED_ANIMALS, SHEAR_ENTITIES,
+ * TRADE_VILLAGERS, FEED_ANIMALS, LEASH_ENTITIES) and PvP are NOT denied by
+ * default, so players can still hunt mobs in the wilderness. Admins can
+ * add or remove flags at runtime via the config — matching is
+ * case-insensitive against the upper-cased flag name.</p>
  */
 public final class WildernessProtection {
 
@@ -47,7 +54,7 @@ public final class WildernessProtection {
         if (world != null && config.wildernessProtection.exceptionWorlds.contains(world.getName())) {
             return true;
         }
-        return false;
+        return !isFlagDenied(config.wildernessProtection.deniedFlags, flag);
     }
 
     /**
@@ -55,5 +62,18 @@ public final class WildernessProtection {
      */
     public static boolean isDenied(World world, Player player, String flag) {
         return !isAllowed(world, player, flag);
+    }
+
+    private static boolean isFlagDenied(List<String> deniedFlags, String flag) {
+        if (deniedFlags == null || deniedFlags.isEmpty() || flag == null) {
+            return false;
+        }
+        String upper = flag.toUpperCase();
+        for (String denied : deniedFlags) {
+            if (denied != null && denied.toUpperCase().equals(upper)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
