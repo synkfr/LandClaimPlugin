@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -100,6 +101,25 @@ public interface LandClaimAPI {
      * @return List of claim profiles where this player is a member
      */
     List<ClaimProfile> getClaimsByMember(UUID playerId);
+
+    /**
+     * Get every claim profile on the server, regardless of owner. The
+     * returned collection is a snapshot — concurrent modifications to
+     * the underlying cache are not reflected. Intended for admin tools
+     * and addons that need to iterate every claim (e.g. a global
+     * tax manager or a server-wide marketplace).
+     *
+     * @return Collection of every ClaimProfile currently loaded
+     */
+    Collection<ClaimProfile> getAllClaimProfiles();
+
+    /**
+     * Look up a claim profile by its unique profile ID.
+     *
+     * @param profileId The claim profile's UUID
+     * @return The ClaimProfile, or null if no claim with that ID exists
+     */
+    ClaimProfile getClaimById(UUID profileId);
 
     /**
      * Get a claim by its name.
@@ -241,6 +261,30 @@ public interface LandClaimAPI {
      * @return true if successful
      */
     boolean adminUnclaimChunk(Player player, Location location);
+
+    /**
+     * Transfer ownership of a claim to a new owner. All chunks owned by
+     * the current claim profile are reassigned to the new owner and the
+     * persistent state is updated. The old owner loses access (except via
+     * role/trust entries, which are preserved). Intended for admin
+     * commands and addons like a marketplace that need to finalize a sale.
+     *
+     * @param profileId The claim profile's UUID
+     * @param newOwnerId The UUID of the player who will own the claim
+     * @return true if the transfer succeeded, false if the claim doesn't exist
+     */
+    boolean transferClaim(UUID profileId, UUID newOwnerId);
+
+    /**
+     * Unclaim every chunk owned by a profile (e.g. for tax auto-unclaim
+     * of an offline player). Differs from a series of adminUnclaimChunk
+     * calls in that the chunks are removed in one transaction and the
+     * claim profile is deleted.
+     *
+     * @param profileId The claim profile to fully unclaim
+     * @return number of chunks that were unclaimed
+     */
+    int unclaimAll(UUID profileId);
 
     /**
      * Add bonus claim blocks to a player.

@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.ayosynk.landClaimPlugin.managers.PermissionResolver;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -94,6 +95,16 @@ public class LandClaimAPIImpl implements LandClaimAPI {
     @Override
     public ClaimProfile getClaimByName(String name) {
         return getClaimManager().getProfileByName(name);
+    }
+
+    @Override
+    public Collection<ClaimProfile> getAllClaimProfiles() {
+        return getClaimManager().getAllProfiles();
+    }
+
+    @Override
+    public ClaimProfile getClaimById(UUID profileId) {
+        return getClaimManager().getProfileById(profileId);
     }
 
     @Override
@@ -201,6 +212,16 @@ public class LandClaimAPIImpl implements LandClaimAPI {
 
         ChunkPosition pos = new ChunkPosition(location.getChunk());
         return getClaimManager().unclaimChunk(location.getChunk());
+    }
+
+    @Override
+    public boolean transferClaim(UUID profileId, UUID newOwnerId) {
+        return getClaimManager().transferClaimProfile(profileId, newOwnerId);
+    }
+
+    @Override
+    public int unclaimAll(UUID profileId) {
+        return getClaimManager().unclaimAllById(profileId);
     }
 
     @Override

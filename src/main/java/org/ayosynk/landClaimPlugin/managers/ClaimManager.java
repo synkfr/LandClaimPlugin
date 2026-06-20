@@ -111,6 +111,19 @@ public class ClaimManager {
     }
 
     /**
+     * Look up a claim profile by its unique ID. O(n) over the cache.
+     *
+     * @return the profile, or null if no claim with that ID is currently loaded
+     */
+    public ClaimProfile getProfileById(UUID profileId) {
+        if (profileId == null) return null;
+        for (ClaimProfile p : getAllProfiles()) {
+            if (profileId.equals(p.getProfileId())) return p;
+        }
+        return null;
+    }
+
+    /**
      * Get the profile that owns a specific chunk position.
      * Uses spatial index for O(1) lookup.
      */
@@ -663,6 +676,77 @@ public class ClaimManager {
         plugin.getVisualizationManager().invalidateCache(newOwnerId);
         plugin.getHookManager().refreshMapHooks();
         return true;
+    }
+
+    /**
+     * Transfer ownership of an arbitrary claim profile to a new owner.
+     *
+     * <p>Unlike {@link #transferOwnership(UUID, UUID)}, this variant does
+     * <em>not</em> require the new owner to be profile-less. The claim
+     * profile is simply re-pointed at the new owner UUID. This is the
+     * right primitive for a marketplace / auction flow where the buyer
+     * may already have their own profile.</p>
+     *
+     * <p>Behavior:</p>
+     * <ul>
+     *   <li>If the new owner already has a profile, the new claim is
+     *       <em>merged into</em> the buyer's existing profile: ownership
+     *       of the transferred profile's chunks is moved to the buyer's
+     *       existing profile, and the seller's empty profile is dropped.
+     *       This is the friendliest behavior for a marketplace because
+     *       buyers don't lose their own claim when purchasing a second
+     *       one.</li>
+     *   <li>If the new owner has no profile, the transferred profile
+     *       is simply re-keyed to them.</li>
+     * </ul>
+     *
+     * @param profileId  the claim profile ID to transfer
+     * @param newOwnerId the player who should end up owning the claim
+     * @return true on success, false if the profile doesn't exist
+     */
+    public boolean transferClaimProfile(UUID profileId, UUID newOwnerId) {
+        ClaimProfile source = getProfileById(profileId);
+        if (source == null) return false;
+        if (newOwnerId.equals(source.getOwnerId())) return true; // no-op
+
+        ClaimProfile buyerProfile = getProfile(newOwnerId);
+
+        if (buyerProfile != null) {
+            // Merge: move all of source's chunks to buyerProfile and drop source.
+            for (java.util.Iterator<ChunkPosition> it = source.getOwnedChunks().iterator(); it.hasNext(); ) {
+                ChunkPosition c = it.next();
+                source.removeChunk(c);
+                buyerProfile.addChunk(c);
+            }
+            plugin.getDatabaseManager().getProfileDao().saveProfile(buyerProfile);
+            plugin.getDatabaseManager().getProfileDao().deleteProfile(source.getOwnerId());
+        } else {
+            // Re-key: change ownerId in place, move cache entry.
+            UUID oldOwnerId = source.getOwnerId();
+            plugin.getCacheManager().getProfileCache().invalidate(oldOwnerId);
+            source.setOwnerId(newOwnerId);
+            plugin.getCacheManager().getProfileCache().put(newOwnerId, source);
+            plugin.getDatabaseManager().getProfileDao().saveProfile(source);
+        }
+
+        plugin.getVisualizationManager().invalidateCache(newOwnerId);
+        plugin.getHookManager().refreshMapHooks();
+        return true;
+    }
+
+    /**
+     * Fully unclaim every chunk in a profile by its profile ID. Used
+     * by addons (e.g. tax auto-unclaim) that need to wipe a claim
+     * without knowing the owner UUID.
+     *
+     * @return the number of chunks that were unclaimed (0 if profile not found)
+     */
+    public int unclaimAllById(UUID profileId) {
+        ClaimProfile profile = getProfileById(profileId);
+        if (profile == null) return 0;
+        int count = profile.getOwnedChunks().size();
+        abandonProfile(profile.getOwnerId());
+        return count;
     }
 
     // ========== Backward compatibility ==========

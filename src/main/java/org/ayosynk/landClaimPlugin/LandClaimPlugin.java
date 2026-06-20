@@ -256,6 +256,16 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
     }
 
     @Override
+    public java.util.Collection<ClaimProfile> getAllClaimProfiles() {
+        return apiDelegate.getAllClaimProfiles();
+    }
+
+    @Override
+    public ClaimProfile getClaimById(java.util.UUID profileId) {
+        return apiDelegate.getClaimById(profileId);
+    }
+
+    @Override
     public int getTotalChunksByOwner(java.util.UUID playerId) {
         return apiDelegate.getTotalChunksByOwner(playerId);
     }
@@ -323,6 +333,16 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
     @Override
     public boolean adminUnclaimChunk(org.bukkit.entity.Player player, org.bukkit.Location location) {
         return apiDelegate.adminUnclaimChunk(player, location);
+    }
+
+    @Override
+    public boolean transferClaim(java.util.UUID profileId, java.util.UUID newOwnerId) {
+        return apiDelegate.transferClaim(profileId, newOwnerId);
+    }
+
+    @Override
+    public int unclaimAll(java.util.UUID profileId) {
+        return apiDelegate.unclaimAll(profileId);
     }
 
     @Override
