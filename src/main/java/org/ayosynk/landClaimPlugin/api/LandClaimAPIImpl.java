@@ -215,13 +215,31 @@ public class LandClaimAPIImpl implements LandClaimAPI {
     }
 
     @Override
-    public boolean transferClaim(UUID profileId, UUID newOwnerId) {
+    public boolean transferClaim(org.bukkit.entity.Player actor, UUID profileId, UUID newOwnerId) {
+        if (!isAuthorizedForTransfer(actor, newOwnerId)) return false;
         return getClaimManager().transferClaimProfile(profileId, newOwnerId);
     }
 
     @Override
-    public int unclaimAll(UUID profileId) {
+    public int unclaimAll(org.bukkit.entity.Player actor, UUID profileId) {
+        // A null actor signals a system-initiated call (e.g. tax
+        // auto-unclaim) and bypasses the permission check. A non-null
+        // actor must hold landclaim.admin.
+        if (actor != null && !actor.hasPermission("landclaim.admin")) return 0;
         return getClaimManager().unclaimAllById(profileId);
+    }
+
+    /**
+     * Authorize a transfer. The actor must be the new owner (self-transfer,
+     * used by marketplace/auction) OR have landclaim.admin (used by
+     * server staff). A null actor signals a system call and is rejected
+     * here — programmatic transfers should go through the ClaimManager
+     * helper directly. Returns false to abort if neither holds.
+     */
+    private static boolean isAuthorizedForTransfer(org.bukkit.entity.Player actor, UUID newOwnerId) {
+        if (actor == null) return false;
+        if (actor.getUniqueId().equals(newOwnerId)) return true;
+        return actor.hasPermission("landclaim.admin");
     }
 
     @Override

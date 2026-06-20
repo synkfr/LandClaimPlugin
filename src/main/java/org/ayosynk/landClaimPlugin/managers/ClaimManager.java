@@ -713,11 +713,18 @@ public class ClaimManager {
 
         if (buyerProfile != null) {
             // Merge: move all of source's chunks to buyerProfile and drop source.
-            for (java.util.Iterator<ChunkPosition> it = source.getOwnedChunks().iterator(); it.hasNext(); ) {
-                ChunkPosition c = it.next();
+            for (ChunkPosition c : new java.util.ArrayList<>(source.getOwnedChunks())) {
                 source.removeChunk(c);
                 buyerProfile.addChunk(c);
+                // Update the spatial index so getProfileAt() returns the
+                // buyer profile for these chunks, not the orphaned source.
+                chunkToProfileMap.put(c, buyerProfile);
             }
+            // Drop the now-empty source profile from the profile cache
+            // (it's keyed by owner UUID).
+            plugin.getCacheManager().getProfileCache().invalidate(source.getOwnerId());
+            // Refresh the buyer entry so subsequent lookups see the new chunks.
+            plugin.getCacheManager().getProfileCache().put(buyerProfile.getOwnerId(), buyerProfile);
             plugin.getDatabaseManager().getProfileDao().saveProfile(buyerProfile);
             plugin.getDatabaseManager().getProfileDao().deleteProfile(source.getOwnerId());
         } else {

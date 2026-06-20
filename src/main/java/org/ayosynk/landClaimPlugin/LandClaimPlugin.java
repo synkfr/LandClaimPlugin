@@ -336,13 +336,13 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
     }
 
     @Override
-    public boolean transferClaim(java.util.UUID profileId, java.util.UUID newOwnerId) {
-        return apiDelegate.transferClaim(profileId, newOwnerId);
+    public boolean transferClaim(org.bukkit.entity.Player actor, java.util.UUID profileId, java.util.UUID newOwnerId) {
+        return apiDelegate.transferClaim(actor, profileId, newOwnerId);
     }
 
     @Override
-    public int unclaimAll(java.util.UUID profileId) {
-        return apiDelegate.unclaimAll(profileId);
+    public int unclaimAll(org.bukkit.entity.Player actor, java.util.UUID profileId) {
+        return apiDelegate.unclaimAll(actor, profileId);
     }
 
     @Override

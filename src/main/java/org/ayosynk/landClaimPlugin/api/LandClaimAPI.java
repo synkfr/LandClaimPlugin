@@ -269,11 +269,18 @@ public interface LandClaimAPI {
      * role/trust entries, which are preserved). Intended for admin
      * commands and addons like a marketplace that need to finalize a sale.
      *
+     * <p>The {@code actor} parameter is required so the API can enforce
+     * a permission check. The actor must either have the
+     * {@code landclaim.admin} permission OR be the {@code newOwnerId}
+     * — the second case lets a buyer transfer a claim to themselves in a
+     * marketplace flow without requiring admin rights.</p>
+     *
+     * @param actor The player initiating the transfer; used for permission check
      * @param profileId The claim profile's UUID
      * @param newOwnerId The UUID of the player who will own the claim
-     * @return true if the transfer succeeded, false if the claim doesn't exist
+     * @return true if the transfer succeeded, false if the claim doesn't exist or the actor is not authorized
      */
-    boolean transferClaim(UUID profileId, UUID newOwnerId);
+    boolean transferClaim(Player actor, UUID profileId, UUID newOwnerId);
 
     /**
      * Unclaim every chunk owned by a profile (e.g. for tax auto-unclaim
@@ -281,10 +288,15 @@ public interface LandClaimAPI {
      * calls in that the chunks are removed in one transaction and the
      * claim profile is deleted.
      *
+     * <p>Requires the {@code actor} to have {@code landclaim.admin}.
+     * For programmatic tax auto-unclaim, pass
+     * {@code Bukkit.getConsoleSender()} (the console has all permissions).</p>
+     *
+     * @param actor The player initiating the unclaim; used for permission check
      * @param profileId The claim profile to fully unclaim
-     * @return number of chunks that were unclaimed
+     * @return number of chunks that were unclaimed (0 if profile not found or actor lacks permission)
      */
-    int unclaimAll(UUID profileId);
+    int unclaimAll(Player actor, UUID profileId);
 
     /**
      * Add bonus claim blocks to a player.
