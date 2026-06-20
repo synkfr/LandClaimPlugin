@@ -125,16 +125,36 @@ The `squaremap` and `Pl3xMap` hooks both wait for the corresponding plugin's `Pl
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `wildernessProtection.enabled` | Boolean | `false` | When `true`, players cannot break, place, ignite, use buckets, modify signs, open containers, use doors, ride vehicles, or harm/interact with entities in unclaimed chunks. Designed for "clan-only" or "town" servers where building/breaking is restricted to claimed land. Admins (`landclaim.admin`) always bypass. |
-| `wildernessProtection.exceptionWorlds` | List | `[]` | Worlds where wilderness protection does not apply. Use the plain Bukkit world name (e.g. `world`, `world_nether`). Useful for exempting a creative build world. |
+| `wildernessProtection.enabled` | Boolean | `false` | When `true`, the flags in `deniedFlags` are denied in unclaimed chunks. Admins (`landclaim.admin`) always bypass. |
+| `wildernessProtection.exceptionWorlds` | List | `[]` | Worlds where wilderness protection does not apply. Use the plain Bukkit world name (e.g. `world`, `world_nether`). |
+| `wildernessProtection.deniedFlags` | List | build / interaction flags only (see below) | The permission flags denied in the wilderness. The default list contains only build / interaction flags — combat flags (DAMAGE_ANIMALS, DAMAGE_MONSTERS, BREED_ANIMALS, SHEAR_ENTITIES, TRADE_VILLAGERS, FEED_ANIMALS, LEASH_ENTITIES) and PvP are NOT denied by default, so players can still hunt and fight mobs in the wilderness. Add a flag to the list to deny it; remove to allow it. Matching is case-insensitive. |
+
+**Default `deniedFlags` list** (build / interaction only):
+
+```
+BLOCK_BREAK, BLOCK_PLACE, BLOCK_IGNITE, USE_BUCKETS, USE_FERTILIZER, MODIFY_SIGNS,
+USE_DOORS, USE_TRAPDOORS, USE_FENCE_GATES, USE_CONTAINERS, USE_WORKSTATIONS,
+USE_BEDS, USE_REDSTONE, USE_LECTERNS, USE_BELLS, TRAMPLE_CROPS,
+MODIFY_ARMOR_STANDS, MODIFY_ITEM_FRAMES
+```
 
 ::: tip Use case
-Enable wilderness protection on a towny-style survival server where the only safe place to build is inside a clan claim. Players can still walk, chat, and fight in the wilderness, but cannot modify the world until they find a claim or get admin help.
+Enable wilderness protection on a towny-style survival server where the only safe place to build is inside a clan claim. Players can still walk, chat, hunt mobs, drop items, throw ender pearls, and fight in the wilderness, but cannot break or place blocks until they find a claim or get admin help.
 :::
 
-::: warning PvP / explosions
-Wilderness protection does not affect PvP (`PvpProtectionListener`) or explosion damage (`ExplosionProtectionListener`) — those listeners have their own logic. To make wilderness fully off-limits, combine this with a `blockWorld` entry for the world, or use another plugin to disable PvP/mob spawning.
+::: warning Combat flags and PvP
+By default, combat flags (`DAMAGE_ANIMALS`, `DAMAGE_MONSTERS`, `BREED_ANIMALS`, etc.) and PvP are NOT in `deniedFlags`, so players retain the ability to hunt and fight in the wilderness. If you want to lock those down too, add them to the list (e.g. `deniedFlags: [..., DAMAGE_ANIMALS, DAMAGE_MONSTERS, PVP]`).
 :::
+
+::: warning Explosions
+Wilderness protection does not affect explosion damage (`ExplosionProtectionListener`) — that listener has its own logic. To make wilderness fully off-limits, combine this with a `blockWorld` entry for the world, or use another plugin to disable mob spawning / explosions.
+:::
+
+### PvP
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `pvp.forceEnabled` | Boolean | `false` | When `true`, `PvpProtectionListener` always allows PvP regardless of the per-claim `pvpEnabled` flag, and `/claim pvp` refuses to toggle (sends `pvp-force-locked`). Designed for PvP-focused servers that want every claim to have PvP on with no opt-out. |
 
 ---
 

@@ -67,13 +67,21 @@ A: The VisualizationManager automatically switches Bedrock players to particle-b
 ## Wilderness Protection
 
 **Q: How do I make it so players can only build inside their claims? I want a towny / clan-style server.**
-A: Set `wildernessProtection.enabled: true` in `config.yml`. When enabled, every block/entity interaction flag is denied in unclaimed chunks. Players can still walk, chat, fight, and use items, but cannot break, place, ignite, use buckets, modify signs, open containers, use doors, ride vehicles, or harm/interact with entities outside of any claim. Admins (`landclaim.admin`) always bypass.
+A: Set `wildernessProtection.enabled: true` in `config.yml`. When enabled, the flags listed in `wildernessProtection.deniedFlags` are denied in unclaimed chunks. The **default** denied list contains only build / interaction flags (BLOCK_BREAK, BLOCK_PLACE, USE_CONTAINERS, USE_DOORS, etc.). Combat flags (DAMAGE_ANIMALS, DAMAGE_MONSTERS, BREED_ANIMALS, SHEAR_ENTITIES, TRADE_VILLAGERS, FEED_ANIMALS, LEASH_ENTITIES) and PvP are NOT in the default list — players can still hunt and fight mobs in the wilderness. Admins (`landclaim.admin`) always bypass.
 
 You can exempt specific worlds (e.g. a creative build world) by adding them to `wildernessProtection.exceptionWorlds`. The list takes plain Bukkit world names, not the namespaced key — so `world` and `world_nether`, not `minecraft:overworld`.
 
+**Q: I enabled wilderness protection and now players can't even attack animals. How do I let them hunt mobs?**
+A: The default `deniedFlags` list deliberately excludes combat flags. If you're seeing a build where animals can't be hit, either you're on an older build (pre-2.5.0) or your config has been customized. Check the `deniedFlags` list — remove `DAMAGE_ANIMALS`, `DAMAGE_MONSTERS`, `BREED_ANIMALS`, `SHEAR_ENTITIES`, `TRADE_VILLAGERS`, `FEED_ANIMALS`, and `LEASH_ENTITIES` to restore the default mob-hunting behavior.
+
 **Q: Does wilderness protection affect PvP?**
-A: No. The `PvpProtectionListener` has its own logic (claim-by-claim PvP toggle via `/claim pvp`) and wilderness protection does not change it. To disable PvP in the wilderness, use a separate anti-PvP plugin or set up a spawn-protection area via a `blockWorld` entry.
+A: By default, no — `PVP` is NOT in the default `deniedFlags` list, so players can fight in the wilderness. The `PvpProtectionListener` has its own logic (claim-by-claim PvP toggle via `/claim pvp`) and is independent of wilderness protection. To force PvP off in the wilderness, add `PVP` to `deniedFlags`. To force PvP on in every claim regardless of the per-claim toggle, set `pvp.forceEnabled: true`.
 
 **Q: Can I let specific non-admin players bypass wilderness protection?**
 A: Not in the current implementation — only `landclaim.admin` bypasses. If you need a finer-grained bypass (e.g. give builders the right to terraform the wilderness), grant them `landclaim.admin` and rely on a separate permission plugin to scope what they can do with that power.
+
+## PvP
+
+**Q: How do I make it so PvP is always on and claim owners can't disable it?**
+A: Set `pvp.forceEnabled: true` in `config.yml`. This makes `PvpProtectionListener` always allow PvP regardless of the per-claim `pvpEnabled` flag, and `/claim pvp` refuses to toggle (sends the `pvp-force-locked` message). Note that this is a server-wide lock — there's no per-claim or per-player granularity. The per-claim `pvpEnabled` flag and its on-disk state are left untouched; only the listener's decision changes, so toggling the config back to `false` restores normal per-claim behavior immediately.
 
