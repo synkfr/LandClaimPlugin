@@ -113,6 +113,34 @@ Bedrock players get a tailored UI when Geyser 2.x is installed. No hard Geyser d
 
 ---
 
+## 🧩 Addons
+
+The plugin's public API (`LandClaimAPI`) and event bus (`ClaimCreateEvent`,
+`ClaimDeleteEvent`, `PlayerEnterClaimEvent`, `PlayerLeaveClaimEvent`) let
+you build standalone addons in a sibling Maven project. Soft-depend on
+LandClaimPlugin so the addon only loads when the parent is present.
+
+### Official Addons
+
+| Addon | Description | Repository |
+|---|---|---|
+| **LandClaimPlugin-Economy** | Charge for claiming, warps, and member invites; per-chunk daily tax with auto-unclaim; server-wide claim marketplace + time-limited auctions with a GUI browser. Vault-based. | [synkfr/LandClaimPlugin-Economy](https://github.com/synkfr/LandClaimPlugin-Economy) |
+
+### Building Your Own
+
+The API exposes:
+- `getClaimAt(...)`, `getClaimsByOwner(UUID)`, `getClaimByName(String)`, `getClaimById(UUID)`
+- `getAllClaimProfiles()` — every loaded claim, for global iteration (tax, leaderboards, etc.)
+- `transferClaim(Player actor, UUID profileId, UUID newOwnerId)` and `unclaimAll(Player actor, UUID profileId)` — programmatic ownership / claim management (the actor is either the new owner or has `landclaim.admin`)
+- `addBonusBlocks(UUID, int)` and `getBonusBlocks(UUID)` — for paid-claim-block plugins
+- `isInCombat(Player)` — hook for combat-taggers
+- The full claim profile model — `getOwnedChunks()`, `getRoles()`, `getTrustedPlayerFlags()`, etc.
+
+For addons that want to act on claim lifecycle, listen for
+`org.ayosynk.landClaimPlugin.api.event.*` events.
+
+---
+
 ## 📥 Installation
 
 1. Download the latest release and drop `LandClaimPlugin.jar` into your `plugins/` folder.
