@@ -267,13 +267,20 @@ public interface LandClaimAPI {
      * the current claim profile are reassigned to the new owner and the
      * persistent state is updated. The old owner loses access (except via
      * role/trust entries, which are preserved). Intended for admin
-     * commands and addons like a marketplace that need to finalize a sale.
+     * commands.
      *
      * <p>The {@code actor} parameter is required so the API can enforce
-     * a permission check. The actor must either have the
-     * {@code landclaim.admin} permission OR be the {@code newOwnerId}
-     * — the second case lets a buyer transfer a claim to themselves in a
-     * marketplace flow without requiring admin rights.</p>
+     * a permission check. The actor is authorized if either:</p>
+     * <ul>
+     *   <li>The actor has the {@code landclaim.admin} permission.</li>
+     *   <li>The actor is the <em>current owner</em> of the claim being
+     *       transferred.</li>
+     * </ul>
+     *
+     * <p>A non-owner actor (e.g. a buyer in a future marketplace flow)
+     * cannot invoke this method directly. Such flows should call
+     * {@link org.ayosynk.landClaimPlugin.managers.ClaimManager#transferClaimProfile}
+     * after performing their own server-side validation.</p>
      *
      * @param actor The player initiating the transfer; used for permission check
      * @param profileId The claim profile's UUID
