@@ -722,11 +722,16 @@ public class ClaimManager {
             }
             // Drop the now-empty source profile from the profile cache
             // (it's keyed by owner UUID).
-            plugin.getCacheManager().getProfileCache().invalidate(source.getOwnerId());
+            UUID sourceOwner = source.getOwnerId();
+            plugin.getCacheManager().getProfileCache().invalidate(sourceOwner);
             // Refresh the buyer entry so subsequent lookups see the new chunks.
             plugin.getCacheManager().getProfileCache().put(buyerProfile.getOwnerId(), buyerProfile);
             plugin.getDatabaseManager().getProfileDao().saveProfile(buyerProfile);
-            plugin.getDatabaseManager().getProfileDao().deleteProfile(source.getOwnerId());
+            plugin.getDatabaseManager().getProfileDao().deleteProfile(sourceOwner);
+            // Cross-server: invalidate both profiles on remote nodes so a
+            // /claimmarket sale on node A is visible immediately on node B.
+            publishInvalidate(sourceOwner);
+            publishInvalidate(buyerProfile.getOwnerId());
         } else {
             // Re-key: change ownerId in place, move cache entry.
             UUID oldOwnerId = source.getOwnerId();
@@ -734,11 +739,20 @@ public class ClaimManager {
             source.setOwnerId(newOwnerId);
             plugin.getCacheManager().getProfileCache().put(newOwnerId, source);
             plugin.getDatabaseManager().getProfileDao().saveProfile(source);
+            // Cross-server: invalidate on both old and new owner IDs.
+            publishInvalidate(oldOwnerId);
+            publishInvalidate(newOwnerId);
         }
 
         plugin.getVisualizationManager().invalidateCache(newOwnerId);
         plugin.getHookManager().refreshMapHooks();
         return true;
+    }
+
+    private void publishInvalidate(UUID ownerId) {
+        if (plugin.getRedisManager() != null && ownerId != null) {
+            plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE", ownerId);
+        }
     }
 
     /**
