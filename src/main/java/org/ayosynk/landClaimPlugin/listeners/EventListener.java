@@ -77,6 +77,18 @@ public class EventListener implements Listener {
 
             // Handle entry/leave titles if transitioning between different claims or wilderness
             if (oldProfile != newProfile) {
+                // Fire PlayerLeaveClaimEvent if leaving a claim
+                if (oldProfile != null) {
+                    org.ayosynk.landClaimPlugin.api.event.PlayerLeaveClaimEvent leaveEvent = new org.ayosynk.landClaimPlugin.api.event.PlayerLeaveClaimEvent(player, oldProfile, currentPos, newProfile);
+                    Bukkit.getPluginManager().callEvent(leaveEvent);
+                }
+
+                // Fire PlayerEnterClaimEvent if entering a claim
+                if (newProfile != null) {
+                    org.ayosynk.landClaimPlugin.api.event.PlayerEnterClaimEvent enterEvent = new org.ayosynk.landClaimPlugin.api.event.PlayerEnterClaimEvent(player, newProfile, currentPos, oldProfile);
+                    Bukkit.getPluginManager().callEvent(enterEvent);
+                }
+
                 net.kyori.adventure.title.Title.Times times = net.kyori.adventure.title.Title.Times.times(
                         java.time.Duration.ofMillis(500),
                         java.time.Duration.ofMillis(1000),

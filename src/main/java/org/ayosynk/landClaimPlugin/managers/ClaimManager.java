@@ -448,6 +448,12 @@ public class ClaimManager {
             }
         }
 
+        org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent createEvent = new org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent(targetProfile, pos, playerId);
+        Bukkit.getPluginManager().callEvent(createEvent);
+        if (createEvent.isCancelled()) {
+            return false;
+        }
+
         targetProfile.addChunk(pos);
         addToSpatialIndex(pos, targetProfile);
 
@@ -558,6 +564,16 @@ public class ClaimManager {
             }
         }
 
+        // Fire events and check cancellations
+        for (ChunkPosition pos : chunksToClaim) {
+            org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent createEvent = new org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent(profile, pos, playerId);
+            Bukkit.getPluginManager().callEvent(createEvent);
+            if (createEvent.isCancelled()) {
+                player.sendMessage(configManager.getMessage("claim-failed"));
+                return 0;
+            }
+        }
+
         for (ChunkPosition pos : chunksToClaim) {
             profile.addChunk(pos);
             addToSpatialIndex(pos, profile);
@@ -588,6 +604,10 @@ public class ClaimManager {
         plugin.getCacheManager().getProfileCache().put(owner, profile);
         saveAndSync(profile);
 
+        // Fire ClaimDeleteEvent
+        org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent deleteEvent = new org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent(profile, pos, null, org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent.DeleteReason.PLAYER_ABANDON);
+        Bukkit.getPluginManager().callEvent(deleteEvent);
+
         plugin.getVisualizationManager().invalidateCache(owner);
         plugin.getHookManager().refreshMapHooks();
         return true;
@@ -604,7 +624,8 @@ public class ClaimManager {
         int count = profile.getOwnedChunks().size();
 
         // Remove all chunks from spatial index
-        for (ChunkPosition chunk : profile.getOwnedChunks()) {
+        java.util.List<ChunkPosition> chunks = new java.util.ArrayList<>(profile.getOwnedChunks());
+        for (ChunkPosition chunk : chunks) {
             removeFromSpatialIndex(chunk);
         }
 
@@ -616,6 +637,10 @@ public class ClaimManager {
             .thenRun(() -> {
                 if (plugin.getRedisManager() != null) {
                     plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE", playerId);
+                }
+                for (ChunkPosition chunk : chunks) {
+                    org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent deleteEvent = new org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent(profile, chunk, playerId, org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent.DeleteReason.PLAYER_ABANDON);
+                    Bukkit.getPluginManager().callEvent(deleteEvent);
                 }
             })
             .exceptionally(throwable -> {

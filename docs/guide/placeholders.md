@@ -71,3 +71,26 @@ These return data about the player's own profile and limits.
 All internal placeholders support both bracket styles interchangeably in configuration files:
 *   `<owner>` is the same as `{owner}`
 *   `<limit>` is the same as `{limit}`
+
+---
+
+## 3. Claim Limits, Slots and Economy (Global)
+
+These placeholders return data about claim limits, custom roles, members, warps, and the cost of buying additional slots.
+
+**Identifier:** `claimplugin`
+
+| Placeholder | Description |
+| :--- | :--- |
+| `%claimplugin_claims_current%` | Number of chunks claimed by the player |
+| `%claimplugin_claims_max%` | Maximum chunk limit for the player |
+| `%claimplugin_cost_next_claim%` | Cost of the next chunk |
+| `%claimplugin_roles_current%` | Number of custom roles in active profile |
+| `%claimplugin_roles_max%` | Maximum custom roles limit for active profile |
+| `%claimplugin_cost_next_role_slot%` | Cost to buy an additional custom role slot |
+| `%claimplugin_members_current%` | Number of members in active profile |
+| `%claimplugin_members_max%` | Maximum members limit for active profile |
+| `%claimplugin_cost_next_member_slot%` | Cost to buy an additional member slot |
+| `%claimplugin_warps_current%` | Number of warps in active profile |
+| `%claimplugin_warps_max%` | Maximum warps limit for active profile |
+| `%claimplugin_cost_next_warp_slot%` | Cost to buy an additional warp slot |

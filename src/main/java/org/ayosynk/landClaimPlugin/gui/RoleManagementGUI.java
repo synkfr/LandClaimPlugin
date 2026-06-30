@@ -181,6 +181,7 @@ public class RoleManagementGUI {
                                                                 }
                                                         }
                                                 }
+                                                maxRoles += profile.getBonusRoleSlots();
 
                                                 if (profile.getRoles().size() >= maxRoles && !profile.getProfileId().equals(ClaimProfile.ADMIN_PROFILE_ID)) {
                                                         p.sendMessage(GuiHelper.MM.deserialize(

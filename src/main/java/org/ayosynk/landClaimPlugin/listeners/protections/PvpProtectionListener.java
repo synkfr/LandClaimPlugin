@@ -50,6 +50,12 @@ public class PvpProtectionListener implements Listener {
             }
             return false;
         }
+        // Check wilderness protection for PvP!
+        org.bukkit.World world = org.bukkit.Bukkit.getWorld(pos.world());
+        if (world != null && (org.ayosynk.landClaimPlugin.managers.WildernessProtection.isDenied(world, null, "PVP")
+                || org.ayosynk.landClaimPlugin.managers.WildernessProtection.isDenied(world, null, "DAMAGE_PLAYERS"))) {
+            return false;
+        }
         return true; // PvP is allowed in wilderness
     }
 

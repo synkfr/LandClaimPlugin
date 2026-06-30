@@ -40,7 +40,8 @@ public class HookManager {
         FoliaScheduler.runTask(plugin, () -> {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                 new org.ayosynk.landClaimPlugin.hooks.papi.LandClaimExpansion(plugin).register();
-                plugin.getLogger().info("PlaceholderAPI detected. Expansion registered.");
+                new org.ayosynk.landClaimPlugin.hooks.papi.ClaimPluginExpansion(plugin).register();
+                plugin.getLogger().info("PlaceholderAPI detected. Expansions registered.");
             }
             if (configManager.getPluginConfig().bluemap.enabled
                     && Bukkit.getPluginManager().getPlugin("BlueMap") != null) {

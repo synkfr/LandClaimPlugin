@@ -119,7 +119,9 @@ public class CommandHandler {
                 new AllyCommand(plugin, claimManager, configManager),
                 new AbandonCommand(plugin, claimManager, configManager),
                 new BanCommand(plugin, claimManager, configManager),
-                new UnstuckCommand(plugin, claimManager, configManager));
+                new UnstuckCommand(plugin, claimManager, configManager),
+                new BuyCommand(plugin, claimManager, configManager),
+                new SellCommand(plugin, claimManager, configManager));
 
         // Register all commands via the shared /claim builder
         Command.Builder<PlayerSource> claimBuilder = commandManager.commandBuilder("claim", "c")

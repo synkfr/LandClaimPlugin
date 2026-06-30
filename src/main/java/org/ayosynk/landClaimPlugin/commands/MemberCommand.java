@@ -102,6 +102,13 @@ public class MemberCommand implements LandClaimCommand {
                         return;
                     }
 
+                    int maxMembers = configManager.getPluginConfig().maxClaimMembers + profile.getBonusMemberSlots();
+                    if (profile.getMemberRoles().size() >= maxMembers && !player.hasPermission("landclaim.admin")) {
+                        player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                            .deserialize("<red>You have reached your maximum member limit (" + maxMembers + " members). Upgrade your claim limit to invite more."));
+                        return;
+                    }
+
                     claimManager.sendMemberInvite(player, target, profile);
                 }));
 

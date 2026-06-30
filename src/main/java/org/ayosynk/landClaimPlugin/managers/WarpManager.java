@@ -136,11 +136,18 @@ public class WarpManager {
     public int getWarpLimit(Player player) {
         if (player.hasPermission("landclaim.admin"))
             return Integer.MAX_VALUE;
+        int limit = configManager.getPluginConfig().maxWarps;
         for (int i = 100; i > 0; i--) {
-            if (player.hasPermission("landclaim.warps.limit." + i))
-                return i;
+            if (player.hasPermission("landclaim.warps.limit." + i)) {
+                limit = i;
+                break;
+            }
         }
-        return configManager.getPluginConfig().maxWarps;
+        org.ayosynk.landClaimPlugin.models.ClaimProfile profile = plugin.getClaimManager().getActiveProfile(player);
+        if (profile != null) {
+            limit += profile.getBonusWarpSlots();
+        }
+        return limit;
     }
 
     public int getWarpCount(UUID ownerId) {

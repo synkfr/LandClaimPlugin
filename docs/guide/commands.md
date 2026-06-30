@@ -21,6 +21,11 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
 | `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires `/claim unclaimall confirm`) |
 | `/claim pvp <on/off> [time]` | Toggle PvP in the claim, with optional duration in seconds |
+| `/claim buy claim [amount]` | Buy extra claim blocks |
+| `/claim buy role` | Buy an additional custom role slot for your active profile |
+| `/claim buy member` | Buy an additional member slot for your active profile |
+| `/claim buy warp` | Buy an additional warp slot for your active profile |
+| `/claim sell <profile> <price>` | List a claim profile on the server-wide marketplace |
 | `/unclaim` | Unclaim the chunk you're standing in |
 | `/unclaim all` | Unclaim all chunks belonging to your active profile |
 

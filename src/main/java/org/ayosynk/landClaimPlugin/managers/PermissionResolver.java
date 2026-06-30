@@ -38,7 +38,9 @@ public class PermissionResolver {
         String roleName = profile.getMemberRole(playerId);
         if (roleName != null) {
             Role role = profile.getRoleByName(roleName);
-            return role != null && role.hasFlag(flag);
+            if (role != null && role.hasFlag(flag)) {
+                return true;
+            }
         }
 
         // 3. Check if player is trusted (per-player override)

@@ -143,6 +143,9 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Maximum number of claims a player is allowed to join as a trusted member (default: 1).")
     public int maxMemberships = 1;
 
+    @Comment("Default maximum members allowed per claim profile.")
+    public int maxClaimMembers = 5;
+
     @Comment("Database connection and backend settings (Supported backends: SQLITE, MYSQL, MARIADB).")
     public DatabaseConfig database = new DatabaseConfig();
 

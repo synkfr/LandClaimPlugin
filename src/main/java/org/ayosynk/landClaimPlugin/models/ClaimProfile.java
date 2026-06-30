@@ -42,10 +42,16 @@ public class ClaimProfile {
     private boolean pvpEnabled = false;
     private long pvpTimerEnd = 0L;
 
+    // Bonus slots from purchasing
+    private int bonusRoleSlots = 0;
+    private int bonusMemberSlots = 0;
+    private int bonusWarpSlots = 0;
+
     public ClaimProfile(UUID profileId, UUID realOwnerId, String name) {
         this.profileId = profileId;
         this.realOwnerId = realOwnerId;
         this.name = name;
+        this.visitorFlags.add("DAMAGE_MONSTERS");
         setupDefaultRoles();
     }
 
@@ -54,6 +60,7 @@ public class ClaimProfile {
         this.profileId = ownerId;
         this.realOwnerId = ownerId;
         this.name = name;
+        this.visitorFlags.add("DAMAGE_MONSTERS");
         setupDefaultRoles();
     }
 
@@ -67,6 +74,8 @@ public class ClaimProfile {
         memberRole.addFlag("USE_WORKSTATIONS");
         memberRole.addFlag("USE_BEDS");
         memberRole.addFlag("USE_REDSTONE");
+        memberRole.addFlag("DAMAGE_MONSTERS");
+        memberRole.addFlag("DAMAGE_ANIMALS");
         this.roles.put(memberRole.getName().toLowerCase(), memberRole);
 
         // Default CoOwner Role (All Permissions)
@@ -432,5 +441,30 @@ public class ClaimProfile {
 
     public void setLeaveTitleMode(String leaveTitleMode) {
         this.leaveTitleMode = leaveTitleMode;
+    }
+
+    // Getters and setters for bonus slots
+    public int getBonusRoleSlots() {
+        return bonusRoleSlots;
+    }
+
+    public void setBonusRoleSlots(int bonusRoleSlots) {
+        this.bonusRoleSlots = bonusRoleSlots;
+    }
+
+    public int getBonusMemberSlots() {
+        return bonusMemberSlots;
+    }
+
+    public void setBonusMemberSlots(int bonusMemberSlots) {
+        this.bonusMemberSlots = bonusMemberSlots;
+    }
+
+    public int getBonusWarpSlots() {
+        return bonusWarpSlots;
+    }
+
+    public void setBonusWarpSlots(int bonusWarpSlots) {
+        this.bonusWarpSlots = bonusWarpSlots;
     }
 }
