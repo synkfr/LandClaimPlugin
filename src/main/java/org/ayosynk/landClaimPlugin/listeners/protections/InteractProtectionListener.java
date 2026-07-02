@@ -66,6 +66,13 @@ public class InteractProtectionListener implements Listener {
             }
         }
 
+        if (event.getAction().isRightClick()) {
+            if(block != null && block.getType() == org.bukkit.Material.CAKE) {
+                checkPermission(event.getPlayer(), block, event, "BLOCK_BREAK");
+                return;
+            }
+        }
+
         if (block == null)
             return;
 
