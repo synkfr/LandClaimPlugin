@@ -8,7 +8,8 @@
 A powerful, feature-rich chunk-based land protection plugin for Paper servers. Create claim profiles, protect your builds, manage members with granular roles, form alliances, set warps, and customize every aspect of your territory.
 
 [![Paper](https://img.shields.io/badge/Paper-1.21+-blue?style=flat-square)](https://papermc.io/)
-[![Java](https://img.shields.io/badge/Java-21+-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Java](https://img.shields.io/badge/Java-25+-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Modrinth](https://img.shields.io/badge/Modrinth-LandClaimPlugin-00AF5C?style=flat-square&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/landclaimplugin)
 [![Version](https://img.shields.io/github/v/release/synkfr/LandClaimPlugin?style=flat-square&color=40ae24&label=Version)](https://github.com/synkfr/LandClaimPlugin/releases)
 [![License](https://img.shields.io/github/license/synkfr/LandClaimPlugin?style=flat-square&color=blue)](LICENSE)
 [![Discord](https://img.shields.io/discord/1378591879393710110?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/pAPPvSmWRK)

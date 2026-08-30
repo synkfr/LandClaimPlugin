@@ -264,8 +264,8 @@ public class PluginConfig extends OkaeriConfig {
         @Comment("Enable or disable checking for new plugin versions.")
         public boolean enabled = true;
 
-        @Comment("The project ID or slug on Modrinth to check for updates.")
-        public String modrinthProjectId = "landclaimplugin";
+        @Comment("The project ID (PAlDTriF) or slug (landclaimplugin) on Modrinth to check for updates.")
+        public String modrinthProjectId = "PAlDTriF";
 
         @Comment("Permission required to receive update notifications on join (or OP).")
         public String notifyPermission = "landclaim.admin";

@@ -118,7 +118,7 @@ Supported maps: `dynmap`, `bluemap`, `squaremap`, `pl3xmap`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `updateChecker.enabled` | Boolean | `true` | Enable or disable checking for new plugin versions on Modrinth |
-| `updateChecker.modrinthProjectId` | String | `landclaimplugin` | The project ID or slug on Modrinth to query |
+| `updateChecker.modrinthProjectId` | String | `PAlDTriF` | The project ID (`PAlDTriF`) or slug (`landclaimplugin`) on Modrinth to query |
 | `updateChecker.notifyPermission` | String | `landclaim.admin` | Permission required to receive join notifications (or OP) |
 
 ### Bedrock / Geyser Support

@@ -66,7 +66,7 @@ public class UpdateManager {
                             if (isNewerVersion(currentVersion, remoteVersion)) {
                                 this.updateAvailable = true;
                                 this.latestVersion = remoteVersion;
-                                this.updateUrl = "https://modrinth.com/plugin/" + projectId + "/version/" + (versionId.isEmpty() ? remoteVersion : versionId);
+                                this.updateUrl = "https://modrinth.com/plugin/landclaimplugin/version/" + (versionId.isEmpty() ? remoteVersion : versionId);
                                 plugin.getLogger().info("A new version of LandClaimPlugin is available on Modrinth: " + remoteVersion + " (Current: " + currentVersion + ")");
                             }
                         }
@@ -86,7 +86,7 @@ public class UpdateManager {
         String permission = plugin.getConfigManager().getPluginConfig().updateChecker.notifyPermission;
         if (player.isOp() || (permission != null && !permission.isEmpty() && player.hasPermission(permission))) {
             String currentVersion = plugin.getPluginMeta().getVersion();
-            String targetUrl = updateUrl != null ? updateUrl : ("https://modrinth.com/plugin/" + plugin.getConfigManager().getPluginConfig().updateChecker.modrinthProjectId);
+            String targetUrl = updateUrl != null ? updateUrl : "https://modrinth.com/plugin/landclaimplugin";
 
             Component notification = MiniMessage.miniMessage().deserialize(
                     "<gold><bold>[LandClaim]</bold></gold> <yellow>A new version is available on Modrinth!</yellow>\n" +
