@@ -179,6 +179,9 @@ public class EventListener implements Listener {
     }
 
     private void sendActionBar(Player player, String message) {
+        if (!configManager.isActionBarEnabled()) {
+            return;
+        }
         player.sendActionBar(MiniMessage.miniMessage().deserialize(message));
     }
 

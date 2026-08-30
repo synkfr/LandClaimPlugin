@@ -25,6 +25,14 @@ public class PlayerJoinListener implements Listener {
                 .thenAccept(claimPlayer -> {
                     plugin.getCacheManager().getPlayerCache().put(event.getPlayer().getUniqueId(), claimPlayer);
                 });
+
+        if (plugin.getUpdateManager() != null) {
+            org.ayosynk.landClaimPlugin.util.FoliaScheduler.runTaskLater(plugin, () -> {
+                if (event.getPlayer().isOnline()) {
+                    plugin.getUpdateManager().notifyPlayerIfUpdateAvailable(event.getPlayer());
+                }
+            }, 40L);
+        }
     }
 
     @EventHandler
