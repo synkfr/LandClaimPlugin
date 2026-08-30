@@ -73,34 +73,41 @@ public class TerritoryMapRenderer extends MapRenderer {
         int centerChunkZ = loc.getBlockZ() >> 4;
 
         ZoomLevel zoom = getZoom(player.getUniqueId());
-        int radius = zoom.chunksPerAxis / 2;
         int pxPerChunk = zoom.pixelsPerChunk;
+        double pixelScale = (double) pxPerChunk / 16.0;
+        int chunkRadius = (zoom.chunksPerAxis / 2) + 1;
 
         ClaimProfile playerProfile = claimManager.getProfile(player.getUniqueId());
 
-        for (int r = 0; r < zoom.chunksPerAxis; r++) {
-            for (int c = 0; c < zoom.chunksPerAxis; c++) {
-                int chunkX = centerChunkX + (c - radius);
-                int chunkZ = centerChunkZ + (r - radius);
+        for (int dz = -chunkRadius; dz <= chunkRadius; dz++) {
+            for (int dx = -chunkRadius; dx <= chunkRadius; dx++) {
+                int chunkX = centerChunkX + dx;
+                int chunkZ = centerChunkZ + dz;
+
+                int startX = 64 + (int) Math.floor(((chunkX << 4) - loc.getX()) * pixelScale);
+                int startZ = 64 + (int) Math.floor(((chunkZ << 4) - loc.getZ()) * pixelScale);
+
+                if (startX + pxPerChunk <= 0 || startX >= 128 ||
+                    startZ + pxPerChunk <= 0 || startZ >= 128) {
+                    continue;
+                }
 
                 ChunkPosition pos = new ChunkPosition(worldName, chunkX, chunkZ);
                 ClaimProfile chunkProfile = claimManager.getProfileAt(pos);
-
                 Color fillColor = getFillColor(chunkProfile, player.getUniqueId(), playerProfile);
 
-                int startX = c * pxPerChunk;
-                int startZ = r * pxPerChunk;
-
                 for (int x = 0; x < pxPerChunk; x++) {
+                    int canvasX = startX + x;
+                    if (canvasX < 0 || canvasX >= 128) continue;
+
                     for (int z = 0; z < pxPerChunk; z++) {
-                        int canvasX = startX + x;
                         int canvasZ = startZ + z;
-                        if (canvasX >= 0 && canvasX < 128 && canvasZ >= 0 && canvasZ < 128) {
-                            if (x == 0 || z == 0 || x == pxPerChunk - 1 || z == pxPerChunk - 1) {
-                                canvas.setPixelColor(canvasX, canvasZ, COLOR_GRID);
-                            } else {
-                                canvas.setPixelColor(canvasX, canvasZ, fillColor);
-                            }
+                        if (canvasZ < 0 || canvasZ >= 128) continue;
+
+                        if (x == 0 || z == 0 || x == pxPerChunk - 1 || z == pxPerChunk - 1) {
+                            canvas.setPixelColor(canvasX, canvasZ, COLOR_GRID);
+                        } else {
+                            canvas.setPixelColor(canvasX, canvasZ, fillColor);
                         }
                     }
                 }
@@ -129,6 +136,12 @@ public class TerritoryMapRenderer extends MapRenderer {
     private Color getFillColor(ClaimProfile profile, UUID viewerId, ClaimProfile viewerProfile) {
         if (profile == null) {
             return COLOR_WILDERNESS;
+        }
+
+        if (profile.getClaimColor() != null) {
+            try {
+                return Color.decode(profile.getClaimColor());
+            } catch (NumberFormatException ignored) {}
         }
 
         if (profile.getOwnerId().equals(viewerId)) {
