@@ -871,6 +871,8 @@ public class ClaimManager {
         plugin.getCacheManager().getProfileCache().invalidate(oldOwnerId);
 
         // Transfer
+        profile.removeMember(newOwnerId);
+        profile.removeTrustedPlayer(newOwnerId);
         profile.setOwnerId(newOwnerId);
 
         // Save under new owner

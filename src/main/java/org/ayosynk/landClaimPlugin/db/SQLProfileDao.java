@@ -307,6 +307,7 @@ public class SQLProfileDao implements ProfileDao {
                     plugin.getLogger().severe("Failed to rollback transaction: " + rollbackEx.getMessage());
                 }
                 e.printStackTrace();
+                throw new RuntimeException("Failed to save profile " + profile.getProfileId(), e);
             } finally {
                 if (conn != null) {
                     try {
@@ -326,25 +327,32 @@ public class SQLProfileDao implements ProfileDao {
             try (Connection conn = dbManager.getDatabase().getConnection()) {
                 conn.setAutoCommit(false);
 
-                clearTable(conn, p + "profile_ally_flags", "owner_id", oid);
-                clearTable(conn, p + "profile_banned_players", "owner_id", oid);
-                clearTable(conn, p + "profile_member_roles", "owner_id", oid);
-                clearTable(conn, p + "profile_roles", "owner_id", oid);
-                clearTable(conn, p + "profile_trusted_players", "owner_id", oid);
-                clearTable(conn, p + "profile_visitor_flags", "owner_id", oid);
-                clearTable(conn, p + "claimed_chunks", "owner_id", oid);
+                try {
+                    clearTable(conn, p + "profile_ally_flags", "owner_id", oid);
+                    clearTable(conn, p + "profile_banned_players", "owner_id", oid);
+                    clearTable(conn, p + "profile_member_roles", "owner_id", oid);
+                    clearTable(conn, p + "profile_roles", "owner_id", oid);
+                    clearTable(conn, p + "profile_trusted_players", "owner_id", oid);
+                    clearTable(conn, p + "profile_visitor_flags", "owner_id", oid);
+                    clearTable(conn, p + "claimed_chunks", "owner_id", oid);
 
-                try (PreparedStatement stmt = conn
-                        .prepareStatement("DELETE FROM " + p + "claim_profiles WHERE owner_id = ?")) {
-                    stmt.setString(1, oid);
-                    stmt.executeUpdate();
+                    try (PreparedStatement stmt = conn
+                            .prepareStatement("DELETE FROM " + p + "claim_profiles WHERE owner_id = ?")) {
+                        stmt.setString(1, oid);
+                        stmt.executeUpdate();
+                    }
+
+                    conn.commit();
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                    conn.rollback();
+                    conn.setAutoCommit(true);
+                    throw e;
                 }
-
-                conn.commit();
-                conn.setAutoCommit(true);
             } catch (SQLException e) {
                 plugin.getLogger().severe("Failed to delete profile for " + ownerId);
                 e.printStackTrace();
+                throw new RuntimeException("Failed to delete profile " + ownerId, e);
             }
         });
     }
@@ -354,16 +362,6 @@ public class SQLProfileDao implements ProfileDao {
         return CompletableFuture.supplyAsync(() -> {
             String p = prefix();
             try (Connection conn = dbManager.getDatabase().getConnection()) {
-                // Load base profile
-                try (PreparedStatement stmt = conn
-                        .prepareStatement("SELECT * FROM " + p + "claim_profiles WHERE owner_id = ?")) {
-                    stmt.setString(1, ownerId.toString());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        if (!rs.next())
-                            return null;
-                    }
-                }
-
                 String name;
                 String claimColor;
                 String visMode;

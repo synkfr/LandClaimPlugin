@@ -96,18 +96,19 @@ public class SQLWarpDao implements WarpDao {
                     float yaw = rs.getFloat("yaw");
                     float pitch = rs.getFloat("pitch");
                     String iconName = rs.getString("icon");
-                    Material icon = Material.valueOf(iconName);
+                    Material icon = Material.getMaterial(iconName != null ? iconName : "");
+                    if (icon == null) {
+                        icon = Material.ENDER_PEARL;
+                    }
                     boolean isPublic = rs.getBoolean("is_public");
 
                     Location loc = new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch);
                     Warp warp = new Warp(name, loc, icon, isPublic);
 
-                    allWarps.computeIfAbsent(ownerId, k -> new HashMap<>()).put(name, warp);
+                    allWarps.computeIfAbsent(ownerId, k -> new HashMap<>()).put(name.toLowerCase(), warp);
                 }
             } catch (SQLException e) {
                 plugin.getLogger().severe("Failed to load warps from database: " + e.getMessage());
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().severe("Failed to parse material for warp icon: " + e.getMessage());
             }
             return allWarps;
         });
@@ -152,13 +153,14 @@ public class SQLWarpDao implements WarpDao {
     public void deleteWarp(UUID ownerId, String name) {
         CompletableFuture.runAsync(() -> {
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
-            String sql = "DELETE FROM " + tablePrefix + "warps WHERE owner_id = ? AND name = ?";
+            String sql = "DELETE FROM " + tablePrefix + "warps WHERE owner_id = ? AND (name = ? OR LOWER(name) = LOWER(?))";
 
             try (Connection conn = dbManager.getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql)) {
 
                 stmt.setString(1, ownerId.toString());
                 stmt.setString(2, name);
+                stmt.setString(3, name);
                 stmt.executeUpdate();
 
             } catch (SQLException e) {

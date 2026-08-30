@@ -74,11 +74,12 @@ public class WarpManager {
         if (warps == null)
             return false;
 
-        boolean removed = warps.remove(name.toLowerCase()) != null;
-        if (removed) {
-            plugin.getDatabaseManager().getWarpDao().deleteWarp(ownerId, name.toLowerCase());
+        Warp removed = warps.remove(name.toLowerCase());
+        if (removed != null) {
+            plugin.getDatabaseManager().getWarpDao().deleteWarp(ownerId, removed.getName());
+            return true;
         }
-        return removed;
+        return false;
     }
 
     public Warp getWarp(UUID ownerId, String name) {

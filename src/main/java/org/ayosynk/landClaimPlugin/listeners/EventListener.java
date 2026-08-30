@@ -300,7 +300,7 @@ public class EventListener implements Listener {
             ChunkPosition current = new ChunkPosition(player.getLocation().getChunk());
 
             // Already outside? Nothing to do.
-            if (!bannedFrom.ownsChunk(current) && !isAdjacentTo(current, bannedFrom)) {
+            if (!bannedFrom.ownsChunk(current)) {
                 return;
             }
 
