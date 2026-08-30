@@ -38,7 +38,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **Chunk-Based Claims** — 16×16 block protection zones, simple and intuitive.
 - **Auto-Claim** — Automatically claim chunks as you walk.
 - **Connected Claims** — Optionally require claims to be adjacent (with diagonal support).
-- **Claim Map GUI** — Interactive in-game map showing nearby claims and ownership.
+- **Held Territory Map (Minimap)** — Live 128×128 pixel radar map in hand/off-hand or Item Frames showing chunk boundaries, claim colors, and real-time player orientation.
 - **Interactive Selectors** — Programmatically select online players via their heads for Trust, Member, and Ally management.
 - **Unstuck Command** — A safe `/claim unstuck` feature that teleports trapped players to the nearest safe wilderness block.
 
@@ -162,6 +162,7 @@ For addons that want to act on claim lifecycle, listen for
 | `/claim profiles` | Open the active profile selector (if Multi-Profile is enabled) |
 | `/claim create <name>` | Create a new claim profile with the given name |
 | `/claim auto` | Toggle auto-claim mode (claim chunks as you walk) |
+| `/claim map` | Receive the live held Territory Map item (alias: `/claim minimap`) |
 | `/claim menu` | Open the main claim management GUI |
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
@@ -188,7 +189,7 @@ Jump directly to specific GUI panels without navigating through the main menu.
 | `/claim menu trusted` | Open trusted player management |
 | `/claim menu visitors` | Open visitor settings |
 | `/claim menu allies` | Open ally management |
-| `/claim menu map` | Open the claim map |
+| `/claim menu map` | Receive the held Territory Map |
 | `/claim menu warps` | Open warp management |
 
 ### Management Commands
@@ -252,8 +253,10 @@ Jump directly to specific GUI panels without navigating through the main menu.
 |---|---|---|
 | `landclaim.*` | All LandClaim permissions | `false` |
 | `landclaim.claim` | Basic claiming ability | ✅ `true` |
+| `landclaim.minimap` | Access to the held Territory Map | ✅ `true` |
 | `landclaim.auto` | Use auto-claim mode | ✅ `true` |
 | `landclaim.admin` | Admin commands & bypass all protection | `op` |
+| `landclaim.update.notify` | Receive update notifications on join | `op` |
 | `landclaim.limit.<n>` | Override the chunk claim limit (e.g., `landclaim.limit.50`) | `false` |
 | `landclaim.list` | List claims | ✅ `true` |
 | `landclaim.warps.limit.<n>` | Override the warps limit (e.g., `landclaim.warps.limit.10`) | `false` |

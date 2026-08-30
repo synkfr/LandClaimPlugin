@@ -6,7 +6,7 @@
 
     <groupId>com.github.synkfr</groupId>
     <artifactId>LandClaimPlugin</artifactId>
-    <version>2.5.0</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <name>LandClaimPlugin</name>
@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
         <!-- Dependency Versions - Using latest available -->
-        <paper.version>1.21.4-R0.1-SNAPSHOT</paper.version>
+        <paper.version>26.2.build.120-stable</paper.version>
         <okaeri.version>6.1.0-beta.1</okaeri.version>
         <cloud.version>2.0.0-beta.15</cloud.version>
         <hikari.version>5.1.0</hikari.version>
@@ -33,8 +33,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
             <plugin>

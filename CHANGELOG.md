@@ -2,6 +2,31 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [3.0.0] - 2026-08-30
+
+### Added
+- **In-Game Held Territory Map (Minimap):**
+  - Live 128×128 pixel radar map rendering directly onto a vanilla `FILLED_MAP` item using Bukkit's `MapView` & `MapRenderer` canvas.
+  - Renders chunk polygons, boundary grid lines, and colored fills for own claims (`#2ecc71`), allies (`#9b59b6`), members/trusted (`#3498db`), foreign claims (`#e74c3c`), and wilderness (`#282c34`).
+  - Real-time rotating player cursor (`MapCursor.Type.PLAYER`) and dynamic territory name banner.
+  - Interactive right-click zoom toggle between **Overview mode (16×16 chunks)** and **Close Detail mode (8×8 chunks)** with audio feedback.
+  - Full **Bedrock / Geyser** support (rendered seamlessly in hand, off-hand, and wall Item Frames).
+  - New commands: `/claim minimap`, `/claim map`, `/claim menu map`.
+  - New permission: `landclaim.minimap` (default: `true`).
+  - Configurable via `minimap` section in `config.yml`.
+- **Modrinth Update Checker:**
+  - Automated asynchronous update checker querying the Modrinth v2 API on startup.
+  - Interactive MiniMessage join notification with clickable links for server operators/admins with `landclaim.update.notify` permission.
+  - Configurable via `updateChecker` section in `config.yml`.
+- **Action Bar Display Toggle:**
+  - Added `actionbarEnabled` option (default: `true`) to enable/disable claim status and wilderness action bar messages.
+- **Minecraft 1.21+ / Paper Compatibility:**
+  - Updated to latest Paper API build `26.2.build.120-stable` with `--release 21`.
+
+### Removed
+- **Legacy GUI Map:**
+  - Removed outdated inventory-based GUI map (`ClaimMapGUI`, `ClaimMapInfoGUI`) in favor of the high-resolution held Territory Map.
+
 ## [2.5.0] - 2026-06-19
 
 ### Added

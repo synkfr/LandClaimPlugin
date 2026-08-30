@@ -97,11 +97,29 @@ Each map plugin has identical configuration:
 
 Supported maps: `dynmap`, `bluemap`, `squaremap`, `pl3xmap`
 
-### Visualization
+### Visualization & Action Bar
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `actionbarUpdateInterval` | Integer | `20` | Ticks between actionbar updates |
+| `actionbarEnabled` | Boolean | `true` | Enable or disable the action bar display for claim status and wilderness |
+| `actionbarUpdateInterval` | Integer | `20` | Ticks between actionbar updates (20 ticks = 1 second) |
+
+### Held Territory Map (Minimap)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `minimap.enabled` | Boolean | `true` | Enable or disable the in-game held territory map feature |
+| `minimap.mapId` | Integer | `-1` | Persisted MapView ID assigned to the territory map (-1 for automatic creation) |
+| `minimap.itemName` | String | `<gold><bold>Territory Map</bold></gold>` | Display name for the Territory Map item (MiniMessage format) |
+| `minimap.itemLore` | List | `[...]` | Description and instruction lore lines for the map item |
+
+### Update Checker
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `updateChecker.enabled` | Boolean | `true` | Enable or disable checking for new plugin versions on Modrinth |
+| `updateChecker.modrinthProjectId` | String | `landclaimplugin` | The project ID or slug on Modrinth to query |
+| `updateChecker.notifyPermission` | String | `landclaim.admin` | Permission required to receive join notifications (or OP) |
 
 ### Bedrock / Geyser Support
 

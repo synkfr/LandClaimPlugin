@@ -14,6 +14,8 @@ LandClaimPlugin (entry point)
 ├── CombatManager         — Combat tag integration
 ├── VisualizationManager  — Boundary rendering
 ├── WarpManager           — Warp point management
+├── MinimapManager        — In-game held Territory Map canvas
+├── UpdateManager         — Modrinth async update checker
 ├── CommandHandler        — Cloud command framework
 ├── ListenerManager       — Event listener registration
 └── HookManager           — Third-party plugin integrations
@@ -90,13 +92,14 @@ org.ayosynk.landClaimPlugin
 │   ├── GuiHelper.java            — Shared GUI utilities
 │   ├── MainMenuGUI.java          — Main claim menu
 │   ├── ClaimSettingsGUI.java     — Claim settings
-│   ├── ClaimMapGUI.java          — Interactive claim map
 │   ├── TrustManagementGUI.java   — Trust player management
 │   ├── MemberManagementGUI.java  — Member management
 │   ├── AllyManagementGUI.java    — Ally management
 │   ├── WarpManagementGUI.java    — Warp management
 │   ├── RoleManagementGUI.java    — Role management
 │   └── ...                       — 20+ specialized GUIs
+├── map/                          — Live held Territory Map
+│   └── TerritoryMapRenderer.java — 128x128 pixel MapRenderer canvas
 ├── hooks/                        — Third-party integrations
 │   ├── map/                      — Map plugin hooks
 │   └── combat/                   — Combat plugin hooks

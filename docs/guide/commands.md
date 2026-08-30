@@ -10,6 +10,7 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim profiles` | Open the active profile selector (Multi-Profile mode) |
 | `/claim create <name>` | Create a new claim profile with the given name |
 | `/claim auto` | Toggle auto-claim mode (claim chunks as you walk) |
+| `/claim map` | Receive the held live Territory Map item (alias: `/claim minimap`) |
 | `/claim menu` | Open the main claim management GUI |
 | `/claim info` | View info about the claim at your location |
 | `/claim visible` | Toggle claim boundary visualization |
@@ -42,7 +43,7 @@ These commands respect the same permission checks as clicking the GUI buttons.
 | `/claim menu trusted` | `MANAGE_MEMBERS` | Open trusted player management |
 | `/claim menu visitors` | `MANAGE_SETTINGS` | Open visitor settings |
 | `/claim menu allies` | `MANAGE_SETTINGS` | Open ally management |
-| `/claim menu map` | — | Open the claim map |
+| `/claim menu map` | — | Receive the held Territory Map |
 | `/claim menu warps` | — | Open warp management |
 
 ## Member Commands
@@ -125,8 +126,10 @@ Ban confirmations, abandon confirmations, unclaim-all confirmations, and AnvilIn
 |---|---|---|
 | `landclaim.*` | All LandClaim permissions | `false` |
 | `landclaim.claim` | Basic claiming ability | `true` |
+| `landclaim.minimap` | Access to the held Territory Map | `true` |
 | `landclaim.auto` | Use auto-claim mode | `true` |
 | `landclaim.admin` | Admin commands and bypass all protection | `op` |
+| `landclaim.update.notify` | Receive update notifications on join | `op` |
 | `landclaim.unstuck` | Teleport to a safe wilderness location | `true` |
 | `landclaim.unclaim` | Unclaim the current chunk | `true` |
 | `landclaim.member` | Access to member subcommands | `true` |

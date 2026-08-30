@@ -23,8 +23,8 @@ features:
     details: Granular 4-Tier Priority Chain with custom roles, trusted players, and 25+ permission flags.
   - title: 🎨 Full Customization
     details: Customize everything from colors and names to entry titles — completely configurable via YAML.
-  - title: 🗺️ Map Integrations
-    details: Automatic claim rendering on BlueMap, Dynmap, Squaremap, and Pl3xMap with custom colors.
+  - title: 🗺️ Map Integrations & Held Territory Map
+    details: Live 128×128 pixel radar map in hand/off-hand or Item Frames, plus automatic web map rendering on BlueMap, Dynmap, Squaremap, and Pl3xMap.
   - title: 🚫 Claim Bans
     details: Hard-deny a player from entering or interacting with your claim. Banned players are pushed back at chunk boundaries and (if online) teleported outside.
   - title: 🎮 Bedrock / Geyser Support
