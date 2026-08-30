@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+@SuppressWarnings("deprecation")
 public class SQLRoleDao implements RoleDao {
 
     private final LandClaimPlugin plugin;

@@ -130,7 +130,9 @@ public class BuyCommand implements LandClaimCommand {
                 Object config = ecoPlugin.getClass().getMethod("getEconomyConfig").invoke(ecoPlugin);
                 return (double) config.getClass().getField(fieldName).get(config);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to resolve economy cost setting " + fieldName + ": " + e.getMessage());
+        }
         return defaultValue;
     }
 

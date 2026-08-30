@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+@SuppressWarnings("deprecation")
 public class SQLClaimDao implements ClaimDao {
 
     private final LandClaimPlugin plugin;

@@ -84,7 +84,7 @@ public class EntityProtectionListener implements Listener {
         if (target instanceof Animals || target instanceof Tameable || target instanceof Fish
                 || target instanceof WaterMob) {
             checkPermission(damager, pos, event, "DAMAGE_ANIMALS");
-        } else if (target instanceof Monster || target instanceof Slime || target instanceof Flying) {
+        } else if (target instanceof Enemy || target instanceof Monster || target instanceof Slime || target instanceof Ghast || target instanceof Phantom) {
             checkPermission(damager, pos, event, "DAMAGE_MONSTERS");
         } else if (target instanceof ArmorStand) {
             checkPermission(damager, pos, event, "MODIFY_ARMOR_STANDS");

@@ -143,6 +143,7 @@ public class AnvilInputGUI implements Listener {
                     }
                 }
 
+                @SuppressWarnings("deprecation")
                 @EventHandler(priority = org.bukkit.event.EventPriority.LOWEST)
                 public void onLegacyChat(org.bukkit.event.player.AsyncPlayerChatEvent event) {
                     if (event.getPlayer().getUniqueId().equals(player.getUniqueId())) {
