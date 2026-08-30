@@ -264,11 +264,18 @@ Jump directly to specific GUI panels without navigating through the main menu.
 
 ---
 
-## 📊 bStats
+## 📋 Disclosures & Transparency
 
-This plugin collects **anonymous** usage statistics via [bStats](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407). The data is publicly visible and helps us understand how the plugin is used across servers. No personal or identifiable information is collected.
+In compliance with platform guidelines and Modrinth disclosure policies:
 
-*To opt out, navigate to `plugins/bStats/config.yml` and set `enabled` to `false`.*
+### 🤖 AI Assistance Disclosure
+This project uses AI assistance (LLMs) for code drafting, refactoring, optimization, and documentation under the direct design, review, and testing of the maintainers. All game logic, security gates, and database transactions are human-architected and audited.
+
+### 🌐 External Network Calls & Telemetry
+LandClaimPlugin communicates with the following external endpoints:
+- **Modrinth API (`https://api.modrinth.com`)**: Queries the public Modrinth v2 API on startup to check for new versions. Sends only the standard `User-Agent` header (`LandClaimPlugin/{version}`). No player or server-identifying data is shared. *Opt-out: set `updateChecker.enabled: false` in `config.yml`.*
+- **bStats Analytics (`https://bstats.org`)**: Collects anonymous usage metrics (Java version, server software, online player count) via [bStats](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407). No personally identifiable information is collected. *Opt-out: set `enabled: false` in `plugins/bStats/config.yml`.*
+- **Redis & Remote MySQL (Optional)**: Connects only to user-configured endpoints for cross-server pub/sub synchronization or centralized database storage.
 
 ---
 

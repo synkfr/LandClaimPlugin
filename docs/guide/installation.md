@@ -29,7 +29,7 @@ Development builds are automatically generated from the latest commits and may i
 - **Chunk-Based Claims** — 16×16 block protection zones, simple and intuitive.
 - **Auto-Claim** — Automatically claim chunks as you walk.
 - **Connected Claims** — Optionally require claims to be adjacent (with diagonal support).
-- **Claim Map GUI** — Interactive in-game map showing nearby claims and ownership.
+- **Held Territory Map (Minimap)** — Live 128×128 pixel radar in hand/off-hand or Item Frames.
 - **Unstuck Command** — A safe `/claim unstuck` feature that teleports trapped players to the nearest safe wilderness block.
 
 ### Permission System
@@ -79,3 +79,15 @@ Prevent players from abusing claim commands while in combat.
 - **Volumetric Intersection Check** — 100% accurate 3D boundary checking
 - **Gap Enforcement** — Configurable required distance between claims and WorldGuard regions
 - **Custom Flag Support** — Apply the `allow-land-claims` flag to regions to explicitly allow claiming
+
+---
+
+## 📋 Disclosures & Privacy
+
+### AI Assistance Disclosure
+This project uses AI assistance (large language model tools) for code drafting, refactoring, and documentation under the direct architectural design, review, and validation of the maintainers.
+
+### External Network Interactions
+- **Modrinth API**: Asynchronously checks for new releases to notify operators. Can be disabled via `updateChecker.enabled: false`.
+- **bStats Analytics**: Collects anonymous server statistics. Can be disabled in `plugins/bStats/config.yml`.
+- **Redis / MySQL**: Connects only if configured by the server administrator for cross-server sync or external storage.
