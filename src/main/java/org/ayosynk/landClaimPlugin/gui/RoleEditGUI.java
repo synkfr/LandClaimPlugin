@@ -76,7 +76,7 @@ public class RoleEditGUI {
                                 plugin.getDatabaseManager().getProfileDao().saveProfile(profile)
                                         .thenRun(() -> {
                                             if (plugin.getRedisManager() != null) {
-                                                plugin.getRedisManager().publishUpdate("INVALIDATE_CLAIM",
+                                                plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE",
                                                         profile.getProfileId());
                                             }
                                         });

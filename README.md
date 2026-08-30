@@ -147,7 +147,7 @@ For addons that want to act on claim lifecycle, listen for
 2. Restart your server.
 3. Configure `plugins/LandClaimPlugin/config.yml` to your liking.
 
-> **Requirements:** Paper 1.21.4+ | Java 21+
+> **Requirements:** Paper 26.2+ | Java 25+
 
 ---
 

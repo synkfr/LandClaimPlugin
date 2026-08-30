@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Java 21** (JDK)
+- **Java 25** (JDK)
 - **Maven 3.8+**
 - **Git**
 
@@ -17,7 +17,7 @@ cd LandClaimPlugin
 mvn clean package
 ```
 
-Output: `target/LandClaimPlugin-2.3.0.jar` (shaded JAR with all dependencies)
+Output: `target/LandClaimPlugin-3.0.0.jar` (shaded JAR with all dependencies)
 
 ## Project Structure
 

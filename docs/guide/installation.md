@@ -2,8 +2,8 @@
 
 ## Requirements
 
-- **Paper 1.21.4+** (or any Paper fork like Purpur)
-- **Java 21+**
+- **Paper 26.2+** (or any Paper fork like Purpur)
+- **Java 25+**
 
 ## Quick Start
 
