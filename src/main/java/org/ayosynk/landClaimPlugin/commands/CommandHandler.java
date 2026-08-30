@@ -142,6 +142,14 @@ public class CommandHandler {
         return claimCommand.isAutoUnclaimEnabled(playerId);
     }
 
+    public void toggleAutoClaim(Player player) {
+        claimCommand.toggleAutoClaim(player);
+    }
+
+    public void toggleAutoUnclaim(Player player) {
+        claimCommand.toggleAutoUnclaim(player);
+    }
+
     public void cleanupPlayer(UUID playerId) {
         claimCommand.cleanupPlayer(playerId);
     }

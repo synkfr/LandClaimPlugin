@@ -7,6 +7,7 @@ All commands use `/claim` (alias: `/c`) as the base.
 | Command | Description |
 |---|---|
 | `/claim` | Claim the chunk you're standing in |
+| `/claim radius <1-5>` | Claim a square area of chunks centered on your current chunk (e.g. `1` = 3×3, `2` = 5×5) |
 | `/claim profiles` | Open the active profile selector (Multi-Profile mode) |
 | `/claim create <name>` | Create a new claim profile with the given name |
 | `/claim auto` | Toggle auto-claim mode (claim chunks as you walk) |
@@ -20,7 +21,8 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim color <color>` | Change claim color using a named color (e.g., `red`, `lime`) or hex code (e.g., `#FF5500`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
-| `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires `/claim unclaimall confirm`) |
+| `/claim unclaim confirm` | Confirm unclaiming all chunks and deleting your active profile |
+| `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires confirm) |
 | `/claim pvp <on/off> [time]` | Toggle PvP in the claim, with optional duration in seconds |
 | `/claim buy claim [amount]` | Buy extra claim blocks |
 | `/claim buy role` | Buy an additional custom role slot for your active profile |
@@ -28,7 +30,10 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim buy warp` | Buy an additional warp slot for your active profile |
 | `/claim sell <profile> <price>` | List a claim profile on the server-wide marketplace |
 | `/unclaim` | Unclaim the chunk you're standing in |
-| `/unclaim all` | Unclaim all chunks belonging to your active profile |
+| `/unclaim auto` | Toggle auto-unclaim mode (unclaim your owned chunks as you walk) |
+| `/unclaim radius <1-5>` | Unclaim all your owned chunks in a square radius (e.g. `1` = 3×3, `2` = 5×5) |
+| `/unclaim all` | Unclaim all chunks belonging to your active profile (prompts for confirmation) |
+| `/unclaim all confirm` | Confirm unclaiming all chunks |
 
 ## Menu Shortcuts
 

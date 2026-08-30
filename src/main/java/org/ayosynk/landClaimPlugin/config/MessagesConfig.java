@@ -9,8 +9,11 @@ public class MessagesConfig extends OkaeriConfig {
 
     public String accessDenied = "<red>You do not have permission to do this.";
     public String wildernessProtected = "<red>You cannot do this in the wilderness. Find a claim or ask an admin.";
-    public String chunkClaimed = "<green>Chunk successfully claimed!";
-    public String chunkUnclaimed = "<green>Chunk successfully unclaimed!";
+    public String chunkClaimed = "<green>Chunk successfully claimed! <gray>(<chunks>/<limit> used)</gray>";
+    public String chunkUnclaimed = "<green>Chunk successfully unclaimed! <gray>(<chunks>/<limit> used)</gray>";
+    public String claimRadiusSuccess = "<green>Successfully claimed <gold><count></gold> chunks in radius <gold><radius></gold>! <gray>(<chunks>/<limit> used)</gray>";
+    public String unclaimRadiusSuccess = "<green>Successfully unclaimed <gold><count></gold> chunks in radius <gold><radius></gold>! <gray>(<chunks>/<limit> used)</gray>";
+    public String invalidRadius = "<red>Radius must be a positive integer between 1 and 5.";
     public String notOwner = "<red>You do not own this claim.";
     public String playerNotFound = "<red>Player not found.";
     public String adminAddChunkSuccess = "<green>Successfully gave <gold><amount></gold> bonus chunks to <gold><player></gold>!";
@@ -158,7 +161,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String multiProfilesDisabled = "<red>The multi-profile system is currently disabled on this server.";
     public String alreadyHasProfile = "<red>You already have a claim profile.";
     public String profileAbandoned = "<red>All your claims have been abandoned.";
-    public String unclaimAllConfirm = "<yellow>Are you sure? Type <click:run_command:'/claim unclaimall confirm'><gold>/claim unclaimall confirm</gold></click> to proceed.";
+    public String unclaimAllConfirm = "<yellow>Are you sure you want to unclaim ALL of your chunks? Type <click:run_command:'/unclaim all confirm'><gold>/unclaim all confirm</gold></click> or <click:run_command:'/claim unclaim confirm'><gold>/claim unclaim confirm</gold></click> to proceed.</yellow>";
 
     // --- Trust / Member ---
     public String notAMember = "<red>That player is not a member of this claim.";

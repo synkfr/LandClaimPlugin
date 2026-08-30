@@ -588,6 +588,207 @@ public class ClaimManager {
     }
 
     /**
+     * Claim all valid chunks within a square radius around a center chunk.
+     */
+    public int claimRadius(Player player, Chunk centerChunk, int radius) {
+        if (!player.hasPermission("landclaim.claim") && !player.hasPermission("landclaim.admin")) {
+            player.sendMessage(configManager.getMessage("access-denied"));
+            return 0;
+        }
+
+        if (radius < 1 || radius > 5) {
+            player.sendMessage(configManager.getMessage("invalid-radius"));
+            return 0;
+        }
+
+        String worldName = centerChunk.getWorld().getName();
+        if (configManager.isWorldBlocked(worldName)) {
+            player.sendMessage(configManager.getMessage("world-blocked"));
+            return 0;
+        }
+
+        UUID playerId = player.getUniqueId();
+        ClaimProfile targetProfile = getActiveProfile(player);
+
+        if (targetProfile == null) {
+            java.util.List<ClaimProfile> memberProfiles = getMemberProfiles(playerId);
+            if (!memberProfiles.isEmpty()) {
+                for (ClaimProfile mp : memberProfiles) {
+                    String roleName = mp.getMemberRole(playerId);
+                    if (roleName != null) {
+                        org.ayosynk.landClaimPlugin.models.Role role = mp.getRoleByName(roleName);
+                        if (role != null && role.hasFlag("CLAIM_LAND")) {
+                            targetProfile = mp;
+                            break;
+                        }
+                    }
+                }
+                if (targetProfile == null) {
+                    player.sendMessage(configManager.getMessage("cannot-claim-as-member"));
+                    return 0;
+                }
+            } else {
+                String defaultName = player.getName() + "'s Claim";
+                targetProfile = new ClaimProfile(playerId, defaultName);
+                plugin.getCacheManager().getProfileCache().put(playerId, targetProfile);
+            }
+        }
+
+        int claimLimit = getClaimLimit(targetProfile.getOwnerId());
+        int globalTotalChunks = getTotalClaimedChunks(targetProfile.getOwnerId());
+
+        int centerX = centerChunk.getX();
+        int centerZ = centerChunk.getZ();
+
+        List<ChunkPosition> candidates = new ArrayList<>();
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                candidates.add(new ChunkPosition(worldName, centerX + dx, centerZ + dz));
+            }
+        }
+
+        // Sort by distance from center so closest chunks are claimed first
+        candidates.sort(Comparator.comparingInt(p -> Math.abs(p.x() - centerX) + Math.abs(p.z() - centerZ)));
+
+        int worldGuardGap = configManager.getWorldGuardGap();
+        int minGap = configManager.getMinClaimGap();
+        boolean requireConnected = configManager.requireConnectedClaims();
+
+        Set<ChunkPosition> newlyClaimed = new HashSet<>();
+
+        for (ChunkPosition pos : candidates) {
+            if (globalTotalChunks >= claimLimit) {
+                break;
+            }
+
+            if (isChunkClaimed(pos)) {
+                continue;
+            }
+
+            if (worldGuardGap > 0 && isTooCloseToWorldGuardRegion(pos, worldGuardGap)) {
+                continue;
+            }
+
+            if (minGap > 0 && isTooCloseToOtherProfile(worldName, pos, targetProfile.getProfileId(), minGap)) {
+                continue;
+            }
+
+            if (requireConnected && targetProfile.getOwnedChunks().size() > 0) {
+                boolean connected = isConnectedToOwnChunks(pos, targetProfile);
+                if (!connected) {
+                    for (ChunkPosition nc : newlyClaimed) {
+                        if (pos.isAdjacentTo(nc, configManager.allowDiagonalConnections())) {
+                            connected = true;
+                            break;
+                        }
+                    }
+                }
+                if (!connected) {
+                    continue;
+                }
+            }
+
+            org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent createEvent =
+                    new org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent(targetProfile, pos, playerId);
+            Bukkit.getPluginManager().callEvent(createEvent);
+            if (createEvent.isCancelled()) {
+                continue;
+            }
+
+            targetProfile.addChunk(pos);
+            addToSpatialIndex(pos, targetProfile);
+            newlyClaimed.add(pos);
+            globalTotalChunks++;
+        }
+
+        if (newlyClaimed.isEmpty()) {
+            player.sendMessage(configManager.getMessage("claim-failed"));
+            return 0;
+        }
+
+        plugin.getCacheManager().getProfileCache().put(targetProfile.getProfileId(), targetProfile);
+        saveAndSync(targetProfile);
+
+        plugin.getVisualizationManager().invalidateCache(playerId);
+        plugin.getVisualizationManager().showTemporary(player);
+        plugin.getHookManager().refreshMapHooks();
+        plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
+
+        player.sendMessage(configManager.getMessage("claim-radius-success",
+                "<count>", String.valueOf(newlyClaimed.size()),
+                "<radius>", String.valueOf(radius),
+                "<chunks>", String.valueOf(targetProfile.getOwnedChunks().size()),
+                "<limit>", String.valueOf(claimLimit)));
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
+        return newlyClaimed.size();
+    }
+
+    /**
+     * Unclaim all owned chunks within a square radius around a center chunk.
+     */
+    public int unclaimRadius(Player player, Chunk centerChunk, int radius) {
+        if (radius < 1 || radius > 5) {
+            player.sendMessage(configManager.getMessage("invalid-radius"));
+            return 0;
+        }
+
+        ClaimProfile profile = getActiveProfile(player);
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile"));
+            return 0;
+        }
+
+        if (!profile.isOwner(player.getUniqueId()) && !player.hasPermission("landclaim.admin")) {
+            player.sendMessage(configManager.getMessage("not-owner"));
+            return 0;
+        }
+
+        String worldName = centerChunk.getWorld().getName();
+        int centerX = centerChunk.getX();
+        int centerZ = centerChunk.getZ();
+
+        List<ChunkPosition> toUnclaim = new ArrayList<>();
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                ChunkPosition pos = new ChunkPosition(worldName, centerX + dx, centerZ + dz);
+                if (profile.getOwnedChunks().contains(pos)) {
+                    toUnclaim.add(pos);
+                }
+            }
+        }
+
+        if (toUnclaim.isEmpty()) {
+            player.sendMessage(configManager.getMessage("not-in-claim"));
+            return 0;
+        }
+
+        for (ChunkPosition pos : toUnclaim) {
+            profile.removeChunk(pos);
+            removeFromSpatialIndex(pos);
+            org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent deleteEvent =
+                    new org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent(profile, pos, player.getUniqueId(),
+                            org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent.DeleteReason.PLAYER_ABANDON);
+            Bukkit.getPluginManager().callEvent(deleteEvent);
+        }
+
+        plugin.getCacheManager().getProfileCache().put(profile.getProfileId(), profile);
+        saveAndSync(profile);
+
+        plugin.getVisualizationManager().invalidateCache(player.getUniqueId());
+        plugin.getVisualizationManager().showTemporary(player);
+        plugin.getHookManager().refreshMapHooks();
+        plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
+
+        player.sendMessage(configManager.getMessage("unclaim-radius-success",
+                "<count>", String.valueOf(toUnclaim.size()),
+                "<radius>", String.valueOf(radius),
+                "<chunks>", String.valueOf(profile.getOwnedChunks().size()),
+                "<limit>", String.valueOf(getClaimLimit(profile.getOwnerId()))));
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
+        return toUnclaim.size();
+    }
+
+    /**
      * Unclaim a single chunk from its owning profile.
      */
     public boolean unclaimChunk(Chunk chunk) {

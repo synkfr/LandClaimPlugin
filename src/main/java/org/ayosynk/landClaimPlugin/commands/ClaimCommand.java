@@ -17,6 +17,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
+import org.incendo.cloud.parser.standard.IntegerParser;
 import org.incendo.cloud.parser.standard.StringParser;
 
 import java.util.HashMap;
@@ -25,7 +26,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
- * Handles: /claim, /claim auto, /claim visible, /claim info, /claim menu,
+ * Handles: /claim, /claim auto, /claim radius, /claim visible, /claim info, /claim menu,
  * /claim menu <subcommand>, /claim rename, /claim color, /claim visualization, /claim unclaimall
  */
 public class ClaimCommand implements LandClaimCommand {
@@ -54,6 +55,19 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.claim", plugin)) return;
                     claimCurrentChunk(player);
+                }));
+
+        // /claim radius <radius>
+        manager.command(claimBuilder.literal("radius")
+                .required("radius", IntegerParser.integerParser(1, 5))
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.claim", plugin)) return;
+                    int radius = context.get("radius");
+                    FoliaScheduler.runForPlayer(plugin, player, () -> {
+                        Chunk chunk = player.getLocation().getChunk();
+                        claimManager.claimRadius(player, chunk, radius);
+                    });
                 }));
 
         // /claim auto
@@ -382,7 +396,7 @@ public class ClaimCommand implements LandClaimCommand {
                     toggleVisualizationMode(player, mode);
                 }));
 
-        // ========== /claim unclaimall ==========
+        // ========== /claim unclaimall / /claim unclaim all ==========
         manager.command(claimBuilder.literal("unclaimall")
                 .handler(context -> {
                     Player player = context.sender().source();
@@ -396,6 +410,38 @@ public class ClaimCommand implements LandClaimCommand {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
                     FoliaScheduler.runForPlayer(plugin, player, () -> unclaimAll(player));
+                }));
+
+        // /claim unclaim confirm
+        manager.command(claimBuilder.literal("unclaim").literal("confirm")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
+                    FoliaScheduler.runForPlayer(plugin, player, () -> unclaimAll(player));
+                }));
+
+        // /claim unclaim all
+        manager.command(claimBuilder.literal("unclaim").literal("all")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
+                    player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
+                }));
+
+        // /claim unclaim all confirm
+        manager.command(claimBuilder.literal("unclaim").literal("all").literal("confirm")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
+                    FoliaScheduler.runForPlayer(plugin, player, () -> unclaimAll(player));
+                }));
+
+        // /claim unclaim auto
+        manager.command(claimBuilder.literal("unclaim").literal("auto")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
+                    toggleAutoUnclaim(player);
                 }));
 
         // ========== /claim leave <claim name> ==========
@@ -430,11 +476,18 @@ public class ClaimCommand implements LandClaimCommand {
         FoliaScheduler.runForPlayer(plugin, player, () -> {
             Chunk chunk = player.getLocation().getChunk();
             if (claimManager.claimChunk(player, chunk)) {
-                player.sendMessage(configManager.getMessage("chunk-claimed"));
+                ClaimProfile profile = claimManager.getActiveProfile(player);
+                int count = profile != null ? profile.getOwnedChunks().size() : 1;
+                int limit = claimManager.getClaimLimit(player);
+                player.sendMessage(configManager.getMessage("chunk-claimed",
+                        "<chunks>", String.valueOf(count),
+                        "<limit>", String.valueOf(limit)));
+                plugin.getVisualizationManager().showTemporary(player);
                 // Update action bar cache so EventListener sends correct message
                 plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
                 // Also send immediate action bar update
                 updateActionBarInstant(player);
+                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
             }
         });
     }
@@ -531,11 +584,18 @@ public class ClaimCommand implements LandClaimCommand {
         player.sendMessage(configManager.getMessage("profile-created", "<name>", name));
     }
 
-    private void toggleAutoClaim(Player player) {
+    public void toggleAutoClaim(Player player) {
         boolean current = autoClaimPlayers.getOrDefault(player.getUniqueId(), false);
         boolean newValue = !current;
         autoClaimPlayers.put(player.getUniqueId(), newValue);
         player.sendMessage(configManager.getMessage(newValue ? "auto-claim-enabled" : "auto-claim-disabled"));
+    }
+
+    public void toggleAutoUnclaim(Player player) {
+        boolean current = autoUnclaimPlayers.getOrDefault(player.getUniqueId(), false);
+        boolean newValue = !current;
+        autoUnclaimPlayers.put(player.getUniqueId(), newValue);
+        player.sendMessage(configManager.getMessage(newValue ? "auto-unclaim-enabled" : "auto-unclaim-disabled"));
     }
 
     private void toggleVisibility(Player player) {

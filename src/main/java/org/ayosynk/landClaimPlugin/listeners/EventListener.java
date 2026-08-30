@@ -218,18 +218,30 @@ public class EventListener implements Listener {
             ChunkPosition pos = new ChunkPosition(toChunk);
             if (!claimManager.isChunkClaimed(pos)) {
                 if (claimManager.claimChunk(player, toChunk)) {
-                    player.sendMessage(configManager.getMessage("chunk-claimed"));
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
+                    int count = profile != null ? profile.getOwnedChunks().size() : 1;
+                    int limit = claimManager.getClaimLimit(player);
+                    player.sendMessage(configManager.getMessage("chunk-claimed",
+                            "<chunks>", String.valueOf(count),
+                            "<limit>", String.valueOf(limit)));
+                    plugin.getVisualizationManager().showTemporary(player);
+                    player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
                 }
             }
         }
 
-        if (configManager.requireConnectedClaims() && plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
-            ChunkPosition fromPos = new ChunkPosition(fromChunk);
+        if (plugin.getCommandHandler().isAutoUnclaimEnabled(playerId)) {
+            ChunkPosition toPos = new ChunkPosition(toChunk);
             ClaimProfile activeProfile = claimManager.getActiveProfile(player);
-            if (activeProfile != null && claimManager.isChunkClaimed(fromPos) && activeProfile.getProfileId().equals(claimManager.getChunkOwner(fromPos))) {
-                if (!isConnectedToOtherClaims(fromPos, activeProfile)) {
-                    claimManager.unclaimChunk(fromChunk);
-                    player.sendMessage(configManager.getMessage("auto-unclaimed"));
+            if (activeProfile != null && activeProfile.getOwnedChunks().contains(toPos) && activeProfile.isOwner(playerId)) {
+                if (claimManager.unclaimChunk(toChunk)) {
+                    int count = activeProfile.getOwnedChunks().size();
+                    int limit = claimManager.getClaimLimit(player);
+                    player.sendMessage(configManager.getMessage("chunk-unclaimed",
+                            "<chunks>", String.valueOf(count),
+                            "<limit>", String.valueOf(limit)));
+                    plugin.getVisualizationManager().showTemporary(player);
+                    player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
                 }
             }
         }

@@ -159,6 +159,7 @@ For addons that want to act on claim lifecycle, listen for
 | Command | Description |
 |---|---|
 | `/claim` | Claim the chunk you're standing in |
+| `/claim radius <1-5>` | Claim a square area of chunks centered on your current chunk (e.g. `1` = 3×3, `2` = 5×5) |
 | `/claim profiles` | Open the active profile selector (if Multi-Profile is enabled) |
 | `/claim create <name>` | Create a new claim profile with the given name |
 | `/claim auto` | Toggle auto-claim mode (claim chunks as you walk) |
@@ -172,10 +173,14 @@ For addons that want to act on claim lifecycle, listen for
 | `/claim color <color>` | Change claim color using a named color or hex code (e.g., `red`, `#FF5500`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block if trapped |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
+| `/claim unclaim confirm` | Confirm unclaiming all chunks and deleting your active profile |
 | `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires confirmation) |
 | `/claim pvp <on/off> [time]` | Toggle PvP globally in the claim, with an optional time duration in seconds |
 | `/unclaim` | Unclaim the chunk you're standing in |
-| `/unclaim all` | Unclaim all chunks belonging to your active profile |
+| `/unclaim auto` | Toggle auto-unclaim mode (unclaim your owned chunks as you walk) |
+| `/unclaim radius <1-5>` | Unclaim all your owned chunks in a square radius (e.g. `1` = 3×3, `2` = 5×5) |
+| `/unclaim all` | Unclaim all chunks belonging to your active profile (prompts for confirmation) |
+| `/unclaim all confirm` | Confirm unclaiming all chunks |
 
 ### Menu Shortcuts
 

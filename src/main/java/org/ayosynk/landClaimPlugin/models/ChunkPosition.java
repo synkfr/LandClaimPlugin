@@ -60,6 +60,20 @@ public record ChunkPosition(String world, int x, int z) {
         return neighbors;
     }
 
+    /**
+     * Check if another chunk position is adjacent to this one.
+     */
+    public boolean isAdjacentTo(ChunkPosition other, boolean includeDiagonals) {
+        if (other == null || !this.world.equals(other.world)) return false;
+        int dx = Math.abs(this.x - other.x);
+        int dz = Math.abs(this.z - other.z);
+        if (includeDiagonals) {
+            return (dx <= 1 && dz <= 1) && !(dx == 0 && dz == 0);
+        } else {
+            return (dx + dz) == 1;
+        }
+    }
+
     @Override
     public String toString() {
         return world + "," + x + "," + z;

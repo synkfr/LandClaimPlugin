@@ -13,9 +13,10 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
+import org.incendo.cloud.parser.standard.IntegerParser;
 
 /**
- * Handles: /unclaim, /unclaim all
+ * Handles: /unclaim, /unclaim auto, /unclaim radius <n>, /unclaim all, /unclaim all confirm, /unclaim confirm
  *
  * <p>Bedrock players with Geyser forms get a ModalForm confirmation before /unclaim all.</p>
  */
@@ -44,12 +45,49 @@ public class UnclaimCommand implements LandClaimCommand {
                     unclaimCurrentChunk(player);
                 }));
 
+        // /unclaim auto
+        manager.command(unclaimBuilder.literal("auto")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
+                    plugin.getCommandHandler().toggleAutoUnclaim(player);
+                }));
+
+        // /unclaim radius <radius>
+        manager.command(unclaimBuilder.literal("radius")
+                .required("radius", IntegerParser.integerParser(1, 5))
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
+                    int radius = context.get("radius");
+                    FoliaScheduler.runForPlayer(plugin, player, () -> {
+                        Chunk chunk = player.getLocation().getChunk();
+                        claimManager.unclaimRadius(player, chunk, radius);
+                    });
+                }));
+
         // /unclaim all
         manager.command(unclaimBuilder.literal("all")
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
                     promptUnclaimAll(player);
+                }));
+
+        // /unclaim all confirm
+        manager.command(unclaimBuilder.literal("all").literal("confirm")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
+                    FoliaScheduler.runForPlayer(plugin, player, () -> performUnclaimAll(player));
+                }));
+
+        // /unclaim confirm
+        manager.command(unclaimBuilder.literal("confirm")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
+                    FoliaScheduler.runForPlayer(plugin, player, () -> performUnclaimAll(player));
                 }));
     }
 
@@ -104,9 +142,15 @@ public class UnclaimCommand implements LandClaimCommand {
             }
 
             if (claimManager.unclaimChunk(chunk)) {
-                player.sendMessage(configManager.getMessage("chunk-unclaimed"));
+                int count = profile.getOwnedChunks().size();
+                int limit = claimManager.getClaimLimit(player);
+                player.sendMessage(configManager.getMessage("chunk-unclaimed",
+                        "<chunks>", String.valueOf(count),
+                        "<limit>", String.valueOf(limit)));
+                plugin.getVisualizationManager().showTemporary(player);
                 // Update action bar cache so EventListener sends correct message
                 plugin.getListenerManager().getEventListener().updatePlayerClaimCache(player);
+                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
             }
         });
     }
