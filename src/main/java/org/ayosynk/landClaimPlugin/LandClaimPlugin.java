@@ -33,6 +33,8 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
     private CommandHandler commandHandler;
     private ListenerManager listenerManager;
     private HookManager hookManager;
+    private UpdateManager updateManager;
+    private MinimapManager minimapManager;
 
     // API delegate for interface methods
     private LandClaimAPIImpl apiDelegate;
@@ -86,7 +88,8 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
                 getLogger().info("Warp and Claim systems initialized.");
             });
 
-            // 7. Initialize and register commands
+            // 7. Initialize minimap and commands
+            minimapManager = new MinimapManager(this);
             commandHandler = new CommandHandler(this, claimManager, configManager, visualizationManager, warpManager);
 
             // 8. Initialize and register listeners
@@ -99,6 +102,10 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
 
             // 10. Initialize public API for external plugins
             apiDelegate = new LandClaimAPIImpl(this);
+
+            // 11. Initialize update manager and check for updates
+            updateManager = new UpdateManager(this);
+            updateManager.checkForUpdates();
 
             // Refresh settings once more
             configManager.reloadMainConfig();
@@ -194,6 +201,14 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
 
     public HookManager getHookManager() {
         return hookManager;
+    }
+
+    public UpdateManager getUpdateManager() {
+        return updateManager;
+    }
+
+    public MinimapManager getMinimapManager() {
+        return minimapManager;
     }
 
     public void reloadPlugin() {

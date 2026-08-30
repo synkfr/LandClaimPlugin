@@ -38,6 +38,7 @@ public class ListenerManager {
         pm.registerEvents(eventListener, plugin);
         pm.registerEvents(new CommandBlocker(plugin, claimManager), plugin);
         pm.registerEvents(new PlayerJoinListener(plugin, visualizationManager), plugin);
+        pm.registerEvents(new org.ayosynk.landClaimPlugin.listeners.MinimapListener(plugin), plugin);
 
         // Protection Listeners
         pm.registerEvents(new BlockProtectionListener(plugin, claimManager, configManager), plugin);

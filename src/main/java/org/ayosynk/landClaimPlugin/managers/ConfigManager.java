@@ -10,8 +10,6 @@ import org.ayosynk.landClaimPlugin.config.MessagesConfig;
 import org.ayosynk.landClaimPlugin.config.PluginConfig;
 import org.ayosynk.landClaimPlugin.config.menus.MainMenuConfig;
 import org.ayosynk.landClaimPlugin.config.menus.ClaimSettingsConfig;
-import org.ayosynk.landClaimPlugin.config.menus.ClaimMapConfig;
-import org.ayosynk.landClaimPlugin.config.menus.ClaimMapInfoConfig;
 import org.ayosynk.landClaimPlugin.config.menus.VisitorSettingsConfig;
 import org.ayosynk.landClaimPlugin.config.menus.TrustManagementConfig;
 import org.ayosynk.landClaimPlugin.config.menus.PlayerTrustPermissionConfig;
@@ -44,8 +42,6 @@ public class ConfigManager {
     private MessagesConfig messagesConfig;
     private MainMenuConfig mainMenuConfig;
     private ClaimSettingsConfig claimSettingsConfig;
-    private ClaimMapConfig claimMapConfig;
-    private ClaimMapInfoConfig claimMapInfoConfig;
     private VisitorSettingsConfig visitorSettingsConfig;
     private TrustManagementConfig trustManagementConfig;
     private PlayerTrustPermissionConfig playerTrustPermissionConfig;
@@ -77,6 +73,7 @@ public class ConfigManager {
         loadConfigs();
     }
 
+    @SuppressWarnings("deprecation")
     private void loadConfigs() {
         this.pluginConfig = eu.okaeri.configs.ConfigManager.create(PluginConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
@@ -119,20 +116,6 @@ public class ConfigManager {
         this.claimSettingsConfig = eu.okaeri.configs.ConfigManager.create(ClaimSettingsConfig.class, (it) -> {
             it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
             it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimSettings.yml"));
-            it.saveDefaults();
-            it.load(true);
-        });
-
-        this.claimMapConfig = eu.okaeri.configs.ConfigManager.create(ClaimMapConfig.class, (it) -> {
-            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
-            it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimMap.yml"));
-            it.saveDefaults();
-            it.load(true);
-        });
-
-        this.claimMapInfoConfig = eu.okaeri.configs.ConfigManager.create(ClaimMapInfoConfig.class, (it) -> {
-            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
-            it.withBindFile(new File(plugin.getDataFolder(), "menus/ClaimMapInfo.yml"));
             it.saveDefaults();
             it.load(true);
         });
@@ -316,8 +299,6 @@ public class ConfigManager {
         messagesConfig.load();
         mainMenuConfig.load();
         claimSettingsConfig.load();
-        claimMapConfig.load();
-        claimMapInfoConfig.load();
         visitorSettingsConfig.load();
         trustManagementConfig.load();
         playerTrustPermissionConfig.load();
@@ -357,14 +338,6 @@ public class ConfigManager {
 
     public ClaimSettingsConfig getClaimSettingsConfig() {
         return claimSettingsConfig;
-    }
-
-    public ClaimMapConfig getClaimMapConfig() {
-        return claimMapConfig;
-    }
-
-    public ClaimMapInfoConfig getClaimMapInfoConfig() {
-        return claimMapInfoConfig;
     }
 
     public VisitorSettingsConfig getVisitorSettingsConfig() {
@@ -523,6 +496,10 @@ public class ConfigManager {
 
     public String getDefaultVisualizationMode() {
         return "OFF";
+    }
+
+    public boolean isActionBarEnabled() {
+        return pluginConfig.actionbarEnabled;
     }
 
     public int getActionBarUpdateInterval() {

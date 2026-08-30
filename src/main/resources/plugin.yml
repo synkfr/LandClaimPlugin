@@ -1,5 +1,5 @@
 name: LandClaimPlugin
-version: "2.5.0"
+version: "3.0.0"
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: "1.21"
 author: AyoSynk
@@ -31,6 +31,14 @@ permissions:
       landclaim.unclaimall: true
       landclaim.leave: true
       landclaim.ban: true
+      landclaim.update.notify: true
+      landclaim.minimap: true
+  landclaim.minimap:
+    description: Access to the held territory map
+    default: true
+  landclaim.update.notify:
+    description: Receive notifications when a new version of LandClaimPlugin is released
+    default: op
   landclaim.claim:
     description: Basic claiming permission
     default: true

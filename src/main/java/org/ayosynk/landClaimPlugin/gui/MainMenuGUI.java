@@ -49,7 +49,7 @@ public class MainMenuGUI {
                         ingredients.put('M', GuiHelper.buildSlot(config.claimMap.material, config.claimMap.name,
                                         config.claimMap.lore, profile, player, ownerName, claimName, (p, e) -> {
                                                 p.closeInventory();
-                                                ClaimMapGUI.open(p, profile, plugin);
+                                                plugin.getMinimapManager().giveOrOpenMinimap(p);
                                         }));
                         ingredients.put('W', GuiHelper.buildSlot(config.warps.material, config.warps.name,
                                         config.warps.lore, profile, player, ownerName, claimName, (p, e) -> {

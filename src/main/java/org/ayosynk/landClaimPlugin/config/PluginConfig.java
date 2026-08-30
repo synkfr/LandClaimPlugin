@@ -205,6 +205,9 @@ public class PluginConfig extends OkaeriConfig {
     })
     public int minClaimGap = 0;
 
+    @Comment("Enable or disable the action bar display for claim status and wilderness.")
+    public boolean actionbarEnabled = true;
+
     @Comment("Interval in server ticks (20 ticks = 1 second) for updating the player action bar display (boundary titles, claim status, etc.).")
     public int actionbarUpdateInterval = 20;
 
@@ -248,6 +251,49 @@ public class PluginConfig extends OkaeriConfig {
         "Useful for blocking slurs, swearing, or other inappropriate/reserved names."
     })
     public String bannedClaimNamesFile = "banned-claim-name.txt";
+
+    @Comment({
+        "Update Checker & Version Notification",
+        "Automatically checks Modrinth for new versions of LandClaimPlugin.",
+        "When an update is available, server operators and players with the permission",
+        "will receive a notification on join."
+    })
+    public UpdateCheckerConfig updateChecker = new UpdateCheckerConfig();
+
+    public static class UpdateCheckerConfig extends OkaeriConfig {
+        @Comment("Enable or disable checking for new plugin versions.")
+        public boolean enabled = true;
+
+        @Comment("The project ID or slug on Modrinth to check for updates.")
+        public String modrinthProjectId = "landclaimplugin";
+
+        @Comment("Permission required to receive update notifications on join (or OP).")
+        public String notifyPermission = "landclaim.admin";
+    }
+
+    @Comment({
+        "In-Game Held Territory Map (Minimap)",
+        "Renders a 128x128 live territory radar on a vanilla Filled Map item.",
+        "Fully compatible with Java Edition and Bedrock/Geyser players."
+    })
+    public MinimapConfig minimap = new MinimapConfig();
+
+    public static class MinimapConfig extends OkaeriConfig {
+        @Comment("Enable or disable the in-game held territory map feature.")
+        public boolean enabled = true;
+
+        @Comment("Persisted MapView ID assigned to the territory map (-1 for automatic creation).")
+        public int mapId = -1;
+
+        @Comment("Custom display name for the Territory Map item.")
+        public String itemName = "<gold><bold>Territory Map</bold></gold>";
+
+        @Comment("Custom lore lines for the Territory Map item.")
+        public List<String> itemLore = List.of(
+            "<gray>Hold in hand or off-hand to view nearby claims.",
+            "<yellow>Right-click to toggle zoom level.</yellow>"
+        );
+    }
     
     /**
      * Validate configuration values and return a list of error messages.

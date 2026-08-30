@@ -300,13 +300,28 @@ public class ClaimCommand implements LandClaimCommand {
                     FoliaScheduler.runForPlayer(plugin, player, () -> AllyManagementGUI.open(player, profile, plugin));
                 }));
 
+        // /claim minimap
+        manager.command(claimBuilder.literal("minimap")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.minimap", plugin)) return;
+                    plugin.getMinimapManager().giveOrOpenMinimap(player);
+                }));
+
+        // /claim map
+        manager.command(claimBuilder.literal("map")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.minimap", plugin)) return;
+                    plugin.getMinimapManager().giveOrOpenMinimap(player);
+                }));
+
         // /claim menu map
         manager.command(claimBuilder.literal("menu").literal("map")
                 .handler(context -> {
                     Player player = context.sender().source();
-                    ClaimProfile profile = resolveProfileForMenu(player);
-                    if (profile == null) return;
-                    FoliaScheduler.runForPlayer(plugin, player, () -> ClaimMapGUI.open(player, profile, plugin));
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.minimap", plugin)) return;
+                    plugin.getMinimapManager().giveOrOpenMinimap(player);
                 }));
 
         // /claim menu warps
@@ -425,6 +440,9 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void updateActionBarInstant(Player player) {
+        if (!configManager.isActionBarEnabled()) {
+            return;
+        }
         org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation().getChunk());
         org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfileAt(pos);
 
