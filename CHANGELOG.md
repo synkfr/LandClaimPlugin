@@ -5,9 +5,19 @@ All notable changes to LandClaimPlugin will be documented in this file.
 ## [3.0.0] - 2026-08-30
 
 ### Added
+- **Radius Claiming & Unclaiming:**
+  - Added `/claim radius <1-5>` and `/unclaim radius <1-5>` for bulk area territory expansion and contraction.
+  - Automatically respects permission gates, claim limits, world blacklists, WorldGuard boundaries, and adjacency rules.
+- **Instant Particle Feedback & Quota Progress:**
+  - Dynamic temporary boundary visualization flash upon claiming or unclaiming chunks.
+  - Pling/Bass audio feedback for interactive confirmation.
+  - Chat quota indicator displaying `<chunks>/<limit>` claimed.
+- **Auto-Unclaim Command:**
+  - Registered `/unclaim auto` allowing players to unclaim chunks as they move.
 - **In-Game Held Territory Map (Minimap):**
   - Live 128×128 pixel radar map rendering directly onto a vanilla `FILLED_MAP` item using Bukkit's `MapView` & `MapRenderer` canvas.
-  - Renders chunk polygons, boundary grid lines, and colored fills for own claims (`#2ecc71`), allies (`#9b59b6`), members/trusted (`#3498db`), foreign claims (`#e74c3c`), and wilderness (`#282c34`).
+  - Accurate player-centered projection tracking smooth sub-chunk movement across 16×16 blocks.
+  - Renders chunk polygons, boundary grid lines, custom profile claim colors (`#RRGGBB`), allies (`#9b59b6`), members/trusted (`#3498db`), foreign claims (`#e74c3c`), and wilderness (`#282c34`).
   - Real-time rotating player cursor (`MapCursor.Type.PLAYER`) and dynamic territory name banner.
   - Interactive right-click zoom toggle between **Overview mode (16×16 chunks)** and **Close Detail mode (8×8 chunks)** with audio feedback.
   - Full **Bedrock / Geyser** support (rendered seamlessly in hand, off-hand, and wall Item Frames).
@@ -15,16 +25,31 @@ All notable changes to LandClaimPlugin will be documented in this file.
   - New permission: `landclaim.minimap` (default: `true`).
   - Configurable via `minimap` section in `config.yml`.
 - **Modrinth Update Checker:**
-  - Automated asynchronous update checker querying the Modrinth v2 API on startup.
+  - Automated asynchronous update checker querying the Modrinth v2 API on startup (`PAlDTriF`).
   - Interactive MiniMessage join notification with clickable links for server operators/admins with `landclaim.update.notify` permission.
   - Configurable via `updateChecker` section in `config.yml`.
 - **Action Bar Display Toggle:**
   - Added `actionbarEnabled` option (default: `true`) to enable/disable claim status and wilderness action bar messages.
-- **Minecraft 1.21+ / Paper Compatibility:**
-  - Updated to latest Paper API build `26.2.build.120-stable` with `--release 21`.
+- **Java 25 & Paper 26.2+ Compatibility:**
+  - Upgraded bytecode target to Java 25 (`release 25`, class file version 69.0) aligned with Paper API `26.2.build.120-stable`.
+  - Upgraded `maven-shade-plugin` to `3.6.0` with ASM 9.8 for Java 25 bytecode relocation.
+
+### Changed & Improved
+- **Unclaim Command Consolidation:**
+  - Unified all unclaiming commands exclusively under `/unclaim` (`/unclaim`, `/unclaim radius <1-5>`, `/unclaim auto`, `/unclaim all [confirm]`).
+  - Removed duplicate unclaim subcommands from `/claim`.
+- **SQL Error Handling & Transaction Integrity:**
+  - Fixed `CompletableFuture` exception propagation in `SQLProfileDao` and `SQLWarpDao` to prevent cache desyncs on rolled-back transactions.
+  - Removed redundant queries in `SQLProfileDao.getProfile`.
+  - Added safe `Material.getMaterial(...)` fallback in `SQLWarpDao` to prevent server startup crashes on missing/renamed materials.
+- **Role Cleanup on Ownership Transfer:**
+  - Automatically cleans up member and trusted roles for the new owner upon claim transfer.
 
 ### Removed
-- **Legacy GUI Map:**
+- **Legacy V1 Code Purge:**
+  - Removed dead legacy `Claim.java` and `ChunkSelection.java` models.
+  - Removed unused `ClaimDao`, `SQLClaimDao`, `RoleDao`, and `SQLRoleDao`.
+  - Removed legacy `claimCache` from `CacheManager` and `INVALIDATE_CLAIM` from `RedisManager`.
   - Removed outdated inventory-based GUI map (`ClaimMapGUI`, `ClaimMapInfoGUI`) in favor of the high-resolution held Territory Map.
 
 ## [2.5.0] - 2026-06-19
