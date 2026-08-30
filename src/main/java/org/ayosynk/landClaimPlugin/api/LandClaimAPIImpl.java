@@ -9,7 +9,6 @@ import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.Warp;
 import org.ayosynk.landClaimPlugin.models.ClaimPlayer;
-import org.ayosynk.landClaimPlugin.models.ChunkSelection;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;

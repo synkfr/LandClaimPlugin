@@ -98,9 +98,6 @@ public class RedisManager {
             CacheManager cache = plugin.getCacheManager();
 
             switch (action) {
-                case "INVALIDATE_CLAIM":
-                    cache.getClaimCache().invalidate(targetId);
-                    break;
                 case "INVALIDATE_PLAYER":
                     cache.getPlayerCache().invalidate(targetId);
                     break;

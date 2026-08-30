@@ -2,7 +2,6 @@ package org.ayosynk.landClaimPlugin.managers;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
-import org.ayosynk.landClaimPlugin.models.Claim;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.ayosynk.landClaimPlugin.models.Warp;
 import org.bukkit.Bukkit;
@@ -10,17 +9,12 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-
 import java.util.*;
-import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.ayosynk.landClaimPlugin.models.ChunkSelection;
 
 public class ClaimManager {
     private final LandClaimPlugin plugin;
     private final ConfigManager configManager;
-    private final Map<UUID, ChunkSelection> playerSelections = new HashMap<>();
 
     // Map of <ReceiverProfileOwnerId, Set<SenderProfileOwnerId>> for pending ally
     // invites
@@ -469,125 +463,6 @@ public class ClaimManager {
     }
 
     /**
-     * Claim multiple chunks at once (for selection-based claiming).
-     */
-    public int claimChunks(Player player, Set<ChunkPosition> chunksToClaim) {
-        // Enforce landclaim.claim at the lowest level so /claim, auto-claim,
-        // the claim-map GUI click, and any API caller all respect the permission.
-        if (!player.hasPermission("landclaim.claim") && !player.hasPermission("landclaim.admin")) {
-            player.sendMessage(configManager.getMessage("access-denied"));
-            return 0;
-        }
-
-        if (chunksToClaim.isEmpty())
-            return 0;
-
-        String worldName = chunksToClaim.iterator().next().world();
-
-        UUID playerId = player.getUniqueId();
-
-        // Check if player is member/trusted elsewhere
-        for (ClaimProfile p : plugin.getCacheManager().getProfileCache().asMap().values()) {
-            if (!p.isOwner(playerId) && (p.isMember(playerId) || p.isTrusted(playerId))) {
-                player.sendMessage(configManager.getMessage("cannot-claim-as-member"));
-                return 0;
-            }
-        }
-
-        ClaimProfile profile = getActiveProfile(player);
-        if (profile == null) {
-            String defaultName = player.getName() + "'s Claim";
-            profile = new ClaimProfile(playerId, defaultName);
-        }
-
-        int claimLimit = getClaimLimit(player);
-        int currentTotalChunks = profile.getOwnedChunks().size();
-
-        if (currentTotalChunks + chunksToClaim.size() > claimLimit) {
-            player.sendMessage(configManager.getMessage("claim-limit-reached", "<limit>", String.valueOf(claimLimit)));
-            return 0;
-        }
-
-        // Validate all chunks are in same world and that world is not blocked
-        for (ChunkPosition pos : chunksToClaim) {
-            if (!pos.world().equals(worldName))
-                return 0;
-            if (configManager.isWorldBlocked(pos.world())) {
-                player.sendMessage(configManager.getMessage("world-blocked"));
-                return 0;
-            }
-        }
-        
-        // Validate each chunk for other restrictions
-        for (ChunkPosition pos : chunksToClaim) {
-            if (isChunkClaimed(pos)) {
-                UUID owner = getChunkOwner(pos);
-                ClaimProfile ownerProfile = getProfile(owner);
-                String ownerName = ownerProfile != null ? ownerProfile.getDisplayOwnerName() : plugin.getServer().getOfflinePlayer(owner).getName();
-                player.sendMessage(
-                        configManager.getMessage("already-claimed", "<owner>",
-                                ownerName != null ? ownerName : "Unknown"));
-                return 0;
-            }
-
-            int worldGuardGap = configManager.getWorldGuardGap();
-            if (worldGuardGap > 0) {
-                if (isTooCloseToWorldGuardRegion(pos, worldGuardGap)) {
-                    player.sendMessage(
-                            configManager.getMessage("too-close-to-worldguard", "{gap}",
-                                    String.valueOf(worldGuardGap)));
-                    return 0;
-                }
-            }
-
-            int minGap = configManager.getMinClaimGap();
-            if (minGap > 0) {
-                if (isTooCloseToOtherProfile(worldName, pos, playerId, minGap)) {
-                    player.sendMessage(
-                            configManager.getMessage("too-close-to-other-claim", "{gap}", String.valueOf(minGap)));
-                    return 0;
-                }
-            }
-        }
-
-        if (configManager.requireConnectedClaims() && currentTotalChunks > 0) {
-            boolean connected = false;
-            for (ChunkPosition pos : chunksToClaim) {
-                if (isConnectedToOwnChunks(pos, profile)) {
-                    connected = true;
-                    break;
-                }
-            }
-            if (!connected) {
-                player.sendMessage(configManager.getMessage("not-connected"));
-                return 0;
-            }
-        }
-
-        // Fire events and check cancellations
-        for (ChunkPosition pos : chunksToClaim) {
-            org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent createEvent = new org.ayosynk.landClaimPlugin.api.event.ClaimCreateEvent(profile, pos, playerId);
-            Bukkit.getPluginManager().callEvent(createEvent);
-            if (createEvent.isCancelled()) {
-                player.sendMessage(configManager.getMessage("claim-failed"));
-                return 0;
-            }
-        }
-
-        for (ChunkPosition pos : chunksToClaim) {
-            profile.addChunk(pos);
-            addToSpatialIndex(pos, profile);
-        }
-
-        plugin.getCacheManager().getProfileCache().put(playerId, profile);
-        saveAndSync(profile);
-
-        plugin.getVisualizationManager().invalidateCache(playerId);
-        plugin.getHookManager().refreshMapHooks();
-        return chunksToClaim.size();
-    }
-
-    /**
      * Claim all valid chunks within a square radius around a center chunk.
      */
     public int claimRadius(Player player, Chunk centerChunk, int radius) {
@@ -998,49 +873,6 @@ public class ClaimManager {
         return count;
     }
 
-    // ========== Backward compatibility ==========
-
-    /**
-     * @deprecated Use getProfileAt() instead. Kept for compatibility during
-     *             migration.
-     */
-    @Deprecated
-    public Claim getClaimAt(ChunkPosition pos) {
-        // Legacy: scan old claim cache
-        for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
-            if (claim.getChunks().contains(pos) && claim.getParentClaimId() == null) {
-                return claim;
-            }
-        }
-        return null;
-    }
-
-    @Deprecated
-    public Claim getSubClaimAt(ChunkPosition pos) {
-        for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
-            if (claim.getChunks().contains(pos) && claim.getParentClaimId() != null) {
-                return claim;
-            }
-        }
-        return null;
-    }
-
-    @Deprecated
-    public Set<Claim> getPlayerClaims(UUID playerId) {
-        Set<Claim> claims = new HashSet<>();
-        for (Claim claim : plugin.getCacheManager().getClaimCache().asMap().values()) {
-            if (claim.getProfileId().equals(playerId) && claim.getParentClaimId() == null) {
-                claims.add(claim);
-            }
-        }
-        return claims;
-    }
-
-    @Deprecated
-    public int unclaimAll(UUID playerId) {
-        return abandonProfile(playerId);
-    }
-
     // ========== Internal helpers ==========
 
     public void saveAndSync(ClaimProfile profile) {
@@ -1122,12 +954,9 @@ public class ClaimManager {
 
         org.ayosynk.landClaimPlugin.models.ClaimPlayer cp = plugin.getCacheManager().getPlayerCache()
                 .getIfPresent(playerId);
-        // If not in cache, we could load from DB, but usually if they have bonus blocks we'd have it in cache or DB.
-        // For now, use cache.
         if (cp != null) {
             limit += cp.getBonusClaimBlocks();
         } else {
-            // Fallback to fetch from DB synchronously if not in cache (since claiming is synchronous mostly, but this is a quick fix)
             org.ayosynk.landClaimPlugin.models.ClaimPlayer dbCp = null;
             try {
                 dbCp = plugin.getDatabaseManager().getPlayerDao().getPlayer(playerId).join();
@@ -1137,13 +966,5 @@ public class ClaimManager {
             }
         }
         return limit;
-    }
-
-    public ChunkSelection getSelection(UUID playerId) {
-        return playerSelections.computeIfAbsent(playerId, k -> new ChunkSelection());
-    }
-
-    public void clearSelection(UUID playerId) {
-        playerSelections.remove(playerId);
     }
 }

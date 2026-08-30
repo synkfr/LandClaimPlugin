@@ -93,13 +93,6 @@ public class MessagesConfig extends OkaeriConfig {
     public String claimInfoTrusted = "<green>Trusted: <gold><players>";
 
     // Commands hardcoded messages
-    public String chunksClaimedSuccess = "<green>Successfully claimed <count> chunks!";
-    public String claimFailed = "<red>Failed to claim chunks. Limit reached or already claimed.";
-    public String selectionRequired = "<red>You must make a selection first using the Claim Wand.";
-    public String subclaimMustBeOwned = "<red>All chunks in a sub-claim must be within your own claim.";
-    public String subclaimAlreadyExists = "<red>A sub-claim already exists here.";
-    public String subclaimOverlap = "<red>A sub-claim cannot overlap multiple different claims.";
-    public String subclaimCreated = "<green>Successfully created sub-claim/zone with <count> chunks!";
     public String notInClaim = "<red>You are not standing in a claim.";
     public String autoClaimEnabled = "<green>Auto-claim enabled.";
     public String autoClaimDisabled = "<red>Auto-claim disabled.";
