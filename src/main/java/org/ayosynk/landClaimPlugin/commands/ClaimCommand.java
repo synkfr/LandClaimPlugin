@@ -396,54 +396,6 @@ public class ClaimCommand implements LandClaimCommand {
                     toggleVisualizationMode(player, mode);
                 }));
 
-        // ========== /claim unclaimall / /claim unclaim all ==========
-        manager.command(claimBuilder.literal("unclaimall")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
-                    player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
-                }));
-
-        // /claim unclaimall confirm
-        manager.command(claimBuilder.literal("unclaimall").literal("confirm")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
-                    FoliaScheduler.runForPlayer(plugin, player, () -> unclaimAll(player));
-                }));
-
-        // /claim unclaim confirm
-        manager.command(claimBuilder.literal("unclaim").literal("confirm")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
-                    FoliaScheduler.runForPlayer(plugin, player, () -> unclaimAll(player));
-                }));
-
-        // /claim unclaim all
-        manager.command(claimBuilder.literal("unclaim").literal("all")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
-                    player.sendMessage(configManager.getMessage("unclaim-all-confirm"));
-                }));
-
-        // /claim unclaim all confirm
-        manager.command(claimBuilder.literal("unclaim").literal("all").literal("confirm")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaimall", plugin)) return;
-                    FoliaScheduler.runForPlayer(plugin, player, () -> unclaimAll(player));
-                }));
-
-        // /claim unclaim auto
-        manager.command(claimBuilder.literal("unclaim").literal("auto")
-                .handler(context -> {
-                    Player player = context.sender().source();
-                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unclaim", plugin)) return;
-                    toggleAutoUnclaim(player);
-                }));
-
         // ========== /claim leave <claim name> ==========
         manager.command(claimBuilder.literal("leave")
                 .required("name", StringParser.greedyStringParser(), ClaimLeaveSuggestions.get(plugin))
@@ -980,26 +932,6 @@ public class ClaimCommand implements LandClaimCommand {
         plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
 
         player.sendMessage(configManager.getMessage("claim-color-changed"));
-    }
-
-    private void unclaimAll(Player player) {
-        ClaimProfile profile = claimManager.getActiveProfile(player);
-        if (profile == null) {
-            player.sendMessage(configManager.getMessage("no-profile"));
-            return;
-        }
-
-        if (!profile.isOwner(player.getUniqueId())) {
-            player.sendMessage(configManager.getMessage("not-owner"));
-            return;
-        }
-
-        int chunksDeleted = claimManager.abandonProfile(profile.getProfileId());
-        player.sendMessage(configManager.getMessage("profile-abandoned",
-                "<chunks>", String.valueOf(chunksDeleted)));
-
-        plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
-        plugin.getHookManager().refreshMapHooks();
     }
 
     private void leaveClaim(Player player, String claimName) {

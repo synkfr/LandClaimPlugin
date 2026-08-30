@@ -161,7 +161,7 @@ public class MessagesConfig extends OkaeriConfig {
     public String multiProfilesDisabled = "<red>The multi-profile system is currently disabled on this server.";
     public String alreadyHasProfile = "<red>You already have a claim profile.";
     public String profileAbandoned = "<red>All your claims have been abandoned.";
-    public String unclaimAllConfirm = "<yellow>Are you sure you want to unclaim ALL of your chunks? Type <click:run_command:'/unclaim all confirm'><gold>/unclaim all confirm</gold></click> or <click:run_command:'/claim unclaim confirm'><gold>/claim unclaim confirm</gold></click> to proceed.</yellow>";
+    public String unclaimAllConfirm = "<yellow>Are you sure you want to unclaim ALL of your chunks? Type <click:run_command:'/unclaim all confirm'><gold>/unclaim all confirm</gold></click> to proceed.</yellow>";
 
     // --- Trust / Member ---
     public String notAMember = "<red>That player is not a member of this claim.";

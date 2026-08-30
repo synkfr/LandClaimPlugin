@@ -173,8 +173,6 @@ For addons that want to act on claim lifecycle, listen for
 | `/claim color <color>` | Change claim color using a named color or hex code (e.g., `red`, `#FF5500`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block if trapped |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
-| `/claim unclaim confirm` | Confirm unclaiming all chunks and deleting your active profile |
-| `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires confirmation) |
 | `/claim pvp <on/off> [time]` | Toggle PvP globally in the claim, with an optional time duration in seconds |
 | `/unclaim` | Unclaim the chunk you're standing in |
 | `/unclaim auto` | Toggle auto-unclaim mode (unclaim your owned chunks as you walk) |

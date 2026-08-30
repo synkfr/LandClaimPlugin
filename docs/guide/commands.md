@@ -21,8 +21,6 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim color <color>` | Change claim color using a named color (e.g., `red`, `lime`) or hex code (e.g., `#FF5500`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block |
 | `/claim abandon` | Delete your entire active claim profile and all its chunks |
-| `/claim unclaim confirm` | Confirm unclaiming all chunks and deleting your active profile |
-| `/claim unclaimall` | Unclaim all chunks and delete your active profile (requires confirm) |
 | `/claim pvp <on/off> [time]` | Toggle PvP in the claim, with optional duration in seconds |
 | `/claim buy claim [amount]` | Buy extra claim blocks |
 | `/claim buy role` | Buy an additional custom role slot for your active profile |
