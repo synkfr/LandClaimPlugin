@@ -21,6 +21,7 @@ import org.incendo.cloud.parser.standard.IntegerParser;
 import org.incendo.cloud.parser.standard.StringParser;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -171,8 +172,7 @@ public class ClaimCommand implements LandClaimCommand {
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.setwarp", plugin)) return;
                     String name = context.get("name");
                     String visibility = context.getOrDefault("visibility", null);
-                    boolean makePublic = visibility != null && visibility.equalsIgnoreCase("public");
-                    FoliaScheduler.runForPlayer(plugin, player, () -> setWarp(player, name, makePublic));
+                    FoliaScheduler.runForPlayer(plugin, player, () -> setWarp(player, name, visibility));
                 }));
 
         // /claim publicwarps
@@ -193,14 +193,15 @@ public class ClaimCommand implements LandClaimCommand {
                     FoliaScheduler.runForPlayer(plugin, player, () -> delWarp(player, name));
                 }));
 
-        // /claim warp <name>
         manager.command(claimBuilder.literal("warp")
-                .required("name", StringParser.stringParser())
+                .required("target", StringParser.stringParser())
+                .optional("subName", StringParser.stringParser())
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.warp", plugin)) return;
-                    String name = context.get("name");
-                    FoliaScheduler.runForPlayer(plugin, player, () -> teleportToWarp(player, name));
+                    String target = context.get("target");
+                    String subName = context.getOrDefault("subName", null);
+                    FoliaScheduler.runForPlayer(plugin, player, () -> teleportToWarp(player, target, subName));
                 }));
 
         // /claim warps
@@ -721,10 +722,10 @@ public class ClaimCommand implements LandClaimCommand {
     }
 
     private void setWarp(Player player, String name) {
-        setWarp(player, name, false);
+        setWarp(player, name, null);
     }
 
-    private void setWarp(Player player, String name, boolean makePublic) {
+    private void setWarp(Player player, String name, String visibility) {
         ClaimProfile profile = claimManager.getActiveProfile(player);
         if (profile == null) {
             player.sendMessage(configManager.getMessage("no-profile"));
@@ -734,28 +735,37 @@ public class ClaimCommand implements LandClaimCommand {
         ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
         ClaimProfile atLoc = claimManager.getProfileAt(pos);
 
-        if (atLoc == null || !atLoc.getProfileId().equals(player.getUniqueId())) {
+        if (atLoc == null || (!atLoc.isOwner(player.getUniqueId()) && !atLoc.getProfileId().equals(profile.getProfileId()))) {
             player.sendMessage(configManager.getMessage("not-in-own-claim"));
             return;
         }
 
-        if (plugin.getWarpManager().getWarpCount(player.getUniqueId()) >= plugin.getWarpManager()
+        if (plugin.getWarpManager().getWarpCount(profile.getProfileId()) >= plugin.getWarpManager()
                 .getWarpLimit(player)) {
             player.sendMessage(configManager.getMessage("warp-limit-reached"));
             return;
         }
 
-        // Preserve the public flag if the warp already exists with a different state.
         org.ayosynk.landClaimPlugin.models.Warp existing = plugin.getWarpManager()
-                .getWarp(player.getUniqueId(), name);
-        boolean finalPublic = makePublic || (existing != null && existing.isPublic());
+                .getWarp(profile.getProfileId(), name);
 
-        plugin.getWarpManager().setWarp(player.getUniqueId(), name, player.getLocation(),
+        boolean finalPublic;
+        if (visibility != null) {
+            finalPublic = visibility.equalsIgnoreCase("public");
+        } else {
+            finalPublic = existing != null && existing.isPublic();
+        }
+
+        boolean saved = plugin.getWarpManager().setWarp(profile.getProfileId(), name, player.getLocation(),
                 Material.ENDER_PEARL, finalPublic);
+        if (!saved) return;
+
         profile.addWarp(new Warp(name, player.getLocation(), Material.ENDER_PEARL, finalPublic));
         player.sendMessage(configManager.getMessage("warp-set", "<name>", name));
         if (finalPublic) {
             player.sendMessage(configManager.getMessage("warp-made-public", "<name>", name));
+        } else if (existing != null && existing.isPublic()) {
+            player.sendMessage(configManager.getMessage("warp-made-private", "<name>", name));
         }
     }
 
@@ -766,7 +776,7 @@ public class ClaimCommand implements LandClaimCommand {
             return;
         }
 
-        if (plugin.getWarpManager().deleteWarp(player.getUniqueId(), name)) {
+        if (plugin.getWarpManager().deleteWarp(profile.getProfileId(), name)) {
             profile.removeWarp(name);
             player.sendMessage(configManager.getMessage("warp-deleted", "<name>", name));
         } else {
@@ -774,24 +784,80 @@ public class ClaimCommand implements LandClaimCommand {
         }
     }
 
-    private void teleportToWarp(Player player, String name) {
-        ClaimProfile profile = claimManager.getActiveProfile(player);
-        if (profile == null) {
-            player.sendMessage(configManager.getMessage("no-profile"));
+    private void teleportToWarp(Player player, String target, String subName) {
+        if (plugin.getCombatManager().isInCombat(player)) {
+            player.sendMessage(configManager.getMessage("in-combat"));
             return;
         }
 
-        Warp warp = profile.getWarp(name);
-        if (warp == null) {
-            player.sendMessage(configManager.getMessage("warp-not-found", "<name>", name));
-            return;
+        String ownerQuery = null;
+        String warpName;
+
+        if (subName != null && !subName.isEmpty()) {
+            ownerQuery = target;
+            warpName = subName;
+        } else if (target.contains(":")) {
+            String[] parts = target.split(":", 2);
+            ownerQuery = parts[0];
+            warpName = parts[1];
+        } else {
+            warpName = target;
         }
 
-        player.teleportAsync(warp.getLocation()).thenAccept(success -> {
-            if (success) {
-                player.sendMessage(configManager.getMessage("warp-teleport", "<name>", name));
+        if (ownerQuery != null) {
+            Map.Entry<UUID, Warp> match = plugin.getWarpManager().findPublicWarpByOwner(ownerQuery, warpName);
+            if (match == null) {
+                player.sendMessage(configManager.getMessage("warp-not-found", "<name>", target));
+                return;
             }
-        });
+            Warp warp = match.getValue();
+            String ownerName = Bukkit.getOfflinePlayer(match.getKey()).getName();
+            if (ownerName == null) ownerName = ownerQuery;
+            final String finalOwner = ownerName;
+            player.teleportAsync(warp.getLocation()).thenAccept(success -> {
+                if (success) {
+                    player.sendMessage(configManager.getMessage("publicwarps-teleported",
+                            "<owner>", finalOwner, "<name>", warp.getName()));
+                }
+            });
+            return;
+        }
+
+        ClaimProfile profile = claimManager.getActiveProfile(player);
+        if (profile != null) {
+            Warp ownWarp = profile.getWarp(warpName);
+            if (ownWarp != null) {
+                player.teleportAsync(ownWarp.getLocation()).thenAccept(success -> {
+                    if (success) {
+                        player.sendMessage(configManager.getMessage("warp-teleport", "<name>", ownWarp.getName()));
+                    }
+                });
+                return;
+            }
+        }
+
+        List<Map.Entry<UUID, Warp>> matches = plugin.getWarpManager().findAllPublicWarps(warpName);
+        if (matches.isEmpty()) {
+            player.sendMessage(configManager.getMessage("warp-not-found", "<name>", warpName));
+            return;
+        }
+
+        if (matches.size() == 1) {
+            Map.Entry<UUID, Warp> single = matches.get(0);
+            Warp warp = single.getValue();
+            String ownerName = Bukkit.getOfflinePlayer(single.getKey()).getName();
+            if (ownerName == null) ownerName = single.getKey().toString();
+            final String finalOwner = ownerName;
+            player.teleportAsync(warp.getLocation()).thenAccept(success -> {
+                if (success) {
+                    player.sendMessage(configManager.getMessage("publicwarps-teleported",
+                            "<owner>", finalOwner, "<name>", warp.getName()));
+                }
+            });
+            return;
+        }
+
+        org.ayosynk.landClaimPlugin.gui.WarpDisambiguationGUI.open(player, warpName, matches, plugin);
     }
 
     // ========== Helpers for new CLI commands ==========

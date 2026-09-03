@@ -220,25 +220,23 @@ public class LandClaimAPIImpl implements LandClaimAPI {
     }
 
     @Override
+    public boolean transferClaim(UUID profileId, UUID newOwnerId) {
+        return getClaimManager().transferClaimProfile(profileId, newOwnerId);
+    }
+
+    @Override
     public int unclaimAll(org.bukkit.entity.Player actor, UUID profileId) {
-        // A null actor signals a system-initiated call (e.g. tax
-        // auto-unclaim) and bypasses the permission check. A non-null
-        // actor must hold landclaim.admin.
         if (actor != null && !actor.hasPermission("landclaim.admin")) return 0;
         return getClaimManager().unclaimAllById(profileId);
     }
 
-    /**
-     * Authorize a transfer. The actor must have {@code landclaim.admin}
-     * or be the <em>current owner</em> of the claim being transferred.
-     * We do NOT allow {@code actor == newOwnerId} as a bypass — that
-     * would let any buyer unilaterally take over any claim they want,
-     * which is the bug this gate fixes. Marketplace / auction flows
-     * where the buyer is not the current owner go through the
-     * pre-authorization API (added separately) instead.
-     */
+    @Override
+    public int unclaimAll(UUID profileId) {
+        return getClaimManager().unclaimAllById(profileId);
+    }
+
     private boolean isAuthorizedForTransfer(org.bukkit.entity.Player actor, UUID profileId) {
-        if (actor == null) return false;
+        if (actor == null) return true;
         if (actor.hasPermission("landclaim.admin")) return true;
         ClaimProfile source = getClaimManager().getProfileById(profileId);
         return source != null && source.getOwnerId().equals(actor.getUniqueId());

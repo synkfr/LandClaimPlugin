@@ -7,6 +7,7 @@ import org.ayosynk.landClaimPlugin.gui.framework.ClickAction;
 import org.ayosynk.landClaimPlugin.gui.framework.GuiItem;
 import org.ayosynk.landClaimPlugin.gui.framework.PaginatedGui;
 import org.ayosynk.landClaimPlugin.gui.framework.SlotDefinition;
+import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.ayosynk.landClaimPlugin.models.Warp;
 import org.ayosynk.landClaimPlugin.util.FoliaScheduler;
 import org.bukkit.Bukkit;
@@ -73,6 +74,10 @@ public class PublicWarpsGUI {
                                                 return (p, e) -> {
                                                         if (e.getClick() == ClickType.LEFT) {
                                                                 p.closeInventory();
+                                                                if (plugin.getCombatManager().isInCombat(p)) {
+                                                                        p.sendMessage(plugin.getConfigManager().getMessage("in-combat"));
+                                                                        return;
+                                                                }
                                                                 p.teleportAsync(finalWarp.getLocation())
                                                                                 .thenAccept(success -> {
                                                                                         if (success) {
@@ -106,10 +111,10 @@ public class PublicWarpsGUI {
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
                                                         (p, e) -> {
                                                                 p.closeInventory();
-                                                                org.ayosynk.landClaimPlugin.gui.MainMenuGUI
-                                                                                .open(p, plugin.getClaimManager()
-                                                                                                .getActiveProfile(p),
-                                                                                                plugin);
+                                                                ClaimProfile active = plugin.getClaimManager().getActiveProfile(p);
+                                                                if (active != null) {
+                                                                        org.ayosynk.landClaimPlugin.gui.MainMenuGUI.open(p, active, plugin);
+                                                                }
                                                         }));
 
                         Component title = GuiHelper.MM.deserialize(config.title);

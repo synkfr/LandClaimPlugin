@@ -94,10 +94,15 @@ Manages warp teleport points.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `setWarp(UUID, String, Location, Material)` | `boolean` | Create/update a warp |
+| `setWarp(UUID, String, Location, Material)` | `boolean` | Create/update a private warp |
+| `setWarp(UUID, String, Location, Material, boolean)` | `boolean` | Create/update a warp with explicit public visibility |
+| `toggleWarpPublic(UUID, String)` | `Boolean` | Toggle public/private state of a warp |
 | `deleteWarp(UUID, String)` | `boolean` | Delete a warp |
 | `getWarp(UUID, String)` | `Warp` | Get a specific warp |
-| `getWarps(UUID)` | `Map` | Get all warps for a player |
+| `getWarps(UUID)` | `Map` | Get all warps for a profile/owner |
+| `getAllPublicWarps()` | `Map` | Get all public warps across the server |
+| `findAllPublicWarps(String)` | `List` | Find all public warps matching a name (collision handling) |
+| `findPublicWarpByOwner(String, String)` | `Entry` | Find a public warp by owner and name |
 | `getWarpLimit(Player)` | `int` | Get effective warp limit |
 | `getWarpCount(UUID)` | `int` | Get current warp count |
 | `loadFromDatabase()` | `CompletableFuture` | Load all warps from DB |
@@ -286,3 +291,18 @@ if (combatManager.isInCombat(player)) {
     throw new CombatBlockedException();
 }
 ```
+
+## Events (`org.ayosynk.landClaimPlugin.api.event.*`)
+
+| Event | Cancellable | Description |
+|---|---|---|
+| `ClaimCreateEvent` | No | Dispatched when a chunk or claim is created |
+| `ClaimDeleteEvent` | No | Dispatched when a claim is deleted or abandoned |
+| `ClaimTransferEvent` | No | Dispatched when claim ownership is transferred |
+| `ClaimMemberAddEvent` | Yes | Dispatched when a member invitation is accepted |
+| `ClaimTrustAddEvent` | Yes | Dispatched when a trust invitation is accepted |
+| `WarpCreateEvent` | Yes | Dispatched when a warp is set |
+| `WarpDeleteEvent` | No | Dispatched when a warp is deleted |
+| `WarpPrivacyChangeEvent` | Yes | Dispatched when a warp is toggled between public and private |
+| `PlayerEnterClaimEvent` | No | Dispatched when a player enters a claim boundary |
+| `PlayerLeaveClaimEvent` | No | Dispatched when a player exits a claim boundary |

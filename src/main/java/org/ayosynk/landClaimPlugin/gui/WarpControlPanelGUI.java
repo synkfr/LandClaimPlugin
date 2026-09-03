@@ -75,10 +75,8 @@ public class WarpControlPanelGUI {
                                         privacyConfig.lore, (p, e) -> {
                                                 p.closeInventory();
                                                 Boolean newValue = plugin.getWarpManager()
-                                                                .toggleWarpPublic(profile.getProfileId(), warp.getName());
+                                                                .toggleWarpPublic(profile.getProfileId(), warp.getName(), p);
                                                 if (newValue == null) {
-                                                        p.sendMessage(plugin.getConfigManager().getMessage(
-                                                                        "warp-not-found", "<name>", warp.getName()));
                                                         return;
                                                 }
                                                 warp.setPublic(newValue);

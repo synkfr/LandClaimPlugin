@@ -57,10 +57,12 @@ if (profile != null) {
 | `getClaimLimit(player)` | Get player's chunk claim limit |
 | `canCreateClaim(playerId)` | Check if player can create new claim |
 
-### Admin Operations
+### Admin & Lifecycle Operations
 
 | Method | Description |
 |--------|-------------|
+| `transferClaim(profileId, newOwnerId)` | Transfer claim ownership to a new player |
+| `unclaimAll(profileId)` | Unclaim all chunks of a claim profile |
 | `adminClaimChunk(player, location)` | Force-claim chunk (requires admin permission) |
 | `adminUnclaimChunk(player, location)` | Force-unclaim chunk (requires admin permission) |
 | `addBonusBlocks(playerId, amount)` | Add/subtract bonus claim blocks |
@@ -125,6 +127,30 @@ Fired when a player leaves a claimed chunk.
 public void onPlayerLeaveClaim(PlayerLeaveClaimEvent event) {
     if (event.isToWilderness()) {
         event.getPlayer().sendMessage("Leaving " + event.getClaimName());
+    }
+}
+```
+
+### ClaimTransferEvent
+
+Fired when claim ownership is transferred.
+
+```java
+@EventHandler
+public void onClaimTransfer(ClaimTransferEvent event) {
+    System.out.println("Claim " + event.getProfile().getName() + " transferred to " + event.getNewOwnerId());
+}
+```
+
+### WarpCreateEvent & WarpPrivacyChangeEvent
+
+Fired when warps are created or privacy is modified (e.g. made public).
+
+```java
+@EventHandler
+public void onWarpPrivacyChange(WarpPrivacyChangeEvent event) {
+    if (event.isNewIsPublic()) {
+        System.out.println("Warp " + event.getWarp().getName() + " made public by " + event.getPlayer().getName());
     }
 }
 ```

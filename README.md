@@ -125,7 +125,7 @@ LandClaimPlugin so the addon only loads when the parent is present.
 
 | Addon | Description | Repository |
 |---|---|---|
-| **LandClaimPlugin-Economy** | Charge for claiming, warps, and member invites; per-chunk daily tax with auto-unclaim; server-wide claim marketplace + time-limited auctions with a GUI browser. Vault-based. | [synkfr/LandClaimPlugin-Economy](https://github.com/synkfr/LandClaimPlugin-Economy) |
+| **LandClaimPlugin-Economy** | Charge for claiming, warps, and member invites; per-chunk daily tax with auto-unclaim; server-wide claim marketplace + time-limited auctions with a GUI browser. Vault-based. | [synkfr/LandClaimPlugin-Eco-Addon](https://github.com/synkfr/LandClaimPlugin-Eco-Addon) |
 
 ### Building Your Own
 
@@ -237,10 +237,11 @@ Jump directly to specific GUI panels without navigating through the main menu.
 
 | Command | Description |
 |---|---|
-| `/claim setwarp <name>` | Set a warp at your current location |
+| `/claim setwarp <name> [public|private]` | Set a warp at your current location with optional visibility |
 | `/claim delwarp <name>` | Delete a warp |
-| `/claim warp <name>` | Teleport to a warp |
-| `/claim warps` | Open the warp management GUI |
+| `/claim warp <name> [warpName]` | Teleport to your warp, or a public warp (`/claim warp <name>` or `/claim warp <owner>:<name>`) |
+| `/claim publicwarps` | Open the server-wide public warps browser GUI |
+| `/claim warps` | Open the active claim's warp management GUI |
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
 | `/claim admin edit <player>` | Open any player's claim management GUI |

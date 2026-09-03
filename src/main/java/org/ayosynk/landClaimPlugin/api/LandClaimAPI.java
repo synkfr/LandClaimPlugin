@@ -289,21 +289,11 @@ public interface LandClaimAPI {
      */
     boolean transferClaim(Player actor, UUID profileId, UUID newOwnerId);
 
-    /**
-     * Unclaim every chunk owned by a profile (e.g. for tax auto-unclaim
-     * of an offline player). Differs from a series of adminUnclaimChunk
-     * calls in that the chunks are removed in one transaction and the
-     * claim profile is deleted.
-     *
-     * <p>Requires the {@code actor} to have {@code landclaim.admin}.
-     * For programmatic tax auto-unclaim, pass
-     * {@code Bukkit.getConsoleSender()} (the console has all permissions).</p>
-     *
-     * @param actor The player initiating the unclaim; used for permission check
-     * @param profileId The claim profile to fully unclaim
-     * @return number of chunks that were unclaimed (0 if profile not found or actor lacks permission)
-     */
+    boolean transferClaim(UUID profileId, UUID newOwnerId);
+
     int unclaimAll(Player actor, UUID profileId);
+
+    int unclaimAll(UUID profileId);
 
     /**
      * Add bonus claim blocks to a player.

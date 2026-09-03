@@ -288,6 +288,11 @@ public class ClaimManager {
     // ========== Member Invites ==========
 
     public void sendMemberInvite(Player sender, Player target, ClaimProfile profile) {
+        org.ayosynk.landClaimPlugin.api.event.ClaimMemberAddEvent event =
+                new org.ayosynk.landClaimPlugin.api.event.ClaimMemberAddEvent(profile, target.getUniqueId(), sender);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
         pendingMemberInvites.put(target.getUniqueId(), profile.getProfileId());
 
         sender.sendMessage(configManager.getMessage("member-invited", "<player>", target.getName()));
@@ -301,6 +306,11 @@ public class ClaimManager {
     // ========== Trust Invites ==========
 
     public void sendTrustInvite(Player sender, Player target, ClaimProfile profile) {
+        org.ayosynk.landClaimPlugin.api.event.ClaimTrustAddEvent event =
+                new org.ayosynk.landClaimPlugin.api.event.ClaimTrustAddEvent(profile, target.getUniqueId(), sender);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
         pendingTrustInvites.put(target.getUniqueId(), sender.getUniqueId());
 
         sender.sendMessage(configManager.getMessage("trust-invited", "<player>", target.getName()));
@@ -814,38 +824,33 @@ public class ClaimManager {
 
         ClaimProfile buyerProfile = getProfile(newOwnerId);
 
+        UUID originalOwnerId = source.getOwnerId();
+
         if (buyerProfile != null) {
-            // Merge: move all of source's chunks to buyerProfile and drop source.
             for (ChunkPosition c : new java.util.ArrayList<>(source.getOwnedChunks())) {
                 source.removeChunk(c);
                 buyerProfile.addChunk(c);
-                // Update the spatial index so getProfileAt() returns the
-                // buyer profile for these chunks, not the orphaned source.
                 chunkToProfileMap.put(c, buyerProfile);
             }
-            // Drop the now-empty source profile from the profile cache
-            // (it's keyed by owner UUID).
             UUID sourceOwner = source.getOwnerId();
             plugin.getCacheManager().getProfileCache().invalidate(sourceOwner);
-            // Refresh the buyer entry so subsequent lookups see the new chunks.
             plugin.getCacheManager().getProfileCache().put(buyerProfile.getOwnerId(), buyerProfile);
             plugin.getDatabaseManager().getProfileDao().saveProfile(buyerProfile);
             plugin.getDatabaseManager().getProfileDao().deleteProfile(sourceOwner);
-            // Cross-server: invalidate both profiles on remote nodes so a
-            // /claimmarket sale on node A is visible immediately on node B.
             publishInvalidate(sourceOwner);
             publishInvalidate(buyerProfile.getOwnerId());
         } else {
-            // Re-key: change ownerId in place, move cache entry.
             UUID oldOwnerId = source.getOwnerId();
             plugin.getCacheManager().getProfileCache().invalidate(oldOwnerId);
             source.setOwnerId(newOwnerId);
             plugin.getCacheManager().getProfileCache().put(newOwnerId, source);
             plugin.getDatabaseManager().getProfileDao().saveProfile(source);
-            // Cross-server: invalidate on both old and new owner IDs.
             publishInvalidate(oldOwnerId);
             publishInvalidate(newOwnerId);
         }
+
+        Bukkit.getPluginManager().callEvent(
+                new org.ayosynk.landClaimPlugin.api.event.ClaimTransferEvent(source, originalOwnerId, newOwnerId));
 
         plugin.getVisualizationManager().invalidateCache(newOwnerId);
         plugin.getHookManager().refreshMapHooks();

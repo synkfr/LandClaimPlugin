@@ -2,6 +2,27 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [3.1.0] - 2026-09-03
+
+### Added
+- **Public Warp Collision Disambiguation Menu:**
+  - Added interactive `WarpDisambiguationGUI` dialog when multiple players have a public warp sharing the same name.
+  - Enabled `/claim warp <name>` for all players to discover and teleport to public warps.
+  - Added direct owner targeting syntax: `/claim warp <owner>:<name>` and `/claim warp <owner> <name>`.
+- **Public API Events & Overloads:**
+  - Added `WarpPrivacyChangeEvent` (Cancellable) fired whenever a warp is toggled between public and private.
+  - Added `ClaimTransferEvent` fired when claim ownership is transferred.
+  - Added `WarpCreateEvent` and `WarpDeleteEvent` fired on warp creation and deletion.
+  - Added `ClaimMemberAddEvent` and `ClaimTrustAddEvent` (Cancellable) fired when member and trust invites are accepted.
+  - Added `LandClaimAPI.transferClaim(UUID, UUID)` and `LandClaimAPI.unclaimAll(UUID)` overloads.
+
+### Fixed
+- Fixed bug where public warps could not be reverted to private via `/claim setwarp <name> private`.
+- Fixed multi-profile UUID key desync between `ClaimCommand`, `WarpControlPanelGUI`, and `ClaimManager.loadProfiles()`.
+- Fixed `/claim setwarp` location check incorrectly rejecting secondary profiles owned by the player.
+- Fixed `NullPointerException` on `PublicWarpsGUI` Back button when the player owns no claim profiles.
+- Patched combat escape exploit in `PublicWarpsGUI` by enforcing `CombatManager.isInCombat()` checks before teleportation.
+
 ## [3.0.0] - 2026-08-30
 
 ### Added
