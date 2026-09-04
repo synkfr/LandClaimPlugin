@@ -211,6 +211,38 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Interval in server ticks (20 ticks = 1 second) for updating the player action bar display (boundary titles, claim status, etc.).")
     public int actionbarUpdateInterval = 20;
 
+    @Comment("Enable or disable chat messages when entering or leaving a claim.")
+    public boolean claimChatNotifications = false;
+
+    @Comment({
+        "Visitor Settings Control & Enforced Defaults",
+        "When 'locked' is true:",
+        "  - Claim owners cannot open or modify visitor settings (GUI and command are blocked).",
+        "  - All claims enforce the server-defined 'defaultFlags' for visitors.",
+        "When 'locked' is false:",
+        "  - 'defaultFlags' are assigned to newly created claims.",
+        "  - Claim owners can freely customize their claim's visitor flags in /claim."
+    })
+    public VisitorSettingsConfigSection visitorSettings = new VisitorSettingsConfigSection();
+
+    public static class VisitorSettingsConfigSection extends OkaeriConfig {
+        @Comment("Lock visitor settings server-wide so players cannot modify them.")
+        public boolean locked = false;
+
+        @Comment({
+            "Default visitor flags (case-insensitive).",
+            "When locked is true, these flags are strictly enforced across ALL claims for visitors.",
+            "When locked is false, these flags are assigned to newly created claims.",
+            "Available flags:",
+            "  BLOCK_BREAK, BLOCK_PLACE, BLOCK_IGNITE, USE_BUCKETS, USE_FERTILIZER, MODIFY_SIGNS, TRAMPLE_CROPS,",
+            "  USE_DOORS, USE_TRAPDOORS, USE_FENCE_GATES, USE_CONTAINERS, USE_WORKSTATIONS, USE_BEDS, USE_REDSTONE,",
+            "  USE_LECTERNS, USE_BELLS, DAMAGE_ANIMALS, DAMAGE_MONSTERS, BREED_ANIMALS, SHEAR_ENTITIES, TRADE_VILLAGERS,",
+            "  FEED_ANIMALS, LEASH_ENTITIES, MODIFY_ARMOR_STANDS, MODIFY_ITEM_FRAMES, RIDE_VEHICLES, MOUNT_ANIMALS,",
+            "  PLACE_VEHICLES, DESTROY_VEHICLES, USE_ENDER_PEARLS, USE_CHORUS_FRUIT, PICKUP_ITEMS, DROP_ITEMS"
+        })
+        public List<String> defaultFlags = List.of("DAMAGE_MONSTERS");
+    }
+
     @Comment({
         "Geyser / Bedrock form support.",
         "When enabled and Geyser 2.x is installed, Bedrock players receive native Bedrock forms",

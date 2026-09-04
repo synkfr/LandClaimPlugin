@@ -87,6 +87,20 @@ public class ClaimCommand implements LandClaimCommand {
                     toggleVisibility(player);
                 }));
 
+        manager.command(claimBuilder.literal("notify")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.notify", plugin)) return;
+                    toggleChatNotify(player);
+                }));
+
+        manager.command(claimBuilder.literal("chatnotify")
+                .handler(context -> {
+                    Player player = context.sender().source();
+                    if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.notify", plugin)) return;
+                    toggleChatNotify(player);
+                }));
+
         // /claim toggle <display_entities|particles|off>
         manager.command(claimBuilder.literal("toggle")
                 .required("mode", StringParser.stringParser(), VisualizationModeSuggestions.modes())
@@ -299,6 +313,10 @@ public class ClaimCommand implements LandClaimCommand {
         manager.command(claimBuilder.literal("menu").literal("visitors")
                 .handler(context -> {
                     Player player = context.sender().source();
+                    if (configManager.isVisitorSettingsLocked()) {
+                        player.sendMessage(configManager.getMessage("visitor-settings-locked"));
+                        return;
+                    }
                     ClaimProfile profile = resolveProfileForMenu(player);
                     if (profile == null) return;
                     if (!checkMenuPermission(player, profile, "MANAGE_SETTINGS")) return;
@@ -421,6 +439,21 @@ public class ClaimCommand implements LandClaimCommand {
     public void cleanupPlayer(UUID playerId) {
         autoClaimPlayers.remove(playerId);
         autoUnclaimPlayers.remove(playerId);
+    }
+
+    private void toggleChatNotify(Player player) {
+        var listenerManager = plugin.getListenerManager();
+        if (listenerManager == null) return;
+        var eventListener = listenerManager.getEventListener();
+        if (eventListener == null) return;
+        UUID playerId = player.getUniqueId();
+        boolean enabled = !eventListener.isChatNotifyEnabled(playerId);
+        eventListener.setChatNotifyEnabled(playerId, enabled);
+        if (enabled) {
+            player.sendMessage(configManager.getMessage("claim-notify-enabled"));
+        } else {
+            player.sendMessage(configManager.getMessage("claim-notify-disabled"));
+        }
     }
 
     // --- Private Helpers ---

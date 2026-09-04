@@ -28,6 +28,7 @@ public class EventListener implements Listener {
     private final Map<UUID, String> lastActionBarMap = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> lastClaimStatusMap = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastPlayerStatusMap = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> chatNotifyPreferences = new ConcurrentHashMap<>();
 
     public EventListener(LandClaimPlugin plugin, ClaimManager claimManager,
             ConfigManager configManager) {
@@ -122,6 +123,35 @@ public class EventListener implements Listener {
                             enterSub ? Component.empty() : enterComp,
                             enterSub ? enterComp : Component.empty(),
                             times));
+                }
+
+                if (isChatNotifyEnabled(playerId)) {
+                    if (oldProfile != null) {
+                        String rawLeave = configManager.getMessagesConfig().claimLeaveChat;
+                        if (rawLeave != null && !rawLeave.isBlank()) {
+                            String leaveMsg = configManager.getMessage("claim-leave-chat",
+                                    "<owner>", oldProfile.getColoredOwnerName(),
+                                    "<claim>", oldProfile.getColoredName(),
+                                    "<name>", oldProfile.getColoredName());
+                            player.sendMessage(leaveMsg);
+                        }
+                    }
+                    if (newProfile != null) {
+                        String rawEnter = configManager.getMessagesConfig().claimEnterChat;
+                        if (rawEnter != null && !rawEnter.isBlank()) {
+                            String enterMsg = configManager.getMessage("claim-enter-chat",
+                                    "<owner>", newProfile.getColoredOwnerName(),
+                                    "<claim>", newProfile.getColoredName(),
+                                    "<name>", newProfile.getColoredName());
+                            player.sendMessage(enterMsg);
+                        }
+                    } else if (oldProfile != null) {
+                        String rawWild = configManager.getMessagesConfig().wildernessEnterChat;
+                        if (rawWild != null && !rawWild.isBlank()) {
+                            String wildMsg = configManager.getMessage("wilderness-enter-chat");
+                            player.sendMessage(wildMsg);
+                        }
+                    }
                 }
             }
 
@@ -264,14 +294,20 @@ public class EventListener implements Listener {
         return !neighbors.isEmpty();
     }
 
-    /**
-     * Clean up player data when they quit to prevent memory leaks
-     */
     public void cleanupPlayer(UUID playerId) {
         lastChunkMap.remove(playerId);
         lastActionBarMap.remove(playerId);
         lastClaimStatusMap.remove(playerId);
         lastPlayerStatusMap.remove(playerId);
+        chatNotifyPreferences.remove(playerId);
+    }
+
+    public boolean isChatNotifyEnabled(UUID playerId) {
+        return chatNotifyPreferences.getOrDefault(playerId, configManager.isClaimChatNotificationsEnabled());
+    }
+
+    public void setChatNotifyEnabled(UUID playerId, boolean enabled) {
+        chatNotifyPreferences.put(playerId, enabled);
     }
 
     /**

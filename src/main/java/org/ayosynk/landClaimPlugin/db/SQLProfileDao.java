@@ -573,6 +573,7 @@ public class SQLProfileDao implements ProfileDao {
     }
 
     private void loadVisitorFlags(Connection conn, String p, ClaimProfile profile) throws SQLException {
+        profile.getVisitorFlags().clear();
         try (PreparedStatement stmt = conn
                 .prepareStatement("SELECT flag FROM " + p + "profile_visitor_flags WHERE owner_id = ?")) {
             stmt.setString(1, profile.getProfileId().toString());

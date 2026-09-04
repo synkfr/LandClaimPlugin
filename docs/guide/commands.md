@@ -17,6 +17,7 @@ All commands use `/claim` (alias: `/c`) as the base.
 | `/claim visible` | Toggle claim boundary visualization |
 | `/claim toggle <mode>` | Switch visualization mode (`display_entities`, `particles`, `off`) |
 | `/claim visualization <mode>` | Alias for `/claim toggle` |
+| `/claim notify` | Toggle claim enter and leave chat notifications (alias: `/claim chatnotify`) |
 | `/claim rename <name>` | Rename your active claim profile (3-32 alphanumeric characters) |
 | `/claim color <color>` | Change claim color using a named color (e.g., `red`, `lime`) or hex code (e.g., `#FF5500`) |
 | `/claim unstuck` | Safely teleport to the nearest wilderness block |

@@ -96,6 +96,10 @@ public class MainMenuGUI {
                                                         p.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
                                                         return;
                                                 }
+                                                if (plugin.getConfigManager().isVisitorSettingsLocked()) {
+                                                        p.sendMessage(plugin.getConfigManager().getMessage("visitor-settings-locked"));
+                                                        return;
+                                                }
                                                 p.closeInventory();
                                                 VisitorSettingsGUI.open(p, profile, plugin);
                                         }));

@@ -66,6 +66,7 @@ public class ConfigManager {
     private List<String> blockedCommands = List.of();
     private List<String> blockedWorlds = List.of();
     private final java.util.Set<String> bannedClaimNames = new java.util.concurrent.ConcurrentHashMap<String, Boolean>().keySet(Boolean.TRUE);
+    private final java.util.Set<String> defaultVisitorFlags = new java.util.concurrent.ConcurrentHashMap<String, Boolean>().keySet(Boolean.TRUE);
 
     public ConfigManager(LandClaimPlugin plugin) {
         this.plugin = plugin;
@@ -287,10 +288,10 @@ public class ConfigManager {
             it.load(true);
         });
 
-        // Populate blocked lists on initial load (not just on reload)
         blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
         blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
         loadBannedWords();
+        loadDefaultVisitorFlags();
     }
 
     public void reloadMainConfig() {
@@ -321,6 +322,7 @@ public class ConfigManager {
         blockedCommands = pluginConfig.blockCmd.stream().map(String::toLowerCase).toList();
         blockedWorlds = pluginConfig.blockWorld.stream().map(String::toLowerCase).toList();
         loadBannedWords();
+        loadDefaultVisitorFlags();
     }
 
     public PluginConfig getPluginConfig() {
@@ -483,6 +485,34 @@ public class ConfigManager {
 
     public int getActionBarUpdateInterval() {
         return pluginConfig.actionbarUpdateInterval;
+    }
+
+    public boolean isClaimChatNotificationsEnabled() {
+        return pluginConfig.claimChatNotifications;
+    }
+
+    public boolean isVisitorSettingsLocked() {
+        return pluginConfig.visitorSettings != null && pluginConfig.visitorSettings.locked;
+    }
+
+    public boolean hasDefaultVisitorFlag(String flag) {
+        if (flag == null) return false;
+        return defaultVisitorFlags.contains(flag.toUpperCase());
+    }
+
+    public java.util.Set<String> getDefaultVisitorFlags() {
+        return java.util.Collections.unmodifiableSet(defaultVisitorFlags);
+    }
+
+    private void loadDefaultVisitorFlags() {
+        defaultVisitorFlags.clear();
+        if (pluginConfig.visitorSettings != null && pluginConfig.visitorSettings.defaultFlags != null) {
+            for (String flag : pluginConfig.visitorSettings.defaultFlags) {
+                if (flag != null && !flag.isBlank()) {
+                    defaultVisitorFlags.add(flag.trim().toUpperCase());
+                }
+            }
+        }
     }
 
     // --- MiniMessage formatting ---

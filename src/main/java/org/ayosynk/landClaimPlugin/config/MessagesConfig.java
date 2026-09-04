@@ -46,6 +46,13 @@ public class MessagesConfig extends OkaeriConfig {
     public String actionbarAdmin = "<gradient:#ff416c:#ff4b2b>🛡️ <owner>'s Claim 🛡️</gradient> <gray>(Admin Override)</gray>";
     public String actionbarBanned = "<gradient:#8a0303:#ff416c>⛔ Banned from <owner>'s Claim ⛔</gradient>";
 
+    public String claimEnterChat = "<gray>Entering <gold><claim></gold> <gray>(Owner: <gold><owner></gold>)</gray>";
+    public String claimLeaveChat = "<gray>Leaving <gold><claim></gold> <gray>(Owner: <gold><owner></gold>)</gray>";
+    public String wildernessEnterChat = "";
+    public String claimNotifyEnabled = "<green>Claim enter/leave chat notifications have been enabled.";
+    public String claimNotifyDisabled = "<red>Claim enter/leave chat notifications have been disabled.";
+    public String visitorSettingsLocked = "<red>Visitor settings are locked by the server configuration.";
+
     @Comment("Variables: <player>, <count>, <limit>, <seconds>, <world>, <x>, <z>")
 
     public String warpSet = "<green>Warp <gold><name></gold> has been set!";

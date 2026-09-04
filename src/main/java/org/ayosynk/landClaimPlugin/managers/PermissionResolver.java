@@ -82,7 +82,9 @@ public class PermissionResolver {
             }
         }
 
-        // 5. Fall back to visitor flags
+        if (plugin != null && plugin.getConfigManager() != null && plugin.getConfigManager().isVisitorSettingsLocked()) {
+            return plugin.getConfigManager().hasDefaultVisitorFlag(flag);
+        }
         return profile.hasVisitorFlag(flag);
     }
 

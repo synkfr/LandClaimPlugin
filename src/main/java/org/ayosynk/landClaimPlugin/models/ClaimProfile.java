@@ -51,17 +51,25 @@ public class ClaimProfile {
         this.profileId = profileId;
         this.realOwnerId = realOwnerId;
         this.name = name;
-        this.visitorFlags.add("DAMAGE_MONSTERS");
+        setupDefaultVisitorFlags();
         setupDefaultRoles();
     }
 
     public ClaimProfile(UUID ownerId, String name) {
-        // Backwards compatibility for old constructor
         this.profileId = ownerId;
         this.realOwnerId = ownerId;
         this.name = name;
-        this.visitorFlags.add("DAMAGE_MONSTERS");
+        setupDefaultVisitorFlags();
         setupDefaultRoles();
+    }
+
+    private void setupDefaultVisitorFlags() {
+        org.ayosynk.landClaimPlugin.LandClaimPlugin plugin = org.ayosynk.landClaimPlugin.LandClaimPlugin.getInstance();
+        if (plugin != null && plugin.getConfigManager() != null) {
+            this.visitorFlags.addAll(plugin.getConfigManager().getDefaultVisitorFlags());
+        } else {
+            this.visitorFlags.add("DAMAGE_MONSTERS");
+        }
     }
 
     private void setupDefaultRoles() {

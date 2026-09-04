@@ -21,6 +21,10 @@ import java.util.Map;
 public class VisitorSettingsGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
+                if (plugin.getConfigManager().isVisitorSettingsLocked()) {
+                        player.sendMessage(plugin.getConfigManager().getMessage("visitor-settings-locked"));
+                        return;
+                }
                 if (!GuiHelper.checkMenuPermission(player, "visitors", plugin)) {
                         return;
                 }

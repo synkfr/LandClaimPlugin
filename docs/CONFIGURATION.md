@@ -103,6 +103,7 @@ Supported maps: `dynmap`, `bluemap`, `squaremap`, `pl3xmap`
 |-----|------|---------|-------------|
 | `actionbarEnabled` | Boolean | `true` | Enable or disable the action bar display for claim status and wilderness |
 | `actionbarUpdateInterval` | Integer | `20` | Ticks between actionbar updates (20 ticks = 1 second) |
+| `claimChatNotifications` | Boolean | `false` | Enable or disable chat messages when entering or leaving a claim (can be toggled per-player with `/claim notify`) |
 
 ### Held Territory Map (Minimap)
 
@@ -173,6 +174,53 @@ Wilderness protection does not affect explosion damage (`ExplosionProtectionList
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `pvp.forceEnabled` | Boolean | `false` | When `true`, `PvpProtectionListener` always allows PvP regardless of the per-claim `pvpEnabled` flag, and `/claim pvp` refuses to toggle (sends `pvp-force-locked`). Designed for PvP-focused servers that want every claim to have PvP on with no opt-out. |
+
+### Visitor Settings & Locking
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `visitorSettings.locked` | Boolean | `false` | Lock visitor settings server-wide. When `true`, claim owners/members cannot open or edit visitor settings via GUI or `/claim menu visitors`, and `defaultFlags` are strictly enforced across ALL claims for visitors. |
+| `visitorSettings.defaultFlags` | List | `["DAMAGE_MONSTERS"]` | Default visitor flags. When `locked: true`, all claims enforce these flags for visitors (flags in the list are allowed, omitted flags are denied). When `locked: false`, these flags are assigned as starting flags for new claims. |
+
+::: tip Open Visitor World Example
+To allow visitors to do everything in claims except breaking and placing blocks, set:
+```yaml
+visitorSettings:
+  locked: true
+  defaultFlags:
+    - BLOCK_IGNITE
+    - USE_BUCKETS
+    - USE_FERTILIZER
+    - MODIFY_SIGNS
+    - TRAMPLE_CROPS
+    - USE_DOORS
+    - USE_TRAPDOORS
+    - USE_FENCE_GATES
+    - USE_CONTAINERS
+    - USE_WORKSTATIONS
+    - USE_BEDS
+    - USE_REDSTONE
+    - USE_LECTERNS
+    - USE_BELLS
+    - DAMAGE_ANIMALS
+    - DAMAGE_MONSTERS
+    - BREED_ANIMALS
+    - SHEAR_ENTITIES
+    - TRADE_VILLAGERS
+    - FEED_ANIMALS
+    - LEASH_ENTITIES
+    - MODIFY_ARMOR_STANDS
+    - MODIFY_ITEM_FRAMES
+    - RIDE_VEHICLES
+    - MOUNT_ANIMALS
+    - PLACE_VEHICLES
+    - DESTROY_VEHICLES
+    - USE_ENDER_PEARLS
+    - USE_CHORUS_FRUIT
+    - PICKUP_ITEMS
+    - DROP_ITEMS
+```
+:::
 
 ---
 

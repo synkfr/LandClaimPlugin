@@ -33,6 +33,10 @@ permissions:
       landclaim.ban: true
       landclaim.update.notify: true
       landclaim.minimap: true
+      landclaim.notify: true
+  landclaim.notify:
+    description: Toggle claim enter and leave chat notifications
+    default: true
   landclaim.minimap:
     description: Access to the held territory map
     default: true
