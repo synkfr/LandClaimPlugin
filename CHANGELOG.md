@@ -2,6 +2,20 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [3.2.0] - 2026-09-04
+
+### Added
+- **Claim Boundary Chat Notifications:**
+  - Added configurable chat notifications upon entering and leaving claim territory (`claimChatNotifications.enabled`).
+  - Added personal player toggle command `/claim notify` (alias `/claim chatnotify`) to opt in/out of chat notifications.
+  - Added `landclaim.notify` permission node for command access.
+  - Formatted messages configurable in `messages.yml` with territory name placeholders (`%claim%`).
+- **Server-Wide Visitor Settings Locking:**
+  - Added server-wide lock setting `visitorSettings.locked` in `config.yml`.
+  - Added configurable server default flags via `visitorSettings.defaultFlags` (e.g. allowing exploration while restricting block breaking/placing).
+  - Enforced server default flags during permission resolution when locked, completely bypassing individual profile overrides.
+  - Blocked access to `VisitorSettingsGUI` when locked to prevent player confusion.
+
 ## [3.1.0] - 2026-09-03
 
 ### Added
