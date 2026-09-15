@@ -107,13 +107,21 @@ public class CommandHandler {
                     }
                 });
 
+        // Root builder for /claim, /c, /landclaim supporting any Source (Player + Console)
+        Command.Builder<Source> claimRoot = commandManager.commandBuilder("claim", "c", "landclaim");
+
+        // Player-specific builder for gameplay subcommands
+        Command.Builder<PlayerSource> playerClaimBuilder = claimRoot.senderType(PlayerSource.class);
+
         // Instantiate modular command groups
         claimCommand = new ClaimCommand(plugin, claimManager, configManager, visualizationManager);
 
-        List<LandClaimCommand> commands = List.of(
+        AdminCommand adminCommand = new AdminCommand(plugin, claimManager, configManager);
+        adminCommand.register(commandManager, claimRoot, playerClaimBuilder);
+
+        List<LandClaimCommand> playerCommands = List.of(
                 claimCommand,
                 new UnclaimCommand(plugin, claimManager, configManager),
-                new AdminCommand(plugin, claimManager, configManager),
                 new MemberCommand(plugin, claimManager, configManager),
                 new TrustCommand(plugin, claimManager, configManager),
                 new AllyCommand(plugin, claimManager, configManager),
@@ -123,12 +131,8 @@ public class CommandHandler {
                 new BuyCommand(plugin, claimManager, configManager),
                 new SellCommand(plugin, claimManager, configManager));
 
-        // Register all commands via the shared /claim builder
-        Command.Builder<PlayerSource> claimBuilder = commandManager.commandBuilder("claim", "c")
-                .senderType(PlayerSource.class);
-
-        for (LandClaimCommand cmd : commands) {
-            cmd.register(commandManager, claimBuilder);
+        for (LandClaimCommand cmd : playerCommands) {
+            cmd.register(commandManager, playerClaimBuilder);
         }
     }
 

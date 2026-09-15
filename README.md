@@ -246,10 +246,12 @@ Jump directly to specific GUI panels without navigating through the main menu.
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
 | `/claim admin edit <player>` | Open any player's claim management GUI |
-| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit |
-| `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias |
-| `/claim admin trust list <owner>` | List players trusted by this owner |
-| `/claim admin trust who <player>` | List claims where this player is trusted |
+| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit *(Console & Player)* |
+| `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias *(Console & Player)* |
+| `/claim admin trust list <owner>` | List players trusted by this owner *(Console & Player)* |
+| `/claim admin trust who <player>` | List claims where this player is trusted *(Console & Player)* |
+| `/claim admin reload` | Reload configuration and messages *(Console & Player)* |
+| `/claim reload` | Shortcut to reload configuration and messages *(Console & Player)* |
 
 ---
 

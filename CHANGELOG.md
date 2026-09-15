@@ -2,6 +2,16 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [3.2.1] - 2026-09-15
+
+### Fixed
+- **Admin Command Console Execution & Argument Order:**
+  - Fixed `/claim admin add chunk <player> <amount>` failing to execute from server console (such as DeluxeMenus, donation stores, and server console scripts).
+  - Aligned `/claim admin add chunk` argument syntax to the documented order `<player> <amount>` instead of the previous reversed order.
+  - Enabled console execution for `/claim admin reload` and the root shortcut `/claim reload`.
+  - Replaced strict `PlayerSource` restriction on the `/claim` root builder with `Source`, allowing non-player senders for applicable administrative subcommands while preserving player-only restrictions on gameplay and GUI commands.
+  - Resolved potential `ClassCastException` by properly handling `CommandSender` instead of forcing `Player` casting in admin handler callbacks.
+
 ## [3.2.0] - 2026-09-04
 
 ### Added

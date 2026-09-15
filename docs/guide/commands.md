@@ -119,12 +119,12 @@ Ban confirmations, abandon confirmations, unclaim-all confirmations, and AnvilIn
 | `/claim admin edit <player>` | Open any player's claim management GUI with full override |
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
-| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit |
-| `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias |
-| `/claim admin trust list <owner>` | List players trusted by this owner |
-| `/claim admin trust who <player>` | List claims where this player is trusted |
-| `/claim admin reload` | Reload the plugin configuration and messages |
-| `/claim reload` | Reload the plugin configuration and messages (Root Shortcut) |
+| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit *(Console & In-Game)* |
+| `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias *(Console & In-Game)* |
+| `/claim admin trust list <owner>` | List players trusted by this owner *(Console & In-Game)* |
+| `/claim admin trust who <player>` | List claims where this player is trusted *(Console & In-Game)* |
+| `/claim admin reload` | Reload the plugin configuration and messages *(Console & In-Game)* |
+| `/claim reload` | Reload the plugin configuration and messages (Root Shortcut, Console & In-Game) |
 
 ## Permissions
 

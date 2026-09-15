@@ -241,13 +241,13 @@ public class ClaimCommand implements LandClaimCommand {
                     FoliaScheduler.runForPlayer(plugin, player, () -> org.ayosynk.landClaimPlugin.gui.ProfileSelectorGUI.open(player, plugin));
                 }));
 
-        // /claim reload
-        manager.command(claimBuilder.literal("reload")
+        // /claim reload (Console + Player)
+        manager.command(manager.commandBuilder("claim", "c", "landclaim").literal("reload")
                 .permission("landclaim.admin")
                 .handler(context -> {
-                    Player player = context.sender().source();
+                    org.bukkit.command.CommandSender sender = context.sender().source();
                     plugin.reloadPlugin();
-                    player.sendMessage(configManager.getMessage("reloaded"));
+                    sender.sendMessage(configManager.getMessage("reloaded"));
                 }));
 
         // /claim pvp <on|off> [time_seconds]

@@ -8,6 +8,7 @@ import org.ayosynk.landClaimPlugin.models.ChunkPosition;
 import org.ayosynk.landClaimPlugin.models.ClaimProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.OfflinePlayer;
 import org.incendo.cloud.Command;
@@ -41,37 +42,43 @@ public class AdminCommand implements LandClaimCommand {
 
     @Override
     public void register(PaperCommandManager<Source> manager, Command.Builder<PlayerSource> claimBuilder) {
-        // /claim admin check
-        manager.command(claimBuilder.literal("admin").literal("check")
-                .permission("landclaim.admin")
+        register(manager, manager.commandBuilder("claim", "c", "landclaim"), claimBuilder);
+    }
+
+    public void register(PaperCommandManager<Source> manager, Command.Builder<Source> claimRoot,
+            Command.Builder<PlayerSource> playerClaimBuilder) {
+        Command.Builder<Source> adminBase = claimRoot.literal("admin")
+                .permission("landclaim.admin");
+        Command.Builder<PlayerSource> playerAdminBase = playerClaimBuilder.literal("admin")
+                .permission("landclaim.admin");
+
+        // /claim admin check (Player only - requires player location)
+        manager.command(playerAdminBase.literal("check")
                 .handler(context -> {
                     Player player = context.sender().source();
                     sendAdminClaimInfo(player);
                 }));
 
-        // /claim admin unclaim
-        manager.command(claimBuilder.literal("admin").literal("unclaim")
-                .permission("landclaim.admin")
+        // /claim admin unclaim (Player only - requires player location)
+        manager.command(playerAdminBase.literal("unclaim")
                 .handler(context -> {
                     Player player = context.sender().source();
                     adminUnclaimCurrentChunk(player);
                 }));
 
-        // /claim admin add chunk <amount> <player>
-        manager.command(claimBuilder.literal("admin").literal("add").literal("chunk")
-                .permission("landclaim.admin")
-                .required("amount", IntegerParser.integerParser(1))
+        // /claim admin add chunk <player> <amount> (Console + Player)
+        manager.command(adminBase.literal("add").literal("chunk")
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("amount", IntegerParser.integerParser(1))
                 .handler(context -> {
-                    Player sender = context.sender().source();
-                    int amount = context.get("amount");
+                    CommandSender sender = context.sender().source();
                     String targetName = context.get("player");
+                    int amount = context.get("amount");
                     adminAddChunk(sender, amount, targetName);
                 }));
 
-        // /claim admin edit <owner>
-        manager.command(claimBuilder.literal("admin").literal("edit")
-                .permission("landclaim.admin")
+        // /claim admin edit <owner> (Player only - opens GUI)
+        manager.command(playerAdminBase.literal("edit")
                 .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
                     Player sender = context.sender().source();
@@ -79,42 +86,37 @@ public class AdminCommand implements LandClaimCommand {
                     adminEditProfile(sender, ownerName);
                 }));
 
-        // /claim admin trust list <owner>
-        manager.command(claimBuilder.literal("admin").literal("trust").literal("list")
-                .permission("landclaim.admin")
+        // /claim admin trust list <owner> (Console + Player)
+        manager.command(adminBase.literal("trust").literal("list")
                 .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
-                    Player sender = context.sender().source();
+                    CommandSender sender = context.sender().source();
                     String ownerName = context.get("owner");
                     adminTrustList(sender, ownerName);
                 }));
 
-        // /claim admin trust who <player>
-        manager.command(claimBuilder.literal("admin").literal("trust").literal("who")
-                .permission("landclaim.admin")
+        // /claim admin trust who <player> (Console + Player)
+        manager.command(adminBase.literal("trust").literal("who")
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
-                    Player sender = context.sender().source();
+                    CommandSender sender = context.sender().source();
                     String playerName = context.get("player");
                     adminTrustWho(sender, playerName);
                 }));
 
-        // /claim admin setalias <claimName/ownerName> <alias>
-        manager.command(claimBuilder.literal("admin").literal("setalias")
-                .permission("landclaim.admin")
+        // /claim admin setalias <claimName/ownerName> <alias> (Console + Player)
+        manager.command(adminBase.literal("setalias")
                 .required("claim", StringParser.stringParser())
                 .required("alias", StringParser.greedyStringParser())
                 .handler(context -> {
-                    Player sender = context.sender().source();
+                    CommandSender sender = context.sender().source();
                     String claimName = context.get("claim");
                     String alias = context.get("alias");
                     adminSetAlias(sender, claimName, alias);
                 }));
 
-        // /claim admin claim
-        manager.command(claimBuilder.literal("admin")
-                .literal("claim")
-                .permission("landclaim.admin")
+        // /claim admin claim (Player only - requires player location)
+        manager.command(playerAdminBase.literal("claim")
                 .handler(context -> {
                     Player player = context.sender().source();
                     org.ayosynk.landClaimPlugin.models.ChunkPosition pos = new org.ayosynk.landClaimPlugin.models.ChunkPosition(player.getLocation());
@@ -144,10 +146,8 @@ public class AdminCommand implements LandClaimCommand {
                     player.sendMessage(configManager.getMessage("admin-chunk-claimed"));
                 }));
 
-        // /claim admin menu
-        manager.command(claimBuilder.literal("admin")
-                .literal("menu")
-                .permission("landclaim.admin")
+        // /claim admin menu (Player only - opens GUI)
+        manager.command(playerAdminBase.literal("menu")
                 .handler(context -> {
                     Player player = context.sender().source();
                     ClaimProfile adminProfile = claimManager.getProfile(org.ayosynk.landClaimPlugin.models.ClaimProfile.ADMIN_PROFILE_ID);
@@ -162,16 +162,16 @@ public class AdminCommand implements LandClaimCommand {
                     FoliaScheduler.runForPlayer(plugin, player, () -> MainMenuGUI.open(player, finalProfile, plugin));
                 }));
 
-        // /claim admin reload
-        manager.command(claimBuilder.literal("admin").literal("reload")
-                .permission("landclaim.admin")
+        // /claim admin reload (Console + Player)
+        manager.command(adminBase.literal("reload")
                 .handler(context -> {
-                    Player sender = context.sender().source();
+                    CommandSender sender = context.sender().source();
                     plugin.reloadPlugin();
                     sender.sendMessage(configManager.getMessage("reloaded"));
                 }));
     }
-    private void adminAddChunk(Player sender, int amount, String targetName) {
+
+    private void adminAddChunk(CommandSender sender, int amount, String targetName) {
         FoliaScheduler.runAsync(plugin, () -> {
             @SuppressWarnings("deprecation")
             OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
@@ -264,7 +264,7 @@ public class AdminCommand implements LandClaimCommand {
         sender.sendMessage(configManager.getMessage("admin-editing-profile", "<player>", target.getName()));
     }
 
-    private void adminTrustList(Player sender, String ownerName) {
+    private void adminTrustList(CommandSender sender, String ownerName) {
         FoliaScheduler.runAsync(plugin, () -> {
             @SuppressWarnings("deprecation")
             OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerName);
@@ -293,12 +293,12 @@ public class AdminCommand implements LandClaimCommand {
                 if (name == null) name = trustedId.toString();
                 String safeName = escapeMiniMessage(name);
                 sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<gray>- <gold>" + safeName));
+                    .deserialize("<gray>- <gold>" + safeName));
             }
         });
     }
 
-    private void adminTrustWho(Player sender, String playerName) {
+    private void adminTrustWho(CommandSender sender, String playerName) {
         FoliaScheduler.runAsync(plugin, () -> {
             @SuppressWarnings("deprecation")
             OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
@@ -330,7 +330,7 @@ public class AdminCommand implements LandClaimCommand {
         });
     }
 
-    private void adminSetAlias(Player sender, String claimName, String alias) {
+    private void adminSetAlias(CommandSender sender, String claimName, String alias) {
         FoliaScheduler.runAsync(plugin, () -> {
             ClaimProfile profile = claimManager.getProfileByNameOrOwner(claimName);
             if (profile == null) {
