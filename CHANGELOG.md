@@ -2,6 +2,20 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [3.2.2] - 2026-09-25
+
+### Added
+- **Minecraft Entity Selector Support (`@p`, `@s`, `@r`, `@a`):**
+  - Added native entity selector support for `/claim admin add chunk`, `/claim admin edit <player>`, `/claim admin trust list <player>`, and `/claim admin trust who <player>`.
+  - Added selector resolution directly on the main thread (Folia and Paper safe) using `Bukkit.selectEntities()`.
+  - Added selector suggestions (`@p`, `@s`, `@r`, `@a`) in tab completion.
+- **Flexible Argument Parsing for `/claim admin add chunk`:**
+  - Automatically handles both `<player> <amount>` and `<amount> <player>` orders seamlessly.
+  - Supports single-argument self-grant `/claim admin add chunk <amount>` when executed by in-game players.
+  - Defaults bonus chunk amount to `1` if omitted (`/claim admin add chunk <player>`).
+- **Comprehensive DeluxeMenus & Citizens 2 Documentation:**
+  - Added complete setup guide with copy-paste configurations and in-game commands for DeluxeMenus chunk shops and Citizens 2 NPC shopkeepers in both docs and README.
+
 ## [3.2.1] - 2026-09-15
 
 ### Fixed

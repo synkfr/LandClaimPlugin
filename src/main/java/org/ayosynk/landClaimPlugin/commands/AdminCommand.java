@@ -20,6 +20,10 @@ import org.incendo.cloud.parser.standard.StringParser;
 import org.ayosynk.landClaimPlugin.models.ClaimPlayer;
 import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
 import org.ayosynk.landClaimPlugin.gui.TrustManagementGUI;
+import org.bukkit.entity.Entity;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
@@ -66,15 +70,28 @@ public class AdminCommand implements LandClaimCommand {
                     adminUnclaimCurrentChunk(player);
                 }));
 
-        // /claim admin add chunk <player> <amount> (Console + Player)
+        // /claim admin add chunk <arg1> [arg2] (Console + Player)
+        // Accepts:
+        //   /claim admin add chunk <player> <amount> (e.g. @p 5, Notch 5)
+        //   /claim admin add chunk <amount> <player> (e.g. 5 @p, 5 Notch)
+        //   /claim admin add chunk <amount> (self-grant for in-game players, e.g. 5)
+        //   /claim admin add chunk <player> (defaults amount to 1, e.g. @p, Notch)
         manager.command(adminBase.literal("add").literal("chunk")
-                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
-                .required("amount", IntegerParser.integerParser(1))
+                .required("arg1", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("arg2", StringParser.stringParser())
                 .handler(context -> {
                     CommandSender sender = context.sender().source();
-                    String targetName = context.get("player");
-                    int amount = context.get("amount");
-                    adminAddChunk(sender, amount, targetName);
+                    String arg1 = context.get("arg1");
+                    String arg2 = context.get("arg2");
+                    handleAdminAddChunk(sender, arg1, arg2);
+                }));
+
+        manager.command(adminBase.literal("add").literal("chunk")
+                .required("arg1", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .handler(context -> {
+                    CommandSender sender = context.sender().source();
+                    String arg1 = context.get("arg1");
+                    handleAdminAddChunk(sender, arg1, null);
                 }));
 
         // /claim admin edit <owner> (Player only - opens GUI)
@@ -171,44 +188,175 @@ public class AdminCommand implements LandClaimCommand {
                 }));
     }
 
-    private void adminAddChunk(CommandSender sender, int amount, String targetName) {
-        FoliaScheduler.runAsync(plugin, () -> {
-            @SuppressWarnings("deprecation")
-            OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-            
-            if (target == null || (!target.hasPlayedBefore() && !target.isOnline())) {
-                sender.sendMessage(configManager.getMessage("player-not-found"));
-                return;
-            }
+    private void handleAdminAddChunk(CommandSender sender, String arg1, String arg2) {
+        String targetInput;
+        int amount;
 
-            UUID targetId = target.getUniqueId();
-            ClaimPlayer claimPlayer = plugin.getCacheManager().getPlayerCache().getIfPresent(targetId);
-            boolean inCache = claimPlayer != null;
-
-            if (!inCache) {
-                try {
-                    claimPlayer = plugin.getDatabaseManager().getPlayerDao().getPlayer(targetId).join();
-                } catch (Exception e) {
-                    plugin.getLogger().severe("Failed to load player data for admin add chunk: " + e.getMessage());
+        if (arg2 == null) {
+            Integer parsedAmount = tryParsePositiveInt(arg1);
+            if (parsedAmount != null) {
+                amount = parsedAmount;
+                if (sender instanceof Player player) {
+                    targetInput = player.getName();
+                } else {
                     sender.sendMessage(configManager.getMessage("player-not-found"));
                     return;
                 }
+            } else {
+                targetInput = arg1;
+                amount = 1;
+            }
+        } else {
+            Integer amountFromArg1 = tryParsePositiveInt(arg1);
+            Integer amountFromArg2 = tryParsePositiveInt(arg2);
+
+            if (amountFromArg2 != null && amountFromArg1 == null) {
+                // <player> <amount> (e.g. "@p 5", "Notch 5")
+                targetInput = arg1;
+                amount = amountFromArg2;
+            } else if (amountFromArg1 != null && amountFromArg2 == null) {
+                // <amount> <player> (e.g. "5 @p", "5 Notch")
+                targetInput = arg2;
+                amount = amountFromArg1;
+            } else if (amountFromArg1 != null && amountFromArg2 != null) {
+                // Both are numbers; treat arg1 as player, arg2 as amount
+                targetInput = arg1;
+                amount = amountFromArg2;
+            } else {
+                // Neither is an integer
+                sender.sendMessage(configManager.getMessage("invalid-command"));
+                return;
+            }
+        }
+
+        List<OfflinePlayer> targets = resolveTargets(sender, targetInput);
+        if (targets.isEmpty()) {
+            sender.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
+
+        adminAddChunk(sender, amount, targets);
+    }
+
+    private List<OfflinePlayer> resolveTargets(CommandSender sender, String input) {
+        if (input == null || input.isBlank()) {
+            return List.of();
+        }
+
+        // 1. Check for entity selectors: @p, @s, @r, @a, @e[type=player], etc.
+        if (input.startsWith("@")) {
+            try {
+                List<Entity> entities = Bukkit.selectEntities(sender, input);
+                List<OfflinePlayer> players = new ArrayList<>();
+                for (Entity entity : entities) {
+                    if (entity instanceof Player player) {
+                        players.add(player);
+                    }
+                }
+                if (!players.isEmpty()) {
+                    return players;
+                }
+            } catch (Exception ignored) {
+                // Selector failed or not supported in this context
             }
 
-            if (claimPlayer == null) {
-                claimPlayer = new ClaimPlayer(targetId);
+            // Fallbacks for Console or standard selectors
+            if (input.equalsIgnoreCase("@p") || input.equalsIgnoreCase("@nearest")) {
+                if (sender instanceof Player p) {
+                    return List.of(p);
+                }
+                Player first = Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
+                return first != null ? List.of(first) : List.of();
+            } else if (input.equalsIgnoreCase("@s")) {
+                if (sender instanceof Player p) {
+                    return List.of(p);
+                }
+                return List.of();
+            } else if (input.equalsIgnoreCase("@a")) {
+                return new ArrayList<>(Bukkit.getOnlinePlayers());
+            } else if (input.equalsIgnoreCase("@r")) {
+                var online = new ArrayList<>(Bukkit.getOnlinePlayers());
+                if (!online.isEmpty()) {
+                    return List.of(online.get(new Random().nextInt(online.size())));
+                }
+                return List.of();
             }
+        }
 
-            claimPlayer.setBonusClaimBlocks(claimPlayer.getBonusClaimBlocks() + amount);
+        // 2. Online player exact match
+        Player onlinePlayer = Bukkit.getPlayerExact(input);
+        if (onlinePlayer != null) {
+            return List.of(onlinePlayer);
+        }
 
-            // Save to DB
-            plugin.getDatabaseManager().getPlayerDao().savePlayer(claimPlayer).join();
-
-            if (inCache) {
-                plugin.getCacheManager().getPlayerCache().put(targetId, claimPlayer);
+        // 3. UUID match
+        try {
+            UUID uuid = UUID.fromString(input);
+            OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
+            if (op.hasPlayedBefore() || op.isOnline()) {
+                return List.of(op);
             }
+        } catch (IllegalArgumentException ignored) {}
 
-            sender.sendMessage(configManager.getMessage("admin-add-chunk-success", "<amount>", String.valueOf(amount), "<player>", target.getName() != null ? target.getName() : targetName));
+        // 4. Offline player match by username
+        @SuppressWarnings("deprecation")
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(input);
+        if (offlinePlayer != null && (offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline())) {
+            return List.of(offlinePlayer);
+        }
+
+        return List.of();
+    }
+
+    private OfflinePlayer resolveSinglePlayer(CommandSender sender, String input) {
+        List<OfflinePlayer> targets = resolveTargets(sender, input);
+        return targets.isEmpty() ? null : targets.get(0);
+    }
+
+    private Integer tryParsePositiveInt(String input) {
+        if (input == null) return null;
+        try {
+            int val = Integer.parseInt(input);
+            return val > 0 ? val : null;
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private void adminAddChunk(CommandSender sender, int amount, List<OfflinePlayer> targets) {
+        FoliaScheduler.runAsync(plugin, () -> {
+            for (OfflinePlayer target : targets) {
+                if (target == null || target.getUniqueId() == null) continue;
+
+                UUID targetId = target.getUniqueId();
+                ClaimPlayer claimPlayer = plugin.getCacheManager().getPlayerCache().getIfPresent(targetId);
+                boolean inCache = claimPlayer != null;
+
+                if (!inCache) {
+                    try {
+                        claimPlayer = plugin.getDatabaseManager().getPlayerDao().getPlayer(targetId).join();
+                    } catch (Exception e) {
+                        plugin.getLogger().severe("Failed to load player data for admin add chunk: " + e.getMessage());
+                        sender.sendMessage(configManager.getMessage("player-not-found"));
+                        continue;
+                    }
+                }
+
+                if (claimPlayer == null) {
+                    claimPlayer = new ClaimPlayer(targetId);
+                }
+
+                claimPlayer.setBonusClaimBlocks(claimPlayer.getBonusClaimBlocks() + amount);
+
+                // Save to DB
+                plugin.getDatabaseManager().getPlayerDao().savePlayer(claimPlayer).join();
+
+                if (inCache) {
+                    plugin.getCacheManager().getPlayerCache().put(targetId, claimPlayer);
+                }
+
+                sender.sendMessage(configManager.getMessage("admin-add-chunk-success", "<amount>", String.valueOf(amount), "<player>", target.getName() != null ? target.getName() : targetId.toString()));
+            }
         });
     }
 
@@ -246,8 +394,7 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminEditProfile(Player sender, String ownerName) {
-        @SuppressWarnings("deprecation")
-        OfflinePlayer target = Bukkit.getOfflinePlayer(ownerName);
+        OfflinePlayer target = resolveSinglePlayer(sender, ownerName);
         if (target == null || target.getUniqueId() == null) {
             sender.sendMessage(configManager.getMessage("player-not-found"));
             return;
@@ -265,14 +412,13 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminTrustList(CommandSender sender, String ownerName) {
-        FoliaScheduler.runAsync(plugin, () -> {
-            @SuppressWarnings("deprecation")
-            OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerName);
-            if (owner == null || owner.getUniqueId() == null) {
-                sender.sendMessage(configManager.getMessage("player-not-found"));
-                return;
-            }
+        OfflinePlayer owner = resolveSinglePlayer(sender, ownerName);
+        if (owner == null || owner.getUniqueId() == null) {
+            sender.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
 
+        FoliaScheduler.runAsync(plugin, () -> {
             ClaimProfile profile = claimManager.getProfile(owner.getUniqueId());
             if (profile == null) {
                 sender.sendMessage(configManager.getMessage("no-profile-found"));
@@ -299,15 +445,14 @@ public class AdminCommand implements LandClaimCommand {
     }
 
     private void adminTrustWho(CommandSender sender, String playerName) {
-        FoliaScheduler.runAsync(plugin, () -> {
-            @SuppressWarnings("deprecation")
-            OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
-            if (target == null || target.getUniqueId() == null) {
-                sender.sendMessage(configManager.getMessage("player-not-found"));
-                return;
-            }
+        OfflinePlayer target = resolveSinglePlayer(sender, playerName);
+        if (target == null || target.getUniqueId() == null) {
+            sender.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
 
-            UUID targetId = target.getUniqueId();
+        UUID targetId = target.getUniqueId();
+        FoliaScheduler.runAsync(plugin, () -> {
             boolean foundAny = false;
             String safeTargetName = escapeMiniMessage(target.getName() != null ? target.getName() : playerName);
             sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()

@@ -24,13 +24,19 @@ public final class OfflinePlayerSuggestions {
     @SuppressWarnings("unchecked")
     public static <C> SuggestionProvider<C> all() {
         return SuggestionProvider.blocking((ctx, input) -> {
+            List<Suggestion> suggestions = new java.util.ArrayList<>();
+            suggestions.add(Suggestion.suggestion("@p"));
+            suggestions.add(Suggestion.suggestion("@s"));
+            suggestions.add(Suggestion.suggestion("@r"));
+            suggestions.add(Suggestion.suggestion("@a"));
             @SuppressWarnings("deprecation")
             OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
-            return Arrays.stream(offlinePlayers)
+            Arrays.stream(offlinePlayers)
                     .map(OfflinePlayer::getName)
                     .filter(name -> name != null && !name.isEmpty())
                     .map(Suggestion::suggestion)
-                    .toList();
+                    .forEach(suggestions::add);
+            return suggestions;
         });
     }
 }

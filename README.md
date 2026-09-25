@@ -245,11 +245,11 @@ Jump directly to specific GUI panels without navigating through the main menu.
 | `/claim warps` | Open the active claim's warp management GUI |
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
-| `/claim admin edit <player>` | Open any player's claim management GUI |
-| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit *(Console & Player)* |
+| `/claim admin edit <player>` | Open any player's claim management GUI (supports `@p`, `@s`, `@r`) |
+| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit *(Console & Player)*. Supports selectors (`@p`, `@s`, `@r`, `@a`), reverse ordering (`<amount> <player>`), and self-granting (`<amount>`). |
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias *(Console & Player)* |
-| `/claim admin trust list <owner>` | List players trusted by this owner *(Console & Player)* |
-| `/claim admin trust who <player>` | List claims where this player is trusted *(Console & Player)* |
+| `/claim admin trust list <owner>` | List players trusted by this owner *(Console & Player, supports selectors)* |
+| `/claim admin trust who <player>` | List claims where this player is trusted *(Console & Player, supports selectors)* |
 | `/claim admin reload` | Reload configuration and messages *(Console & Player)* |
 | `/claim reload` | Shortcut to reload configuration and messages *(Console & Player)* |
 
@@ -269,6 +269,63 @@ Jump directly to specific GUI panels without navigating through the main menu.
 | `landclaim.list` | List claims | ✅ `true` |
 | `landclaim.warps.limit.<n>` | Override the warps limit (e.g., `landclaim.warps.limit.10`) | `false` |
 | `landclaim.createrole.<n>` | Override the max number of custom roles | `false` |
+
+---
+
+## 🛒 Shop & NPC Integration (DeluxeMenus & Citizens 2)
+
+LandClaimPlugin integrates seamlessly with **DeluxeMenus** and **Citizens 2** to allow players to purchase extra claim chunks with items (e.g. Gold Blocks) or economy currency.
+
+### 1. DeluxeMenus GUI Shop
+In your DeluxeMenus configuration (e.g. `plugins/DeluxeMenus/gui_menus/claimshop.yml`):
+```yaml
+menu_title: '&8Buy Land Claim Chunks'
+open_command: claimshop
+size: 27
+items:
+  buy_chunk:
+    material: GOLD_BLOCK
+    slot: 13
+    display_name: '&e&lBuy 1 Extra Chunk'
+    lore:
+      - '&7Cost: &630x Gold Block'
+      - '&7Your Chunks: &a%landclaim_chunks% &7/ &b%landclaim_limit%'
+      - ''
+      - '&a&lCLICK &fto purchase 1 claim chunk!'
+    left_click_commands:
+      - '[console] clear %player_name% gold_block 30'
+      - '[console] claim admin add chunk %player_name% 1'
+      - '[message] &aSuccessfully traded 30 Gold Blocks for 1 extra claim chunk!'
+      - '[sound] ENTITY_PLAYER_LEVELUP 1 1'
+      - '[refresh]'
+    left_click_requirement:
+      requirements:
+        has_gold_blocks:
+          type: has item
+          material: GOLD_BLOCK
+          amount: 30
+      deny_commands:
+        - '[message] &cYou need 30 Gold Blocks in your inventory to buy this!'
+        - '[sound] BLOCK_ANVIL_LAND 1 1'
+```
+
+### 2. Citizens 2 NPC Setup
+- **Option A: Link NPC to DeluxeMenus (Recommended)**
+  ```bash
+  /npc create "Territory Surveyor" --type player
+  /npc select
+  /npc command add -p "claimshop"
+  ```
+  *(Right-clicking the NPC opens the `/claimshop` GUI for the player!)*
+
+- **Option B: Direct Console Command**
+  ```bash
+  /npc select
+  /npc command add -c "claim admin add chunk <p> 1"
+  ```
+  *(Both Citizens placeholder `<p>` and Minecraft entity selector `@p` are supported!)*
+
+For complete setup guides and Vault economy examples, see our [Integrations Documentation](https://synkfr.github.io/LandClaimPlugin/guide/integrations).
 
 ---
 

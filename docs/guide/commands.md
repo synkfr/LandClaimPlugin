@@ -116,15 +116,19 @@ Ban confirmations, abandon confirmations, unclaim-all confirmations, and AnvilIn
 |---|---|
 | `/claim admin claim` | Claim the current chunk for the global Admin Profile (Server Land) |
 | `/claim admin menu` | Open the management menu for the global Admin Profile |
-| `/claim admin edit <player>` | Open any player's claim management GUI with full override |
+| `/claim admin edit <player>` | Open any player's claim management GUI with full override (supports `@p`, `@s`, `@r`) |
 | `/claim admin check` | View detailed claim info (owner UUID, profile name) |
 | `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
-| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit *(Console & In-Game)* |
+| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit *(Console & In-Game)*. Supports selectors (`@p`, `@s`, `@r`, `@a`), reverse ordering (`<amount> <player>`), and self-granting (`<amount>`). See [Integrations Guide](/guide/integrations) |
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias *(Console & In-Game)* |
-| `/claim admin trust list <owner>` | List players trusted by this owner *(Console & In-Game)* |
-| `/claim admin trust who <player>` | List claims where this player is trusted *(Console & In-Game)* |
+| `/claim admin trust list <owner>` | List players trusted by this owner *(Console & In-Game, supports selectors)* |
+| `/claim admin trust who <player>` | List claims where this player is trusted *(Console & In-Game, supports selectors)* |
 | `/claim admin reload` | Reload the plugin configuration and messages *(Console & In-Game)* |
 | `/claim reload` | Reload the plugin configuration and messages (Root Shortcut, Console & In-Game) |
+
+::: tip Bonus Chunks & Shop Integrations
+The `/claim admin add chunk` command is fully compatible with **DeluxeMenus** and **Citizens 2** NPCs for creating chunk-purchasing shops. It accepts `@p` and `<p>` interchangeably. For complete configuration examples, see the [Integrations Guide](/guide/integrations).
+:::
 
 ## Permissions
 

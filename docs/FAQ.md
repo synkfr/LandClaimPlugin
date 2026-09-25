@@ -85,3 +85,15 @@ A: Not in the current implementation — only `landclaim.admin` bypasses. If you
 **Q: How do I make it so PvP is always on and claim owners can't disable it?**
 A: Set `pvp.forceEnabled: true` in `config.yml`. This makes `PvpProtectionListener` always allow PvP regardless of the per-claim `pvpEnabled` flag, and `/claim pvp` refuses to toggle (sends the `pvp-force-locked` message). Note that this is a server-wide lock — there's no per-claim or per-player granularity. The per-claim `pvpEnabled` flag and its on-disk state are left untouched; only the listener's decision changes, so toggling the config back to `false` restores normal per-claim behavior immediately.
 
+---
+
+## DeluxeMenus & Citizens 2 Integration
+
+**Q: How do I let players purchase extra claim chunks using a GUI shop or an in-game NPC?**
+A: Use `/claim admin add chunk <player> <amount>`.
+- **With DeluxeMenus:** In your menu's click commands, execute `[console] claim admin add chunk %player_name% 1` along with item removal (`[console] clear %player_name% gold_block 30`) or Vault currency deduction (`[console] eco take %player_name% 5000`).
+- **With Citizens 2:** Spawn your NPC (`/npc create "Surveyor" --type player`) and link it to your DeluxeMenus shop (`/npc command add -p "claimshop"`). If you want the NPC to grant chunks directly via console command, use `/npc command add -c "claim admin add chunk <p> 1"`. Both `<p>` (Citizens placeholder) and `@p` (Minecraft selector) are supported in v3.2.2+.
+
+See the full [Integrations Guide](/guide/integrations) for complete copy-paste configuration examples and command setups.
+
+
