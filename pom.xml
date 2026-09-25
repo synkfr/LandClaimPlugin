@@ -16,9 +16,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
         <!-- Dependency Versions - Using latest available -->
-        <paper.version>26.2.build.120-stable</paper.version>
+        <paper.version>26.3.build.40-alpha</paper.version>
         <okaeri.version>6.1.0-beta.1</okaeri.version>
-        <cloud.version>2.0.0-beta.15</cloud.version>
+        <cloud.version>2.0.1</cloud.version>
         <hikari.version>5.1.0</hikari.version>
         <jedis.version>5.1.0</jedis.version>
         <caffeine.version>3.1.8</caffeine.version>
