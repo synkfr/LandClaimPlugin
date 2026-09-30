@@ -21,16 +21,28 @@ public class CombatManager {
 
     private void initializeHooks() {
         if (plugin.getServer().getPluginManager().getPlugin("DeluxeCombat") != null) {
-            activeHooks.add(new DeluxeCombatHook());
-            plugin.getLogger().info("Hooked into DeluxeCombat for combat tagging!");
+            try {
+                activeHooks.add(new DeluxeCombatHook());
+                plugin.getLogger().info("Hooked into DeluxeCombat for combat tagging!");
+            } catch (Throwable t) {
+                plugin.getLogger().warning("Failed to hook into DeluxeCombat: " + t.getMessage());
+            }
         }
         if (plugin.getServer().getPluginManager().getPlugin("PvPManager") != null) {
-            activeHooks.add(new PvPManagerHook());
-            plugin.getLogger().info("Hooked into PvPManager for combat tagging!");
+            try {
+                activeHooks.add(new PvPManagerHook());
+                plugin.getLogger().info("Hooked into PvPManager for combat tagging!");
+            } catch (Throwable t) {
+                plugin.getLogger().warning("Failed to hook into PvPManager: " + t.getMessage());
+            }
         }
         if (plugin.getServer().getPluginManager().getPlugin("EternalCombat") != null) {
-            activeHooks.add(new EternalCombatHook());
-            plugin.getLogger().info("Hooked into EternalCombat for combat tagging!");
+            try {
+                activeHooks.add(new EternalCombatHook());
+                plugin.getLogger().info("Hooked into EternalCombat for combat tagging!");
+            } catch (Throwable t) {
+                plugin.getLogger().warning("Failed to hook into EternalCombat: " + t.getMessage());
+            }
         }
     }
 

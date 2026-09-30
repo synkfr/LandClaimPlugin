@@ -7,18 +7,39 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 public class EternalCombatHook implements CombatHook {
-    private final EternalCombatApi combatApi;
+    private EternalCombatApi combatApi;
 
     public EternalCombatHook() {
-        this.combatApi = EternalCombatProvider.provide();
+        try {
+            this.combatApi = EternalCombatProvider.provide();
+        } catch (Throwable ignored) {
+            this.combatApi = null;
+        }
+    }
+
+    private EternalCombatApi getApi() {
+        if (combatApi != null) {
+            return combatApi;
+        }
+        try {
+            combatApi = EternalCombatProvider.provide();
+        } catch (Throwable ignored) {
+        }
+        return combatApi;
     }
 
     @Override
     public boolean isInCombat(Player player) {
-        if (combatApi == null)
+        EternalCombatApi api = getApi();
+        if (api == null) {
             return false;
+        }
 
-        UUID playerId = player.getUniqueId();
-        return combatApi.getFightManager().isInCombat(playerId);
+        try {
+            UUID playerId = player.getUniqueId();
+            return api.getFightManager().isInCombat(playerId);
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }

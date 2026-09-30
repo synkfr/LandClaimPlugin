@@ -2,6 +2,7 @@ package org.ayosynk.landClaimPlugin.listeners.protections;
 
 import org.ayosynk.landClaimPlugin.LandClaimPlugin;
 import org.ayosynk.landClaimPlugin.managers.ClaimManager;
+import org.ayosynk.landClaimPlugin.managers.CombatManager;
 import org.ayosynk.landClaimPlugin.managers.ConfigManager;
 
 import org.ayosynk.landClaimPlugin.models.ChunkPosition;
@@ -17,11 +18,13 @@ import org.bukkit.event.entity.PotionSplashEvent;
 
 public class PvpProtectionListener implements Listener {
 
+    private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
 
     public PvpProtectionListener(LandClaimPlugin plugin, ClaimManager claimManager,
             ConfigManager configManager) {
+        this.plugin = plugin;
         this.claimManager = claimManager;
         this.configManager = configManager;
     }
@@ -59,6 +62,20 @@ public class PvpProtectionListener implements Listener {
         return true; // PvP is allowed in wilderness
     }
 
+    private boolean isPvpInteractionAllowed(Player attacker, Player victim) {
+        boolean bypassInCombat = configManager.getPluginConfig().pvp.combatTagBypass;
+        CombatManager combatManager = plugin.getCombatManager();
+
+        boolean victimAllowed = isPvpAllowed(victim.getLocation())
+                || (bypassInCombat && combatManager.isInCombat(victim));
+        if (!victimAllowed) {
+            return false;
+        }
+
+        return isPvpAllowed(attacker.getLocation())
+                || (bypassInCombat && (combatManager.isInCombat(attacker) || combatManager.isInCombat(victim)));
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player))
@@ -79,7 +96,7 @@ public class PvpProtectionListener implements Listener {
         if (attacker == null || attacker.equals(victim))
             return;
 
-        if (!isPvpAllowed(victim.getLocation()) || !isPvpAllowed(attacker.getLocation())) {
+        if (!isPvpInteractionAllowed(attacker, victim)) {
             event.setCancelled(true);
             attacker.sendMessage(configManager.getMessage("pvp-denied"));
         }
@@ -95,9 +112,9 @@ public class PvpProtectionListener implements Listener {
 
         // Check each affected entity
         event.getAffectedEntities().forEach(entity -> {
-            if (entity instanceof Player && !entity.equals(thrower)) {
+            if (entity instanceof Player victim && !victim.equals(thrower)) {
                 // If the victim is in a claim where PvP is disabled, or thrower is in claim
-                if (!isPvpAllowed(entity.getLocation()) || !isPvpAllowed(thrower.getLocation())) {
+                if (!isPvpInteractionAllowed(thrower, victim)) {
                     event.setIntensity(entity, 0); // Nullify effect on this specific player
                 }
             }

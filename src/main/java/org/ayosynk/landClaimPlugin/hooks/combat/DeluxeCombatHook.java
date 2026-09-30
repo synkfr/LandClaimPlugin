@@ -12,6 +12,10 @@ public class DeluxeCombatHook implements CombatHook {
 
     @Override
     public boolean isInCombat(Player player) {
-        return api.isInCombat(player);
+        try {
+            return api != null && api.isInCombat(player);
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }

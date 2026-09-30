@@ -266,6 +266,14 @@ public class PluginConfig extends OkaeriConfig {
 
     public static class PvpConfig extends OkaeriConfig {
         public boolean forceEnabled = false;
+
+        @Comment({
+            "When true, claim PvP protection is temporarily bypassed for players who are in combat.",
+            "This prevents players from starting a fight in the wilderness and running into a claim to hide.",
+            "Requires a supported combat tag plugin (DeluxeCombat, PvPManager, EternalCombat).",
+            "When false, claims always protect players from PvP unless /claim pvp is enabled."
+        })
+        public boolean combatTagBypass = true;
     }
 
     @Comment({

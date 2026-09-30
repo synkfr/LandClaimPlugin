@@ -6,12 +6,15 @@ import org.bukkit.entity.Player;
 public class PvPManagerHook implements CombatHook {
 
     public PvPManagerHook() {
-        // Validation could go here if needed
     }
 
     @Override
     public boolean isInCombat(Player player) {
-        CombatPlayer combatPlayer = CombatPlayer.get(player);
-        return combatPlayer != null && combatPlayer.isInCombat();
+        try {
+            CombatPlayer combatPlayer = CombatPlayer.get(player);
+            return combatPlayer != null && combatPlayer.isInCombat();
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }
