@@ -10,6 +10,7 @@ public class ClaimPlayer {
     private String visualizationMode;
     private int bonusClaimBlocks;
     private UUID activeProfileId;
+    private boolean decayExempt;
 
     public ClaimPlayer(UUID uniqueId) {
         this.uniqueId = uniqueId;
@@ -18,6 +19,7 @@ public class ClaimPlayer {
         this.visualizationMode = "DEFAULT";
         this.bonusClaimBlocks = 0;
         this.activeProfileId = null;
+        this.decayExempt = false;
     }
 
     public UUID getUniqueId() {
@@ -62,5 +64,13 @@ public class ClaimPlayer {
 
     public void setActiveProfileId(UUID activeProfileId) {
         this.activeProfileId = activeProfileId;
+    }
+
+    public boolean isDecayExempt() {
+        return decayExempt;
+    }
+
+    public void setDecayExempt(boolean decayExempt) {
+        this.decayExempt = decayExempt;
     }
 }

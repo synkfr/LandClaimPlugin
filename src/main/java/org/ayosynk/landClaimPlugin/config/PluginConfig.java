@@ -277,6 +277,31 @@ public class PluginConfig extends OkaeriConfig {
     }
 
     @Comment({
+        "Inactive Claim Auto-Decay",
+        "Automatically clear out claims belonging to players who have been offline for a set period.",
+        "Admins and VIPs can be exempted per-player via '/claim admin decay exempt <player>'",
+        "or via the exemptPermission (e.g. landclaim.decay.exempt)."
+    })
+    public DecayConfig decay = new DecayConfig();
+
+    public static class DecayConfig extends OkaeriConfig {
+        @Comment("Enable automatic claim decay for inactive players.")
+        public boolean enabled = false;
+
+        @Comment("Days of inactivity (player offline) before their claims automatically decay.")
+        public int inactiveDays = 14;
+
+        @Comment("How often (in hours) the plugin should scan for inactive claims.")
+        public int checkIntervalHours = 12;
+
+        @Comment("Permission that exempts players from claim decay.")
+        public String exemptPermission = "landclaim.decay.exempt";
+
+        @Comment("If true, only the claim owner's activity is checked. If false, active claim members protect the claim from decay.")
+        public boolean onlyCheckOwner = true;
+    }
+
+    @Comment({
         "LuckPerms / Bukkit Permissions Bypass",
         "If true, separate permissions like landclaim.menu.<menu>, landclaim.menu.*, ",
         "and command-specific permissions (e.g., landclaim.unstuck) will be checked.",

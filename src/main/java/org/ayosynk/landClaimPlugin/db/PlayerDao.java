@@ -19,4 +19,6 @@ public interface PlayerDao {
 
     /** Load player preferences by UUID. Returns null if not found. */
     CompletableFuture<ClaimPlayer> getPlayer(UUID playerId);
+
+    CompletableFuture<java.util.List<UUID>> getExemptPlayerIds();
 }

@@ -29,7 +29,8 @@ public class SQLPlayerDao implements PlayerDao {
                 "auto_unclaim BOOLEAN NOT NULL DEFAULT 0," +
                 "visualization_mode VARCHAR(32) NOT NULL DEFAULT 'DEFAULT'," +
                 "bonus_blocks INT NOT NULL DEFAULT 0," +
-                "active_profile_id VARCHAR(36) NULL)";
+                "active_profile_id VARCHAR(36) NULL," +
+                "decay_exempt BOOLEAN NOT NULL DEFAULT 0)";
 
         try (Connection conn = dbManager.getDatabase().getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -46,6 +47,12 @@ public class SQLPlayerDao implements PlayerDao {
         } catch (SQLException ignored) {
             // Column likely already exists
         }
+
+        try (Connection conn = dbManager.getDatabase().getConnection();
+             PreparedStatement stmt = conn.prepareStatement("ALTER TABLE " + tablePrefix + "players ADD COLUMN decay_exempt BOOLEAN NOT NULL DEFAULT 0")) {
+            stmt.executeUpdate();
+        } catch (SQLException ignored) {
+        }
     }
 
     @Override
@@ -54,11 +61,11 @@ public class SQLPlayerDao implements PlayerDao {
             String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
             String sql = plugin.getConfigManager().getPluginConfig().database.type.equalsIgnoreCase("SQLITE")
                     ? "INSERT OR REPLACE INTO " + tablePrefix
-                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks, active_profile_id) VALUES (?, ?, ?, ?, ?, ?)"
+                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks, active_profile_id, decay_exempt) VALUES (?, ?, ?, ?, ?, ?, ?)"
                     : "INSERT INTO " + tablePrefix
-                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks, active_profile_id) VALUES (?, ?, ?, ?, ?, ?) "
+                            + "players (uuid, auto_claim, auto_unclaim, visualization_mode, bonus_blocks, active_profile_id, decay_exempt) VALUES (?, ?, ?, ?, ?, ?, ?) "
                             +
-                            "ON DUPLICATE KEY UPDATE auto_claim=VALUES(auto_claim), auto_unclaim=VALUES(auto_unclaim), visualization_mode=VALUES(visualization_mode), bonus_blocks=VALUES(bonus_blocks), active_profile_id=VALUES(active_profile_id)";
+                            "ON DUPLICATE KEY UPDATE auto_claim=VALUES(auto_claim), auto_unclaim=VALUES(auto_unclaim), visualization_mode=VALUES(visualization_mode), bonus_blocks=VALUES(bonus_blocks), active_profile_id=VALUES(active_profile_id), decay_exempt=VALUES(decay_exempt)";
 
             try (Connection conn = dbManager.getDatabase().getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -69,6 +76,7 @@ public class SQLPlayerDao implements PlayerDao {
                 stmt.setString(4, player.getVisualizationMode());
                 stmt.setInt(5, player.getBonusClaimBlocks());
                 stmt.setString(6, player.getActiveProfileId() != null ? player.getActiveProfileId().toString() : null);
+                stmt.setBoolean(7, player.isDecayExempt());
 
                 stmt.executeUpdate();
             } catch (SQLException e) {
@@ -102,6 +110,7 @@ public class SQLPlayerDao implements PlayerDao {
                                 player.setActiveProfileId(UUID.fromString(activeIdStr));
                             } catch (IllegalArgumentException ignored) {}
                         }
+                        player.setDecayExempt(rs.getBoolean("decay_exempt"));
                         return player;
                     }
                 }
@@ -111,6 +120,28 @@ public class SQLPlayerDao implements PlayerDao {
             }
             // Return default player if not found
             return new ClaimPlayer(playerId);
+        });
+    }
+
+    @Override
+    public CompletableFuture<java.util.List<UUID>> getExemptPlayerIds() {
+        return CompletableFuture.supplyAsync(() -> {
+            String tablePrefix = plugin.getConfigManager().getPluginConfig().database.tablePrefix;
+            String sql = "SELECT uuid FROM " + tablePrefix + "players WHERE decay_exempt = 1";
+            java.util.List<UUID> list = new java.util.ArrayList<>();
+            try (Connection conn = dbManager.getDatabase().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    try {
+                        list.add(UUID.fromString(rs.getString("uuid")));
+                    } catch (IllegalArgumentException ignored) {}
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Failed to load decay exempt players");
+                e.printStackTrace();
+            }
+            return list;
         });
     }
 }

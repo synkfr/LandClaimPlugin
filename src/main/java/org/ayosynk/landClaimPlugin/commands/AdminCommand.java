@@ -15,18 +15,20 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
-import org.incendo.cloud.parser.standard.IntegerParser;
+import org.incendo.cloud.parser.standard.BooleanParser;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.ayosynk.landClaimPlugin.models.ClaimPlayer;
 import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
-import org.ayosynk.landClaimPlugin.gui.TrustManagementGUI;
 import org.bukkit.entity.Entity;
+import org.bukkit.Location;
+import org.bukkit.command.ProxiedCommandSender;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles: /claim admin check, /claim admin unclaim, /claim admin add chunk
@@ -80,25 +82,47 @@ public class AdminCommand implements LandClaimCommand {
                 .required("arg1", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .required("arg2", StringParser.stringParser())
                 .handler(context -> {
-                    CommandSender sender = context.sender().source();
+                    Source source = context.sender();
                     String arg1 = context.get("arg1");
                     String arg2 = context.get("arg2");
-                    handleAdminAddChunk(sender, arg1, arg2);
+                    handleAdminAddChunk(source, arg1, arg2);
                 }));
 
         manager.command(adminBase.literal("add").literal("chunk")
                 .required("arg1", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
-                    CommandSender sender = context.sender().source();
+                    Source source = context.sender();
                     String arg1 = context.get("arg1");
-                    handleAdminAddChunk(sender, arg1, null);
+                    handleAdminAddChunk(source, arg1, null);
+                }));
+
+        manager.command(adminBase.literal("decay").literal("run")
+                .handler(context -> {
+                    CommandSender sender = context.sender().source();
+                    plugin.getClaimDecayManager().runDecayCheck(sender);
+                }));
+
+        manager.command(adminBase.literal("decay").literal("exempt")
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .optional("state", BooleanParser.booleanParser())
+                .handler(context -> {
+                    Source source = context.sender();
+                    String playerName = context.get("player");
+                    Boolean state = context.getOrDefault("state", null);
+                    adminDecayExempt(source, playerName, state);
+                }));
+
+        manager.command(adminBase.literal("decay").literal("list")
+                .handler(context -> {
+                    CommandSender sender = context.sender().source();
+                    adminDecayList(sender);
                 }));
 
         // /claim admin edit <owner> (Player only - opens GUI)
         manager.command(playerAdminBase.literal("edit")
                 .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
-                    Player sender = context.sender().source();
+                    PlayerSource sender = context.sender();
                     String ownerName = context.get("owner");
                     adminEditProfile(sender, ownerName);
                 }));
@@ -107,7 +131,7 @@ public class AdminCommand implements LandClaimCommand {
         manager.command(adminBase.literal("trust").literal("list")
                 .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
-                    CommandSender sender = context.sender().source();
+                    Source sender = context.sender();
                     String ownerName = context.get("owner");
                     adminTrustList(sender, ownerName);
                 }));
@@ -116,7 +140,7 @@ public class AdminCommand implements LandClaimCommand {
         manager.command(adminBase.literal("trust").literal("who")
                 .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
                 .handler(context -> {
-                    CommandSender sender = context.sender().source();
+                    Source sender = context.sender();
                     String playerName = context.get("player");
                     adminTrustWho(sender, playerName);
                 }));
@@ -188,7 +212,8 @@ public class AdminCommand implements LandClaimCommand {
                 }));
     }
 
-    private void handleAdminAddChunk(CommandSender sender, String arg1, String arg2) {
+    private void handleAdminAddChunk(Source source, String arg1, String arg2) {
+        CommandSender sender = source.source();
         String targetInput;
         int amount;
 
@@ -211,25 +236,21 @@ public class AdminCommand implements LandClaimCommand {
             Integer amountFromArg2 = tryParsePositiveInt(arg2);
 
             if (amountFromArg2 != null && amountFromArg1 == null) {
-                // <player> <amount> (e.g. "@p 5", "Notch 5")
                 targetInput = arg1;
                 amount = amountFromArg2;
             } else if (amountFromArg1 != null && amountFromArg2 == null) {
-                // <amount> <player> (e.g. "5 @p", "5 Notch")
                 targetInput = arg2;
                 amount = amountFromArg1;
             } else if (amountFromArg1 != null && amountFromArg2 != null) {
-                // Both are numbers; treat arg1 as player, arg2 as amount
                 targetInput = arg1;
                 amount = amountFromArg2;
             } else {
-                // Neither is an integer
                 sender.sendMessage(configManager.getMessage("invalid-command"));
                 return;
             }
         }
 
-        List<OfflinePlayer> targets = resolveTargets(sender, targetInput);
+        List<OfflinePlayer> targets = resolveTargets(source, targetInput);
         if (targets.isEmpty()) {
             sender.sendMessage(configManager.getMessage("player-not-found"));
             return;
@@ -238,40 +259,67 @@ public class AdminCommand implements LandClaimCommand {
         adminAddChunk(sender, amount, targets);
     }
 
+    private List<OfflinePlayer> resolveTargets(Source source, String input) {
+        CommandSender sender = source != null ? source.source() : null;
+        return resolveTargets(source, sender, input);
+    }
+
     private List<OfflinePlayer> resolveTargets(CommandSender sender, String input) {
+        return resolveTargets(null, sender, input);
+    }
+
+    private List<OfflinePlayer> resolveTargets(Source source, CommandSender sender, String input) {
         if (input == null || input.isBlank()) {
             return List.of();
         }
 
-        // 1. Check for entity selectors: @p, @s, @r, @a, @e[type=player], etc.
+        CommandSourceStack stack = source != null ? source.stack() : null;
+        Location location = stack != null ? stack.getLocation() : null;
+        Entity executor = stack != null ? stack.getExecutor() : null;
+
         if (input.startsWith("@")) {
-            try {
-                List<Entity> entities = Bukkit.selectEntities(sender, input);
-                List<OfflinePlayer> players = new ArrayList<>();
-                for (Entity entity : entities) {
-                    if (entity instanceof Player player) {
-                        players.add(player);
-                    }
-                }
-                if (!players.isEmpty()) {
-                    return players;
-                }
-            } catch (Exception ignored) {
-                // Selector failed or not supported in this context
+            CommandSender effectiveSender = sender;
+            if (executor instanceof Player playerExecutor) {
+                effectiveSender = playerExecutor;
+            } else if (sender instanceof ProxiedCommandSender pcs && pcs.getCallee() instanceof Player playerCallee) {
+                effectiveSender = playerCallee;
             }
 
-            // Fallbacks for Console or standard selectors
-            if (input.equalsIgnoreCase("@p") || input.equalsIgnoreCase("@nearest")) {
+            List<OfflinePlayer> selected = selectEntitiesSafely(effectiveSender, input);
+            if (!selected.isEmpty()) {
+                return selected;
+            }
+
+            if (input.equalsIgnoreCase("@s")) {
+                if (executor instanceof Player playerExecutor) {
+                    return List.of(playerExecutor);
+                }
+                if (sender instanceof Player p) {
+                    return List.of(p);
+                }
+                if (sender instanceof ProxiedCommandSender pcs && pcs.getCallee() instanceof Player p) {
+                    return List.of(p);
+                }
+                if (location != null && location.getWorld() != null) {
+                    Player nearest = findNearestPlayer(location);
+                    if (nearest != null) {
+                        return List.of(nearest);
+                    }
+                }
+                Player first = Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
+                return first != null ? List.of(first) : List.of();
+            } else if (input.equalsIgnoreCase("@p") || input.equalsIgnoreCase("@nearest")) {
+                if (location != null && location.getWorld() != null) {
+                    Player nearest = findNearestPlayer(location);
+                    if (nearest != null) {
+                        return List.of(nearest);
+                    }
+                }
                 if (sender instanceof Player p) {
                     return List.of(p);
                 }
                 Player first = Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
                 return first != null ? List.of(first) : List.of();
-            } else if (input.equalsIgnoreCase("@s")) {
-                if (sender instanceof Player p) {
-                    return List.of(p);
-                }
-                return List.of();
             } else if (input.equalsIgnoreCase("@a")) {
                 return new ArrayList<>(Bukkit.getOnlinePlayers());
             } else if (input.equalsIgnoreCase("@r")) {
@@ -283,13 +331,11 @@ public class AdminCommand implements LandClaimCommand {
             }
         }
 
-        // 2. Online player exact match
         Player onlinePlayer = Bukkit.getPlayerExact(input);
         if (onlinePlayer != null) {
             return List.of(onlinePlayer);
         }
 
-        // 3. UUID match
         try {
             UUID uuid = UUID.fromString(input);
             OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
@@ -298,7 +344,6 @@ public class AdminCommand implements LandClaimCommand {
             }
         } catch (IllegalArgumentException ignored) {}
 
-        // 4. Offline player match by username
         @SuppressWarnings("deprecation")
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(input);
         if (offlinePlayer != null && (offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline())) {
@@ -306,6 +351,69 @@ public class AdminCommand implements LandClaimCommand {
         }
 
         return List.of();
+    }
+
+    private List<OfflinePlayer> selectEntitiesSafely(CommandSender sender, String selector) {
+        if (sender == null) {
+            return List.of();
+        }
+        if (Bukkit.isPrimaryThread()) {
+            return doSelectEntities(sender, selector);
+        }
+        CompletableFuture<List<OfflinePlayer>> future = new CompletableFuture<>();
+        FoliaScheduler.runTask(plugin, () -> {
+            try {
+                future.complete(doSelectEntities(sender, selector));
+            } catch (Throwable t) {
+                future.complete(List.of());
+            }
+        });
+        try {
+            return future.get(3, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private List<OfflinePlayer> doSelectEntities(CommandSender sender, String selector) {
+        try {
+            List<Entity> entities = Bukkit.selectEntities(sender, selector);
+            List<OfflinePlayer> players = new ArrayList<>();
+            for (Entity entity : entities) {
+                if (entity instanceof Player player) {
+                    players.add(player);
+                }
+            }
+            return players;
+        } catch (Throwable ignored) {
+            return List.of();
+        }
+    }
+
+    private Player findNearestPlayer(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
+        }
+        Player nearest = null;
+        double minDistanceSq = Double.MAX_VALUE;
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getWorld().equals(location.getWorld())) {
+                double distSq = player.getLocation().distanceSquared(location);
+                if (distSq < minDistanceSq) {
+                    minDistanceSq = distSq;
+                    nearest = player;
+                }
+            }
+        }
+        if (nearest != null) {
+            return nearest;
+        }
+        return Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
+    }
+
+    private OfflinePlayer resolveSinglePlayer(Source source, String input) {
+        List<OfflinePlayer> targets = resolveTargets(source, input);
+        return targets.isEmpty() ? null : targets.get(0);
     }
 
     private OfflinePlayer resolveSinglePlayer(CommandSender sender, String input) {
@@ -393,6 +501,27 @@ public class AdminCommand implements LandClaimCommand {
         });
     }
 
+    private void adminEditProfile(Source source, String ownerName) {
+        CommandSender sender = source.source();
+        if (!(sender instanceof Player player)) {
+            return;
+        }
+        OfflinePlayer target = resolveSinglePlayer(source, ownerName);
+        if (target == null || target.getUniqueId() == null) {
+            player.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
+
+        ClaimProfile profile = claimManager.getProfile(target.getUniqueId());
+        if (profile == null) {
+            player.sendMessage(configManager.getMessage("no-profile-found"));
+            return;
+        }
+
+        MainMenuGUI.open(player, profile, plugin);
+        player.sendMessage(configManager.getMessage("admin-editing-profile", "<player>", target.getName()));
+    }
+
     private void adminEditProfile(Player sender, String ownerName) {
         OfflinePlayer target = resolveSinglePlayer(sender, ownerName);
         if (target == null || target.getUniqueId() == null) {
@@ -406,9 +535,42 @@ public class AdminCommand implements LandClaimCommand {
             return;
         }
 
-        // Open the MainMenuGUI for the admin to manage this profile
         MainMenuGUI.open(sender, profile, plugin);
         sender.sendMessage(configManager.getMessage("admin-editing-profile", "<player>", target.getName()));
+    }
+
+    private void adminTrustList(Source source, String ownerName) {
+        CommandSender sender = source.source();
+        OfflinePlayer owner = resolveSinglePlayer(source, ownerName);
+        if (owner == null || owner.getUniqueId() == null) {
+            sender.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
+
+        FoliaScheduler.runAsync(plugin, () -> {
+            ClaimProfile profile = claimManager.getProfile(owner.getUniqueId());
+            if (profile == null) {
+                sender.sendMessage(configManager.getMessage("no-profile-found"));
+                return;
+            }
+
+            var trusted = profile.getTrustedPlayerFlags();
+            if (trusted.isEmpty()) {
+                sender.sendMessage(configManager.getMessage("trust-list-empty"));
+                return;
+            }
+
+            String safeOwnerName = escapeMiniMessage(owner.getName() != null ? owner.getName() : ownerName);
+            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                    .deserialize("<gold>Trusted players for " + safeOwnerName + ":"));
+            for (UUID trustedId : trusted.keySet()) {
+                String name = Bukkit.getOfflinePlayer(trustedId).getName();
+                if (name == null) name = trustedId.toString();
+                String safeName = escapeMiniMessage(name);
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                    .deserialize("<gray>- <gold>" + safeName));
+            }
+        });
     }
 
     private void adminTrustList(CommandSender sender, String ownerName) {
@@ -444,6 +606,38 @@ public class AdminCommand implements LandClaimCommand {
         });
     }
 
+    private void adminTrustWho(Source source, String playerName) {
+        CommandSender sender = source.source();
+        OfflinePlayer target = resolveSinglePlayer(source, playerName);
+        if (target == null || target.getUniqueId() == null) {
+            sender.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
+
+        UUID targetId = target.getUniqueId();
+        FoliaScheduler.runAsync(plugin, () -> {
+            boolean foundAny = false;
+            String safeTargetName = escapeMiniMessage(target.getName() != null ? target.getName() : playerName);
+            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                    .deserialize("<gold>Claims where " + safeTargetName + " is trusted:"));
+
+            for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
+                if (profile.isTrusted(targetId)) {
+                    foundAny = true;
+                    String ownerName = profile.getDisplayOwnerName();
+                    String safeOwnerName = escapeMiniMessage(ownerName);
+                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                            .deserialize("<gray>- <gold>" + safeOwnerName));
+                }
+            }
+
+            if (!foundAny) {
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize("<red>This player is not trusted in any claims."));
+            }
+        });
+    }
+
     private void adminTrustWho(CommandSender sender, String playerName) {
         OfflinePlayer target = resolveSinglePlayer(sender, playerName);
         if (target == null || target.getUniqueId() == null) {
@@ -471,6 +665,55 @@ public class AdminCommand implements LandClaimCommand {
             if (!foundAny) {
                 sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
                         .deserialize("<red>This player is not trusted in any claims."));
+            }
+        });
+    }
+
+    private void adminDecayExempt(Source source, String playerName, Boolean explicitState) {
+        CommandSender sender = source.source();
+        OfflinePlayer target = resolveSinglePlayer(source, playerName);
+        if (target == null || target.getUniqueId() == null) {
+            sender.sendMessage(configManager.getMessage("player-not-found"));
+            return;
+        }
+
+        UUID targetId = target.getUniqueId();
+        FoliaScheduler.runAsync(plugin, () -> {
+            boolean currentState = plugin.getClaimDecayManager().isExempt(targetId, null);
+            boolean newState = explicitState != null ? explicitState : !currentState;
+            plugin.getClaimDecayManager().setExempt(targetId, newState);
+
+            String targetDisplayName = target.getName() != null ? target.getName() : targetId.toString();
+            String statusStr = newState ? "EXEMPT" : "NOT EXEMPT";
+            sender.sendMessage(configManager.getMessage("admin-decay-exempt-set",
+                    "<player>", targetDisplayName,
+                    "<status>", statusStr));
+        });
+    }
+
+    private void adminDecayList(CommandSender sender) {
+        FoliaScheduler.runAsync(plugin, () -> {
+            try {
+                List<UUID> exemptIds = plugin.getDatabaseManager().getPlayerDao().getExemptPlayerIds().join();
+                if (exemptIds.isEmpty()) {
+                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                            .deserialize("<yellow>No players are currently manually exempt from claim decay."));
+                    return;
+                }
+
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize("<gold>Decay-Exempt Players (" + exemptIds.size() + "):"));
+                for (UUID id : exemptIds) {
+                    OfflinePlayer op = Bukkit.getOfflinePlayer(id);
+                    String name = op.getName() != null ? op.getName() : id.toString();
+                    String safeName = escapeMiniMessage(name);
+                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                            .deserialize("<gray>- <gold>" + safeName + " <dark_gray>(" + id + ")"));
+                }
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to retrieve exempt players list: " + e.getMessage());
+                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize("<red>Failed to retrieve exempt players list."));
             }
         });
     }

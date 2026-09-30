@@ -699,45 +699,51 @@ public class ClaimManager {
         return true;
     }
 
-    /**
-     * Abandon the player's entire profile — unclaim all chunks and delete all data.
-     */
-    public int abandonProfile(UUID playerId) {
-        ClaimProfile profile = getProfile(playerId);
-        if (profile == null)
+    public int deleteProfile(UUID profileId, org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent.DeleteReason reason) {
+        ClaimProfile found = getProfileById(profileId);
+        if (found == null) {
+            found = getProfile(profileId);
+        }
+        if (found == null) {
             return 0;
+        }
+        final ClaimProfile profile = found;
 
         int count = profile.getOwnedChunks().size();
+        UUID ownerId = profile.getOwnerId();
 
-        // Remove all chunks from spatial index and fire deletion events synchronously
         java.util.List<ChunkPosition> chunks = new java.util.ArrayList<>(profile.getOwnedChunks());
         for (ChunkPosition chunk : chunks) {
             removeFromSpatialIndex(chunk);
             org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent deleteEvent =
-                    new org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent(profile, chunk, playerId,
-                            org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent.DeleteReason.PLAYER_ABANDON);
+                    new org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent(profile, chunk, ownerId, reason);
             Bukkit.getPluginManager().callEvent(deleteEvent);
         }
 
-        // Remove from cache
-        plugin.getCacheManager().getProfileCache().invalidate(playerId);
+        plugin.getCacheManager().getProfileCache().invalidate(profile.getProfileId());
 
-        // Delete from DB atomically
-        plugin.getDatabaseManager().getProfileDao().deleteProfile(playerId)
+        plugin.getDatabaseManager().getProfileDao().deleteProfile(profile.getProfileId())
             .thenRun(() -> {
                 if (plugin.getRedisManager() != null) {
-                    plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE", playerId);
+                    plugin.getRedisManager().publishUpdate("INVALIDATE_PROFILE", profile.getProfileId());
                 }
             })
             .exceptionally(throwable -> {
-                plugin.getLogger().severe("Failed to delete profile for " + playerId + ": " + throwable.getMessage());
+                plugin.getLogger().severe("Failed to delete profile for " + profile.getProfileId() + ": " + throwable.getMessage());
                 throwable.printStackTrace();
                 return null;
             });
 
-        plugin.getVisualizationManager().invalidateCache(playerId);
+        plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
         plugin.getHookManager().refreshMapHooks();
         return count;
+    }
+
+    /**
+     * Abandon the player's entire profile — unclaim all chunks and delete all data.
+     */
+    public int abandonProfile(UUID playerId) {
+        return deleteProfile(playerId, org.ayosynk.landClaimPlugin.api.event.ClaimDeleteEvent.DeleteReason.PLAYER_ABANDON);
     }
 
     /**

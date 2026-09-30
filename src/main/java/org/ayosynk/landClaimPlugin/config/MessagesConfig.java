@@ -234,4 +234,9 @@ public class MessagesConfig extends OkaeriConfig {
     public String geyserUnclaimAllContent = "<red>Are you sure you want to unclaim ALL of your claimed chunks?\n<gray>This action cannot be undone.";
     @Comment("Shown on the ModalForm when a Bedrock player attempts to ban another player from their claim.")
     public String geyserBanContent = "<red>Ban <gold><player></gold> from your claim?\n<gray>They will no longer be able to enter.";
+
+    public String adminDecayRunStarted = "<yellow>Scanning for inactive claims to decay...";
+    public String adminDecayRunFinished = "<green>Decay check complete. <gold><claims></gold> claims decayed (<gold><chunks></gold> chunks freed).";
+    public String adminDecayExemptSet = "<green>Decay exemption for <gold><player></gold> set to: <white><status></white>.";
+    public String adminDecayDisabled = "<yellow>Claim auto-decay is currently disabled in config.yml.";
 }

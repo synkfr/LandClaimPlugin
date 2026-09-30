@@ -26,7 +26,8 @@ public class ClaimDeleteEvent extends ClaimEvent {
         /** Ownership transfer (old claim deleted) */
         OWNERSHIP_TRANSFER,
         /** Plugin or migration operation */
-        SYSTEM
+        SYSTEM,
+        INACTIVITY_DECAY
     }
 
     public ClaimDeleteEvent(@NotNull ClaimProfile profile, @NotNull ChunkPosition chunk,

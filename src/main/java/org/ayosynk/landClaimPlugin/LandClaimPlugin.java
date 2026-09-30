@@ -35,6 +35,7 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
     private HookManager hookManager;
     private UpdateManager updateManager;
     private MinimapManager minimapManager;
+    private ClaimDecayManager claimDecayManager;
 
     // API delegate for interface methods
     private LandClaimAPIImpl apiDelegate;
@@ -99,6 +100,9 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
             // 9. Initialize third-party plugins (WorldGuard, Maps)
             hookManager = new HookManager(this, claimManager, configManager);
             hookManager.init();
+
+            claimDecayManager = new ClaimDecayManager(this, claimManager, configManager);
+            claimDecayManager.start();
 
             // 10. Initialize public API for external plugins
             apiDelegate = new LandClaimAPIImpl(this);
@@ -209,6 +213,10 @@ public class LandClaimPlugin extends JavaPlugin implements LandClaimAPI {
 
     public MinimapManager getMinimapManager() {
         return minimapManager;
+    }
+
+    public ClaimDecayManager getClaimDecayManager() {
+        return claimDecayManager;
     }
 
     public void reloadPlugin() {
