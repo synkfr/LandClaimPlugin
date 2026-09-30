@@ -1,10 +1,10 @@
 name: LandClaimPlugin
-version: "3.2.2"
+version: "3.3.0"
 main: org.ayosynk.landClaimPlugin.LandClaimPlugin
 api-version: "1.21"
 author: AyoSynk
 folia-supported: true
-soft-depend: [WorldGuard, BlueMap, dynmap, squaremap, Pl3xMap, Geyser-Spigot, floodgate, Vault, DeluxeCombat, PvPManager, EternalCombat]
+soft-depend: [WorldGuard, BlueMap, dynmap, squaremap, Pl3xMap, Geyser-Spigot, floodgate, Vault, DeluxeCombat, PvPManager, EternalCombat, CombatLogX]
 permissions:
   landclaim.*:
     description: All landclaim permissions
@@ -48,6 +48,9 @@ permissions:
     default: true
   landclaim.admin:
     description: Bypass protection and limits
+    default: op
+  landclaim.decay.exempt:
+    description: Exempts player from automatic claim decay
     default: op
   landclaim.ban:
     description: Ban / unban players from your claim
