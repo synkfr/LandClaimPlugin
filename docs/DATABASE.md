@@ -109,6 +109,7 @@ Player preference data.
 | `auto_unclaim` | BOOLEAN | DEFAULT FALSE | Auto-unclaim toggle |
 | `vis_mode` | VARCHAR(32) | DEFAULT `'DEFAULT'` | Preferred visualization |
 | `bonus_claim_blocks` | INT | DEFAULT 0 | Bonus claim limit |
+| `decay_exempt` | BOOLEAN | DEFAULT FALSE | Inactivity decay exemption toggle |
 
 ### `lc_warps`
 

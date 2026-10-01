@@ -175,3 +175,21 @@ Starting in **v3.2.2**, `/claim admin add chunk` includes flexible syntax parsin
 - `<Username>` — Online or cached offline player
 
 All selector lookups are evaluated synchronously on the main thread for Folia/Paper safety, and chunk persistence is processed asynchronously in the background.
+
+---
+
+## 4. Combat Taggers (PvP Protection Bypass)
+
+LandClaimPlugin natively integrates with popular combat tagging plugins to prevent PvP exploits:
+- **DeluxeCombat**
+- **CombatLogX**
+- **PvPManager**
+- **EternalCombat**
+
+### Anti-Safezone Claim Exploitation
+In standard survival servers, players often initiate a fight in the wilderness and sprint into an adjacent claimed territory to hide from damage. 
+
+With `combatTag.combatTagBypass: true` (enabled by default in `config.yml`), LandClaimPlugin temporarily suspends claim PvP protection for tagged players:
+1. When player A and player B fight, their combat plugin tags them.
+2. If either player runs into a claim (even their own claim, or a claim with PvP disabled), opponents can still deal damage to them until their combat tag expires.
+3. Once the combat tag naturally wears off, normal claim protection resumes immediately.

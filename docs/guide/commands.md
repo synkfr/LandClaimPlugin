@@ -123,6 +123,9 @@ Ban confirmations, abandon confirmations, unclaim-all confirmations, and AnvilIn
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias *(Console & In-Game)* |
 | `/claim admin trust list <owner>` | List players trusted by this owner *(Console & In-Game, supports selectors)* |
 | `/claim admin trust who <player>` | List claims where this player is trusted *(Console & In-Game, supports selectors)* |
+| `/claim admin decay run` | Trigger a manual scan to decay inactive claims *(Console & In-Game)* |
+| `/claim admin decay exempt <player> [true\|false]` | Toggle or set a player's exemption from claim decay *(Console & In-Game, supports selectors)* |
+| `/claim admin decay list` | List all players manually exempt from claim decay *(Console & In-Game)* |
 | `/claim admin reload` | Reload the plugin configuration and messages *(Console & In-Game)* |
 | `/claim reload` | Reload the plugin configuration and messages (Root Shortcut, Console & In-Game) |
 
@@ -139,6 +142,7 @@ The `/claim admin add chunk` command is fully compatible with **DeluxeMenus** an
 | `landclaim.minimap` | Access to the held Territory Map | `true` |
 | `landclaim.auto` | Use auto-claim mode | `true` |
 | `landclaim.admin` | Admin commands and bypass all protection | `op` |
+| `landclaim.decay.exempt` | Exempts player from automatic claim decay | `op` |
 | `landclaim.update.notify` | Receive update notifications on join | `op` |
 | `landclaim.unstuck` | Teleport to a safe wilderness location | `true` |
 | `landclaim.unclaim` | Unclaim the current chunk | `true` |

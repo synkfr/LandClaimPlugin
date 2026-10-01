@@ -175,6 +175,22 @@ Wilderness protection does not affect explosion damage (`ExplosionProtectionList
 |-----|------|---------|-------------|
 | `pvp.forceEnabled` | Boolean | `false` | When `true`, `PvpProtectionListener` always allows PvP regardless of the per-claim `pvpEnabled` flag, and `/claim pvp` refuses to toggle (sends `pvp-force-locked`). Designed for PvP-focused servers that want every claim to have PvP on with no opt-out. |
 
+### Combat Tag (PvP Protection Bypass)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `combatTag.combatTagBypass` | Boolean | `true` | When `true`, players who are tagged in PvP combat via DeluxeCombat, CombatLogX, PvPManager, or EternalCombat temporarily lose claim PvP protection until their combat tag expires, preventing players from running into claims to escape active PvP fights. |
+
+### Inactive Claim Auto-Decay
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `decay.enabled` | Boolean | `false` | Enable automatic claim decay for inactive players |
+| `decay.inactiveDays` | Integer | `14` | Days of inactivity (player offline) before claims automatically decay |
+| `decay.checkIntervalHours` | Integer | `12` | Frequency in hours to scan for inactive claims |
+| `decay.exemptPermission` | String | `landclaim.decay.exempt` | Permission node that exempts players from auto-decay |
+| `decay.onlyCheckOwner` | Boolean | `true` | If `true`, only owner activity is checked. If `false`, active claim members protect the claim from decay |
+
 ### Visitor Settings & Locking
 
 | Key | Type | Default | Description |

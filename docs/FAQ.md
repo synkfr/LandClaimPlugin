@@ -80,10 +80,25 @@ A: By default, no — `PVP` is NOT in the default `deniedFlags` list, so players
 **Q: Can I let specific non-admin players bypass wilderness protection?**
 A: Not in the current implementation — only `landclaim.admin` bypasses. If you need a finer-grained bypass (e.g. give builders the right to terraform the wilderness), grant them `landclaim.admin` and rely on a separate permission plugin to scope what they can do with that power.
 
-## PvP
+## PvP & Combat
 
 **Q: How do I make it so PvP is always on and claim owners can't disable it?**
 A: Set `pvp.forceEnabled: true` in `config.yml`. This makes `PvpProtectionListener` always allow PvP regardless of the per-claim `pvpEnabled` flag, and `/claim pvp` refuses to toggle (sends the `pvp-force-locked` message). Note that this is a server-wide lock — there's no per-claim or per-player granularity. The per-claim `pvpEnabled` flag and its on-disk state are left untouched; only the listener's decision changes, so toggling the config back to `false` restores normal per-claim behavior immediately.
+
+**Q: How do I stop players from running into claims to escape PvP fights?**
+A: Ensure `combatTag.combatTagBypass: true` is set in `config.yml` (enabled by default). When hooked into DeluxeCombat, CombatLogX, PvPManager, or EternalCombat, players actively tagged in combat temporarily lose claim PvP protection until their combat tag expires, preventing safe-zone abuse.
+
+---
+
+## Inactive Claims & Auto-Decay
+
+**Q: How do I automatically remove abandoned claims from inactive players?**
+A: Set `decay.enabled: true` in `config.yml`. Configure `decay.inactiveDays: 14` (or any desired threshold) and `decay.checkIntervalHours: 12`. The plugin will periodically scan for players offline longer than that duration and automatically unclaim their land.
+
+**Q: Can I exempt specific players (like VIPs or staff) from claim decay?**
+A: Yes! You have two ways:
+1. Grant them the `landclaim.decay.exempt` permission node (or whatever you set in `decay.exemptPermission`).
+2. Run `/claim admin decay exempt <player> true` from console or in-game. This flag is saved permanently in the database even across restarts. You can view all exempt players with `/claim admin decay list`.
 
 ---
 
@@ -92,7 +107,7 @@ A: Set `pvp.forceEnabled: true` in `config.yml`. This makes `PvpProtectionListen
 **Q: How do I let players purchase extra claim chunks using a GUI shop or an in-game NPC?**
 A: Use `/claim admin add chunk <player> <amount>`.
 - **With DeluxeMenus:** In your menu's click commands, execute `[console] claim admin add chunk %player_name% 1` along with item removal (`[console] clear %player_name% gold_block 30`) or Vault currency deduction (`[console] eco take %player_name% 5000`).
-- **With Citizens 2:** Spawn your NPC (`/npc create "Surveyor" --type player`) and link it to your DeluxeMenus shop (`/npc command add -p "claimshop"`). If you want the NPC to grant chunks directly via console command, use `/npc command add -c "claim admin add chunk <p> 1"`. Both `<p>` (Citizens placeholder) and `@p` (Minecraft selector) are supported in v3.2.2+.
+- **With Citizens 2:** Spawn your NPC (`/npc create "Surveyor" --type player`) and link it to your DeluxeMenus shop (`/npc command add -p "claimshop"`). If you want the NPC to grant chunks directly via console command, use `/npc command add -c "claim admin add chunk <p> 1"`. Both `<p>` (Citizens placeholder) and `@p` (Minecraft selector) are supported.
 
 See the full [Integrations Guide](/guide/integrations) for complete copy-paste configuration examples and command setups.
 
