@@ -2,6 +2,28 @@
 
 All notable changes to LandClaimPlugin will be documented in this file.
 
+## [3.3.0] - 2026-10-01
+
+### Added
+- **Combat Tag PvP Claim Protection Bypass:**
+  - Actively combat-tagged players temporarily lose claim PvP protection while their combat tag is active (`combatTag.combatTagBypass: true`), preventing them from initiating a fight in the wilderness and running into a claim to hide.
+  - Integrated with **DeluxeCombat**, **CombatLogX**, **PvPManager**, and **EternalCombat**.
+  - Added robust combat hooks with reflection and Bukkit/Paper API fallbacks.
+- **Inactive Claim Auto-Decay & Exemption System:**
+  - Added configurable automatic cleanup of inactive claims (`decay.enabled`, `decay.inactiveDays`, `decay.checkIntervalHours`, `decay.onlyCheckOwner`).
+  - Claims belonging to players who have been offline longer than `inactiveDays` (default: 14 days) are automatically unclaimed and their profiles cleaned up.
+  - Staff and VIP exemption support via permission `landclaim.decay.exempt` and per-player exemption commands.
+  - Added `/claim admin decay run` (trigger manual decay sweep).
+  - Added `/claim admin decay exempt <player> [true|false]` (toggle or set player exemption).
+  - Added `/claim admin decay list` (view all manually exempt players).
+  - Added `INACTIVITY_DECAY` reason to `ClaimDeleteEvent`.
+  - Added `decay_exempt` database column and automatic migration in `SQLPlayerDao`.
+
+### Fixed
+- **Minecraft Entity Selector Resolution (`@s`, `@p`, `@a`, `@r`):**
+  - Resolved `IllegalStateException` on Paper servers by scheduling entity selector resolution (`Bukkit.selectEntities`) on the primary server thread.
+  - Extracted execution location and executor entity from Brigadier's `CommandSourceStack`, correctly resolving `@s` and `@p` when commands are executed via `/execute at @p ...` or `/execute as @p ...`.
+
 ## [3.2.2] - 2026-09-25
 
 ### Added

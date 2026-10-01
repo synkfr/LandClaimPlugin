@@ -66,6 +66,8 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 - **Item Protection** — Prevent unauthorized pickup and drop
 - **Piston Protection** — Block pistons from pushing/pulling across claim borders
 - **PvP Protection** — Disable PvP inside claims
+- **Combat Tag PvP Bypass** — Actively combat-tagged players temporarily lose claim protection against attacks, preventing safe-zone abuse during fights
+- **Inactive Claim Auto-Decay** — Automatically clean up claims from players inactive for a configurable period, with exemption options for VIPs and staff
 - **Vehicle Protection** — Prevent unauthorized vehicle use and destruction
 - **Command Blocking** — Block specific commands inside other players' claims
 - **Wilderness Protection** — Opt-in `wildernessProtection.enabled` flag flips the default: players can only build/break inside claims, never in unclaimed chunks. Designed for clan/town-style servers.
@@ -90,10 +92,13 @@ Visualize claims directly on your server's web map! Claims are drawn as colored 
 - **Pl3xMap**
 
 ### ⚔️ Combat Tagger Plugins
-Prevent players from abusing claim commands (like teleporting or abandoning claims) while actively in combat. The plugin automatically detects when a player is combat-tagged.
+Prevent combat exploitation and command abuse while in active combat. Automatically detects combat tagging:
 - **DeluxeCombat**
+- **CombatLogX**
 - **PvPManager**
 - **EternalCombat**
+- **Claim Protection Bypass:** Actively combat-tagged players cannot flee into claims to hide from PvP fights — claim PvP protection temporarily drops for them until their tag expires (`combatTag.combatTagBypass: true`).
+- **Command Blocking:** Prevents tagged players from teleporting or abandoning claims during combat.
 
 ### 🛡️ WorldGuard
 Respect WorldGuard regions when players attempt to claim land.
@@ -250,6 +255,9 @@ Jump directly to specific GUI panels without navigating through the main menu.
 | `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias *(Console & Player)* |
 | `/claim admin trust list <owner>` | List players trusted by this owner *(Console & Player, supports selectors)* |
 | `/claim admin trust who <player>` | List claims where this player is trusted *(Console & Player, supports selectors)* |
+| `/claim admin decay run` | Trigger a manual scan to decay inactive claims *(Console & Player)* |
+| `/claim admin decay exempt <player> [true\|false]` | Toggle or set a player's exemption from claim decay *(Console & Player, supports selectors)* |
+| `/claim admin decay list` | List all players manually exempt from claim decay *(Console & Player)* |
 | `/claim admin reload` | Reload configuration and messages *(Console & Player)* |
 | `/claim reload` | Shortcut to reload configuration and messages *(Console & Player)* |
 
@@ -264,6 +272,7 @@ Jump directly to specific GUI panels without navigating through the main menu.
 | `landclaim.minimap` | Access to the held Territory Map | ✅ `true` |
 | `landclaim.auto` | Use auto-claim mode | ✅ `true` |
 | `landclaim.admin` | Admin commands & bypass all protection | `op` |
+| `landclaim.decay.exempt` | Exempts player from automatic claim decay | `op` |
 | `landclaim.update.notify` | Receive update notifications on join | `op` |
 | `landclaim.limit.<n>` | Override the chunk claim limit (e.g., `landclaim.limit.50`) | `false` |
 | `landclaim.list` | List claims | ✅ `true` |
