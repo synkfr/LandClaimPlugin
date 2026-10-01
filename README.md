@@ -12,7 +12,7 @@ A powerful, feature-rich chunk-based land protection plugin for Paper servers. C
 [![Modrinth](https://img.shields.io/badge/Modrinth-LandClaimPlugin-00AF5C?style=flat-square&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/landclaimplugin)
 [![Version](https://img.shields.io/github/v/release/synkfr/LandClaimPlugin?style=flat-square&color=40ae24&label=Version)](https://github.com/synkfr/LandClaimPlugin/releases)
 [![License](https://img.shields.io/github/license/synkfr/LandClaimPlugin?style=flat-square&color=blue)](LICENSE)
-[![Discord](https://img.shields.io/discord/1378591879393710110?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/pAPPvSmWRK)
+[![Discord](https://img.shields.io/discord/1378591879393710110?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/UAgsmk6KEr)
 
 </div>
 
@@ -357,7 +357,7 @@ LandClaimPlugin communicates with the following external endpoints:
 
 ### 🔗 Quick Links
 
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/fGyDyp3Ak4)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/UAgsmk6KEr)
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/synkfr/LandClaimPlugin)
 [![Issues](https://img.shields.io/badge/Issues-EA4335?style=flat-square&logo=github&logoColor=white)](https://github.com/synkfr/LandClaimPlugin/issues)
 [![bStats](https://img.shields.io/badge/bStats-313131?style=flat-square&logo=chart-dot&logoColor=white)](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
