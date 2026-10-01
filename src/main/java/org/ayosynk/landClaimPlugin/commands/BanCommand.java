@@ -42,7 +42,7 @@ public class BanCommand implements LandClaimCommand {
 
         // /claim ban <player>
         manager.command(banBuilder
-                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.playersOnly())
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.ban", plugin)) return;

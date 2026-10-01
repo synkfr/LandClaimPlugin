@@ -65,7 +65,7 @@ public class TrustCommand implements LandClaimCommand {
 
         // /claim trust invite <player>
         manager.command(trustBuilder.literal("invite")
-                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.playersOnly())
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;

@@ -15,7 +15,6 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 import org.incendo.cloud.paper.util.sender.Source;
-import org.incendo.cloud.parser.standard.BooleanParser;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.ayosynk.landClaimPlugin.models.ClaimPlayer;
 import org.ayosynk.landClaimPlugin.gui.MainMenuGUI;
@@ -78,22 +77,18 @@ public class AdminCommand implements LandClaimCommand {
         //   /claim admin add chunk <amount> <player> (e.g. 5 @p, 5 Notch)
         //   /claim admin add chunk <amount> (self-grant for in-game players, e.g. 5)
         //   /claim admin add chunk <player> (defaults amount to 1, e.g. @p, Notch)
+        // /claim admin add chunk <arg1> [arg2] (Console + Player)
+        // Accepts:
+        //   /claim admin add chunk <player> <amount> (e.g. @p 5, Notch 5)
+        //   /claim admin add chunk <amount> <player> (e.g. 5 @p, 5 Notch)
+        //   /claim admin add chunk <amount> (self-grant for in-game players, e.g. 5)
+        //   /claim admin add chunk <player> (defaults amount to 1, e.g. @p, Notch)
         manager.command(adminBase.literal("add").literal("chunk")
-                .required("arg1", StringParser.stringParser(), OfflinePlayerSuggestions.all())
-                .required("arg2", StringParser.stringParser())
+                .optional("input", StringParser.greedyStringParser(), OfflinePlayerSuggestions.adminChunk())
                 .handler(context -> {
                     Source source = context.sender();
-                    String arg1 = context.get("arg1");
-                    String arg2 = context.get("arg2");
-                    handleAdminAddChunk(source, arg1, arg2);
-                }));
-
-        manager.command(adminBase.literal("add").literal("chunk")
-                .required("arg1", StringParser.stringParser(), OfflinePlayerSuggestions.all())
-                .handler(context -> {
-                    Source source = context.sender();
-                    String arg1 = context.get("arg1");
-                    handleAdminAddChunk(source, arg1, null);
+                    String input = context.getOrDefault("input", null);
+                    handleAdminAddChunk(source, input);
                 }));
 
         manager.command(adminBase.literal("decay").literal("run")
@@ -103,13 +98,11 @@ public class AdminCommand implements LandClaimCommand {
                 }));
 
         manager.command(adminBase.literal("decay").literal("exempt")
-                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
-                .optional("state", BooleanParser.booleanParser())
+                .optional("input", StringParser.greedyStringParser(), OfflinePlayerSuggestions.decayExempt())
                 .handler(context -> {
                     Source source = context.sender();
-                    String playerName = context.get("player");
-                    Boolean state = context.getOrDefault("state", null);
-                    adminDecayExempt(source, playerName, state);
+                    String input = context.getOrDefault("input", null);
+                    handleAdminDecayExempt(source, input);
                 }));
 
         manager.command(adminBase.literal("decay").literal("list")
@@ -120,7 +113,7 @@ public class AdminCommand implements LandClaimCommand {
 
         // /claim admin edit <owner> (Player only - opens GUI)
         manager.command(playerAdminBase.literal("edit")
-                .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("owner", StringParser.greedyStringParser(), OfflinePlayerSuggestions.withSelectors())
                 .handler(context -> {
                     PlayerSource sender = context.sender();
                     String ownerName = context.get("owner");
@@ -129,7 +122,7 @@ public class AdminCommand implements LandClaimCommand {
 
         // /claim admin trust list <owner> (Console + Player)
         manager.command(adminBase.literal("trust").literal("list")
-                .required("owner", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("owner", StringParser.greedyStringParser(), OfflinePlayerSuggestions.withSelectors())
                 .handler(context -> {
                     Source sender = context.sender();
                     String ownerName = context.get("owner");
@@ -138,7 +131,7 @@ public class AdminCommand implements LandClaimCommand {
 
         // /claim admin trust who <player> (Console + Player)
         manager.command(adminBase.literal("trust").literal("who")
-                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("player", StringParser.greedyStringParser(), OfflinePlayerSuggestions.withSelectors())
                 .handler(context -> {
                     Source sender = context.sender();
                     String playerName = context.get("player");
@@ -212,13 +205,21 @@ public class AdminCommand implements LandClaimCommand {
                 }));
     }
 
-    private void handleAdminAddChunk(Source source, String arg1, String arg2) {
+    private void handleAdminAddChunk(Source source, String input) {
         CommandSender sender = source.source();
+        List<String> tokens = tokenize(input);
+
+        if (tokens.isEmpty()) {
+            sender.sendMessage(configManager.getMessage("invalid-command"));
+            return;
+        }
+
         String targetInput;
         int amount;
 
-        if (arg2 == null) {
-            Integer parsedAmount = tryParsePositiveInt(arg1);
+        if (tokens.size() == 1) {
+            String token = tokens.get(0);
+            Integer parsedAmount = tryParsePositiveInt(token);
             if (parsedAmount != null) {
                 amount = parsedAmount;
                 if (sender instanceof Player player) {
@@ -228,26 +229,31 @@ public class AdminCommand implements LandClaimCommand {
                     return;
                 }
             } else {
-                targetInput = arg1;
+                targetInput = token;
                 amount = 1;
             }
-        } else {
-            Integer amountFromArg1 = tryParsePositiveInt(arg1);
-            Integer amountFromArg2 = tryParsePositiveInt(arg2);
+        } else if (tokens.size() == 2) {
+            String token1 = tokens.get(0);
+            String token2 = tokens.get(1);
+            Integer amountFromToken1 = tryParsePositiveInt(token1);
+            Integer amountFromToken2 = tryParsePositiveInt(token2);
 
-            if (amountFromArg2 != null && amountFromArg1 == null) {
-                targetInput = arg1;
-                amount = amountFromArg2;
-            } else if (amountFromArg1 != null && amountFromArg2 == null) {
-                targetInput = arg2;
-                amount = amountFromArg1;
-            } else if (amountFromArg1 != null && amountFromArg2 != null) {
-                targetInput = arg1;
-                amount = amountFromArg2;
+            if (amountFromToken2 != null && amountFromToken1 == null) {
+                targetInput = token1;
+                amount = amountFromToken2;
+            } else if (amountFromToken1 != null && amountFromToken2 == null) {
+                targetInput = token2;
+                amount = amountFromToken1;
+            } else if (amountFromToken1 != null && amountFromToken2 != null) {
+                targetInput = token1;
+                amount = amountFromToken2;
             } else {
                 sender.sendMessage(configManager.getMessage("invalid-command"));
                 return;
             }
+        } else {
+            sender.sendMessage(configManager.getMessage("invalid-command"));
+            return;
         }
 
         List<OfflinePlayer> targets = resolveTargets(source, targetInput);
@@ -257,6 +263,66 @@ public class AdminCommand implements LandClaimCommand {
         }
 
         adminAddChunk(sender, amount, targets);
+    }
+
+    private void handleAdminDecayExempt(Source source, String input) {
+        CommandSender sender = source.source();
+        List<String> tokens = tokenize(input);
+
+        if (tokens.isEmpty()) {
+            sender.sendMessage(configManager.getMessage("invalid-command"));
+            return;
+        }
+
+        String target = tokens.get(0);
+        Boolean state = null;
+
+        if (tokens.size() == 2) {
+            String stateStr = tokens.get(1);
+            if (stateStr.equalsIgnoreCase("true")) {
+                state = Boolean.TRUE;
+            } else if (stateStr.equalsIgnoreCase("false")) {
+                state = Boolean.FALSE;
+            } else {
+                sender.sendMessage(configManager.getMessage("invalid-command"));
+                return;
+            }
+        } else if (tokens.size() > 2) {
+            sender.sendMessage(configManager.getMessage("invalid-command"));
+            return;
+        }
+
+        adminDecayExempt(source, target, state);
+    }
+
+    private List<String> tokenize(String input) {
+        if (input == null || input.isBlank()) {
+            return List.of();
+        }
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inBracket = false;
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c == '[') {
+                inBracket = true;
+                current.append(c);
+            } else if (c == ']') {
+                inBracket = false;
+                current.append(c);
+            } else if (Character.isWhitespace(c) && !inBracket) {
+                if (current.length() > 0) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+            } else {
+                current.append(c);
+            }
+        }
+        if (current.length() > 0) {
+            tokens.add(current.toString());
+        }
+        return tokens;
     }
 
     private List<OfflinePlayer> resolveTargets(Source source, String input) {
@@ -671,24 +737,27 @@ public class AdminCommand implements LandClaimCommand {
 
     private void adminDecayExempt(Source source, String playerName, Boolean explicitState) {
         CommandSender sender = source.source();
-        OfflinePlayer target = resolveSinglePlayer(source, playerName);
-        if (target == null || target.getUniqueId() == null) {
+        List<OfflinePlayer> targets = resolveTargets(source, playerName);
+        if (targets.isEmpty()) {
             sender.sendMessage(configManager.getMessage("player-not-found"));
             return;
         }
 
-        UUID targetId = target.getUniqueId();
-        FoliaScheduler.runAsync(plugin, () -> {
-            boolean currentState = plugin.getClaimDecayManager().isExempt(targetId, null);
-            boolean newState = explicitState != null ? explicitState : !currentState;
-            plugin.getClaimDecayManager().setExempt(targetId, newState);
+        for (OfflinePlayer target : targets) {
+            if (target == null || target.getUniqueId() == null) continue;
+            UUID targetId = target.getUniqueId();
+            FoliaScheduler.runAsync(plugin, () -> {
+                boolean currentState = plugin.getClaimDecayManager().isExempt(targetId, null);
+                boolean newState = explicitState != null ? explicitState : !currentState;
+                plugin.getClaimDecayManager().setExempt(targetId, newState);
 
-            String targetDisplayName = target.getName() != null ? target.getName() : targetId.toString();
-            String statusStr = newState ? "EXEMPT" : "NOT EXEMPT";
-            sender.sendMessage(configManager.getMessage("admin-decay-exempt-set",
-                    "<player>", targetDisplayName,
-                    "<status>", statusStr));
-        });
+                String targetDisplayName = target.getName() != null ? target.getName() : targetId.toString();
+                String statusStr = newState ? "EXEMPT" : "NOT EXEMPT";
+                sender.sendMessage(configManager.getMessage("admin-decay-exempt-set",
+                        "<player>", targetDisplayName,
+                        "<status>", statusStr));
+            });
+        }
     }
 
     private void adminDecayList(CommandSender sender) {

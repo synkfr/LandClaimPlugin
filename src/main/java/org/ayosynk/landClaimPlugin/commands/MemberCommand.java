@@ -67,7 +67,7 @@ public class MemberCommand implements LandClaimCommand {
 
         // /claim member invite <player>
         manager.command(memberBuilder.literal("invite")
-                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.all())
+                .required("player", StringParser.stringParser(), OfflinePlayerSuggestions.playersOnly())
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.member", plugin)) return;
