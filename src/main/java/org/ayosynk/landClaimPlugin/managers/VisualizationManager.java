@@ -28,6 +28,10 @@ public class VisualizationManager {
     private final ConfigManager configManager;
 
     private static final int DISPLAY_RANGE = 64;
+    private static final int Y_BAND_STEP = 4;
+    private static final int[] HORIZONTAL_BAND_OFFSETS = { -4, 0, 4, 8, 12 };
+    private static final float RAIL_THICKNESS = 0.05f;
+    private static final float PILLAR_THICKNESS = 0.07f;
     private static final int MAX_CACHE_ENTRIES = 100;
     private final Map<String, Map<String, Set<Edge>>> mergedEdgesCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheSize = new AtomicInteger(0);
@@ -38,25 +42,26 @@ public class VisualizationManager {
     private final Map<UUID, List<BlockDisplay>> activeDisplays = new ConcurrentHashMap<>();
     private final Map<UUID, AtomicLong> displayGenerations = new ConcurrentHashMap<>();
     private final Map<UUID, ChunkPosition> lastVisualizedChunk = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> lastVisualizedYBand = new ConcurrentHashMap<>();
 
-    // Hex → stained glass mapping for Display Entity mode
-    private static final Map<String, Material> HEX_TO_GLASS = Map.ofEntries(
-            Map.entry("#1D1D21", Material.BLACK_STAINED_GLASS),
-            Map.entry("#3C44AA", Material.BLUE_STAINED_GLASS),
-            Map.entry("#835432", Material.BROWN_STAINED_GLASS),
-            Map.entry("#169C9C", Material.CYAN_STAINED_GLASS),
-            Map.entry("#474F52", Material.GRAY_STAINED_GLASS),
-            Map.entry("#5E7C16", Material.GREEN_STAINED_GLASS),
-            Map.entry("#3AB3DA", Material.LIGHT_BLUE_STAINED_GLASS),
-            Map.entry("#80C71F", Material.LIME_STAINED_GLASS),
-            Map.entry("#9D9D97", Material.LIGHT_GRAY_STAINED_GLASS),
-            Map.entry("#C74EBD", Material.MAGENTA_STAINED_GLASS),
-            Map.entry("#F9801D", Material.ORANGE_STAINED_GLASS),
-            Map.entry("#F38BAA", Material.PINK_STAINED_GLASS),
-            Map.entry("#8932B8", Material.PURPLE_STAINED_GLASS),
-            Map.entry("#B02E26", Material.RED_STAINED_GLASS),
-            Map.entry("#F9FFFE", Material.WHITE_STAINED_GLASS),
-            Map.entry("#FED83D", Material.YELLOW_STAINED_GLASS));
+    // Hex → concrete mapping for opaque Display Entity wireframe borders
+    private static final Map<String, Material> HEX_TO_CONCRETE = Map.ofEntries(
+            Map.entry("#1D1D21", Material.BLACK_CONCRETE),
+            Map.entry("#3C44AA", Material.BLUE_CONCRETE),
+            Map.entry("#835432", Material.BROWN_CONCRETE),
+            Map.entry("#169C9C", Material.CYAN_CONCRETE),
+            Map.entry("#474F52", Material.GRAY_CONCRETE),
+            Map.entry("#5E7C16", Material.GREEN_CONCRETE),
+            Map.entry("#3AB3DA", Material.LIGHT_BLUE_CONCRETE),
+            Map.entry("#80C71F", Material.LIME_CONCRETE),
+            Map.entry("#9D9D97", Material.LIGHT_GRAY_CONCRETE),
+            Map.entry("#C74EBD", Material.MAGENTA_CONCRETE),
+            Map.entry("#F9801D", Material.ORANGE_CONCRETE),
+            Map.entry("#F38BAA", Material.PINK_CONCRETE),
+            Map.entry("#8932B8", Material.PURPLE_CONCRETE),
+            Map.entry("#B02E26", Material.RED_CONCRETE),
+            Map.entry("#F9FFFE", Material.WHITE_CONCRETE),
+            Map.entry("#FED83D", Material.YELLOW_CONCRETE));
 
     public VisualizationManager(LandClaimPlugin plugin, ClaimManager claimManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -113,7 +118,9 @@ public class VisualizationManager {
                 spawnParticles(player, profile, currentProfile);
             } else {
                 ChunkPosition prevChunk = lastVisualizedChunk.get(playerId);
-                if (!currentChunk.equals(prevChunk)) {
+                int currentYBand = yBandFor(player.getLocation().getY());
+                Integer prevYBand = lastVisualizedYBand.get(playerId);
+                if (!currentChunk.equals(prevChunk) || prevYBand == null || currentYBand != prevYBand) {
                     redrawDisplays(player);
                 }
             }
@@ -210,6 +217,7 @@ public class VisualizationManager {
         String visMode = resolveVisMode(player, ownProfile);
         if ("OFF".equalsIgnoreCase(visMode)) {
             lastVisualizedChunk.remove(playerId);
+            lastVisualizedYBand.remove(playerId);
             return;
         }
 
@@ -230,16 +238,19 @@ public class VisualizationManager {
             }
             if (claims.isEmpty()) {
                 lastVisualizedChunk.remove(playerId);
+                lastVisualizedYBand.remove(playerId);
                 return;
             }
 
             Set<Edge> edges = getMergedEdges(ownProfile, currentProfile, player.getWorld().getName(), claims);
             if (edges.isEmpty()) {
                 lastVisualizedChunk.remove(playerId);
+                lastVisualizedYBand.remove(playerId);
                 return;
             }
 
             lastVisualizedChunk.put(playerId, currentChunk);
+            lastVisualizedYBand.put(playerId, yBandFor(player.getLocation().getY()));
             if ("PARTICLE".equals(visMode)) {
                 return;
             }
@@ -256,41 +267,38 @@ public class VisualizationManager {
     }
 
     /**
-     * Resolve the stained glass Material from the profile's claim color.
+     * Resolve the opaque concrete Material from the profile's claim color.
      */
     private Material resolveMaterial(ClaimProfile profile, UUID playerId) {
-        // Temporary mode uses orange
         if (temporaryTimers.containsKey(playerId)) {
-            return Material.ORANGE_STAINED_GLASS;
+            return Material.ORANGE_CONCRETE;
         }
-
-        if (profile != null && profile.getClaimColor() != null) {
-            Material mapped = HEX_TO_GLASS.get(profile.getClaimColor().toUpperCase());
-            if (mapped != null)
-                return mapped;
-
-            // For custom hex colors, find the closest stained glass
-            return findClosestGlass(profile.getClaimColor());
-        }
-
-        return Material.LIME_STAINED_GLASS; // default
+        return profile != null ? resolveConcreteMaterial(profile.getClaimColor()) : Material.LIME_CONCRETE;
     }
 
     /**
-     * Find the closest stained glass color to a given hex string.
+     * Resolve the exact or nearest concrete Material for a hex claim color.
      */
-    private Material findClosestGlass(String hex) {
+    static Material resolveConcreteMaterial(String hex) {
+        if (hex == null) {
+            return Material.LIME_CONCRETE;
+        }
+        Material mapped = HEX_TO_CONCRETE.get(hex.toUpperCase(Locale.ROOT));
+        if (mapped != null) {
+            return mapped;
+        }
         Color target = hexToColor(hex);
-        if (target == null)
-            return Material.LIME_STAINED_GLASS;
+        if (target == null) {
+            return Material.LIME_CONCRETE;
+        }
 
         double bestDistance = Double.MAX_VALUE;
-        Material bestMaterial = Material.LIME_STAINED_GLASS;
-
-        for (Map.Entry<String, Material> entry : HEX_TO_GLASS.entrySet()) {
+        Material bestMaterial = Material.LIME_CONCRETE;
+        for (Map.Entry<String, Material> entry : HEX_TO_CONCRETE.entrySet()) {
             Color c = hexToColor(entry.getKey());
-            if (c == null)
+            if (c == null) {
                 continue;
+            }
             double dist = colorDistance(target, c);
             if (dist < bestDistance) {
                 bestDistance = dist;
@@ -390,6 +398,11 @@ public class VisualizationManager {
         }
     }
 
+    /**
+     * Spawn an opaque concrete wireframe of vertical corner pillars and horizontal rails
+     * so translucent terrain (water, ice, glass, portals) behind claim borders never gets
+     * depth-culled by full-wall translucent BlockDisplays.
+     */
     private void spawnDisplays(Player player, Set<Edge> edges, Material material, long gen) {
         UUID playerId = player.getUniqueId();
         World world = player.getWorld();
@@ -398,14 +411,17 @@ public class VisualizationManager {
         double pz = player.getLocation().getZ();
 
         int minHeight = world.getMinHeight();
-        float scaleY = (float) (world.getMaxHeight() - minHeight);
-        float transY = (float) (minHeight - playerY);
+        int maxHeight = world.getMaxHeight();
+        float pillarScaleY = (float) (maxHeight - minHeight);
+        float pillarTransY = (float) (minHeight - playerY);
+        int baseY = yBandFor(playerY) * Y_BAND_STEP;
 
         org.bukkit.block.data.BlockData blockData = Bukkit.createBlockData(material);
         org.joml.AxisAngle4f emptyRotation = new org.joml.AxisAngle4f();
 
         List<BlockDisplay> displays = Collections.synchronizedList(new ArrayList<>());
         activeDisplays.put(playerId, displays);
+        Set<Long> spawnedCorners = new HashSet<>();
 
         for (Edge edge : edges) {
             if (isGenerationStale(playerId, gen) || !player.isOnline()) {
@@ -413,6 +429,27 @@ public class VisualizationManager {
             }
             if (!isEdgeNearPlayer(edge, px, pz, DISPLAY_RANGE)) {
                 continue;
+            }
+
+            // Deduplicate shared chunk-corner posts across adjacent edges
+            int[][] corners = { { edge.x1(), edge.z1() }, { edge.x2(), edge.z2() } };
+            for (int[] corner : corners) {
+                int vx = corner[0];
+                int vz = corner[1];
+                if (!spawnedCorners.add(packCorner(vx, vz))) {
+                    continue;
+                }
+                int cChunkX = vx >> 4;
+                int cChunkZ = vz >> 4;
+                if (!world.isChunkLoaded(cChunkX, cChunkZ)) {
+                    continue;
+                }
+                Location pillarLoc = new Location(world, vx, playerY, vz);
+                float halfPillar = -PILLAR_THICKNESS / 2f;
+                dispatchAtLocation(player, world, pillarLoc, cChunkX, cChunkZ, gen,
+                        () -> spawnBlockBeam(player, world, displays, pillarLoc, blockData, emptyRotation,
+                                halfPillar, pillarTransY, halfPillar,
+                                PILLAR_THICKNESS, pillarScaleY, PILLAR_THICKNESS, gen));
             }
 
             double minX = Math.min(edge.x1(), edge.x2());
@@ -425,61 +462,94 @@ public class VisualizationManager {
 
             double lengthX = Math.abs(edge.x2() - edge.x1());
             double lengthZ = Math.abs(edge.z2() - edge.z1());
-            float scaleX = (float) (lengthX == 0 ? 0.05f : lengthX);
-            float scaleZ = (float) (lengthZ == 0 ? 0.05f : lengthZ);
-            float transX = lengthX == 0 ? -0.025f : 0f;
-            float transZ = lengthZ == 0 ? -0.025f : 0f;
-            Location loc = new Location(world, minX, playerY, minZ);
+            float scaleX = (float) (lengthX == 0 ? RAIL_THICKNESS : lengthX);
+            float scaleZ = (float) (lengthZ == 0 ? RAIL_THICKNESS : lengthZ);
+            float transX = lengthX == 0 ? -RAIL_THICKNESS / 2f : 0f;
+            float transZ = lengthZ == 0 ? -RAIL_THICKNESS / 2f : 0f;
+            float halfRail = -RAIL_THICKNESS / 2f;
 
-            Runnable spawnOne = () -> {
-                if (isGenerationStale(playerId, gen) || !player.isOnline() || !isVisualizing(playerId)) {
-                    return;
-                }
-                if (!world.isChunkLoaded(chunkX, chunkZ)) {
-                    return;
-                }
-                BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
-                    e.setPersistent(false);
-                    e.setVisibleByDefault(false);
-                    e.setBlock(blockData);
-                    e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
-                    e.setGravity(false);
-                    e.setViewRange(1.5f);
-
-                    Transformation transform = new Transformation(
-                            new Vector3f(transX, transY, transZ),
-                            emptyRotation,
-                            new Vector3f(scaleX, scaleY, scaleZ),
-                            emptyRotation);
-                    e.setTransformation(transform);
-                });
-
-                boolean keep;
-                synchronized (displays) {
-                    keep = !isGenerationStale(playerId, gen) && player.isOnline() && isVisualizing(playerId);
-                    if (keep) {
-                        displays.add(display);
+            Location edgeLoc = new Location(world, minX, playerY, minZ);
+            dispatchAtLocation(player, world, edgeLoc, chunkX, chunkZ, gen, () -> {
+                for (int offset : HORIZONTAL_BAND_OFFSETS) {
+                    int beamY = baseY + offset;
+                    if (beamY < minHeight || beamY >= maxHeight) {
+                        continue;
                     }
+                    Location beamLoc = new Location(world, minX, beamY, minZ);
+                    spawnBlockBeam(player, world, displays, beamLoc, blockData, emptyRotation,
+                            transX, halfRail, transZ,
+                            scaleX, RAIL_THICKNESS, scaleZ, gen);
                 }
-                if (!keep) {
-                    display.remove();
-                } else if (FoliaScheduler.isFolia()) {
-                    FoliaScheduler.runForPlayer(plugin, player, () -> {
-                        if (!isGenerationStale(playerId, gen) && player.isOnline() && display.isValid()) {
-                            player.showEntity(plugin, display);
-                        }
-                    });
-                } else {
-                    player.showEntity(plugin, display);
-                }
-            };
+            });
+        }
+    }
 
-            if (!FoliaScheduler.isFolia() || Bukkit.isOwnedByCurrentRegion(loc)) {
-                spawnOne.run();
-            } else {
-                FoliaScheduler.runAtLocation(plugin, loc, spawnOne);
+    private void dispatchAtLocation(Player player, World world, Location loc, int chunkX, int chunkZ, long gen,
+            Runnable spawnAction) {
+        UUID playerId = player.getUniqueId();
+        Runnable guarded = () -> {
+            if (isGenerationStale(playerId, gen) || !player.isOnline() || !isVisualizing(playerId)) {
+                return;
+            }
+            if (!world.isChunkLoaded(chunkX, chunkZ)) {
+                return;
+            }
+            spawnAction.run();
+        };
+        if (!FoliaScheduler.isFolia() || Bukkit.isOwnedByCurrentRegion(loc)) {
+            guarded.run();
+        } else {
+            FoliaScheduler.runAtLocation(plugin, loc, guarded);
+        }
+    }
+
+    private void spawnBlockBeam(Player player, World world, List<BlockDisplay> displays, Location loc,
+            org.bukkit.block.data.BlockData blockData, org.joml.AxisAngle4f emptyRotation,
+            float transX, float transY, float transZ,
+            float scaleX, float scaleY, float scaleZ, long gen) {
+        UUID playerId = player.getUniqueId();
+        BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
+            e.setPersistent(false);
+            e.setVisibleByDefault(false);
+            e.setBlock(blockData);
+            e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
+            e.setGravity(false);
+            e.setShadowRadius(0f);
+            e.setShadowStrength(0f);
+            e.setViewRange(1.5f);
+            e.setTransformation(new Transformation(
+                    new Vector3f(transX, transY, transZ),
+                    emptyRotation,
+                    new Vector3f(scaleX, scaleY, scaleZ),
+                    emptyRotation));
+        });
+
+        boolean keep;
+        synchronized (displays) {
+            keep = !isGenerationStale(playerId, gen) && player.isOnline() && isVisualizing(playerId);
+            if (keep) {
+                displays.add(display);
             }
         }
+        if (!keep) {
+            display.remove();
+        } else if (FoliaScheduler.isFolia()) {
+            FoliaScheduler.runForPlayer(plugin, player, () -> {
+                if (!isGenerationStale(playerId, gen) && player.isOnline() && display.isValid()) {
+                    player.showEntity(plugin, display);
+                }
+            });
+        } else {
+            player.showEntity(plugin, display);
+        }
+    }
+
+    static long packCorner(int x, int z) {
+        return (((long) x) << 32) | (z & 0xffffffffL);
+    }
+
+    static int yBandFor(double y) {
+        return Math.floorDiv((int) Math.floor(y), Y_BAND_STEP);
     }
 
     private static boolean isEdgeNearPlayer(Edge edge, double px, double pz, int maxDist) {
@@ -502,6 +572,7 @@ public class VisualizationManager {
     private void clearDisplays(UUID playerId) {
         nextGeneration(playerId);
         lastVisualizedChunk.remove(playerId);
+        lastVisualizedYBand.remove(playerId);
         removeTrackedDisplays(playerId);
     }
 
