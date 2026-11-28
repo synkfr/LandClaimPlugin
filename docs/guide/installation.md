@@ -13,7 +13,7 @@
 4. Edit `plugins/LandClaimPlugin/config.yml`, `plugins/LandClaimPlugin/locales/messages_<lang>.yml`, and menus under `plugins/LandClaimPlugin/menus/`.
 
 ::: tip Upgrading from 3.4.0
-Updating to `3.5.0` automatically creates `.bk` backups (`config.yml.bk`, `locales/<message>.yml.bk`, and `menus/<menu>.yml.bk`) before migrating flat keys into grouped sections and refreshing menu files with the Obsidian and Cobalt GUI defaults. Run `/claim admin reload` after editing any YAML file.
+Updating to `3.5.0` automatically creates `.bk` backups (`config.yml.bk`, `locales/<message>.yml.bk`, and `menus/<menu>.yml.bk`) before migrating flat keys into grouped sections and refreshing menu files with the modern minimal dark-frame GUI defaults (`#00E262` / `#E20000` / `#E2B700` / `#A0A0A0` / `#FFFFFF` / `#1F1F1F`). Run `/claim admin reload` after editing any YAML file.
 :::
 
 ---

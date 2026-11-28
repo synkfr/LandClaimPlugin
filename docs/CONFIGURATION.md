@@ -111,7 +111,7 @@ Supported map keys under `maps.` are `dynmap`, `bluemap`, `squaremap`, and `pl3x
 |-----|------|---------|-------------|
 | `minimap.enabled` | Boolean | `true` | Enable or disable the held territory map feature |
 | `minimap.mapId` | Integer | `-1` | Persisted MapView ID assigned to the territory map (`-1` creates one automatically) |
-| `minimap.itemName` | String | `<color:#38BDF8><b>Territory Map</b></color>` | Display name for the Territory Map item (MiniMessage format) |
+| `minimap.itemName` | String | `<color:#00E262><b>Territory Map</b></color>` | Display name for the Territory Map item (MiniMessage format) |
 | `minimap.itemLore` | List | `[...]` | Instruction lore lines for the map item |
 
 ### Update Checker (`updateChecker.*`)
