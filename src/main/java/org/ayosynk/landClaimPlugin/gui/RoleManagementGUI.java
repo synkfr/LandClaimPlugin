@@ -28,196 +28,122 @@ public class RoleManagementGUI {
                 if (!GuiHelper.checkMenuPermission(player, "roles", plugin)) {
                         return;
                 }
-                FoliaScheduler.runAsync(plugin, () -> {
-                        RoleManagementConfig config = plugin.getConfigManager().getRoleManagementConfig();
+                RoleManagementConfig config = plugin.getConfigManager().getRoleManagementConfig();
 
-                        List<GuiItem> contentItems = new ArrayList<>();
+                List<GuiItem> contentItems = new ArrayList<>();
 
-                        // Build items for each role in the profile, sorted by priority (higher first)
-                        List<Role> sortedRoles = new ArrayList<>(profile.getRoles().values());
-                        sortedRoles.sort((r1, r2) -> Integer.compare(r2.getPriority(), r1.getPriority()));
-                        for (Role role : sortedRoles) {
-                                final String roleName = role.getName();
-                                final boolean isDefault = roleName.equalsIgnoreCase("Member")
-                                                || roleName.equalsIgnoreCase("CoOwner");
+                List<Role> sortedRoles = new ArrayList<>(profile.getRoles().values());
+                sortedRoles.sort((r1, r2) -> Integer.compare(r2.getPriority(), r1.getPriority()));
+                var cm = plugin.getConfigManager();
+                for (Role role : sortedRoles) {
+                        final String roleName = role.getName();
+                        final boolean isDefault = roleName.equalsIgnoreCase("Member")
+                                        || roleName.equalsIgnoreCase("CoOwner");
 
-                                contentItems.add(new GuiItem() {
-                                        @Override
-                                        public ItemStack render(Player viewer) {
-                                                // Use NAME_TAG for default roles, PAPER for custom roles
-                                                Material mat = isDefault ? Material.NAME_TAG : Material.PAPER;
-                                                ItemStack item = new ItemStack(mat);
-                                                ItemMeta meta = item.getItemMeta();
-                                                if (meta != null) {
-                                                        String color = isDefault ? "<gold>" : "<yellow>";
-                                                        meta.displayName(GuiHelper.MM.deserialize(color + roleName));
+                        contentItems.add(new GuiItem() {
+                                @Override
+                                public ItemStack render(Player viewer) {
+                                        Material mat = isDefault ? Material.NAME_TAG : Material.PAPER;
+                                        Component displayName = cm.getRawComponent(
+                                                        isDefault ? "gui.role-default-name" : "gui.role-custom-name",
+                                                        "<role>", roleName);
+                                        List<Component> lore = new ArrayList<>();
+                                        if (isDefault) {
+                                                lore.add(cm.getRawComponent("gui.default-role-badge"));
+                                        }
+                                        lore.add(Component.empty());
+                                        lore.add(cm.getRawComponent("gui.click-edit-role"));
+                                        lore.add(cm.getRawComponent(
+                                                        isDefault ? "gui.click-delete-role-disabled" : "gui.click-delete-role"));
+                                        return GuiHelper.buildItem(mat, displayName, lore);
+                                }
 
-                                                        List<Component> lore = new ArrayList<>();
+                                @Override
+                                public ClickAction clickAction() {
+                                        return (p, e) -> {
+                                                if (e.getClick() == ClickType.RIGHT) {
                                                         if (isDefault) {
-                                                                lore.add(GuiHelper.MM.deserialize(
-                                                                                "<gray><i>Default Role</i>"));
-                                                        }
-                                                        lore.add(Component.empty());
-                                                        lore.add(GuiHelper.MM
-                                                                        .deserialize("<gray>Left-click: Edit Role"));
-
-                                                        // Only custom roles can be deleted
-                                                        if (!isDefault) {
-                                                                lore.add(GuiHelper.MM.deserialize(
-                                                                                "<gray>Right-click: Delete Role"));
-                                                        } else {
-                                                                lore.add(GuiHelper.MM.deserialize(
-                                                                                "<dark_gray><st>Right-click: Delete Role</st>"));
+                                                                p.sendMessage(cm.getMessage("gui.cannot-delete-default-role"));
+                                                                return;
                                                         }
 
-                                                        meta.lore(lore);
-                                                        item.setItemMeta(meta);
+                                                        ConfirmationGUI.open(p,
+                                                                        cm.getRawTemplate("gui.confirm-delete-role", "<role>", roleName),
+                                                                        () -> {
+                                                                                profile.removeRole(roleName);
+                                                                                for (Map.Entry<java.util.UUID, String> memberEntry : profile
+                                                                                                .getMemberRoles()
+                                                                                                .entrySet()) {
+                                                                                        if (memberEntry.getValue().equalsIgnoreCase(roleName)) {
+                                                                                                profile.setMemberRole(memberEntry.getKey(), "Member");
+                                                                                        }
+                                                                                }
+
+                                                                                plugin.getCacheManager().getProfileCache().put(profile.getProfileId(), profile);
+                                                                                plugin.getClaimManager().saveAndSync(profile);
+
+                                                                                p.sendMessage(cm.getMessage("gui.role-deleted", "<role>", roleName));
+                                                                                RoleManagementGUI.open(p, profile, plugin);
+                                                                        },
+                                                                        () -> RoleManagementGUI.open(p, profile, plugin));
+                                                } else {
+                                                        RoleSetupGUI.open(p, profile, plugin, role);
                                                 }
-                                                return item;
+                                        };
+                                }
+                        });
+                }
+
+                String[] structure = {
+                                "F F F F F F F F F",
+                                "F x x x x x x x F",
+                                "F x x x x x x x F",
+                                "P b b C < b b b N"
+                };
+
+                Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name, config.frame.lore));
+                ingredients.put('b', GuiHelper.buildSlot(config.navFill.material, config.navFill.name, config.navFill.lore));
+                ingredients.put('C', GuiHelper.buildSlot(config.createRole.material, config.createRole.name,
+                                config.createRole.lore, (p, e) -> {
+                                        int maxRoles = 2;
+                                        for (org.bukkit.permissions.PermissionAttachmentInfo pai : p.getEffectivePermissions()) {
+                                                if (pai.getPermission().startsWith("landclaim.createrole.")) {
+                                                        try {
+                                                                int limit = Integer.parseInt(pai.getPermission()
+                                                                                .substring("landclaim.createrole.".length()));
+                                                                if (limit + 2 > maxRoles) {
+                                                                        maxRoles = limit + 2;
+                                                                }
+                                                        } catch (NumberFormatException ignored) {
+                                                        }
+                                                }
+                                        }
+                                        maxRoles += profile.getBonusRoleSlots();
+
+                                        if (profile.getRoles().size() >= maxRoles && !profile.getProfileId().equals(ClaimProfile.ADMIN_PROFILE_ID)) {
+                                                p.sendMessage(cm.getMessage("gui.role-limit-reached",
+                                                                "<limit>", String.valueOf(maxRoles - 2)));
+                                                return;
                                         }
 
-                                        @Override
-                                        public ClickAction clickAction() {
-                                                return (p, e) -> {
-                                                        if (e.getClick() == ClickType.RIGHT) {
-                                                                if (isDefault) {
-                                                                        p.sendMessage(GuiHelper.MM.deserialize(
-                                                                                        "<red>You cannot delete default roles."));
-                                                                        return;
-                                                                }
+                                        RoleSetupGUI.open(p, profile, plugin, null);
+                                }));
+                ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                (p, e) -> ClaimSettingsGUI.open(p, profile, plugin)));
 
-                                                                // Delete Role Confirmation
-                                                                FoliaScheduler.runTask(plugin, () -> {
-                                                                        ConfirmationGUI.open(p,
-                                                                                        "<red>Delete role " + roleName
-                                                                                                        + "?",
-                                                                                        () -> {
-                                                                                                // 1. Remove role from
-                                                                                                // profile
-                                                                                                profile.removeRole(
-                                                                                                                roleName);
+                Component title = GuiHelper.MM.deserialize(config.title);
+                PaginatedGui gui = new PaginatedGui(title, 4, structure, ingredients, 'x');
 
-                                                                                                // 2. Unassign this role
-                                                                                                // from any members who
-                                                                                                // had it
-                                                                                                boolean changedMember = false;
-                                                                                                for (Map.Entry<java.util.UUID, String> memberEntry : profile
-                                                                                                                .getMemberRoles()
-                                                                                                                .entrySet()) {
-                                                                                                        if (memberEntry.getValue()
-                                                                                                                        .equalsIgnoreCase(
-                                                                                                                                        roleName)) {
-                                                                                                                // Fallback
-                                                                                                                // to
-                                                                                                                // Member
-                                                                                                                profile.setMemberRole(
-                                                                                                                                memberEntry.getKey(),
-                                                                                                                                "Member");
-                                                                                                                changedMember = true;
-                                                                                                        }
-                                                                                                }
+                ItemStack navFiller = GuiHelper.buildItemStack(config.navFill.material, config.navFill.name, config.navFill.lore);
+                gui.setPrevButton(
+                                GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name, config.previousPage.lore),
+                                navFiller);
+                gui.setNextButton(
+                                GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name, config.nextPage.lore),
+                                navFiller);
 
-                                                                                                // 3. Save
-                                                                                                plugin.getCacheManager()
-                                                                                                                .getProfileCache()
-                                                                                                                .put(profile.getProfileId(),
-                                                                                                                                profile);
-                                                                                                plugin.getClaimManager()
-                                                                                                                .saveAndSync(profile);
-
-                                                                                                p.sendMessage(GuiHelper.MM
-                                                                                                                .deserialize("<yellow>Deleted role "
-                                                                                                                                + roleName
-                                                                                                                                + "."));
-                                                                                                RoleManagementGUI.open(
-                                                                                                                p,
-                                                                                                                profile,
-                                                                                                                plugin);
-                                                                                        },
-                                                                                        () -> RoleManagementGUI.open(p,
-                                                                                                        profile,
-                                                                                                        plugin));
-                                                                });
-                                                        } else {
-                                                                // Edit Role
-                                                                p.closeInventory();
-                                                                RoleSetupGUI.open(p, profile, plugin, role);
-                                                        }
-                                                };
-                                        }
-                                });
-                        }
-
-                        String[] structure = {
-                                        "F F F F F F F F F",
-                                        "F x x x x x x x F",
-                                        "F x x x x x x x F",
-                                        "P N N C < N N N V"
-                        };
-
-                        Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name,
-                                        config.frame.lore));
-                        ingredients.put('N', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
-                                        config.navFill.lore));
-                        ingredients.put('C', GuiHelper.buildSlot(config.createRole.material, config.createRole.name,
-                                        config.createRole.lore, (p, e) -> {
-                                                // Check claim role limit permission: landclaim.createrole.<number>
-                                                int maxRoles = 2; // Default allows 0 custom roles (2 defaults taking up
-                                                                  // the slots)
-                                                for (org.bukkit.permissions.PermissionAttachmentInfo pai : p
-                                                                .getEffectivePermissions()) {
-                                                        if (pai.getPermission().startsWith("landclaim.createrole.")) {
-                                                                try {
-                                                                        int limit = Integer.parseInt(pai.getPermission()
-                                                                                        .substring("landclaim.createrole."
-                                                                                                        .length()));
-                                                                        // limit is extra custom roles, total = limit +
-                                                                        // 2
-                                                                        if (limit + 2 > maxRoles) {
-                                                                                maxRoles = limit + 2;
-                                                                        }
-                                                                } catch (NumberFormatException ignored) {
-                                                                }
-                                                        }
-                                                }
-                                                maxRoles += profile.getBonusRoleSlots();
-
-                                                if (profile.getRoles().size() >= maxRoles && !profile.getProfileId().equals(ClaimProfile.ADMIN_PROFILE_ID)) {
-                                                        p.sendMessage(GuiHelper.MM.deserialize(
-                                                                        "<red>You have reached your maximum role limit ("
-                                                                                        + (maxRoles - 2)
-                                                                                        + " custom roles). Upgrade your rank to create more."));
-                                                        return;
-                                                }
-
-                                                p.closeInventory();
-                                                // Open setup in create mode (null role)
-                                                RoleSetupGUI.open(p, profile, plugin, null);
-                                        }));
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                ClaimSettingsGUI.open(p, profile, plugin);
-                                                        }));
-
-                        Component title = GuiHelper.MM.deserialize(config.title);
-                        PaginatedGui gui = new PaginatedGui(title, 4, structure, ingredients, 'x');
-
-                        gui.setPrevButton(27,
-                                        GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name,
-                                                        config.previousPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
-                        gui.setNextButton(35,
-                                        GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name,
-                                                        config.nextPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
-
-                        gui.setContent(contentItems, player);
-                        gui.open(player);
-                });
+                gui.setContent(contentItems, player);
+                gui.open(player);
         }
 }

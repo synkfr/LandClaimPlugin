@@ -23,71 +23,59 @@ import java.util.function.Consumer;
 public class OnlinePlayerSelectorGUI {
 
     public static void open(Player player, LandClaimPlugin plugin, Consumer<Player> onSelect, Runnable onBack) {
-        FoliaScheduler.runAsync(plugin, () -> {
-            OnlinePlayerSelectorConfig config = plugin.getConfigManager().getOnlinePlayerSelectorConfig();
+        var cm = plugin.getConfigManager();
+        OnlinePlayerSelectorConfig config = cm.getOnlinePlayerSelectorConfig();
 
-            List<GuiItem> contentItems = new ArrayList<>();
+        List<GuiItem> contentItems = new ArrayList<>();
 
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                // Don't show the viewer themselves in the list if they are picking someone else
-                // Actually, for trust/invite, you usually want someone else.
-                if (online.getUniqueId().equals(player.getUniqueId())) continue;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.getUniqueId().equals(player.getUniqueId())) continue;
 
-                contentItems.add(new GuiItem() {
-                    @Override
-                    public ItemStack render(Player viewer) {
-                        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-                        SkullMeta meta = (SkullMeta) head.getItemMeta();
-                        if (meta != null) {
-                            meta.setOwningPlayer(online);
-                            meta.displayName(GuiHelper.MM.deserialize("<yellow>" + online.getName()));
-                            List<Component> lore = new ArrayList<>();
-                            lore.add(GuiHelper.MM.deserialize("<gray>Click to select"));
-                            meta.lore(lore);
-                            head.setItemMeta(meta);
-                        }
-                        return head;
-                    }
+            contentItems.add(new GuiItem() {
+                @Override
+                public ItemStack render(Player viewer) {
+                    return GuiHelper.buildPlayerHead(
+                            online,
+                            cm.getRawComponent("gui.skull-item-name", "<name>", online.getName()),
+                            List.of(cm.getRawComponent("gui.click-select")));
+                }
 
-                    @Override
-                    public ClickAction clickAction() {
-                        return (p, e) -> {
-                            p.closeInventory();
-                            onSelect.accept(online);
-                        };
-                    }
-                });
-            }
+                @Override
+                public ClickAction clickAction() {
+                    return (p, e) -> {
+                        p.closeInventory();
+                        onSelect.accept(online);
+                    };
+                }
+            });
+        }
 
-            String[] structure = {
-                    "F F F F F F F F F",
-                    "F x x x x x x x F",
-                    "F x x x x x x x F",
-                    "F x x x x x x x F",
-                    "F x x x x x x x F",
-                    "P B B B < B B B N"
-            };
+        String[] structure = {
+                "F F F F F F F F F",
+                "F x x x x x x x F",
+                "F x x x x x x x F",
+                "F x x x x x x x F",
+                "F x x x x x x x F",
+                "P B B B < B B B N"
+        };
 
-            Map<Character, SlotDefinition> ingredients = new HashMap<>();
-            ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name, config.frame.lore));
-            ingredients.put('B', GuiHelper.buildSlot(config.navFill.material, config.navFill.name, config.navFill.lore));
-            ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore, (p, e) -> {
-                p.closeInventory();
-                onBack.run();
-            }));
+        Map<Character, SlotDefinition> ingredients = new HashMap<>();
+        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name, config.frame.lore));
+        ingredients.put('B', GuiHelper.buildSlot(config.navFill.material, config.navFill.name, config.navFill.lore));
+        ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore, (p, e) -> onBack.run()));
 
-            Component title = GuiHelper.MM.deserialize(config.title);
-            PaginatedGui gui = new PaginatedGui(title, 6, structure, ingredients, 'x');
+        Component title = GuiHelper.MM.deserialize(config.title);
+        PaginatedGui gui = new PaginatedGui(title, 6, structure, ingredients, 'x');
 
-            gui.setPrevButton(45,
-                    GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name, config.previousPage.lore),
-                    GuiHelper.buildItemStack(config.navFill.material, config.navFill.name, config.navFill.lore));
-            gui.setNextButton(53,
-                    GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name, config.nextPage.lore),
-                    GuiHelper.buildItemStack(config.navFill.material, config.navFill.name, config.navFill.lore));
+        ItemStack navFiller = GuiHelper.buildItemStack(config.navFill.material, config.navFill.name, config.navFill.lore);
+        gui.setPrevButton(
+                GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name, config.previousPage.lore),
+                navFiller);
+        gui.setNextButton(
+                GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name, config.nextPage.lore),
+                navFiller);
 
-            gui.setContent(contentItems, player);
-            gui.open(player);
-        });
+        gui.setContent(contentItems, player);
+        gui.open(player);
     }
 }

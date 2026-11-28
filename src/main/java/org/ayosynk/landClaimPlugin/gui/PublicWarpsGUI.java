@@ -24,18 +24,16 @@ import java.util.UUID;
 /**
  * Server-wide public warps browser. Any player with {@code landclaim.warp}
  * can open this GUI and teleport to any warp an owner has marked public.
- * Players are not required to be a member of the claim — the whole point
- * of the public flag is sharing the warp with the rest of the server.
  */
 public class PublicWarpsGUI {
 
         public static void open(Player player, LandClaimPlugin plugin) {
                 FoliaScheduler.runAsync(plugin, () -> {
-                        PublicWarpsConfig config = plugin.getConfigManager().getPublicWarpsConfig();
+                        var cm = plugin.getConfigManager();
+                        PublicWarpsConfig config = cm.getPublicWarpsConfig();
 
                         Map<UUID, Map<String, Warp>> publicWarps = plugin.getWarpManager().getAllPublicWarps();
 
-                        // Flatten into a list of records (ownerId, warp) for stable pagination.
                         List<Map.Entry<UUID, Warp>> entries = new ArrayList<>();
                         for (Map.Entry<UUID, Map<String, Warp>> ownerEntry : publicWarps.entrySet()) {
                                 for (Warp warp : ownerEntry.getValue().values()) {
@@ -44,17 +42,20 @@ public class PublicWarpsGUI {
                         }
 
                         if (entries.isEmpty()) {
-                                player.sendMessage(plugin.getConfigManager().getMessage("publicwarps-no-warps"));
+                                FoliaScheduler.runForPlayer(plugin, player,
+                                                () -> player.sendMessage(cm.getMessage("publicwarps-no-warps")));
                                 return;
                         }
 
-                        List<GuiItem> contentItems = new ArrayList<>();
+                        List<GuiItem> contentItems = new ArrayList<>(entries.size());
                         for (Map.Entry<UUID, Warp> entry : entries) {
                                 UUID ownerId = entry.getKey();
                                 Warp warp = entry.getValue();
-                                final UUID finalOwnerId = ownerId;
                                 final Warp finalWarp = warp;
-                                String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
+                                ClaimProfile ownerProfile = plugin.getClaimManager().getProfile(ownerId);
+                                String ownerName = ownerProfile != null
+                                                ? ownerProfile.getDisplayOwnerName()
+                                                : Bukkit.getOfflinePlayer(ownerId).getName();
                                 if (ownerName == null)
                                         ownerName = ownerId.toString();
                                 final String finalOwnerName = ownerName;
@@ -62,11 +63,12 @@ public class PublicWarpsGUI {
                                 contentItems.add(new GuiItem() {
                                         @Override
                                         public ItemStack render(Player viewer) {
-                                                return GuiHelper.buildItemStack(finalWarp.getIcon().name(),
-                                                                "<yellow>" + finalWarp.getName(),
+                                                return GuiHelper.buildItem(
+                                                                finalWarp.getIcon(),
+                                                                cm.getRawComponent("gui.warp-item-name", "<name>", finalWarp.getName()),
                                                                 List.of(
-                                                                                "<gray>Owner: <gold>" + finalOwnerName,
-                                                                                "<gray>Left-Click to teleport"));
+                                                                                cm.getRawComponent("gui.warp-owner-line", "<owner>", finalOwnerName),
+                                                                                cm.getRawComponent("gui.warp-teleport-hint")));
                                         }
 
                                         @Override
@@ -75,20 +77,16 @@ public class PublicWarpsGUI {
                                                         if (e.getClick() == ClickType.LEFT) {
                                                                 p.closeInventory();
                                                                 if (plugin.getCombatManager().isInCombat(p)) {
-                                                                        p.sendMessage(plugin.getConfigManager().getMessage("in-combat"));
+                                                                        p.sendMessage(cm.getMessage("in-combat"));
                                                                         return;
                                                                 }
                                                                 p.teleportAsync(finalWarp.getLocation())
                                                                                 .thenAccept(success -> {
                                                                                         if (success) {
-                                                                                                p.sendMessage(plugin
-                                                                                                                .getConfigManager()
-                                                                                                                .getMessage(
-                                                                                                                                "publicwarps-teleported",
-                                                                                                                                "<owner>",
-                                                                                                                                finalOwnerName,
-                                                                                                                                "<name>",
-                                                                                                                                finalWarp.getName()));
+                                                                                                p.sendMessage(cm.getMessage(
+                                                                                                                "publicwarps-teleported",
+                                                                                                                "<owner>", finalOwnerName,
+                                                                                                                "<name>", finalWarp.getName()));
                                                                                         }
                                                                                 });
                                                         }
@@ -98,41 +96,38 @@ public class PublicWarpsGUI {
                         }
 
                         String[] structure = {
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "P n n n < n n n N"
+                                        "F F F F F F F F F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "n P n n < n n N n"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('n', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
-                                        config.navFill.lore));
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                ClaimProfile active = plugin.getClaimManager().getActiveProfile(p);
-                                                                if (active != null) {
-                                                                        org.ayosynk.landClaimPlugin.gui.MainMenuGUI.open(p, active, plugin);
-                                                                }
-                                                        }));
+                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name, config.frame.lore));
+                        ingredients.put('n', GuiHelper.buildSlot(config.navFill.material, config.navFill.name, config.navFill.lore));
+                        ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                        (p, e) -> {
+                                                ClaimProfile active = plugin.getClaimManager().getActiveProfile(p);
+                                                if (active != null) {
+                                                        MainMenuGUI.open(p, active, plugin);
+                                                } else {
+                                                        p.closeInventory();
+                                                }
+                                        }));
 
                         Component title = GuiHelper.MM.deserialize(config.title);
-                        PaginatedGui gui = new PaginatedGui(title, 4, structure, ingredients, 'x');
+                        PaginatedGui gui = new PaginatedGui(title, 5, structure, ingredients, 'x');
 
-                        gui.setPrevButton(27,
-                                        GuiHelper.buildItemStack(config.previousPage.material,
-                                                        config.previousPage.name,
-                                                        config.previousPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
-                        gui.setNextButton(35,
-                                        GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name,
-                                                        config.nextPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
+                        ItemStack navFiller = GuiHelper.buildItemStack(config.navFill.material, config.navFill.name, config.navFill.lore);
+                        gui.setPrevButton(
+                                        GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name, config.previousPage.lore),
+                                        navFiller);
+                        gui.setNextButton(
+                                        GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name, config.nextPage.lore),
+                                        navFiller);
 
-                        FoliaScheduler.runTask(plugin, () -> {
+                        FoliaScheduler.runForPlayer(plugin, player, () -> {
                                 gui.setContent(contentItems, player);
                                 gui.open(player);
                         });

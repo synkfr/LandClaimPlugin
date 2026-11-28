@@ -10,25 +10,25 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class ChangeClaimColorConfig extends OkaeriConfig {
 
-    public String title = "Change Color";
+    public String title = "<color:#1E293B>Claim Color";
 
-    @Comment("Background framing")
-    public ItemConfig frameFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig frameFill = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
-    @Comment("Bottom navigation separators")
-    public ItemConfig navFrame = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Bottom navigation separator")
+    public ItemConfig navFrame = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Opens HEX color input")
     public ItemConfig customColor = new ItemConfig(
             "BRUSH",
-            "<light_purple><bold>Custom Color",
-            List.of("<gray>Set a custom claim color", "<gray>using hex code."));
+            "<color:#38BDF8>Custom Hex Color",
+            List.of("<color:#9AA5B4>Enter a custom hex code", "<color:#9AA5B4>such as <color:#F1F5F9>#38BDF8<color:#9AA5B4>."));
 
     @Comment("Return to Claim Settings")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<yellow>Back",
-            List.of("<gray>Return to Claim Settings"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to Claim Settings"));
 
     @Comment("Color Selection Options")
     public ItemConfig colorBlack = new ItemConfig("BLACK_WOOL", "<black><bold>Black",

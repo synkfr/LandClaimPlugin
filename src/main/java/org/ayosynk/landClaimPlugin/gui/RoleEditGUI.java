@@ -24,13 +24,10 @@ import java.util.Map;
 public class RoleEditGUI {
 
     public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin, Role role, boolean isNew) {
-        FoliaScheduler.runAsync(plugin, () -> {
-            // Layout config
-            RoleEditConfig config = plugin.getConfigManager().getRoleEditConfig();
-            // We reuse the flags catalog from VisitorSettingsConfig
-            VisitorSettingsConfig flagsConfig = plugin.getConfigManager().getVisitorSettingsConfig();
+        RoleEditConfig config = plugin.getConfigManager().getRoleEditConfig();
+        VisitorSettingsConfig flagsConfig = plugin.getConfigManager().getVisitorSettingsConfig();
 
-            List<GuiItem> contentItems = new ArrayList<>();
+        List<GuiItem> contentItems = new ArrayList<>();
 
             for (Map.Entry<String, VisitorSettingsConfig.ItemConfig> entry : flagsConfig.flags.entrySet()) {
                 String flagId = entry.getKey();
@@ -40,26 +37,9 @@ public class RoleEditGUI {
                     @Override
                     public ItemStack render(Player viewer) {
                         boolean hasFlag = role.hasFlag(flagId);
-                        ItemStack item = GuiHelper.buildItemStack(flagConfig.material, flagConfig.name,
-                                flagConfig.lore);
-                        ItemMeta meta = item.getItemMeta();
-                        if (meta != null) {
-                            List<Component> lore = meta.lore();
-                            if (lore == null)
-                                lore = new ArrayList<>();
-
-                            lore.add(Component.empty());
-                            String statusText = hasFlag ? config.enabledStatus : config.disabledStatus;
-                            lore.add(GuiHelper.MM.deserialize(statusText));
-                            meta.lore(lore);
-
-                            if (hasFlag) {
-                                meta.addEnchant(org.bukkit.enchantments.Enchantment.UNBREAKING, 1, true);
-                                meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
-                            }
-                            item.setItemMeta(meta);
-                        }
-                        return item;
+                        String statusText = hasFlag ? config.enabledStatus : config.disabledStatus;
+                        return GuiHelper.buildToggleFlagItem(flagConfig.material, flagConfig.name,
+                                flagConfig.lore, statusText, hasFlag);
                     }
 
                     @Override
@@ -97,7 +77,7 @@ public class RoleEditGUI {
                     "F x x x x x x x F",
                     "F x x x x x x x F",
                     "F x x x x x x x F",
-                    "P B B F < F B B N",
+                    "P B B B < B B B N",
             };
 
             Map<Character, SlotDefinition> ingredients = new HashMap<>();
@@ -107,26 +87,20 @@ public class RoleEditGUI {
             ingredients.put('B',
                     GuiHelper.buildSlot(config.bottomFill.material, config.bottomFill.name, config.bottomFill.lore));
             ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                    (p, e) -> {
-                        p.closeInventory();
-                        RoleSetupGUI.open(p, profile, plugin, role);
-                    }));
+                    (p, e) -> RoleSetupGUI.open(p, profile, plugin, role)));
 
             Component title = GuiHelper.MM.deserialize(config.title.replace("<role>", role.getName()));
             PaginatedGui gui = new PaginatedGui(title, 6, structure, ingredients, 'x');
 
-            gui.setPrevButton(45,
-                    GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name,
-                            config.previousPage.lore),
-                    GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
-                            config.bottomFill.lore));
-            gui.setNextButton(53,
+            ItemStack navFiller = GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name, config.bottomFill.lore);
+            gui.setPrevButton(
+                    GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name, config.previousPage.lore),
+                    navFiller);
+            gui.setNextButton(
                     GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name, config.nextPage.lore),
-                    GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
-                            config.bottomFill.lore));
+                    navFiller);
 
             gui.setContent(contentItems, player);
             gui.open(player);
-        });
     }
 }

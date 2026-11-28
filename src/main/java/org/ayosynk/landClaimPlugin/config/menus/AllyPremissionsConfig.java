@@ -12,10 +12,10 @@ import java.util.LinkedHashMap;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class AllyPremissionsConfig extends OkaeriConfig {
 
-        public String title = "Ally Premissions";
+        public String title = "<color:#1E293B>Ally Permissions <color:#64748B>· <color:#0369A1><name>";
 
-        @Comment("UI border framing")
-        public ItemConfig frame = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+        @Comment("Outer border frame")
+        public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
         @Comment("Navigation background")
         public ItemConfig navFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
@@ -23,52 +23,52 @@ public class AllyPremissionsConfig extends OkaeriConfig {
         @Comment("Information Button")
         public ItemConfig info = new ItemConfig(
                         "NETHER_STAR",
-                        "<yellow><bold>Permission Info",
-                        List.of("<gray>Toggle permissions for this allied claim."));
+                        "<color:#38BDF8>Ally Permissions",
+                        List.of("<color:#9AA5B4>Toggle flags granted to", "<color:#9AA5B4>this allied claim."));
 
         @Comment("Previous Page Button")
         public ItemConfig previousPage = new ItemConfig(
-                        "LIGHT_BLUE_CANDLE",
-                        "<aqua>Previous Page",
-                        List.of("<gray>Go to the previous page."));
+                        "ARROW",
+                        "<color:#38BDF8>← Previous Page",
+                        List.of("<color:#9AA5B4>View previous items"));
 
         @Comment("Next Page Button")
         public ItemConfig nextPage = new ItemConfig(
-                        "LIME_CANDLE",
-                        "<green>Next Page",
-                        List.of("<gray>Go to the next page."));
+                        "ARROW",
+                        "<color:#38BDF8>Next Page →",
+                        List.of("<color:#9AA5B4>View next items"));
 
         @Comment("Return to previous menu")
         public ItemConfig back = new ItemConfig(
-                        "SPECTRAL_ARROW",
-                        "<yellow>Back",
-                        List.of("<gray>Return to Ally Control Panel"));
+                        "ARROW",
+                        "<color:#38BDF8>← Back",
+                        List.of("<color:#9AA5B4>Return to Ally Control Panel"));
 
         @Comment("Text added to lore when a flag is enabled for this ally")
-        public String enabledStatus = "<green>Enabled";
+        public String enabledStatus = "<color:#34D399>● Enabled";
 
         @Comment("Text added to lore when a flag is disabled for this ally")
-        public String disabledStatus = "<red>Disabled";
+        public String disabledStatus = "<color:#F87171>○ Disabled";
 
         @Comment("List of configurable ally flags.")
         public Map<String, ItemConfig> flags = new LinkedHashMap<>() {
                 {
-                        put("use", new ItemConfig("OAK_DOOR", "<gold>Use Blocks",
-                                        List.of("<gray>Allow ally to use doors, buttons, etc.")));
-                        put("interact", new ItemConfig("ARMOR_STAND", "<gold>Interact",
-                                        List.of("<gray>Allow ally to interact with entities.")));
-                        put("chest-access", new ItemConfig("CHEST", "<gold>Chest Access",
-                                        List.of("<gray>Allow ally to open chests.")));
-                        put("ride", new ItemConfig("SADDLE", "<gold>Ride Vehicles",
-                                        List.of("<gray>Allow ally to ride horses/boats.")));
-                        put("vehicle-place", new ItemConfig("OAK_BOAT", "<gold>Place Vehicles",
-                                        List.of("<gray>Allow ally to place boats/minecarts.")));
-                        put("vehicle-destroy", new ItemConfig("GOLDEN_SWORD", "<gold>Destroy Vehicles",
-                                        List.of("<gray>Allow ally to break boats/minecarts.")));
-                        put("drop-items", new ItemConfig("ROTTEN_FLESH", "<gold>Drop Items",
-                                        List.of("<gray>Allow ally to drop items.")));
-                        put("pickup-items", new ItemConfig("DIAMOND", "<gold>Pickup Items",
-                                        List.of("<gray>Allow ally to pick up items.")));
+                        put("use", new ItemConfig("OAK_DOOR", "<color:#60A5FA>Use Blocks",
+                                        List.of("<color:#9AA5B4>Allow ally to use doors and switches.")));
+                        put("interact", new ItemConfig("ARMOR_STAND", "<color:#60A5FA>Interact",
+                                        List.of("<color:#9AA5B4>Allow ally to interact with entities.")));
+                        put("chest-access", new ItemConfig("CHEST", "<color:#60A5FA>Chest Access",
+                                        List.of("<color:#9AA5B4>Allow ally to open containers.")));
+                        put("ride", new ItemConfig("SADDLE", "<color:#60A5FA>Ride Vehicles",
+                                        List.of("<color:#9AA5B4>Allow ally to ride mounts and vehicles.")));
+                        put("vehicle-place", new ItemConfig("OAK_BOAT", "<color:#60A5FA>Place Vehicles",
+                                        List.of("<color:#9AA5B4>Allow ally to place boats or minecarts.")));
+                        put("vehicle-destroy", new ItemConfig("GOLDEN_SWORD", "<color:#60A5FA>Destroy Vehicles",
+                                        List.of("<color:#9AA5B4>Allow ally to break boats or minecarts.")));
+                        put("drop-items", new ItemConfig("DROPPER", "<color:#60A5FA>Drop Items",
+                                        List.of("<color:#9AA5B4>Allow ally to drop items.")));
+                        put("pickup-items", new ItemConfig("HOPPER", "<color:#60A5FA>Pickup Items",
+                                        List.of("<color:#9AA5B4>Allow ally to pick up dropped items.")));
                 }
         };
 

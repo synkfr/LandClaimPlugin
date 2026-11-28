@@ -52,7 +52,7 @@ public class AnvilInputGUI implements Listener {
         ItemStack resultItem = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta meta = resultItem.getItemMeta();
         if (meta != null) {
-            meta.displayName(GuiHelper.MM.deserialize("<i:false><color:#30FF60>✔ Save</color>"));
+            meta.displayName(plugin.getConfigManager().getRawComponent("gui.anvil-save"));
             resultItem.setItemMeta(meta);
         }
         event.setResult(resultItem);
@@ -102,7 +102,7 @@ public class AnvilInputGUI implements Listener {
         // Bedrock player path: prefer a native Geyser CustomForm text input if available.
         // Falls back to the chat-prompt listener if Geyser forms are disabled or unavailable.
         if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
-            if (plugin.getConfigManager().getPluginConfig().geyserForms
+            if (plugin.getConfigManager().getPluginConfig().general.geyserForms
                     && org.ayosynk.landClaimPlugin.util.GeyserFormHelper.isAvailable()) {
                 player.closeInventory();
                 player.sendMessage(plugin.getConfigManager().getMessage("geyser-form-sent", "<title>", title));

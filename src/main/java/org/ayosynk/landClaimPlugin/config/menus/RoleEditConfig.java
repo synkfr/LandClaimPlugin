@@ -8,43 +8,43 @@ import java.util.List;
 @Header("Role Edit Permissions GUI Configuration")
 public class RoleEditConfig extends OkaeriConfig {
 
-    public String title = "Role Permissions - <role>";
+    public String title = "<color:#1E293B>Role Flags <color:#64748B>· <color:#0369A1><role>";
 
-    @Comment("Frame item on the top and sides")
-    public VisitorSettingsConfig.ItemConfig frame = new VisitorSettingsConfig.ItemConfig("GRAY_STAINED_GLASS_PANE", " ",
+    @Comment("Outer border frame")
+    public VisitorSettingsConfig.ItemConfig frame = new VisitorSettingsConfig.ItemConfig("BLACK_STAINED_GLASS_PANE", " ",
             List.of());
 
     @Comment("Info item at the top middle")
     public VisitorSettingsConfig.ItemConfig info = new VisitorSettingsConfig.ItemConfig(
             "PAPER",
-            "<yellow>Role Permissions",
+            "<color:#38BDF8>Role Permissions",
             List.of(
-                    "<gray>Toggle permissions for this role.",
-                    "<gray>Click an item to change its setting."));
+                    "<color:#9AA5B4>Toggle flags granted to",
+                    "<color:#9AA5B4>members assigned this role."));
 
-    @Comment("Nav frame item at the bottom")
+    @Comment("Navigation bar background")
     public VisitorSettingsConfig.ItemConfig bottomFill = new VisitorSettingsConfig.ItemConfig("GRAY_STAINED_GLASS_PANE",
             " ", List.of());
 
     @Comment("Return to previous menu")
     public VisitorSettingsConfig.ItemConfig back = new VisitorSettingsConfig.ItemConfig(
-            "SPECTRAL_ARROW",
-            "<yellow>Back",
-            List.of("<gray>Return to Role Setup"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to Role Setup"));
 
     @Comment("Previous Page Button")
     public VisitorSettingsConfig.ItemConfig previousPage = new VisitorSettingsConfig.ItemConfig(
-            "LIGHT_BLUE_CANDLE",
-            "<aqua>Previous Page",
-            List.of("<gray>Go to the previous page."));
+            "ARROW",
+            "<color:#38BDF8>← Previous Page",
+            List.of("<color:#9AA5B4>View previous items"));
 
     @Comment("Next Page Button")
     public VisitorSettingsConfig.ItemConfig nextPage = new VisitorSettingsConfig.ItemConfig(
-            "LIME_CANDLE",
-            "<green>Next Page",
-            List.of("<gray>Go to the next page."));
+            "ARROW",
+            "<color:#38BDF8>Next Page →",
+            List.of("<color:#9AA5B4>View next items"));
 
     @Comment("Lore for Enabled/Disabled states")
-    public String enabledStatus = "<green>Currently: <bold>Enabled";
-    public String disabledStatus = "<red>Currently: <bold>Disabled";
+    public String enabledStatus = "<color:#34D399>● Enabled";
+    public String disabledStatus = "<color:#F87171>○ Disabled";
 }

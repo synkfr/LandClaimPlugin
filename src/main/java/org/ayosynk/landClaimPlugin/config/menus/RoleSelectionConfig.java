@@ -10,31 +10,31 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class RoleSelectionConfig extends OkaeriConfig {
 
-    public String title = "Change Role";
+    public String title = "<color:#1E293B>Assign Role";
 
-    @Comment("UI border")
-    public ItemConfig frame = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Navigation bar background")
     public ItemConfig navFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Return to Player Control Panel")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<yellow>Back",
-            List.of("<gray>Return to Player Control Panel"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to Member Controls"));
 
     @Comment("Previous Page Button")
     public ItemConfig previousPage = new ItemConfig(
-            "CYAN_CANDLE",
-            "<aqua>Previous Page",
-            List.of("<gray>Go to the previous page."));
+            "ARROW",
+            "<color:#38BDF8>← Previous Page",
+            List.of("<color:#9AA5B4>View previous items"));
 
     @Comment("Next Page Button")
     public ItemConfig nextPage = new ItemConfig(
-            "LIME_CANDLE",
-            "<green>Next Page",
-            List.of("<gray>Go to the next page."));
+            "ARROW",
+            "<color:#38BDF8>Next Page →",
+            List.of("<color:#9AA5B4>View next items"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

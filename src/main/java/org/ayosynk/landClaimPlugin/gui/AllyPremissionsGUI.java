@@ -41,30 +41,10 @@ public class AllyPremissionsGUI {
                                                 Set<String> allyFlags = profile
                                                                 .getAllyFlags(targetAllyProfile.getProfileId());
                                                 boolean hasFlag = allyFlags != null && allyFlags.contains(flagId);
-
-                                                ItemStack item = GuiHelper.buildItemStack(flagConfig.material,
-                                                                flagConfig.name, flagConfig.lore);
-                                                ItemMeta meta = item.getItemMeta();
-                                                if (meta != null) {
-                                                        List<Component> lore = meta.lore();
-                                                        if (lore == null)
-                                                                lore = new ArrayList<>();
-
-                                                        lore.add(Component.empty());
-                                                        String statusText = hasFlag ? config.enabledStatus
-                                                                        : config.disabledStatus;
-                                                        lore.add(GuiHelper.MM.deserialize(statusText));
-                                                        meta.lore(lore);
-
-                                                        if (hasFlag) {
-                                                                meta.addEnchant(org.bukkit.enchantments.Enchantment.UNBREAKING,
-                                                                                1, true);
-                                                                meta.addItemFlags(
-                                                                                org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
-                                                        }
-                                                        item.setItemMeta(meta);
-                                                }
-                                                return item;
+                                                String statusText = hasFlag ? config.enabledStatus
+                                                                : config.disabledStatus;
+                                                return GuiHelper.buildToggleFlagItem(flagConfig.material,
+                                                                flagConfig.name, flagConfig.lore, statusText, hasFlag);
                                         }
 
                                         @Override
@@ -101,38 +81,34 @@ public class AllyPremissionsGUI {
                                         "F x x x x x x x F",
                                         "F x x x x x x x F",
                                         "F x x x x x x x F",
-                                        "P N N N < N N N V"
+                                        "P B B B < B B B N"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
                         ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name,
                                         config.frame.lore));
-                        ingredients.put('N', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
+                        ingredients.put('B', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
                                         config.navFill.lore));
                         ingredients.put('I',
                                         GuiHelper.buildSlot(config.info.material, config.info.name, config.info.lore));
                         ingredients.put('<',
                                         GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                AllyControlPanelGUI.open(p, profile, plugin,
-                                                                                targetAllyProfile);
-                                                        }));
+                                                        (p, e) -> AllyControlPanelGUI.open(p, profile, plugin, targetAllyProfile)));
 
                         Component title = GuiHelper.MM
                                         .deserialize(config.title.replace("<name>", targetAllyProfile.getName()));
                         PaginatedGui gui = new PaginatedGui(title, 6, structure, ingredients, 'x');
 
-                        gui.setPrevButton(45,
+                        ItemStack navFiller = GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
+                                        config.navFill.lore);
+                        gui.setPrevButton(
                                         GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name,
                                                         config.previousPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
-                        gui.setNextButton(53,
+                                        navFiller);
+                        gui.setNextButton(
                                         GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name,
                                                         config.nextPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
+                                        navFiller);
 
                         gui.setContent(contentItems, player);
                         gui.open(player);

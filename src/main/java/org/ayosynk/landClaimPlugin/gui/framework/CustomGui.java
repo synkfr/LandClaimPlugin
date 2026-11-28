@@ -11,6 +11,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Core GUI runtime built on the Bukkit Inventory API.
@@ -53,12 +54,15 @@ public class CustomGui implements InventoryHolder {
     // ---- Slot management ----
 
     /**
-     * Place an item with a click handler.
+     * Place an item with a click handler, or clear any prior handler when action is null.
      */
     public void setItem(int slot, ItemStack item, ClickAction action) {
         inventory.setItem(slot, item);
+        if (clickHandlers == null) return;
         if (action != null) {
             clickHandlers.put(slot, action);
+        } else {
+            clickHandlers.remove(slot);
         }
     }
 
@@ -70,26 +74,31 @@ public class CustomGui implements InventoryHolder {
     }
 
     /**
-     * Parse InvUI-style structure strings and fill the inventory.
-     * <p>
-     * Format: each row is a space-separated string of single characters.
-     * Characters map to {@link SlotDefinition} entries in the ingredients map.
-     * Unknown characters or {@code '.'} are skipped (empty slot).
+     * Parse InvUI-style structure strings and fill the inventory without allocating intermediate arrays.
      *
      * @param rows        structure rows, e.g. {@code "F F F F F F F F F"}
-     * @param ingredients character → item+action mappings
+     * @param ingredients character to item+action mappings
      */
     public void fillFromStructure(String[] rows, Map<Character, SlotDefinition> ingredients) {
+        parseStructure(rows, ingredients, (slot, ch) -> {});
+    }
+
+    protected final void parseStructure(String[] rows, Map<Character, SlotDefinition> ingredients,
+            BiConsumer<Integer, Character> unmappedConsumer) {
         int slot = 0;
+        int size = inventory.getSize();
         for (String row : rows) {
-            String[] chars = row.split(" ");
-            for (String ch : chars) {
-                if (slot >= inventory.getSize())
-                    return;
-                if (ch.length() == 1 && ch.charAt(0) != '.') {
-                    SlotDefinition def = ingredients.get(ch.charAt(0));
+            int len = row.length();
+            for (int i = 0; i < len; i++) {
+                char c = row.charAt(i);
+                if (c == ' ') continue;
+                if (slot >= size) return;
+                if (c != '.') {
+                    SlotDefinition def = ingredients != null ? ingredients.get(c) : null;
                     if (def != null) {
                         setItem(slot, def.item(), def.action());
+                    } else if (unmappedConsumer != null) {
+                        unmappedConsumer.accept(slot, c);
                     }
                 }
                 slot++;

@@ -10,37 +10,37 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class TitleSettingsConfig extends OkaeriConfig {
 
-    public String title = "Title Settings";
+    public String title = "<color:#1E293B>Territory Titles";
 
-    @Comment("Main background spacing")
-    public ItemConfig frame = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
-    @Comment("Bottom alignment spacer")
-    public ItemConfig navSpacer = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Bottom navigation separator")
+    public ItemConfig navSpacer = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Enable / disable claim titles globally")
     public ItemConfig titleToggle = new ItemConfig(
-            "BAMBOO_SIGN",
-            "<yellow><bold>Title Toggle",
-            List.of("<gray>Toggle on and off"));
+            "LEVER",
+            "<color:#38BDF8><b>Titles Toggle",
+            List.of("<color:#9AA5B4>Enable or disable claim", "<color:#9AA5B4>enter and exit titles."));
 
     @Comment("Configure entry title behavior")
     public ItemConfig onEntry = new ItemConfig(
-            "BELL",
-            "<gold><bold>On Entry",
-            List.of("<gray>Shows Title on Entering the claim"));
+            "OAK_SIGN",
+            "<color:#34D399><b>Entry Title",
+            List.of("<color:#9AA5B4>Text shown when a player", "<color:#9AA5B4>steps into your claim."));
 
     @Comment("Configure leave title behavior")
     public ItemConfig onLeaveTitle = new ItemConfig(
-            "FIELD_MASONED_BANNER_PATTERN",
-            "<light_purple><bold>On Leave Title",
-            List.of("<gray>Shows Title on leaving the claim"));
+            "DARK_OAK_SIGN",
+            "<color:#60A5FA><b>Exit Title",
+            List.of("<color:#9AA5B4>Text shown when a player", "<color:#9AA5B4>leaves your claim."));
 
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<red>Back",
-            List.of("<gray>Return to Claim Settings"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to Claim Settings"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

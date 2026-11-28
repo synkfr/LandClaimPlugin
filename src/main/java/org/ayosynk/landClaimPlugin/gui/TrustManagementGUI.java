@@ -40,55 +40,32 @@ public class TrustManagementGUI {
                                 contentItems.add(new GuiItem() {
                                         @Override
                                         public ItemStack render(Player viewer) {
-                                                ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
-                                                SkullMeta meta = (SkullMeta) skull.getItemMeta();
-                                                if (meta != null) {
-                                                        meta.setOwningPlayer(Bukkit.getOfflinePlayer(trustedId));
-                                                        meta.displayName(GuiHelper.MM
-                                                                        .deserialize("<yellow>" + displayName));
-
-                                                        List<Component> lore = new ArrayList<>();
-                                                        lore.add(GuiHelper.MM.deserialize(
-                                                                        "<gray>Left-click: Edit permissions"));
-                                                        lore.add(GuiHelper.MM.deserialize("<gray>Right-click: Remove"));
-                                                        meta.lore(lore);
-                                                        skull.setItemMeta(meta);
-                                                }
-                                                return skull;
+                                                var cm = plugin.getConfigManager();
+                                                List<Component> lore = List.of(
+                                                                cm.getRawComponent("gui.click-edit-permissions"),
+                                                                cm.getRawComponent("gui.click-remove"));
+                                                return GuiHelper.buildPlayerHead(
+                                                                trustedId,
+                                                                displayName,
+                                                                cm.getRawComponent("gui.skull-item-name", "<name>", displayName),
+                                                                lore);
                                         }
 
                                         @Override
                                         public ClickAction clickAction() {
                                                 return (p, e) -> {
                                                         if (e.getClick() == ClickType.RIGHT) {
-                                                                // Right-click → confirmation → remove
-                                                                FoliaScheduler.runTask(plugin,
-                                                                                () -> ConfirmationGUI.open(p,
-                                                                                                "<red>Remove " + displayName
-                                                                                                                + "?",
-                                                                                                () -> {
-                                                                                                        profile.removeTrustedPlayer(
-                                                                                                                        trustedId);
-                                                                                                        plugin.getCacheManager()
-                                                                                                                        .getProfileCache()
-                                                                                                                        .put(profile.getProfileId(),
-                                                                                                                                        profile);
-                                                                                                        plugin.getClaimManager()
-                                                                                                                        .saveAndSync(profile);
-                                                                                                        // Re-open trust
-                                                                                                        // management
-                                                                                                        TrustManagementGUI
-                                                                                                                        .open(p, profile,
-                                                                                                                                        plugin);
-                                                                                                },
-                                                                                                () -> TrustManagementGUI
-                                                                                                                .open(p, profile,
-                                                                                                                                plugin)));
+                                                                ConfirmationGUI.open(p,
+                                                                                plugin.getConfigManager().getRawTemplate("gui.confirm-remove-trust", "<player>", displayName),
+                                                                                () -> {
+                                                                                        profile.removeTrustedPlayer(trustedId);
+                                                                                        plugin.getCacheManager().getProfileCache().put(profile.getProfileId(), profile);
+                                                                                        plugin.getClaimManager().saveAndSync(profile);
+                                                                                        TrustManagementGUI.open(p, profile, plugin);
+                                                                                },
+                                                                                () -> TrustManagementGUI.open(p, profile, plugin));
                                                         } else {
-                                                                // Left-click → edit permissions
-                                                                p.closeInventory();
-                                                                PlayerTrustPermissionGUI.open(p, profile, plugin,
-                                                                                trustedId);
+                                                                PlayerTrustPermissionGUI.open(p, profile, plugin, trustedId);
                                                         }
                                                 };
                                         }
@@ -96,13 +73,15 @@ public class TrustManagementGUI {
                         }
 
                         String[] structure = {
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "P B B + < B B B N"
+                                        "F F F F F F F F F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "B P B + < B B N B"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name, config.frame.lore));
                         ingredients.put('B', GuiHelper.buildSlot(config.bottomFill.material, config.bottomFill.name,
                                         config.bottomFill.lore));
                         ingredients.put('+', GuiHelper.buildSlot(config.addPlayer.material, config.addPlayer.name,
@@ -124,29 +103,31 @@ public class TrustManagementGUI {
                                                         TrustManagementGUI.open(p, profile, plugin);
                                                 }, () -> TrustManagementGUI.open(p, profile, plugin));
                                         }));
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                MainMenuGUI.open(p, profile, plugin);
-                                                        }));
+                        ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                        (p, e) -> MainMenuGUI.open(p, profile, plugin)));
 
                         Component title = GuiHelper.MM.deserialize(config.title);
-                        PaginatedGui gui = new PaginatedGui(title, 4, structure, ingredients, 'x');
+                        PaginatedGui gui = new PaginatedGui(title, 5, structure, ingredients, 'x');
 
-                        gui.setPrevButton(27,
+                        ItemStack navFiller = GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
+                                        config.bottomFill.lore);
+                        gui.setPrevButton(
                                         GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name,
                                                         config.previousPage.lore),
-                                        GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
-                                                        config.bottomFill.lore));
-                        gui.setNextButton(35,
+                                        navFiller);
+                        gui.setNextButton(
                                         GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name,
                                                         config.nextPage.lore),
-                                        GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
-                                                        config.bottomFill.lore));
+                                        navFiller);
 
-                        gui.setContent(contentItems, player);
-                        gui.open(player);
+                        FoliaScheduler.runForPlayer(plugin, player, () -> {
+                                gui.setContent(contentItems, player);
+                                if (contentItems.isEmpty()) {
+                                        gui.setItem(22, GuiHelper.buildItemStack(config.emptyIndicator.material,
+                                                        config.emptyIndicator.name, config.emptyIndicator.lore));
+                                }
+                                gui.open(player);
+                        });
                 });
         }
 }

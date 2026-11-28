@@ -8,31 +8,31 @@ import java.util.List;
 @Header("OnlinePlayerSelector GUI Configuration")
 public class OnlinePlayerSelectorConfig extends OkaeriConfig {
 
-    public String title = "Select Player";
+    public String title = "<color:#1E293B>Select Player";
 
-    @Comment("Decorative border")
-    public ItemConfig frame = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Navigation bar background")
     public ItemConfig navFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<yellow>Back",
-            List.of("<gray>Return to Previous Menu"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to previous menu"));
 
     @Comment("Previous Page Button")
     public ItemConfig previousPage = new ItemConfig(
-            "LIGHT_BLUE_CANDLE",
-            "<aqua>Previous Page",
-            List.of("<gray>Go to the previous page"));
+            "ARROW",
+            "<color:#38BDF8>← Previous Page",
+            List.of("<color:#9AA5B4>View previous items"));
 
     @Comment("Next Page Button")
     public ItemConfig nextPage = new ItemConfig(
-            "LIME_CANDLE",
-            "<green>Next Page",
-            List.of("<gray>Go to the next page"));
+            "ARROW",
+            "<color:#38BDF8>Next Page →",
+            List.of("<color:#9AA5B4>View next items"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

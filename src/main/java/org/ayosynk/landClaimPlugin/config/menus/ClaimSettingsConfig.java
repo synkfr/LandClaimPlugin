@@ -10,94 +10,96 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting")
 public class ClaimSettingsConfig extends OkaeriConfig {
 
-    public String title = "Claim Settings: {claim_name}";
+    public String title = "<color:#1E293B>Claim Settings <color:#64748B>· <color:#0369A1>{claim_name}";
 
-    @Comment("Filler 1 (Primary filler)")
-    public ItemConfig filler1 = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig filler1 = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
-    @Comment("Filler 2 (Secondary filler)")
+    @Comment("Inner background glass")
     public ItemConfig filler2 = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Overview Button")
     public ItemConfig overview = new ItemConfig(
             "NETHER_STAR",
-            "<yellow>Claim Settings Overview",
+            "<color:#38BDF8>Territory Overview",
             List.of(
-                    "<gray>View general claim settings."));
+                    "<color:#9AA5B4>Owner <color:#F1F5F9>{owner}",
+                    "<color:#9AA5B4>Chunks <color:#F1F5F9>{size}",
+                    "<color:#9AA5B4>Members <color:#F1F5F9>{members}"));
 
     @Comment("Rename Button")
     public ItemConfig rename = new ItemConfig(
             "NAME_TAG",
-            "<aqua>Change Claim Name",
+            "<color:#60A5FA>Rename Claim",
             List.of(
-                    "<gray>Click to rename this claim."));
+                    "<color:#9AA5B4>Edit claim name or owner alias."));
 
     @Comment("Color Button")
     public ItemConfig color = new ItemConfig(
             "BRUSH",
-            "<light_purple>Change Claim Color",
+            "<color:#38BDF8>Map Color",
             List.of(
-                    "<gray>Change the display color for map integrations."));
+                    "<color:#9AA5B4>Choose display color for web maps."));
 
     @Comment("Roles Button")
     public ItemConfig roles = new ItemConfig(
             "WRITABLE_BOOK",
-            "<gold>Manage Roles",
+            "<color:#FBBF24>Claim Roles",
             List.of(
-                    "<gray>Manage custom roles and permissions within this claim."));
+                    "<color:#9AA5B4>Create roles and assign flags."));
 
     @Comment("PvP Toggle Button")
     public ItemConfig pvpToggle = new ItemConfig(
             "IRON_SWORD",
-            "<red>Toggle PvP",
+            "<color:#F87171>PvP Protection",
             List.of(
-                    "<gray>Enable or disable PvP inside this claim.",
-                    "<gray>Status: <pvp_status>"));
+                    "<color:#9AA5B4>Toggle combat inside this claim.",
+                    "<color:#9AA5B4>Status <pvp_status>"));
 
     @Comment("Visibility Button")
     public ItemConfig visibility = new ItemConfig(
             "ECHO_SHARD",
-            "<blue>Claim Visibility",
+            "<color:#60A5FA>Map Visibility",
             List.of(
-                    "<gray>Toggle claim visibility on web maps."));
+                    "<color:#9AA5B4>Toggle visibility on web maps."));
 
     @Comment("Title Toggle Button")
     public ItemConfig titleToggle = new ItemConfig(
             "GOAT_HORN",
-            "<yellow>Title Change on Enter/Leave",
+            "<color:#38BDF8>Territory Titles",
             List.of(
-                    "<gray>Toggle showing a title when players enter/leave."));
+                    "<color:#9AA5B4>Customize entry and exit titles."));
 
     @Comment("TNT Explosions Toggle Button")
     public ItemConfig tntToggle = new ItemConfig(
             "TNT",
-            "<red>Toggle TNT Explosions",
+            "<color:#FBBF24>TNT Explosions",
             List.of(
-                    "<gray>Allow or block TNT explosions inside this claim.",
-                    "<gray>Status: <tnt_status>"));
+                    "<color:#9AA5B4>Allow or block TNT blasts inside",
+                    "<color:#9AA5B4>this claim. Status <tnt_status>"));
 
     @Comment("Mob Spawning Toggle Button")
     public ItemConfig mobSpawningToggle = new ItemConfig(
             "SPAWNER",
-            "<green>Toggle Mob Spawning",
+            "<color:#34D399>Mob Spawning",
             List.of(
-                    "<gray>Allow or block natural mob spawning inside this claim.",
-                    "<gray>Status: <mob_spawning_status>"));
+                    "<color:#9AA5B4>Allow or block natural mob spawns",
+                    "<color:#9AA5B4>inside this claim. Status <mob_spawning_status>"));
 
     @Comment("Abandon All Button")
     public ItemConfig abandonAll = new ItemConfig(
             "FLOWER_BANNER_PATTERN",
-            "<red>Abandon All Claims",
+            "<color:#F87171><b>Abandon All Claims",
             List.of(
-                    "<gray>Abandon all your claims.",
-                    "<dark_red><bold>WARNING: Irreversible!"));
+                    "<color:#9AA5B4>Release every chunk in this profile.",
+                    "<color:#F87171>Permanent action."));
 
     @Comment("Back Button")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<red>Back to MainMenu",
+            "ARROW",
+            "<color:#38BDF8>← Back",
             List.of(
-                    "<gray>Return to the previous menu."));
+                    "<color:#9AA5B4>Return to Main Menu"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

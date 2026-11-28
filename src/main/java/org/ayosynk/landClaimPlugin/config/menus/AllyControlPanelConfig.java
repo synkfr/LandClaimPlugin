@@ -10,37 +10,37 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class AllyControlPanelConfig extends OkaeriConfig {
 
-    public String title = "Ally Control Panel";
+    public String title = "<color:#1E293B>Ally Controls";
 
-    @Comment("Locked UI background")
-    public ItemConfig frame = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
-    @Comment("Visual separation")
-    public ItemConfig spacer = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Navigation bar background")
+    public ItemConfig spacer = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Ally Permissions Button")
     public ItemConfig allyPermissions = new ItemConfig(
             "WRITABLE_BOOK",
-            "<gold>Ally Permissions",
-            List.of("<gray>Manage permissions for this allied claim."));
+            "<color:#38BDF8>Ally Permissions",
+            List.of("<color:#9AA5B4>Configure flags shared with", "<color:#9AA5B4>this allied claim."));
 
     @Comment("Ally Warps Button (Coming Soon)")
     public ItemConfig allyWarps = new ItemConfig(
             "RECOVERY_COMPASS",
-            "<aqua>Ally Warps <gray>(Coming Soon)",
-            List.of("<gray>View and use warps from this ally."));
+            "<color:#60A5FA>Ally Warps <color:#9AA5B4>(Soon)",
+            List.of("<color:#9AA5B4>Shared ally warp access is", "<color:#9AA5B4>planned for a future update."));
 
     @Comment("Remove from Ally Button")
     public ItemConfig removeAlly = new ItemConfig(
             "CREEPER_BANNER_PATTERN",
-            "<red><bold>Remove from Ally",
-            List.of("<gray>Sever the alliance with this claim."));
+            "<color:#F87171><b>End Alliance",
+            List.of("<color:#9AA5B4>Remove this claim from your", "<color:#9AA5B4>alliance list."));
 
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<yellow>Back",
-            List.of("<gray>Return to Ally Management"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to Ally Management"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

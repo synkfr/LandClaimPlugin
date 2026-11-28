@@ -51,29 +51,10 @@ public class PlayerTrustPermissionGUI {
                                         @Override
                                         public ItemStack render(Player viewer) {
                                                 boolean hasFlag = flags.contains(flagId.toUpperCase());
-                                                ItemStack item = GuiHelper.buildItemStack(flagConfig.material,
-                                                                flagConfig.name, flagConfig.lore);
-                                                ItemMeta meta = item.getItemMeta();
-                                                if (meta != null) {
-                                                        List<Component> lore = meta.lore();
-                                                        if (lore == null)
-                                                                lore = new ArrayList<>();
-
-                                                        lore.add(Component.empty());
-                                                        String statusText = hasFlag ? config.enabledStatus
-                                                                        : config.disabledStatus;
-                                                        lore.add(GuiHelper.MM.deserialize(statusText));
-                                                        meta.lore(lore);
-
-                                                        if (hasFlag) {
-                                                                meta.addEnchant(org.bukkit.enchantments.Enchantment.UNBREAKING,
-                                                                                1, true);
-                                                                meta.addItemFlags(
-                                                                                org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
-                                                        }
-                                                        item.setItemMeta(meta);
-                                                }
-                                                return item;
+                                                String statusText = hasFlag ? config.enabledStatus
+                                                                : config.disabledStatus;
+                                                return GuiHelper.buildToggleFlagItem(flagConfig.material,
+                                                                flagConfig.name, flagConfig.lore, statusText, hasFlag);
                                         }
 
                                         @Override
@@ -126,28 +107,28 @@ public class PlayerTrustPermissionGUI {
                         ingredients.put('B', GuiHelper.buildSlot(ptConfig.bottomFill.material, ptConfig.bottomFill.name,
                                         ptConfig.bottomFill.lore));
                         ingredients.put('<', GuiHelper.buildSlot(ptConfig.back.material, ptConfig.back.name,
-                                        ptConfig.back.lore, (p, e) -> {
-                                                p.closeInventory();
-                                                TrustManagementGUI.open(p, profile, plugin);
-                                        }));
+                                        ptConfig.back.lore, (p, e) -> TrustManagementGUI.open(p, profile, plugin)));
 
                         Component title = GuiHelper.MM.deserialize(ptConfig.title);
                         PaginatedGui gui = new PaginatedGui(title, 6, structure, ingredients, 'x');
 
-                        gui.setPrevButton(45,
+                        ItemStack navFiller = GuiHelper.buildItemStack(ptConfig.bottomFill.material,
+                                        ptConfig.bottomFill.name, ptConfig.bottomFill.lore);
+                        gui.setPrevButton(
                                         GuiHelper.buildItemStack(ptConfig.previousPage.material,
                                                         ptConfig.previousPage.name,
                                                         ptConfig.previousPage.lore),
-                                        GuiHelper.buildItemStack(ptConfig.bottomFill.material, ptConfig.bottomFill.name,
-                                                        ptConfig.bottomFill.lore));
-                        gui.setNextButton(53,
-                                        GuiHelper.buildItemStack(ptConfig.nextPage.material, ptConfig.nextPage.name,
+                                        navFiller);
+                        gui.setNextButton(
+                                        GuiHelper.buildItemStack(ptConfig.nextPage.material,
+                                                        ptConfig.nextPage.name,
                                                         ptConfig.nextPage.lore),
-                                        GuiHelper.buildItemStack(ptConfig.bottomFill.material, ptConfig.bottomFill.name,
-                                                        ptConfig.bottomFill.lore));
+                                        navFiller);
 
-                        gui.setContent(contentItems, player);
-                        gui.open(player);
+                        FoliaScheduler.runForPlayer(plugin, player, () -> {
+                                gui.setContent(contentItems, player);
+                                gui.open(player);
+                        });
                 });
         }
 }

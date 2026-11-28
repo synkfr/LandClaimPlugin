@@ -38,83 +38,70 @@ public class ChangeClaimColorGUI {
                         Map.entry("YELLOW", "#FED83D"));
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
-                FoliaScheduler.runAsync(plugin, () -> {
-                        ChangeClaimColorConfig config = plugin.getConfigManager().getChangeClaimColorConfig();
+                ChangeClaimColorConfig config = plugin.getConfigManager().getChangeClaimColorConfig();
 
-                        String[] structure = {
-                                        "F F F F F F F F F",
-                                        "F 0 1 2 3 4 5 6 F",
-                                        "F 7 8 9 A B C D F",
-                                        "F F F E X Y F F F",
-                                        "F F F N < N F F F"
-                        };
+                String[] structure = {
+                                "F F F F F F F F F",
+                                "F 0 1 2 3 4 5 6 F",
+                                "F 7 8 9 A B C D F",
+                                "F F F E X Y F F F",
+                                "N N N N < N N N N"
+                };
 
-                        Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('F', GuiHelper.buildSlot(config.frameFill.material, config.frameFill.name,
-                                        config.frameFill.lore));
-                        ingredients.put('N', GuiHelper.buildSlot(config.navFrame.material, config.navFrame.name,
-                                        config.navFrame.lore));
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                ClaimSettingsGUI.open(p, profile, plugin);
-                                                        }));
+                Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                ingredients.put('F', GuiHelper.buildSlot(config.frameFill.material, config.frameFill.name,
+                                config.frameFill.lore));
+                ingredients.put('N', GuiHelper.buildSlot(config.navFrame.material, config.navFrame.name,
+                                config.navFrame.lore));
+                ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                (p, e) -> ClaimSettingsGUI.open(p, profile, plugin)));
 
-                        // Custom HEX color input
-                        ingredients.put('X', GuiHelper.buildSlot(config.customColor.material, config.customColor.name,
-                                        config.customColor.lore, (p, e) -> {
-                                                p.closeInventory();
-                                                p.closeInventory();
-                                                AnvilInputGUI.open(plugin, p, "Hex Color", profile.getClaimColor() != null ? profile.getClaimColor() : "#00FF00", input -> {
-                                                        FoliaScheduler.runTask(plugin, () -> {
-                                                                if (input == null) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("rename-cancelled"));
-                                                                        ChangeClaimColorGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
+                ingredients.put('X', GuiHelper.buildSlot(config.customColor.material, config.customColor.name,
+                                config.customColor.lore, (p, e) -> {
+                                        p.closeInventory();
+                                        AnvilInputGUI.open(plugin, p,
+                                                        plugin.getConfigManager().getRawTemplate("gui.prompt-hex-color"),
+                                                        profile.getClaimColor() != null ? profile.getClaimColor() : "#38BDF8", input -> {
+                                                FoliaScheduler.runForPlayer(plugin, p, () -> {
+                                                        if (input == null) {
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("rename-cancelled"));
+                                                                ChangeClaimColorGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
 
-                                                                String hex = input.startsWith("#") ? input
-                                                                                : "#" + input;
-                                                                if (!HEX_PATTERN.matcher(hex).matches()) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("claim-color-invalid"));
-                                                                        ChangeClaimColorGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
+                                                        String hex = input.startsWith("#") ? input : "#" + input;
+                                                        if (!HEX_PATTERN.matcher(hex).matches()) {
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("claim-color-invalid"));
+                                                                ChangeClaimColorGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
 
-                                                                applyColor(p, profile, plugin,
-                                                                                hex.toUpperCase());
-                                                        });
+                                                        applyColor(p, profile, plugin, hex.toUpperCase());
                                                 });
-                                        }));
+                                        });
+                                }));
 
-                        // Preset colors
-                        ingredients.put('0', buildColorSlot(config.colorBlack, "BLACK", profile, plugin));
-                        ingredients.put('1', buildColorSlot(config.colorBlue, "BLUE", profile, plugin));
-                        ingredients.put('2', buildColorSlot(config.colorBrown, "BROWN", profile, plugin));
-                        ingredients.put('3', buildColorSlot(config.colorCyan, "CYAN", profile, plugin));
-                        ingredients.put('4', buildColorSlot(config.colorGray, "GRAY", profile, plugin));
-                        ingredients.put('5', buildColorSlot(config.colorGreen, "GREEN", profile, plugin));
-                        ingredients.put('6', buildColorSlot(config.colorLightBlue, "LIGHT_BLUE", profile, plugin));
-                        ingredients.put('7', buildColorSlot(config.colorLime, "LIME", profile, plugin));
-                        ingredients.put('8', buildColorSlot(config.colorLightGray, "LIGHT_GRAY", profile, plugin));
-                        ingredients.put('9', buildColorSlot(config.colorMagenta, "MAGENTA", profile, plugin));
-                        ingredients.put('A', buildColorSlot(config.colorOrange, "ORANGE", profile, plugin));
-                        ingredients.put('B', buildColorSlot(config.colorPink, "PINK", profile, plugin));
-                        ingredients.put('C', buildColorSlot(config.colorPurple, "PURPLE", profile, plugin));
-                        ingredients.put('D', buildColorSlot(config.colorRed, "RED", profile, plugin));
-                        ingredients.put('E', buildColorSlot(config.colorWhite, "WHITE", profile, plugin));
-                        ingredients.put('Y', buildColorSlot(config.colorYellow, "YELLOW", profile, plugin));
+                ingredients.put('0', buildColorSlot(config.colorBlack, "BLACK", profile, plugin));
+                ingredients.put('1', buildColorSlot(config.colorBlue, "BLUE", profile, plugin));
+                ingredients.put('2', buildColorSlot(config.colorBrown, "BROWN", profile, plugin));
+                ingredients.put('3', buildColorSlot(config.colorCyan, "CYAN", profile, plugin));
+                ingredients.put('4', buildColorSlot(config.colorGray, "GRAY", profile, plugin));
+                ingredients.put('5', buildColorSlot(config.colorGreen, "GREEN", profile, plugin));
+                ingredients.put('6', buildColorSlot(config.colorLightBlue, "LIGHT_BLUE", profile, plugin));
+                ingredients.put('7', buildColorSlot(config.colorLime, "LIME", profile, plugin));
+                ingredients.put('8', buildColorSlot(config.colorLightGray, "LIGHT_GRAY", profile, plugin));
+                ingredients.put('9', buildColorSlot(config.colorMagenta, "MAGENTA", profile, plugin));
+                ingredients.put('A', buildColorSlot(config.colorOrange, "ORANGE", profile, plugin));
+                ingredients.put('B', buildColorSlot(config.colorPink, "PINK", profile, plugin));
+                ingredients.put('C', buildColorSlot(config.colorPurple, "PURPLE", profile, plugin));
+                ingredients.put('D', buildColorSlot(config.colorRed, "RED", profile, plugin));
+                ingredients.put('E', buildColorSlot(config.colorWhite, "WHITE", profile, plugin));
+                ingredients.put('Y', buildColorSlot(config.colorYellow, "YELLOW", profile, plugin));
 
-                        Component title = GuiHelper.MM.deserialize(config.title);
-                        FoliaScheduler.runTask(plugin, () -> {
-                                CustomGui gui = new CustomGui(title, 5);
-                                gui.fillFromStructure(structure, ingredients);
-                                gui.open(player);
-                        });
-                });
+                Component title = GuiHelper.MM.deserialize(config.title);
+                CustomGui gui = new CustomGui(title, 5);
+                gui.fillFromStructure(structure, ingredients);
+                gui.open(player);
         }
 
         private static SlotDefinition buildColorSlot(ChangeClaimColorConfig.ItemConfig itemConfig,

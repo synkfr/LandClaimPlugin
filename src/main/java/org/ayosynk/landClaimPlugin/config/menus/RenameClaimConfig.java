@@ -10,40 +10,40 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class RenameClaimConfig extends OkaeriConfig {
 
-    public String title = "Rename Claim";
+    public String title = "<color:#1E293B>Rename Claim";
 
-    @Comment("Visual border separation")
-    public ItemConfig outerFrame = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig outerFrame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
-    @Comment("Neutral inactive space filler")
+    @Comment("Inner background glass")
     public ItemConfig background = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
-    @Comment("Bottom alignment spacer")
-    public ItemConfig navSpacer = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Bottom navigation separator")
+    public ItemConfig navSpacer = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Opens chat/anvil input for claim name")
     public ItemConfig changeName = new ItemConfig(
             "LECTERN",
-            "<yellow><bold>Change Name",
-            List.of("<gray>Click to enter a new name for the claim."));
+            "<color:#38BDF8><b>Rename Claim",
+            List.of("<color:#9AA5B4>Enter a custom display name", "<color:#9AA5B4>for this claim."));
 
     @Comment("Restores default claim name")
     public ItemConfig resetToDefault = new ItemConfig(
             "FLOW_BANNER_PATTERN",
-            "<red><bold>Reset to Default",
-            List.of("<gray>Remove the custom name and", "<gray>restore the default name."));
+            "<color:#F87171><b>Reset Name",
+            List.of("<color:#9AA5B4>Remove custom claim name and", "<color:#9AA5B4>restore the default label."));
 
     @Comment("Change the owner alias")
     public ItemConfig ownerAlias = new ItemConfig(
             "NAME_TAG",
-            "<gold><bold>Set Owner Alias",
-            List.of("<gray>Change the displayed owner", "<gray>name in menus and titles.", "<gray>Type 'reset' to clear it."));
+            "<color:#60A5FA><b>Owner Alias",
+            List.of("<color:#9AA5B4>Set the owner name displayed in", "<color:#9AA5B4>menus and titles (or 'reset')."));
 
     @Comment("Return to Claim Settings")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<yellow>Back",
-            List.of("<gray>Return to Claim Settings"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to Claim Settings"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

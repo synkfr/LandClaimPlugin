@@ -41,88 +41,89 @@ public class MemberManagementGUI {
                                 contentItems.add(new GuiItem() {
                                         @Override
                                         public ItemStack render(Player viewer) {
-                                                ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
-                                                SkullMeta meta = (SkullMeta) skull.getItemMeta();
-                                                if (meta != null) {
-                                                        meta.setOwningPlayer(Bukkit.getOfflinePlayer(memberId));
-                                                        meta.displayName(GuiHelper.MM
-                                                                        .deserialize("<yellow>" + displayName));
-
-                                                        List<Component> lore = new ArrayList<>();
-                                                        lore.add(GuiHelper.MM
-                                                                        .deserialize("<gray>Role: <white>" + role));
-                                                        lore.add(Component.empty());
-                                                        lore.add(GuiHelper.MM.deserialize("<yellow>Click to manage"));
-                                                        meta.lore(lore);
-                                                        skull.setItemMeta(meta);
-                                                }
-                                                return skull;
+                                                var cm = plugin.getConfigManager();
+                                                List<Component> lore = List.of(
+                                                                cm.getRawComponent("gui.member-role-line", "<role>", role),
+                                                                Component.empty(),
+                                                                cm.getRawComponent("gui.click-manage"));
+                                                return GuiHelper.buildPlayerHead(
+                                                                memberId,
+                                                                displayName,
+                                                                cm.getRawComponent("gui.skull-item-name", "<name>", displayName),
+                                                                lore);
                                         }
 
                                         @Override
                                         public ClickAction clickAction() {
-                                                return (p, e) -> {
-                                                        p.closeInventory();
-                                                        PlayerControlPanelGUI.open(p, profile, plugin, memberId,
-                                                                        displayName);
-                                                };
+                                                return (p, e) -> PlayerControlPanelGUI.open(p, profile, plugin, memberId, displayName);
                                         }
                                 });
                         }
 
                         String[] structure = {
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "P B B + < B B B N"
+                                        "F F F F F F F F F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "B P B + < B B N B"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name, config.frame.lore));
                         ingredients.put('B', GuiHelper.buildSlot(config.bottomFill.material, config.bottomFill.name,
                                         config.bottomFill.lore));
                         ingredients.put('+', GuiHelper.buildSlot(config.inviteMember.material, config.inviteMember.name,
                                         config.inviteMember.lore, (p, e) -> {
                                                 OnlinePlayerSelectorGUI.open(p, plugin, target -> {
                                                         // Callback: target selected
+                                                        var cm = plugin.getConfigManager();
                                                         if (profile.isOwner(target.getUniqueId())) {
-                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                .getMessage("cannot-invite-self"));
+                                                                p.sendMessage(cm.getMessage("cannot-invite-self"));
                                                                 return;
                                                         }
                                                         if (profile.isMember(target.getUniqueId())) {
-                                                                p.sendMessage(plugin.getConfigManager()
-                                                                                .getMessage("already-member"));
+                                                                p.sendMessage(cm.getMessage("already-member"));
+                                                                return;
+                                                        }
+                                                        if (!plugin.getClaimManager().canCreateProfile(target.getUniqueId())) {
+                                                                p.sendMessage(cm.getMessage("target-already-in-claim", "<player>", target.getName()));
+                                                                return;
+                                                        }
+                                                        int maxMembers = cm.getPluginConfig().limits.maxClaimMembers + profile.getBonusMemberSlots();
+                                                        if (profile.getMemberRoles().size() >= maxMembers && !p.hasPermission("landclaim.admin")) {
+                                                                p.sendMessage(cm.getMessage("members.limit-reached", "<limit>", String.valueOf(maxMembers)));
                                                                 return;
                                                         }
 
-                                                        // Logic from /claim member invite
                                                         plugin.getClaimManager().sendMemberInvite(p, target, profile);
                                                         MemberManagementGUI.open(p, profile, plugin);
                                                 }, () -> MemberManagementGUI.open(p, profile, plugin));
                                         }));
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                MainMenuGUI.open(p, profile, plugin);
-                                                        }));
+                        ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                        (p, e) -> MainMenuGUI.open(p, profile, plugin)));
 
                         Component title = GuiHelper.MM.deserialize(config.title);
-                        PaginatedGui gui = new PaginatedGui(title, 4, structure, ingredients, 'x');
+                        PaginatedGui gui = new PaginatedGui(title, 5, structure, ingredients, 'x');
 
-                        gui.setPrevButton(27,
+                        ItemStack navFiller = GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
+                                        config.bottomFill.lore);
+                        gui.setPrevButton(
                                         GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name,
                                                         config.previousPage.lore),
-                                        GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
-                                                        config.bottomFill.lore));
-                        gui.setNextButton(35,
+                                        navFiller);
+                        gui.setNextButton(
                                         GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name,
                                                         config.nextPage.lore),
-                                        GuiHelper.buildItemStack(config.bottomFill.material, config.bottomFill.name,
-                                                        config.bottomFill.lore));
+                                        navFiller);
 
-                        gui.setContent(contentItems, player);
-                        gui.open(player);
+                        FoliaScheduler.runForPlayer(plugin, player, () -> {
+                                gui.setContent(contentItems, player);
+                                if (contentItems.isEmpty()) {
+                                        gui.setItem(22, GuiHelper.buildItemStack(config.emptyIndicator.material,
+                                                        config.emptyIndicator.name, config.emptyIndicator.lore));
+                                }
+                                gui.open(player);
+                        });
                 });
         }
 }

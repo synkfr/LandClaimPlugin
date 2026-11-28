@@ -10,34 +10,37 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class WarpManagementConfig extends OkaeriConfig {
 
-    public String title = "Warp Management";
+    public String title = "<color:#1E293B>Claim Warps";
 
-    @Comment("Decorative border")
-    public ItemConfig frame = new ItemConfig("WHITE_STAINED_GLASS_PANE", " ", List.of());
+    @Comment("Outer border frame")
+    public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Empty state indicator")
-    public ItemConfig emptyIndicator = new ItemConfig("RED_STAINED_GLASS_PANE", "<red>No Warps Yet", List.of());
+    public ItemConfig emptyIndicator = new ItemConfig(
+            "PAPER",
+            "<color:#9AA5B4>No Warps Yet",
+            List.of("<color:#64748B>Stand inside your claim and run", "<color:#F1F5F9>/claim setwarp <name><color:#64748B>."));
 
     @Comment("Navigation bar background")
     public ItemConfig navFill = new ItemConfig("GRAY_STAINED_GLASS_PANE", " ", List.of());
 
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
-            "SPECTRAL_ARROW",
-            "<yellow>Back",
-            List.of("<gray>Return to Main Menu"));
+            "ARROW",
+            "<color:#38BDF8>← Back",
+            List.of("<color:#9AA5B4>Return to Main Menu"));
 
     @Comment("Previous Page Button")
     public ItemConfig previousPage = new ItemConfig(
-            "CYAN_CANDLE",
-            "<aqua>Previous Page",
-            List.of("<gray>Go to the previous page"));
+            "ARROW",
+            "<color:#38BDF8>← Previous Page",
+            List.of("<color:#9AA5B4>View previous items"));
 
     @Comment("Next Page Button")
     public ItemConfig nextPage = new ItemConfig(
-            "LIME_CANDLE",
-            "<green>Next Page",
-            List.of("<gray>Go to the next page"));
+            "ARROW",
+            "<color:#38BDF8>Next Page →",
+            List.of("<color:#9AA5B4>View next items"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

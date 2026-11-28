@@ -23,9 +23,11 @@ public class PaginatedGui extends CustomGui {
     private int prevSlot = -1;
     private ItemStack prevActiveItem;
     private ItemStack prevInactiveItem;
+    private Boolean prevWasActive;
     private int nextSlot = -1;
     private ItemStack nextActiveItem;
     private ItemStack nextInactiveItem;
+    private Boolean nextWasActive;
 
     /**
      * Creates a paginated GUI.
@@ -33,54 +35,37 @@ public class PaginatedGui extends CustomGui {
      * @param title           window title
      * @param rows            total rows (including navigation row)
      * @param structure       structure strings (use 'x' for content slots)
-     * @param ingredients     ingredient map (excluding 'x' — content marker)
+     * @param ingredients     ingredient map (excluding 'x' and 'P'/'N' navigation markers)
      * @param contentSlotChar character used to mark content slots in structure
-     *                        (typically 'x')
      */
     public PaginatedGui(Component title, int rows, String[] structure,
             Map<Character, SlotDefinition> ingredients, char contentSlotChar) {
         super(title, rows);
 
-        // Parse structure to find content slot positions AND fill static ingredients
         List<Integer> contentSlotList = new ArrayList<>();
-        int slot = 0;
-        for (String row : structure) {
-            String[] chars = row.split(" ");
-            for (String ch : chars) {
-                if (slot >= rows * 9)
-                    break;
-                if (ch.length() == 1) {
-                    char c = ch.charAt(0);
-                    if (c == contentSlotChar) {
-                        contentSlotList.add(slot);
-                    } else if (c != '.') {
-                        SlotDefinition def = ingredients.get(c);
-                        if (def != null) {
-                            setItem(slot, def.item(), def.action());
-                        }
-                    }
-                }
-                slot++;
+        parseStructure(structure, ingredients, (slot, c) -> {
+            if (c == contentSlotChar) {
+                contentSlotList.add(slot);
+            } else if (c == 'P' && this.prevSlot < 0) {
+                this.prevSlot = slot;
+            } else if (c == 'N' && this.nextSlot < 0) {
+                this.nextSlot = slot;
             }
+        });
+        this.contentSlots = new int[contentSlotList.size()];
+        for (int i = 0; i < contentSlotList.size(); i++) {
+            this.contentSlots[i] = contentSlotList.get(i);
         }
-        this.contentSlots = contentSlotList.stream().mapToInt(Integer::intValue).toArray();
     }
 
     /**
      * Sets the content list and renders page 0.
      */
     public void setContent(List<GuiItem> items, Player viewer) {
-        this.content = items != null ? items : Collections.emptyList(); // Assuming 'content' is the field to update
-        // The original code had 'this.currentPage = 0; renderPage(viewer);'
-        // The provided snippet has 'this.totalPages = ... setPage(0, viewer);'
-        // To maintain correctness without introducing new fields, I'll adapt to
-        // existing fields.
-        // Assuming 'content' is the list of items, and 'contentSlots.length' is
-        // 'itemsPerPage'.
-        int totalPages = (int) Math.ceil((double) this.content.size() / contentSlots.length);
-        if (totalPages == 0)
-            totalPages = 1; // Ensure at least one page if content is empty
-        setPage(0, viewer); // This will render the page
+        this.content = items != null ? items : Collections.emptyList();
+        this.prevWasActive = null;
+        this.nextWasActive = null;
+        setPage(0, viewer);
     }
 
     /**
@@ -128,6 +113,15 @@ public class PaginatedGui extends CustomGui {
     // ---- Navigation buttons ----
 
     /**
+     * Configure the previous-page button at the parsed {@code 'P'} slot.
+     */
+    public void setPrevButton(ItemStack activeItem, ItemStack inactiveItem) {
+        if (this.prevSlot >= 0) {
+            setPrevButton(this.prevSlot, activeItem, inactiveItem);
+        }
+    }
+
+    /**
      * Configure the previous-page button.
      *
      * @param slot         inventory slot for the button
@@ -138,13 +132,17 @@ public class PaginatedGui extends CustomGui {
         this.prevSlot = slot;
         this.prevActiveItem = activeItem;
         this.prevInactiveItem = inactiveItem;
+        this.prevWasActive = null;
+        setItem(slot, inactiveItem, null);
+    }
 
-        // Set up click handler for prev button
-        setItem(slot, inactiveItem, (player, event) -> {
-            if (currentPage > 0) {
-                setPage(currentPage - 1, player);
-            }
-        });
+    /**
+     * Configure the next-page button at the parsed {@code 'N'} slot.
+     */
+    public void setNextButton(ItemStack activeItem, ItemStack inactiveItem) {
+        if (this.nextSlot >= 0) {
+            setNextButton(this.nextSlot, activeItem, inactiveItem);
+        }
     }
 
     /**
@@ -158,24 +156,37 @@ public class PaginatedGui extends CustomGui {
         this.nextSlot = slot;
         this.nextActiveItem = activeItem;
         this.nextInactiveItem = inactiveItem;
-
-        // Set up click handler for next button
-        setItem(slot, inactiveItem, (player, event) -> {
-            if (currentPage < getPageCount() - 1) {
-                setPage(currentPage + 1, player);
-            }
-        });
+        this.nextWasActive = null;
+        setItem(slot, inactiveItem, null);
     }
 
     private void updateNavButtons() {
         if (prevSlot >= 0) {
-            ItemStack item = (currentPage > 0) ? prevActiveItem : prevInactiveItem;
-            getInventory().setItem(prevSlot, item);
+            boolean hasPrev = currentPage > 0;
+            if (prevWasActive == null || prevWasActive != hasPrev) {
+                prevWasActive = hasPrev;
+                setItem(prevSlot, hasPrev ? prevActiveItem : prevInactiveItem,
+                        hasPrev ? (player, event) -> setPage(currentPage - 1, player) : null);
+            }
         }
         if (nextSlot >= 0) {
-            ItemStack item = (currentPage < getPageCount() - 1) ? nextActiveItem : nextInactiveItem;
-            getInventory().setItem(nextSlot, item);
+            boolean hasNext = currentPage < getPageCount() - 1;
+            if (nextWasActive == null || nextWasActive != hasNext) {
+                nextWasActive = hasNext;
+                setItem(nextSlot, hasNext ? nextActiveItem : nextInactiveItem,
+                        hasNext ? (player, event) -> setPage(currentPage + 1, player) : null);
+            }
         }
+    }
+
+    @Override
+    public void dispose() {
+        content = Collections.emptyList();
+        prevActiveItem = null;
+        prevInactiveItem = null;
+        nextActiveItem = null;
+        nextInactiveItem = null;
+        super.dispose();
     }
 
     // ---- Query ----

@@ -45,42 +45,35 @@ public class AllyManagementGUI {
                                 contentItems.add(new GuiItem() {
                                         @Override
                                         public ItemStack render(Player viewer) {
-                                                ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
-                                                SkullMeta meta = (SkullMeta) skull.getItemMeta();
-                                                if (meta != null) {
-                                                        meta.setOwningPlayer(Bukkit.getOfflinePlayer(allyOwnerId));
-                                                        meta.displayName(GuiHelper.MM.deserialize("<gold>" + allyName));
-
-                                                        List<Component> lore = new ArrayList<>();
-                                                        lore.add(GuiHelper.MM.deserialize(
-                                                                        "<gray>Owner: <white>" + finalOwnerName));
-                                                        lore.add(Component.empty());
-                                                        lore.add(GuiHelper.MM.deserialize(
-                                                                        "<yellow>Click to manage permissions"));
-                                                        meta.lore(lore);
-                                                        skull.setItemMeta(meta);
-                                                }
-                                                return skull;
+                                                var cm = plugin.getConfigManager();
+                                                List<Component> lore = List.of(
+                                                                cm.getRawComponent("gui.ally-owner-line", "<owner>", finalOwnerName),
+                                                                Component.empty(),
+                                                                cm.getRawComponent("gui.click-manage"));
+                                                return GuiHelper.buildPlayerHead(
+                                                                allyOwnerId,
+                                                                finalOwnerName,
+                                                                cm.getRawComponent("gui.skull-item-name", "<name>", allyName),
+                                                                lore);
                                         }
 
                                         @Override
                                         public ClickAction clickAction() {
-                                                return (p, e) -> {
-                                                        p.closeInventory();
-                                                        AllyControlPanelGUI.open(p, profile, plugin, allyProfile);
-                                                };
+                                                return (p, e) -> AllyControlPanelGUI.open(p, profile, plugin, allyProfile);
                                         }
                                 });
                         }
 
                         String[] structure = {
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "x x x x x x x x x",
-                                        "P B B + < B B B N"
+                                        "F F F F F F F F F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "F x x x x x x x F",
+                                        "B P B + < B B N B"
                         };
 
                         Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name, config.frame.lore));
                         ingredients.put('B', GuiHelper.buildSlot(config.navFill.material, config.navFill.name,
                                         config.navFill.lore));
                         ingredients.put('+', GuiHelper.buildSlot(config.addAlly.material, config.addAlly.name,
@@ -113,29 +106,31 @@ public class AllyManagementGUI {
                                                         AllyManagementGUI.open(p, profile, plugin);
                                                 }, () -> AllyManagementGUI.open(p, profile, plugin));
                                         }));
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                MainMenuGUI.open(p, profile, plugin);
-                                                        }));
+                        ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                        (p, e) -> MainMenuGUI.open(p, profile, plugin)));
 
                         Component title = GuiHelper.MM.deserialize(config.title);
-                        PaginatedGui gui = new PaginatedGui(title, 4, structure, ingredients, 'x');
+                        PaginatedGui gui = new PaginatedGui(title, 5, structure, ingredients, 'x');
 
-                        gui.setPrevButton(27,
+                        ItemStack navFiller = GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
+                                        config.navFill.lore);
+                        gui.setPrevButton(
                                         GuiHelper.buildItemStack(config.previousPage.material, config.previousPage.name,
                                                         config.previousPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
-                        gui.setNextButton(35,
+                                        navFiller);
+                        gui.setNextButton(
                                         GuiHelper.buildItemStack(config.nextPage.material, config.nextPage.name,
                                                         config.nextPage.lore),
-                                        GuiHelper.buildItemStack(config.navFill.material, config.navFill.name,
-                                                        config.navFill.lore));
+                                        navFiller);
 
-                        gui.setContent(contentItems, player);
-                        gui.open(player);
+                        FoliaScheduler.runForPlayer(plugin, player, () -> {
+                                gui.setContent(contentItems, player);
+                                if (contentItems.isEmpty()) {
+                                        gui.setItem(22, GuiHelper.buildItemStack(config.emptyIndicator.material,
+                                                        config.emptyIndicator.name, config.emptyIndicator.lore));
+                                }
+                                gui.open(player);
+                        });
                 });
         }
 }

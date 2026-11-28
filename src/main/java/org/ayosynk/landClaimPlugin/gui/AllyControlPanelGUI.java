@@ -17,40 +17,33 @@ public class AllyControlPanelGUI {
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin,
                         ClaimProfile targetAllyProfile) {
-                FoliaScheduler.runAsync(plugin, () -> {
-                        AllyControlPanelConfig config = plugin.getConfigManager().getAllyControlPanelConfig();
+                AllyControlPanelConfig config = plugin.getConfigManager().getAllyControlPanelConfig();
 
-                        String[] structure = {
-                                        "F F F F F F F F F",
-                                        "F F P F W F R F F",
-                                        "F F F F F F F F F",
-                                        "S S S S < S S S S"
-                        };
+                String[] structure = {
+                                "F F F F F F F F F",
+                                "F F P F W F R F F",
+                                "F F F F F F F F F",
+                                "S S S S < S S S S"
+                };
 
-                        Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name,
-                                        config.frame.lore));
-                        ingredients.put('S', GuiHelper.buildSlot(config.spacer.material, config.spacer.name,
-                                        config.spacer.lore));
-                        ingredients.put('P',
-                                        GuiHelper.buildSlot(config.allyPermissions.material,
-                                                        config.allyPermissions.name.replace("<name>",
-                                                                        targetAllyProfile.getName()),
-                                                        config.allyPermissions.lore, (p, e) -> {
-                                                                p.closeInventory();
-                                                                AllyPremissionsGUI.open(p, profile, plugin,
-                                                                                targetAllyProfile);
-                                                        }));
-                        ingredients.put('W', GuiHelper.buildSlot(config.allyWarps.material, config.allyWarps.name,
-                                        config.allyWarps.lore, (p, e) -> {
-                                                // No action (coming later)
-                                        }));
-                        ingredients.put('R', GuiHelper.buildSlot(config.removeAlly.material,
-                                        config.removeAlly.name.replace("<name>", targetAllyProfile.getName()),
-                                        config.removeAlly.lore, (p, e) -> {
-                                                p.closeInventory();
-                                                ConfirmationGUI.open(p, "<red>Remove Alliance?", () -> {
-                                                        // Confirm
+                Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                ingredients.put('F', GuiHelper.buildSlot(config.frame.material, config.frame.name,
+                                config.frame.lore));
+                ingredients.put('S', GuiHelper.buildSlot(config.spacer.material, config.spacer.name,
+                                config.spacer.lore));
+                ingredients.put('P',
+                                GuiHelper.buildSlot(config.allyPermissions.material,
+                                                config.allyPermissions.name.replace("<name>",
+                                                                targetAllyProfile.getName()),
+                                                config.allyPermissions.lore,
+                                                (p, e) -> AllyPremissionsGUI.open(p, profile, plugin, targetAllyProfile)));
+                ingredients.put('W', GuiHelper.buildSlot(config.allyWarps.material, config.allyWarps.name,
+                                config.allyWarps.lore, (p, e) -> {}));
+                ingredients.put('R', GuiHelper.buildSlot(config.removeAlly.material,
+                                config.removeAlly.name.replace("<name>", targetAllyProfile.getName()),
+                                config.removeAlly.lore, (p, e) -> ConfirmationGUI.open(p,
+                                                plugin.getConfigManager().getRawTemplate("gui.confirm-remove-ally"),
+                                                () -> {
                                                         profile.removeAlly(targetAllyProfile.getProfileId());
                                                         targetAllyProfile.removeAlly(profile.getProfileId());
                                                         plugin.getClaimManager().saveAndSync(profile);
@@ -59,23 +52,15 @@ public class AllyControlPanelGUI {
                                                                         "ally-removed", "<name>",
                                                                         targetAllyProfile.getName()));
                                                         AllyManagementGUI.open(p, profile, plugin);
-                                                }, () -> {
-                                                        // Cancel
-                                                        AllyControlPanelGUI.open(p, profile, plugin, targetAllyProfile);
-                                                });
-                                        }));
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                AllyManagementGUI.open(p, profile, plugin);
-                                                        }));
+                                                },
+                                                () -> AllyControlPanelGUI.open(p, profile, plugin, targetAllyProfile))));
+                ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                (p, e) -> AllyManagementGUI.open(p, profile, plugin)));
 
-                        Component title = GuiHelper.MM
-                                        .deserialize(config.title.replace("<name>", targetAllyProfile.getName()));
-                        CustomGui gui = new CustomGui(title, 4);
-                        gui.fillFromStructure(structure, ingredients);
-                        gui.open(player);
-                });
+                Component title = GuiHelper.MM
+                                .deserialize(config.title.replace("<name>", targetAllyProfile.getName()));
+                CustomGui gui = new CustomGui(title, 4);
+                gui.fillFromStructure(structure, ingredients);
+                gui.open(player);
         }
 }

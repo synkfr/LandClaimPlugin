@@ -19,147 +19,114 @@ public class RenameClaimGUI {
         private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9 ]{3,32}$");
 
         public static void open(Player player, ClaimProfile profile, LandClaimPlugin plugin) {
-                FoliaScheduler.runAsync(plugin, () -> {
-                        RenameClaimConfig config = plugin.getConfigManager().getRenameClaimConfig();
+                RenameClaimConfig config = plugin.getConfigManager().getRenameClaimConfig();
 
-                        String[] structure = {
-                                        "O O B B B B B O O",
-                                        "O B C B R B A B O",
-                                        "B B B B B B B B B",
-                                        "O B B S < S B B B"
-                        };
+                String[] structure = {
+                                "O O B B B B B O O",
+                                "O B C B R B A B O",
+                                "B B B B B B B B B",
+                                "S S S S < S S S S"
+                };
 
-                        Map<Character, SlotDefinition> ingredients = new HashMap<>();
-                        ingredients.put('O', GuiHelper.buildSlot(config.outerFrame.material, config.outerFrame.name,
-                                        config.outerFrame.lore));
-                        ingredients.put('B', GuiHelper.buildSlot(config.background.material, config.background.name,
-                                        config.background.lore));
-                        ingredients.put('S', GuiHelper.buildSlot(config.navSpacer.material, config.navSpacer.name,
-                                        config.navSpacer.lore));
+                Map<Character, SlotDefinition> ingredients = new HashMap<>();
+                ingredients.put('O', GuiHelper.buildSlot(config.outerFrame.material, config.outerFrame.name,
+                                config.outerFrame.lore));
+                ingredients.put('B', GuiHelper.buildSlot(config.background.material, config.background.name,
+                                config.background.lore));
+                ingredients.put('S', GuiHelper.buildSlot(config.navSpacer.material, config.navSpacer.name,
+                                config.navSpacer.lore));
 
-                        // Change Name: close GUI → chat prompt
-                        ingredients.put('C', GuiHelper.buildSlot(config.changeName.material, config.changeName.name,
-                                        config.changeName.lore, (p, e) -> {
-                                                p.closeInventory();
-                                                AnvilInputGUI.open(plugin, p, "Rename Claim", profile.getName(), input -> {
-                                                        FoliaScheduler.runTask(plugin, () -> {
-                                                                if (input == null) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("rename-cancelled"));
-                                                                        RenameClaimGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
-
-                                                                if (!NAME_PATTERN.matcher(input).matches()) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("claim-name-invalid"));
-                                                                        RenameClaimGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
-                                                                 if (plugin.getConfigManager().isBannedClaimName(input)) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("banned-claim-name"));
-                                                                        RenameClaimGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                 }
-                                                                // Check uniqueness
-                                                                boolean unique = plugin.getClaimManager()
-                                                                                .getAllProfiles().stream()
-                                                                                .noneMatch(cp -> cp.getName()
-                                                                                                .equalsIgnoreCase(input)
-                                                                                                && !cp.getProfileId()
-                                                                                                                .equals(profile.getProfileId()));
-
-                                                                if (!unique) {
-                                                                        p.sendMessage(plugin.getConfigManager()
-                                                                                        .getMessage("name-already-in-use"));
-                                                                        RenameClaimGUI.open(p, profile, plugin);
-                                                                        return;
-                                                                }
-
-                                                                profile.setName(input);
-                                                                plugin.getDatabaseManager().getProfileDao()
-                                                                                .saveProfile(profile);
-                                                                p.sendMessage(plugin.getConfigManager().getMessage(
-                                                                                "claim-renamed", "<name>", input));
+                ingredients.put('C', GuiHelper.buildSlot(config.changeName.material, config.changeName.name,
+                                config.changeName.lore, (p, e) -> {
+                                        p.closeInventory();
+                                        AnvilInputGUI.open(plugin, p, plugin.getConfigManager().getRawTemplate("gui.prompt-rename-claim"), profile.getName(), input -> {
+                                                FoliaScheduler.runForPlayer(plugin, p, () -> {
+                                                        if (input == null) {
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("rename-cancelled"));
                                                                 RenameClaimGUI.open(p, profile, plugin);
-                                                        });
+                                                                return;
+                                                        }
+
+                                                        if (!NAME_PATTERN.matcher(input).matches()) {
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("claim-name-invalid"));
+                                                                RenameClaimGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
+                                                        if (plugin.getConfigManager().isBannedClaimName(input)) {
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("banned-claim-name"));
+                                                                RenameClaimGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
+                                                        boolean unique = plugin.getClaimManager()
+                                                                        .getAllProfiles().stream()
+                                                                        .noneMatch(cp -> cp.getName().equalsIgnoreCase(input)
+                                                                                        && !cp.getProfileId().equals(profile.getProfileId()));
+
+                                                        if (!unique) {
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("name-already-in-use"));
+                                                                RenameClaimGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
+
+                                                        profile.setName(input);
+                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                                                        p.sendMessage(plugin.getConfigManager().getMessage("claim-renamed", "<name>", input));
+                                                        RenameClaimGUI.open(p, profile, plugin);
                                                 });
-                                        }));
+                                        });
+                                }));
 
-                        // Reset to Default
-                        ingredients.put('R',
-                                        GuiHelper.buildSlot(config.resetToDefault.material, config.resetToDefault.name,
-                                                        config.resetToDefault.lore, (p, e) -> {
-                                                                p.closeInventory();
-                                                                String defaultName = Bukkit.getOfflinePlayer(
-                                                                                profile.getProfileId()).getName();
-                                                                if (defaultName == null)
-                                                                        defaultName = "Unnamed Claim";
-                                                                else
-                                                                        defaultName = defaultName + "'s Claim";
-                                                                String finalName = defaultName;
-                                                                ConfirmationGUI.open(p,
-                                                                                "<red>Reset claim name?",
-                                                                                () -> {
-                                                                                        profile.setName(finalName);
-                                                                                        plugin.getDatabaseManager()
-                                                                                                        .getProfileDao()
-                                                                                                        .saveProfile(profile);
-                                                                                        p.sendMessage(plugin
-                                                                                                        .getConfigManager()
-                                                                                                        .getMessage("claim-renamed",
-                                                                                                                        "<name>",
-                                                                                                                        finalName));
-                                                                                        RenameClaimGUI.open(p, profile,
-                                                                                                        plugin);
-                                                                                },
-                                                                                () -> RenameClaimGUI.open(p, profile,
-                                                                                                plugin));
-                                                        }));
+                ingredients.put('R', GuiHelper.buildSlot(config.resetToDefault.material, config.resetToDefault.name,
+                                config.resetToDefault.lore, (p, e) -> {
+                                        String defaultName = Bukkit.getOfflinePlayer(profile.getOwnerId()).getName();
+                                        if (defaultName == null)
+                                                defaultName = plugin.getConfigManager().getRawTemplate("gui.default-unnamed-claim");
+                                        else
+                                                defaultName = defaultName + "'s Claim";
+                                        String finalName = defaultName;
+                                        ConfirmationGUI.open(p,
+                                                        plugin.getConfigManager().getRawTemplate("gui.confirm-reset-claim-name"),
+                                                        () -> {
+                                                                profile.setName(finalName);
+                                                                plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("claim-renamed", "<name>", finalName));
+                                                                RenameClaimGUI.open(p, profile, plugin);
+                                                        },
+                                                        () -> RenameClaimGUI.open(p, profile, plugin));
+                                }));
 
-                        // Set Owner Alias
-                        ingredients.put('A',
-                                        GuiHelper.buildSlot(config.ownerAlias.material, config.ownerAlias.name,
-                                                        config.ownerAlias.lore, (p, e) -> {
-                                                                p.closeInventory();
-                                                                String currentAlias = profile.getOwnerAlias() != null ? profile.getOwnerAlias() : "reset";
-                                                                AnvilInputGUI.open(plugin, p, "Set Owner Alias", currentAlias, input -> {
-                                                                        FoliaScheduler.runTask(plugin, () -> {
-                                                                                if (input == null || input.isEmpty() || input.equals(currentAlias)) {
-                                                                                        p.sendMessage(plugin.getConfigManager().getMessage("rename-cancelled"));
-                                                                                        RenameClaimGUI.open(p, profile, plugin);
-                                                                                        return;
-                                                                                }
+                ingredients.put('A', GuiHelper.buildSlot(config.ownerAlias.material, config.ownerAlias.name,
+                                config.ownerAlias.lore, (p, e) -> {
+                                        p.closeInventory();
+                                        String currentAlias = profile.getOwnerAlias() != null ? profile.getOwnerAlias() : "reset";
+                                        AnvilInputGUI.open(plugin, p, plugin.getConfigManager().getRawTemplate("gui.prompt-owner-alias"), currentAlias, input -> {
+                                                FoliaScheduler.runForPlayer(plugin, p, () -> {
+                                                        if (input == null || input.isEmpty() || input.equals(currentAlias)) {
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("rename-cancelled"));
+                                                                RenameClaimGUI.open(p, profile, plugin);
+                                                                return;
+                                                        }
 
-                                                                                if (input.equalsIgnoreCase("reset") || input.equalsIgnoreCase("none")) {
-                                                                                        profile.setOwnerAlias(null);
-                                                                                        p.sendMessage(GuiHelper.MM.deserialize("<green>Owner alias has been reset."));
-                                                                                } else {
-                                                                                        profile.setOwnerAlias(input);
-                                                                                        p.sendMessage(GuiHelper.MM.deserialize("<green>Owner alias set to: <white>" + input));
-                                                                                }
+                                                        if (input.equalsIgnoreCase("reset") || input.equalsIgnoreCase("none")) {
+                                                                profile.setOwnerAlias(null);
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("profile.owner-alias-reset"));
+                                                        } else {
+                                                                profile.setOwnerAlias(input);
+                                                                p.sendMessage(plugin.getConfigManager().getMessage("profile.owner-alias-set", "<alias>", input));
+                                                        }
 
-                                                                                plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
-                                                                                RenameClaimGUI.open(p, profile, plugin);
-                                                                        });
-                                                                });
-                                                        }));
+                                                        plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
+                                                        RenameClaimGUI.open(p, profile, plugin);
+                                                });
+                                        });
+                                }));
 
-                        // Back
-                        ingredients.put('<',
-                                        GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
-                                                        (p, e) -> {
-                                                                p.closeInventory();
-                                                                ClaimSettingsGUI.open(p, profile, plugin);
-                                                        }));
+                ingredients.put('<', GuiHelper.buildSlot(config.back.material, config.back.name, config.back.lore,
+                                (p, e) -> ClaimSettingsGUI.open(p, profile, plugin)));
 
-                        Component title = GuiHelper.MM.deserialize(config.title);
-                        FoliaScheduler.runTask(plugin, () -> {
-                                CustomGui gui = new CustomGui(title, 4);
-                                gui.fillFromStructure(structure, ingredients);
-                                gui.open(player);
-                        });
-                });
+                Component title = GuiHelper.MM.deserialize(config.title);
+                CustomGui gui = new CustomGui(title, 4);
+                gui.fillFromStructure(structure, ingredients);
+                gui.open(player);
         }
 }
