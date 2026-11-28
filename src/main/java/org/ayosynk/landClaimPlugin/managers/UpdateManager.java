@@ -42,32 +42,32 @@ public class UpdateManager {
                 String currentVersion = plugin.getPluginMeta().getVersion();
                 String apiUrl = "https://api.modrinth.com/v2/project/" + projectId + "/version";
 
-                HttpClient client = HttpClient.newBuilder()
+                try (HttpClient client = HttpClient.newBuilder()
                         .connectTimeout(Duration.ofSeconds(10))
-                        .build();
+                        .build()) {
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(apiUrl))
+                            .header("User-Agent", "synkfr/LandClaimPlugin/" + currentVersion)
+                            .timeout(Duration.ofSeconds(10))
+                            .GET()
+                            .build();
 
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(apiUrl))
-                        .header("User-Agent", "synkfr/LandClaimPlugin/" + currentVersion)
-                        .timeout(Duration.ofSeconds(10))
-                        .GET()
-                        .build();
+                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                    if (response.statusCode() == 200) {
+                        JsonElement jsonElement = JsonParser.parseString(response.body());
+                        if (jsonElement.isJsonArray()) {
+                            JsonArray versionsArray = jsonElement.getAsJsonArray();
+                            if (!versionsArray.isEmpty()) {
+                                JsonObject latestObject = versionsArray.get(0).getAsJsonObject();
+                                String remoteVersion = latestObject.get("version_number").getAsString();
+                                String versionId = latestObject.has("id") ? latestObject.get("id").getAsString() : "";
 
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == 200) {
-                    JsonElement jsonElement = JsonParser.parseString(response.body());
-                    if (jsonElement.isJsonArray()) {
-                        JsonArray versionsArray = jsonElement.getAsJsonArray();
-                        if (!versionsArray.isEmpty()) {
-                            JsonObject latestObject = versionsArray.get(0).getAsJsonObject();
-                            String remoteVersion = latestObject.get("version_number").getAsString();
-                            String versionId = latestObject.has("id") ? latestObject.get("id").getAsString() : "";
-
-                            if (isNewerVersion(currentVersion, remoteVersion)) {
-                                this.updateAvailable = true;
-                                this.latestVersion = remoteVersion;
-                                this.updateUrl = "https://modrinth.com/plugin/landclaimplugin/version/" + (versionId.isEmpty() ? remoteVersion : versionId);
-                                plugin.getLogger().info("A new version of LandClaimPlugin is available on Modrinth: " + remoteVersion + " (Current: " + currentVersion + ")");
+                                if (isNewerVersion(currentVersion, remoteVersion)) {
+                                    this.updateAvailable = true;
+                                    this.latestVersion = remoteVersion;
+                                    this.updateUrl = "https://modrinth.com/plugin/landclaimplugin/version/" + (versionId.isEmpty() ? remoteVersion : versionId);
+                                    plugin.getLogger().info("A new version of LandClaimPlugin is available on Modrinth: " + remoteVersion + " (Current: " + currentVersion + ")");
+                                }
                             }
                         }
                     }
@@ -88,11 +88,10 @@ public class UpdateManager {
             String currentVersion = plugin.getPluginMeta().getVersion();
             String targetUrl = updateUrl != null ? updateUrl : "https://modrinth.com/plugin/landclaimplugin";
 
-            Component notification = MiniMessage.miniMessage().deserialize(
-                    "<gold><bold>[LandClaim]</bold></gold> <yellow>A new version is available on Modrinth!</yellow>\n" +
-                    "<gray>Current: <red>" + currentVersion + "</red> ➔ Latest: <green>" + latestVersion + "</green></gray>\n" +
-                    "<click:open_url:'" + targetUrl + "'><hover:show_text:'<gray>Click to view release on Modrinth</gray>'><aqua><u>[Click here to download update]</u></aqua></hover></click>"
-            );
+            Component notification = plugin.getConfigManager().getRawComponent("updates.available",
+                    "<latest>", latestVersion != null ? latestVersion : "",
+                    "<current>", currentVersion,
+                    "<url>", targetUrl);
             player.sendMessage(notification);
         }
     }

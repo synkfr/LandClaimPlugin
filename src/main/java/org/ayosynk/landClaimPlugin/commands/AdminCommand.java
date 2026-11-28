@@ -878,23 +878,6 @@ public class AdminCommand implements LandClaimCommand {
         player.sendMessage(configManager.getMessage("admin-editing-profile", "<player>", target.getName()));
     }
 
-    private void adminEditProfile(Player sender, String ownerName) {
-        OfflinePlayer target = resolveSinglePlayer(sender, ownerName);
-        if (target == null || target.getUniqueId() == null) {
-            sender.sendMessage(configManager.getMessage("player-not-found"));
-            return;
-        }
-
-        ClaimProfile profile = claimManager.getProfile(target.getUniqueId());
-        if (profile == null) {
-            sender.sendMessage(configManager.getMessage("no-profile-found"));
-            return;
-        }
-
-        MainMenuGUI.open(sender, profile, plugin);
-        sender.sendMessage(configManager.getMessage("admin-editing-profile", "<player>", target.getName()));
-    }
-
     private void adminTrustList(Source source, String ownerName) {
         CommandSender sender = source.source();
         OfflinePlayer owner = resolveSinglePlayer(source, ownerName);
@@ -917,47 +900,11 @@ public class AdminCommand implements LandClaimCommand {
             }
 
             String safeOwnerName = escapeMiniMessage(owner.getName() != null ? owner.getName() : ownerName);
-            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gold>Trusted players for " + safeOwnerName + ":"));
+            sender.sendMessage(configManager.getMessage("admin.trust-list-header", "<player>", safeOwnerName));
             for (UUID trustedId : trusted.keySet()) {
                 String name = Bukkit.getOfflinePlayer(trustedId).getName();
                 if (name == null) name = trustedId.toString();
-                String safeName = escapeMiniMessage(name);
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gray>- <gold>" + safeName));
-            }
-        });
-    }
-
-    private void adminTrustList(CommandSender sender, String ownerName) {
-        OfflinePlayer owner = resolveSinglePlayer(sender, ownerName);
-        if (owner == null || owner.getUniqueId() == null) {
-            sender.sendMessage(configManager.getMessage("player-not-found"));
-            return;
-        }
-
-        FoliaScheduler.runAsync(plugin, () -> {
-            ClaimProfile profile = claimManager.getProfile(owner.getUniqueId());
-            if (profile == null) {
-                sender.sendMessage(configManager.getMessage("no-profile-found"));
-                return;
-            }
-
-            var trusted = profile.getTrustedPlayerFlags();
-            if (trusted.isEmpty()) {
-                sender.sendMessage(configManager.getMessage("trust-list-empty"));
-                return;
-            }
-
-            String safeOwnerName = escapeMiniMessage(owner.getName() != null ? owner.getName() : ownerName);
-            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gold>Trusted players for " + safeOwnerName + ":"));
-            for (UUID trustedId : trusted.keySet()) {
-                String name = Bukkit.getOfflinePlayer(trustedId).getName();
-                if (name == null) name = trustedId.toString();
-                String safeName = escapeMiniMessage(name);
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gray>- <gold>" + safeName));
+                sender.sendMessage(configManager.getMessage("admin.trust-list-entry", "<player>", escapeMiniMessage(name)));
             }
         });
     }
@@ -974,53 +921,18 @@ public class AdminCommand implements LandClaimCommand {
         FoliaScheduler.runAsync(plugin, () -> {
             boolean foundAny = false;
             String safeTargetName = escapeMiniMessage(target.getName() != null ? target.getName() : playerName);
-            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gold>Claims where " + safeTargetName + " is trusted:"));
+            sender.sendMessage(configManager.getMessage("admin.trust-who-header", "<player>", safeTargetName));
 
             for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
                 if (profile.isTrusted(targetId)) {
                     foundAny = true;
-                    String ownerName = profile.getDisplayOwnerName();
-                    String safeOwnerName = escapeMiniMessage(ownerName);
-                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<gray>- <gold>" + safeOwnerName));
+                    sender.sendMessage(configManager.getMessage("admin.trust-who-entry",
+                            "<claim>", escapeMiniMessage(profile.getDisplayOwnerName())));
                 }
             }
 
             if (!foundAny) {
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>This player is not trusted in any claims."));
-            }
-        });
-    }
-
-    private void adminTrustWho(CommandSender sender, String playerName) {
-        OfflinePlayer target = resolveSinglePlayer(sender, playerName);
-        if (target == null || target.getUniqueId() == null) {
-            sender.sendMessage(configManager.getMessage("player-not-found"));
-            return;
-        }
-
-        UUID targetId = target.getUniqueId();
-        FoliaScheduler.runAsync(plugin, () -> {
-            boolean foundAny = false;
-            String safeTargetName = escapeMiniMessage(target.getName() != null ? target.getName() : playerName);
-            sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<gold>Claims where " + safeTargetName + " is trusted:"));
-
-            for (ClaimProfile profile : plugin.getCacheManager().getProfileCache().asMap().values()) {
-                if (profile.isTrusted(targetId)) {
-                    foundAny = true;
-                    String ownerName = profile.getDisplayOwnerName();
-                    String safeOwnerName = escapeMiniMessage(ownerName);
-                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<gray>- <gold>" + safeOwnerName));
-                }
-            }
-
-            if (!foundAny) {
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>This player is not trusted in any claims."));
+                sender.sendMessage(configManager.getMessage("admin.trust-who-empty"));
             }
         });
     }
@@ -1042,7 +954,8 @@ public class AdminCommand implements LandClaimCommand {
                 plugin.getClaimDecayManager().setExempt(targetId, newState);
 
                 String targetDisplayName = target.getName() != null ? target.getName() : targetId.toString();
-                String statusStr = newState ? "EXEMPT" : "NOT EXEMPT";
+                String statusStr = configManager.getRawTemplate(
+                        newState ? "admin.decay-status-exempt" : "admin.decay-status-not-exempt");
                 sender.sendMessage(configManager.getMessage("admin-decay-exempt-set",
                         "<player>", targetDisplayName,
                         "<status>", statusStr));
@@ -1055,24 +968,22 @@ public class AdminCommand implements LandClaimCommand {
             try {
                 List<UUID> exemptIds = plugin.getDatabaseManager().getPlayerDao().getExemptPlayerIds().join();
                 if (exemptIds.isEmpty()) {
-                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<yellow>No players are currently manually exempt from claim decay."));
+                    sender.sendMessage(configManager.getMessage("admin.decay-list-empty"));
                     return;
                 }
 
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<gold>Decay-Exempt Players (" + exemptIds.size() + "):"));
+                sender.sendMessage(configManager.getMessage("admin.decay-list-header",
+                        "<count>", String.valueOf(exemptIds.size())));
                 for (UUID id : exemptIds) {
                     OfflinePlayer op = Bukkit.getOfflinePlayer(id);
                     String name = op.getName() != null ? op.getName() : id.toString();
-                    String safeName = escapeMiniMessage(name);
-                    sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<gray>- <gold>" + safeName + " <dark_gray>(" + id + ")"));
+                    sender.sendMessage(configManager.getMessage("admin.decay-list-entry",
+                            "<player>", escapeMiniMessage(name),
+                            "<uuid>", id.toString()));
                 }
             } catch (Exception e) {
                 plugin.getLogger().severe("Failed to retrieve exempt players list: " + e.getMessage());
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>Failed to retrieve exempt players list."));
+                sender.sendMessage(configManager.getMessage("admin.decay-list-error"));
             }
         });
     }
@@ -1088,13 +999,13 @@ public class AdminCommand implements LandClaimCommand {
             String safeClaimName = escapeMiniMessage(profile.getName());
             if (alias.equalsIgnoreCase("reset") || alias.equalsIgnoreCase("none")) {
                 profile.setOwnerAlias(null);
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<green>Owner alias for claim '<white>" + safeClaimName + "<green>' has been reset."));
+                sender.sendMessage(configManager.getMessage("admin.alias-reset", "<claim>", safeClaimName));
             } else {
                 profile.setOwnerAlias(alias);
                 String safeAlias = escapeMiniMessage(alias);
-                sender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<green>Owner alias for claim '<white>" + safeClaimName + "<green>' set to: <white>" + safeAlias));
+                sender.sendMessage(configManager.getMessage("admin.alias-set",
+                        "<claim>", safeClaimName,
+                        "<alias>", safeAlias));
             }
 
             plugin.getDatabaseManager().getProfileDao().saveProfile(profile);

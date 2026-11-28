@@ -43,22 +43,22 @@ public class HookManager {
                 new org.ayosynk.landClaimPlugin.hooks.papi.ClaimPluginExpansion(plugin).register();
                 plugin.getLogger().info("PlaceholderAPI detected. Expansions registered.");
             }
-            if (configManager.getPluginConfig().bluemap.enabled
+            if (configManager.getPluginConfig().maps.bluemap.enabled
                     && Bukkit.getPluginManager().getPlugin("BlueMap") != null) {
                 blueMapHook = new BlueMapHook(plugin, claimManager);
                 plugin.getLogger().info("BlueMap detected. Enabling map integration.");
             }
-            if (configManager.getPluginConfig().dynmap.enabled
+            if (configManager.getPluginConfig().maps.dynmap.enabled
                     && Bukkit.getPluginManager().getPlugin("dynmap") != null) {
                 dynmapHook = new DynmapHook(plugin, claimManager);
                 plugin.getLogger().info("Dynmap detected. Enabling map integration.");
             }
-            if (configManager.getPluginConfig().squaremap.enabled
+            if (configManager.getPluginConfig().maps.squaremap.enabled
                     && Bukkit.getPluginManager().getPlugin("squaremap") != null) {
                 squaremapHook = new SquaremapHook(plugin, claimManager);
                 plugin.getLogger().info("Squaremap detected. Enabling map integration.");
             }
-            if (configManager.getPluginConfig().pl3xmap.enabled
+            if (configManager.getPluginConfig().maps.pl3xmap.enabled
                     && Bukkit.getPluginManager().getPlugin("Pl3xMap") != null) {
                 pl3xmapHook = new Pl3xMapHook(plugin, claimManager);
                 plugin.getLogger().info("Pl3xMap detected. Enabling map integration.");

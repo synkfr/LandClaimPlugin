@@ -108,14 +108,28 @@ public class ClaimProfile {
         coOwnerRole.addFlag("BLOCK_BREAK");
         coOwnerRole.addFlag("BLOCK_PLACE");
         coOwnerRole.addFlag("BLOCK_IGNITE");
-        coOwnerRole.addFlag("INTERACT_ENTITIES");
-        coOwnerRole.addFlag("HARM_ENTITIES");
-        coOwnerRole.addFlag("MANAGE_VEHICLES");
-        coOwnerRole.addFlag("WARP_MANAGE");
+        coOwnerRole.addFlag("DAMAGE_ANIMALS");
+        coOwnerRole.addFlag("DAMAGE_MONSTERS");
+        coOwnerRole.addFlag("BREED_ANIMALS");
+        coOwnerRole.addFlag("SHEAR_ENTITIES");
+        coOwnerRole.addFlag("TRADE_VILLAGERS");
+        coOwnerRole.addFlag("FEED_ANIMALS");
+        coOwnerRole.addFlag("LEASH_ENTITIES");
+        coOwnerRole.addFlag("MODIFY_ARMOR_STANDS");
+        coOwnerRole.addFlag("MODIFY_ITEM_FRAMES");
+        coOwnerRole.addFlag("RIDE_VEHICLES");
+        coOwnerRole.addFlag("MOUNT_ANIMALS");
+        coOwnerRole.addFlag("PLACE_VEHICLES");
+        coOwnerRole.addFlag("DESTROY_VEHICLES");
+        coOwnerRole.addFlag("USE_ENDER_PEARLS");
+        coOwnerRole.addFlag("USE_CHORUS_FRUIT");
+        coOwnerRole.addFlag("PICKUP_ITEMS");
+        coOwnerRole.addFlag("DROP_ITEMS");
         coOwnerRole.addFlag("MODIFY_SIGNS");
         coOwnerRole.addFlag("USE_FERTILIZER");
-        coOwnerRole.addFlag("USE_LEASHES");
-        coOwnerRole.addFlag("INTERACT_VILLAGERS");
+        coOwnerRole.addFlag("USE_LECTERNS");
+        coOwnerRole.addFlag("USE_BELLS");
+        coOwnerRole.addFlag("CLAIM_LAND");
         this.roles.put(coOwnerRole.getName().toLowerCase(), coOwnerRole);
     }
 

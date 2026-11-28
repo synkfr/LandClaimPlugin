@@ -40,7 +40,7 @@ public class TrustCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
@@ -71,7 +71,7 @@ public class TrustCommand implements LandClaimCommand {
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
                     String targetName = context.get("player");
 
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
@@ -161,7 +161,7 @@ public class TrustCommand implements LandClaimCommand {
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.trust", plugin)) return;
                     String targetName = context.get("player");
 
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("no-profile"));
                         return;
@@ -189,7 +189,7 @@ public class TrustCommand implements LandClaimCommand {
 
                     profile.removeTrustedPlayer(targetId);
 
-                    plugin.getCacheManager().getProfileCache().put(player.getUniqueId(), profile);
+                    plugin.getCacheManager().getProfileCache().put(profile.getProfileId(), profile);
                     claimManager.saveAndSync(profile);
 
                     player.sendMessage(configManager.getMessage("trust-removed", "<player>", targetName));

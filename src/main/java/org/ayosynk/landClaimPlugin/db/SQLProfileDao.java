@@ -365,91 +365,15 @@ public class SQLProfileDao implements ProfileDao {
     public CompletableFuture<ClaimProfile> getProfile(UUID ownerId) {
         return CompletableFuture.supplyAsync(() -> {
             String p = prefix();
-            try (Connection conn = dbManager.getDatabase().getConnection()) {
-                String name;
-                String claimColor;
-                String visMode;
-                boolean titleEnabled;
-                String enterTitle;
-                String leaveTitle;
-                String enterTitleMode;
-                String leaveTitleMode;
-                String ownerAlias;
-                boolean pvpEnabled;
-                long pvpTimerEnd;
-                String realOwnerIdStr;
-                int bonusRoleSlots;
-                int bonusMemberSlots;
-                int bonusWarpSlots;
-                boolean tntEnabled;
-                boolean mobSpawningEnabled;
-                try (PreparedStatement stmt = conn
-                        .prepareStatement(
-                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id, bonus_role_slots, bonus_member_slots, bonus_warp_slots, tnt_enabled, mob_spawning_enabled FROM " + p
-                                        + "claim_profiles WHERE owner_id = ?")) {
-                    stmt.setString(1, ownerId.toString());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        if (!rs.next())
-                            return null;
-                        name = rs.getString("name");
-                        claimColor = rs.getString("claim_color");
-                        visMode = rs.getString("vis_mode");
-                        titleEnabled = rs.getBoolean("title_enabled");
-                        enterTitle = rs.getString("enter_title");
-                        leaveTitle = rs.getString("leave_title");
-                        enterTitleMode = rs.getString("enter_title_mode");
-                        leaveTitleMode = rs.getString("leave_title_mode");
-                        ownerAlias = rs.getString("owner_alias");
-                        pvpEnabled = rs.getBoolean("pvp_enabled");
-                        pvpTimerEnd = rs.getLong("pvp_timer_end");
-                        realOwnerIdStr = rs.getString("real_owner_id");
-                        bonusRoleSlots = rs.getInt("bonus_role_slots");
-                        bonusMemberSlots = rs.getInt("bonus_member_slots");
-                        bonusWarpSlots = rs.getInt("bonus_warp_slots");
-                        tntEnabled = rs.getBoolean("tnt_enabled");
-                        mobSpawningEnabled = rs.getObject("mob_spawning_enabled") == null || rs.getBoolean("mob_spawning_enabled");
+            try (Connection conn = dbManager.getDatabase().getConnection();
+                    PreparedStatement stmt = conn.prepareStatement("SELECT * FROM " + p + "claim_profiles WHERE owner_id = ?")) {
+                stmt.setString(1, ownerId.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        return null;
                     }
+                    return hydrateProfile(conn, p, rs);
                 }
-
-                UUID realOwnerId = (realOwnerIdStr != null && !realOwnerIdStr.isEmpty()) ? UUID.fromString(realOwnerIdStr) : ownerId;
-                ClaimProfile profile = new ClaimProfile(ownerId, realOwnerId, name);
-                profile.setClaimColor(claimColor);
-                profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
-                profile.setEnterTitleEnabled(titleEnabled);
-                if (enterTitle != null)
-                    profile.setEnterTitle(enterTitle);
-                if (leaveTitle != null)
-                    profile.setLeaveTitle(leaveTitle);
-                if (enterTitleMode != null)
-                    profile.setEnterTitleMode(enterTitleMode);
-                if (leaveTitleMode != null)
-                    profile.setLeaveTitleMode(leaveTitleMode);
-                if (ownerAlias != null)
-                    profile.setOwnerAlias(ownerAlias);
-                profile.setPvpEnabled(pvpEnabled);
-                profile.setPvpTimerEnd(pvpTimerEnd);
-                profile.setBonusRoleSlots(bonusRoleSlots);
-                profile.setBonusMemberSlots(bonusMemberSlots);
-                profile.setBonusWarpSlots(bonusWarpSlots);
-                profile.setTntEnabled(tntEnabled);
-                profile.setMobSpawningEnabled(mobSpawningEnabled);
-                loadChunks(conn, p, profile);
-                loadVisitorFlags(conn, p, profile);
-                loadTrustedPlayers(conn, p, profile);
-                loadRoles(conn, p, profile);
-                loadMemberRoles(conn, p, profile);
-                loadAllyFlags(conn, p, profile);
-                loadBannedPlayers(conn, p, profile);
-
-                // Load warps from WarpManager to keep ClaimProfile in sync
-                Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager().getWarps(ownerId);
-                if (!warps.isEmpty()) {
-                    for (org.ayosynk.landClaimPlugin.models.Warp warp : warps.values()) {
-                        profile.addWarp(warp);
-                    }
-                }
-
-                return profile;
             } catch (SQLException e) {
                 plugin.getLogger().severe("Failed to load profile for " + ownerId);
                 e.printStackTrace();
@@ -466,57 +390,8 @@ public class SQLProfileDao implements ProfileDao {
             try (Connection conn = dbManager.getDatabase().getConnection();
                     PreparedStatement stmt = conn.prepareStatement("SELECT * FROM " + p + "claim_profiles");
                     ResultSet rs = stmt.executeQuery()) {
-
                 while (rs.next()) {
-                    UUID profileId = UUID.fromString(rs.getString("owner_id"));
-                    String realOwnerIdStr = rs.getString("real_owner_id");
-                    UUID realOwnerId = (realOwnerIdStr != null && !realOwnerIdStr.isEmpty()) ? UUID.fromString(realOwnerIdStr) : profileId;
-                    String name = rs.getString("name");
-                    String claimColor = rs.getString("claim_color");
-                    String visMode = rs.getString("vis_mode");
-                    boolean titleEnabled = rs.getBoolean("title_enabled");
-                    String enterTitle = rs.getString("enter_title");
-                    String leaveTitle = rs.getString("leave_title");
-                    String enterTitleMode = rs.getString("enter_title_mode");
-                    String leaveTitleMode = rs.getString("leave_title_mode");
-                    String ownerAlias = rs.getString("owner_alias");
-                    ClaimProfile profile = new ClaimProfile(profileId, realOwnerId, name);
-                    profile.setClaimColor(claimColor);
-                    profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
-                    profile.setEnterTitleEnabled(titleEnabled);
-                    if (enterTitle != null)
-                        profile.setEnterTitle(enterTitle);
-                    if (leaveTitle != null)
-                        profile.setLeaveTitle(leaveTitle);
-                    if (enterTitleMode != null)
-                        profile.setEnterTitleMode(enterTitleMode);
-                    if (leaveTitleMode != null)
-                        profile.setLeaveTitleMode(leaveTitleMode);
-                    if (ownerAlias != null)
-                        profile.setOwnerAlias(ownerAlias);
-                    profile.setBonusRoleSlots(rs.getInt("bonus_role_slots"));
-                    profile.setBonusMemberSlots(rs.getInt("bonus_member_slots"));
-                    profile.setBonusWarpSlots(rs.getInt("bonus_warp_slots"));
-                    profile.setTntEnabled(rs.getBoolean("tnt_enabled"));
-                    profile.setMobSpawningEnabled(rs.getObject("mob_spawning_enabled") == null || rs.getBoolean("mob_spawning_enabled"));
-                    loadChunks(conn, p, profile);
-                    loadVisitorFlags(conn, p, profile);
-                    loadTrustedPlayers(conn, p, profile);
-                    loadRoles(conn, p, profile);
-                    loadMemberRoles(conn, p, profile);
-                    loadAllyFlags(conn, p, profile);
-                    loadBannedPlayers(conn, p, profile);
-
-                    // Load warps from WarpManager to keep ClaimProfile in sync
-                    Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager()
-                            .getWarps(profileId);
-                    if (!warps.isEmpty()) {
-                        for (org.ayosynk.landClaimPlugin.models.Warp warp : warps.values()) {
-                            profile.addWarp(warp);
-                        }
-                    }
-
-                    profiles.add(profile);
+                    profiles.add(hydrateProfile(conn, p, rs));
                 }
             } catch (SQLException e) {
                 plugin.getLogger().severe("Failed to load all profiles.");
@@ -524,6 +399,52 @@ public class SQLProfileDao implements ProfileDao {
             }
             return profiles;
         });
+    }
+
+    private ClaimProfile hydrateProfile(Connection conn, String p, ResultSet rs) throws SQLException {
+        UUID profileId = UUID.fromString(rs.getString("owner_id"));
+        String realOwnerIdStr = rs.getString("real_owner_id");
+        UUID realOwnerId = (realOwnerIdStr != null && !realOwnerIdStr.isEmpty())
+                ? UUID.fromString(realOwnerIdStr)
+                : profileId;
+        ClaimProfile profile = new ClaimProfile(profileId, realOwnerId, rs.getString("name"));
+        profile.setClaimColor(rs.getString("claim_color"));
+        String visMode = rs.getString("vis_mode");
+        profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
+        profile.setEnterTitleEnabled(rs.getBoolean("title_enabled"));
+        String enterTitle = rs.getString("enter_title");
+        if (enterTitle != null) profile.setEnterTitle(enterTitle);
+        String leaveTitle = rs.getString("leave_title");
+        if (leaveTitle != null) profile.setLeaveTitle(leaveTitle);
+        String enterTitleMode = rs.getString("enter_title_mode");
+        if (enterTitleMode != null) profile.setEnterTitleMode(enterTitleMode);
+        String leaveTitleMode = rs.getString("leave_title_mode");
+        if (leaveTitleMode != null) profile.setLeaveTitleMode(leaveTitleMode);
+        String ownerAlias = rs.getString("owner_alias");
+        if (ownerAlias != null) profile.setOwnerAlias(ownerAlias);
+        profile.setPvpEnabled(rs.getBoolean("pvp_enabled"));
+        profile.setPvpTimerEnd(rs.getLong("pvp_timer_end"));
+        profile.setBonusRoleSlots(rs.getInt("bonus_role_slots"));
+        profile.setBonusMemberSlots(rs.getInt("bonus_member_slots"));
+        profile.setBonusWarpSlots(rs.getInt("bonus_warp_slots"));
+        profile.setTntEnabled(rs.getBoolean("tnt_enabled"));
+        profile.setMobSpawningEnabled(rs.getObject("mob_spawning_enabled") == null || rs.getBoolean("mob_spawning_enabled"));
+
+        loadChunks(conn, p, profile);
+        loadVisitorFlags(conn, p, profile);
+        loadTrustedPlayers(conn, p, profile);
+        loadRoles(conn, p, profile);
+        loadMemberRoles(conn, p, profile);
+        loadAllyFlags(conn, p, profile);
+        loadBannedPlayers(conn, p, profile);
+
+        Map<String, org.ayosynk.landClaimPlugin.models.Warp> warps = plugin.getWarpManager().getWarps(profileId);
+        if (!warps.isEmpty()) {
+            for (org.ayosynk.landClaimPlugin.models.Warp warp : warps.values()) {
+                profile.addWarp(warp);
+            }
+        }
+        return profile;
     }
 
     @Override

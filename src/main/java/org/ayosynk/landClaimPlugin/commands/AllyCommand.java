@@ -33,7 +33,7 @@ public class AllyCommand implements LandClaimCommand {
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.ally", plugin)) return;
                     String targetName = context.get("name");
 
-                    ClaimProfile senderProfile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile senderProfile = claimManager.getActiveProfile(player);
                     if (senderProfile == null) {
                         player.sendMessage(configManager.getMessage("not-owner"));
                         return;
@@ -63,7 +63,7 @@ public class AllyCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.ally", plugin)) return;
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("not-owner"));
                         return;
@@ -106,7 +106,7 @@ public class AllyCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.ally", plugin)) return;
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("not-owner"));
                         return;
@@ -130,7 +130,7 @@ public class AllyCommand implements LandClaimCommand {
                 .handler(context -> {
                     Player player = context.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.ally", plugin)) return;
-                    ClaimProfile profile = claimManager.getProfile(player.getUniqueId());
+                    ClaimProfile profile = claimManager.getActiveProfile(player);
                     if (profile == null) {
                         player.sendMessage(configManager.getMessage("not-owner"));
                         return;

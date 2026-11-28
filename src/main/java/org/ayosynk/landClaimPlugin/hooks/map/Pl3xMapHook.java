@@ -36,8 +36,8 @@ public class Pl3xMapHook {
         if (!active)
             return;
 
-        double fillOpacity = plugin.getConfigManager().getPluginConfig().pl3xmap.fillOpacity;
-        double borderOpacity = plugin.getConfigManager().getPluginConfig().pl3xmap.borderOpacity;
+        double fillOpacity = plugin.getConfigManager().getPluginConfig().maps.pl3xmap.fillOpacity;
+        double borderOpacity = plugin.getConfigManager().getPluginConfig().maps.pl3xmap.borderOpacity;
 
         Pl3xMap.api().getWorldRegistry().forEach(world -> {
             String layerKey = "landclaims";

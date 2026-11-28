@@ -668,7 +668,7 @@ public class ClaimCommand implements LandClaimCommand {
                         profile.setPvpTimerEnd(0L);
                         plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
 
-                        String expireMsg = configManager.getMessage("pvp-disabled");
+                        net.kyori.adventure.text.Component expireMsg = configManager.getMessage("pvp-disabled");
                         // Folia: player.getLocation() requires the player's region thread.
                         // Dispatch per-player on the global region (Paper) or per-player
                         // region (Folia) so the location read is safe.
@@ -692,11 +692,9 @@ public class ClaimCommand implements LandClaimCommand {
 
             // Broadcast to players in the claim
             String messageKey = enable ? (time != null ? "pvp-enabled-temp" : "pvp-enabled") : "pvp-disabled";
-            String msg = configManager.getMessage(messageKey);
-            if (time != null) {
-                msg = msg.replace("<time>", String.valueOf(time));
-            }
-            final String rawMessage = msg;
+            final net.kyori.adventure.text.Component rawMessage = time != null
+                    ? configManager.getMessage(messageKey, "<time>", String.valueOf(time))
+                    : configManager.getMessage(messageKey);
 
             // Folia: player.getLocation() requires the player's region thread.
             // Dispatch per-player so the location read is safe.
@@ -724,24 +722,6 @@ public class ClaimCommand implements LandClaimCommand {
         return false;
     }
 
-    private void abandonClaim(Player player) {
-        ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
-        ClaimProfile profile = claimManager.getProfileAt(pos);
-
-        if (profile == null) {
-            player.sendMessage(configManager.getMessage("not-in-claim"));
-            return;
-        }
-
-        if (!profile.getProfileId().equals(player.getUniqueId())) {
-            player.sendMessage(configManager.getMessage("not-owner"));
-            return;
-        }
-
-        claimManager.unclaimChunk(player.getLocation().getChunk());
-        player.sendMessage(configManager.getMessage("claim-abandoned"));
-    }
-
     private void sendClaimInfo(Player player) {
         ChunkPosition pos = new ChunkPosition(player.getLocation().getChunk());
         ClaimProfile profile = claimManager.getProfileAt(pos);
@@ -754,10 +734,6 @@ public class ClaimCommand implements LandClaimCommand {
         String ownerName = profile.getColoredOwnerName();
 
         player.sendMessage(configManager.getMessage("claim-info-owner", "<owner>", ownerName));
-    }
-
-    private void setWarp(Player player, String name) {
-        setWarp(player, name, null);
     }
 
     private void setWarp(Player player, String name, String visibility) {

@@ -77,7 +77,7 @@ public class TerritoryMapRenderer extends MapRenderer {
         double pixelScale = (double) pxPerChunk / 16.0;
         int chunkRadius = (zoom.chunksPerAxis / 2) + 1;
 
-        ClaimProfile playerProfile = claimManager.getProfile(player.getUniqueId());
+        ClaimProfile playerProfile = claimManager.getActiveProfile(player);
 
         for (int dz = -chunkRadius; dz <= chunkRadius; dz++) {
             for (int dx = -chunkRadius; dx <= chunkRadius; dx++) {

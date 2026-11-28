@@ -93,8 +93,7 @@ public class MinimapManager {
     public void giveOrOpenMinimap(Player player) {
         for (ItemStack item : player.getInventory().getContents()) {
             if (isMinimapItem(item)) {
-                player.sendMessage(MiniMessage.miniMessage().deserialize(
-                        "<gold>[LandClaim]</gold> <yellow>You already have a Territory Map in your inventory!</yellow>"));
+                player.sendMessage(plugin.getConfigManager().getMessage("minimap.already-owned"));
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.2f);
                 return;
             }
@@ -107,15 +106,15 @@ public class MinimapManager {
             player.getInventory().addItem(mapItem);
         }
 
-        player.sendMessage(MiniMessage.miniMessage().deserialize(
-                "<gold>[LandClaim]</gold> <green>Received the <yellow>Territory Map</yellow>! Hold it in your hand or off-hand to view nearby claims in real time.</green>"));
+        player.sendMessage(plugin.getConfigManager().getMessage("minimap.received"));
         player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.0f);
     }
 
     public void toggleZoom(Player player) {
         TerritoryMapRenderer.ZoomLevel newZoom = renderer.toggleZoom(player.getUniqueId());
-        String modeName = newZoom == TerritoryMapRenderer.ZoomLevel.OVERVIEW ? "16x16 Chunks (Overview)" : "8x8 Chunks (Close Detail)";
-        player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Map Zoom: <gold>" + modeName + "</gold></yellow>"));
+        String modeKey = newZoom == TerritoryMapRenderer.ZoomLevel.OVERVIEW ? "minimap.zoom-overview" : "minimap.zoom-close";
+        String modeName = plugin.getConfigManager().getRawTemplate(modeKey);
+        player.sendActionBar(plugin.getConfigManager().getRawComponent("minimap.zoom-changed", "<mode>", modeName));
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, newZoom == TerritoryMapRenderer.ZoomLevel.OVERVIEW ? 1.0f : 1.5f);
     }
 

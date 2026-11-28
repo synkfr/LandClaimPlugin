@@ -41,13 +41,12 @@ public class BuyCommand implements LandClaimCommand {
                     }
                     int amount = context.getOrDefault("amount", 1);
                     if (amount <= 0) {
-                        player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                                .deserialize("<red>Amount must be greater than 0."));
+                        player.sendMessage(configManager.getMessage("economy.invalid-amount"));
                         return;
                     }
                     org.ayosynk.landClaimPlugin.models.ClaimPlayer cp = plugin.getCacheManager().getPlayerCache().getIfPresent(player.getUniqueId());
                     int currentBonus = cp != null ? cp.getBonusClaimBlocks() : 0;
-                    int maxBonus = plugin.getConfigManager().getPluginConfig().maxBonusClaimBlocks;
+                    int maxBonus = plugin.getConfigManager().getPluginConfig().limits.maxBonusClaimBlocks;
                     if (maxBonus > 0 && (long) currentBonus + amount > maxBonus) {
                         int remaining = Math.max(0, maxBonus - currentBonus);
                         player.sendMessage(configManager.getMessage("max-bonus-claim-blocks-reached",
@@ -56,7 +55,7 @@ public class BuyCommand implements LandClaimCommand {
                                 "<remaining>", String.valueOf(remaining)));
                         return;
                     }
-                    int maxTotal = plugin.getConfigManager().getPluginConfig().maxTotalClaimLimit;
+                    int maxTotal = plugin.getConfigManager().getPluginConfig().limits.maxTotalClaimLimit;
                     if (maxTotal > 0) {
                         int currentLimit = plugin.getClaimManager().getClaimLimit(player);
                         if ((long) currentLimit + amount > maxTotal) {
@@ -75,8 +74,9 @@ public class BuyCommand implements LandClaimCommand {
                     }
 
                     plugin.addBonusBlocks(player.getUniqueId(), amount).thenAccept(newTotal -> {
-                        player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                                .deserialize("<green>Successfully purchased <gold>" + amount + "</gold> claim blocks! New limit: <gold>" + plugin.getClaimManager().getClaimLimit(player) + "</gold>"));
+                        player.sendMessage(configManager.getMessage("economy.bought-claim-blocks",
+                                "<amount>", String.valueOf(amount),
+                                "<limit>", String.valueOf(plugin.getClaimManager().getClaimLimit(player))));
                     });
                 }));
 
@@ -103,8 +103,8 @@ public class BuyCommand implements LandClaimCommand {
                     }
                     profile.setBonusRoleSlots(profile.getBonusRoleSlots() + 1);
                     claimManager.saveAndSync(profile);
-                    player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<green>Successfully purchased an additional custom role slot! Total bonus slots: <gold>" + profile.getBonusRoleSlots() + "</gold>"));
+                    player.sendMessage(configManager.getMessage("economy.bought-role-slot",
+                            "<total>", String.valueOf(profile.getBonusRoleSlots())));
                 }));
 
         // /claim buy member
@@ -130,8 +130,8 @@ public class BuyCommand implements LandClaimCommand {
                     }
                     profile.setBonusMemberSlots(profile.getBonusMemberSlots() + 1);
                     claimManager.saveAndSync(profile);
-                    player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<green>Successfully purchased an additional member slot! Total bonus slots: <gold>" + profile.getBonusMemberSlots() + "</gold>"));
+                    player.sendMessage(configManager.getMessage("economy.bought-member-slot",
+                            "<total>", String.valueOf(profile.getBonusMemberSlots())));
                 }));
 
         // /claim buy warp
@@ -157,8 +157,8 @@ public class BuyCommand implements LandClaimCommand {
                     }
                     profile.setBonusWarpSlots(profile.getBonusWarpSlots() + 1);
                     claimManager.saveAndSync(profile);
-                    player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<green>Successfully purchased an additional warp slot! Total bonus slots: <gold>" + profile.getBonusWarpSlots() + "</gold>"));
+                    player.sendMessage(configManager.getMessage("economy.bought-warp-slot",
+                            "<total>", String.valueOf(profile.getBonusWarpSlots())));
                 }));
     }
 
@@ -193,8 +193,7 @@ public class BuyCommand implements LandClaimCommand {
         try {
             Plugin ecoPlugin = Bukkit.getPluginManager().getPlugin("LandClaimPlugin-Economy");
             if (ecoPlugin == null || !ecoPlugin.isEnabled()) {
-                player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>Economy features are disabled."));
+                player.sendMessage(configManager.getMessage("economy.disabled"));
                 return false;
             }
             Class<?> ecoHookClass = Class.forName("org.ayosynk.landclaimeconomy.util.EconomyHook");
@@ -205,16 +204,16 @@ public class BuyCommand implements LandClaimCommand {
             if (balance < cost) {
                 String costStr = (String) formatMethod.invoke(null, cost);
                 String balStr = (String) formatMethod.invoke(null, balance);
-                player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>Insufficient funds! Cost: " + costStr + ", Balance: " + balStr));
+                player.sendMessage(configManager.getMessage("economy.insufficient-funds",
+                        "<cost>", costStr,
+                        "<balance>", balStr));
                 return false;
             }
 
             // Withdraw
             boolean success = (boolean) ecoHookClass.getMethod("withdraw", org.bukkit.OfflinePlayer.class, double.class).invoke(null, player, cost);
             if (!success) {
-                player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>Transaction failed."));
+                player.sendMessage(configManager.getMessage("economy.transaction-failed"));
                 return false;
             }
 
@@ -227,8 +226,7 @@ public class BuyCommand implements LandClaimCommand {
         } catch (Exception e) {
             plugin.getLogger().severe("Error charging player: " + e.getMessage());
             e.printStackTrace();
-            player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<red>An error occurred while processing the purchase."));
+            player.sendMessage(configManager.getMessage("economy.purchase-error"));
             return false;
         }
     }

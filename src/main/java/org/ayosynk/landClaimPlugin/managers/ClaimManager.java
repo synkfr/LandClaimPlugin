@@ -944,7 +944,7 @@ public class ClaimManager {
     }
 
     private int getClaimLimit(UUID playerId, Player player) {
-        int limit = configManager.getPluginConfig().chunkClaimLimit;
+        int limit = configManager.getPluginConfig().limits.chunkClaimLimit;
         
         if (player != null) {
             if (player.hasPermission("landclaim.admin"))

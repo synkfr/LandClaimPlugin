@@ -1,122 +1,158 @@
 package org.ayosynk.landClaimPlugin.config;
 
 import eu.okaeri.configs.OkaeriConfig;
-import eu.okaeri.configs.annotation.*;
+import eu.okaeri.configs.annotation.Comment;
+import eu.okaeri.configs.annotation.Header;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@Header({
-    "===========================================================",
-    "              LandClaimPlugin - Main Configuration          ",
-    "==========================================================="
-})
+@Header("LandClaimPlugin - Main Configuration")
+@Header("Documentation: https://synkfr.github.io/LandClaimPlugin/CONFIGURATION")
 public class PluginConfig extends OkaeriConfig {
 
-    @Comment({
-        "Messages Prefix (MiniMessage format)",
-        "This prefix will appear before all chat messages sent by the plugin."
-    })
-    public String prefix = "<dark_gray>[<gold>LandClaim<dark_gray>]</gold> ";
+    @Comment("General plugin preferences and locale selection.")
+    public GeneralConfig general = new GeneralConfig();
 
-    @Comment({
-        "The default language/locale file to load from the locales folder (e.g., en-US, es-ES).",
-        "Make sure the corresponding file exists in the plugins/LandClaimPlugin/locales/ directory."
-    })
-    public String language = "en-US";
+    @Comment("Chunk claiming rules, gap checks, blocked worlds, and multi-profile mode.")
+    public ClaimingConfig claiming = new ClaimingConfig();
 
-    @Comment({
-        "Adjacent Claim Connection Check",
-        "If true, players can only claim new chunks that are directly adjacent to their existing claims.",
-        "If false, players can claim chunks anywhere in the world."
-    })
-    public boolean requireConnectedClaims = false;
+    @Comment("Default chunk, member, profile, and warp allowances.")
+    public LimitsConfig limits = new LimitsConfig();
 
-    @Comment({
-        "Diagonal Chunk Connection Check",
-        "If requireConnectedClaims is true, this determines whether diagonal chunks count as connected (true)",
-        "or only orthogonal (north/south/east/west) chunks count as connected (false)."
-    })
-    public boolean allowDiagonalConnections = true;
+    @Comment("Granular LuckPerms/Bukkit permission gating.")
+    public PermissionsConfig permissions = new PermissionsConfig();
 
-    @Comment({
-        "Blocked Worlds for Claiming",
-        "Players will be unable to claim any land inside the worlds listed below."
-    })
-    public List<String> blockWorld = List.of("world_nether", "world_the_end");
+    @Comment("Server-wide PvP rules and combat tag integration.")
+    public PvpConfig pvp = new PvpConfig();
 
-    @Comment({
-        "Blocked Commands in Claims",
-        "List of commands that players are strictly blocked from executing while standing inside other players' claims.",
-        "Use this to prevent unauthorized warping, setting homes, or teleportation in claimed territories."
-    })
-    public List<String> blockCmd = List.of("setwarp", "warp", "sethome");
+    @Comment("Default and locked visitor permission behavior.")
+    public VisitorSettingsConfigSection visitorSettings = new VisitorSettingsConfigSection();
 
-    @Comment({
-        "Multi-Profile System",
-        "Enable to allow players to manage multiple separate claim profiles via an active profile selector GUI.",
-        "WARNING: If you disable this after players have already created multiple profiles, ",
-        "they will lose access to all secondary profiles! Switch back to enable them again.",
-        "Use with caution."
-    })
-    public boolean multiProfilesEnabled = false;
+    @Comment("Unclaimed chunk restrictions for survival or town-style servers.")
+    public WildernessProtectionConfig wildernessProtection = new WildernessProtectionConfig();
 
-    @Comment("Maximum number of separate claim profiles a single player is allowed to own/create.")
-    public int maxProfilesPerPlayer = 2;
+    @Comment("Automatic cleanup for claims owned by inactive players.")
+    public DecayConfig decay = new DecayConfig();
 
-    @Comment("Cooldown in seconds for the /claim unstuck command to prevent spamming.")
-    public int cooldownUnstuck = 30;
+    @Comment("Action bar and territory chat notifications.")
+    public DisplayConfig display = new DisplayConfig();
 
-    @Comment("Integration settings for web-based live maps (Dynmap, BlueMap, Squaremap, Pl3xmap).")
-    public MapConfig dynmap = new MapConfig();
-    public MapConfig bluemap = new MapConfig();
-    public MapConfig squaremap = new MapConfig();
-    public MapConfig pl3xmap = new MapConfig();
+    @Comment("In-game held 128x128 territory radar map.")
+    public MinimapConfig minimap = new MinimapConfig();
+
+    @Comment("Web map integrations (BlueMap, Dynmap, Squaremap, Pl3xMap).")
+    public MapsConfig maps = new MapsConfig();
+
+    @Comment("Storage backend (SQLITE, MYSQL, or MARIADB).")
+    public DatabaseConfig database = new DatabaseConfig();
+
+    @Comment("Cross-server cache invalidation via Redis Pub/Sub.")
+    public RedisConfig redis = new RedisConfig();
+
+    @Comment("Asynchronous Modrinth version checker.")
+    public UpdateCheckerConfig updateChecker = new UpdateCheckerConfig();
+
+    public static class GeneralConfig extends OkaeriConfig {
+        @Comment("Internal schema version used to trigger one-time upgrade backups.")
+        public String configVersion = "3.5.0";
+
+        @Comment("Locale file to load from plugins/LandClaimPlugin/locales/messages_<language>.yml")
+        public String language = "en-US";
+
+        @Comment("File containing blocked claim name words (one word per line).")
+        public String bannedClaimNamesFile = "banned-claim-name.txt";
+
+        @Comment("Cooldown in seconds between /claim unstuck uses.")
+        public int cooldownUnstuck = 30;
+
+        @Comment("Send native Bedrock forms when Geyser 2.x / Floodgate are available.")
+        public boolean geyserForms = true;
+    }
+
+    public static class ClaimingConfig extends OkaeriConfig {
+        @Comment("Require new claims to touch an existing claim owned by the profile.")
+        public boolean requireConnectedClaims = false;
+
+        @Comment("Allow diagonal adjacency when requireConnectedClaims is true.")
+        public boolean allowDiagonalConnections = true;
+
+        @Comment("Minimum chunk gap between different players' claims (0 = disabled).")
+        public int minClaimGap = 0;
+
+        @Comment("Minimum chunk gap between claims and WorldGuard regions (0 = disabled).")
+        public int worldguardGap = 0;
+
+        @Comment({
+            "Allow players to own multiple independent claim profiles via /claim profiles.",
+            "Warning: disabling this later hides secondary profiles from their owners."
+        })
+        public boolean multiProfilesEnabled = false;
+
+        @Comment("Maximum number of separate claim profiles a single player can own.")
+        public int maxProfilesPerPlayer = 2;
+
+        @Comment("Worlds where players cannot claim land.")
+        public List<String> blockWorld = List.of("world_nether", "world_the_end");
+
+        @Comment("Commands blocked when non-members execute them inside another player's claim.")
+        public List<String> blockCmd = List.of("setwarp", "warp", "sethome");
+    }
+
+    public static class LimitsConfig extends OkaeriConfig {
+        @Comment("Base chunk limit per player (override with landclaim.limit.<amount>).")
+        public int chunkClaimLimit = 5;
+
+        @Comment("Hard cap on bonus or purchased claim chunks (0 = unlimited).")
+        public int maxBonusClaimBlocks = 0;
+
+        @Comment("Hard cap on total combined claim chunks per player (0 = unlimited).")
+        public int maxTotalClaimLimit = 0;
+
+        @Comment("Maximum claims a player may belong to as a member.")
+        public int maxMemberships = 1;
+
+        @Comment("Default maximum members allowed inside a single claim profile.")
+        public int maxClaimMembers = 5;
+
+        @Comment("Base claim warp limit per profile (override with landclaim.warps.limit.<amount>).")
+        public int maxWarps = 3;
+    }
+
+    public static class PermissionsConfig extends OkaeriConfig {
+        @Comment({
+            "Require individual permission nodes (landclaim.menu.<menu>, landclaim.unstuck, etc.).",
+            "Leave false on casual SMP servers so all players can access standard commands and menus."
+        })
+        public boolean useSeparatePermission = false;
+    }
+
+    public static class MapsConfig extends OkaeriConfig {
+        public MapConfig dynmap = new MapConfig();
+        public MapConfig bluemap = new MapConfig();
+        public MapConfig squaremap = new MapConfig();
+        public MapConfig pl3xmap = new MapConfig();
+    }
 
     public static class MapConfig extends OkaeriConfig {
-        @Comment("Enable/disable this specific map integration.")
         public boolean enabled = true;
-        @Comment("Fill color for the claim areas on the map (Hex color code without #).")
+        @Comment("Hex fill color without '#'.")
         public String fillColor = "3366FF";
-        @Comment("Fill opacity for the claim areas on the map (0.0 = fully transparent, 1.0 = fully solid).")
         public double fillOpacity = 0.3;
-        @Comment("Border color for the claim areas on the map (Hex color code without #).")
+        @Comment("Hex border color without '#'.")
         public String borderColor = "3366FF";
-        @Comment("Border opacity for the claim areas on the map (0.0 = fully transparent, 1.0 = fully solid).")
         public double borderOpacity = 0.8;
     }
 
-    @Comment({
-        "Wilderness Protection",
-        "When enabled, the flags listed in 'deniedFlags' are blocked in unclaimed",
-        "chunks. Use this for 'clan-only' or 'town' servers where building/breaking",
-        "is restricted to claimed land only.",
-        "Players with the 'landclaim.admin' permission always bypass wilderness protection.",
-        "The default list contains build / interaction flags only — combat flags",
-        "(DAMAGE_ANIMALS, DAMAGE_MONSTERS, BREED_ANIMALS, etc.) are NOT denied by",
-        "default so players can still hunt and fight mobs in the wilderness. PvP",
-        "in the wilderness is handled by PvpProtectionListener and is also unaffected."
-    })
-    public WildernessProtectionConfig wildernessProtection = new WildernessProtectionConfig();
-
     public static class WildernessProtectionConfig extends OkaeriConfig {
-        @Comment("Master toggle. When true, the flags in 'deniedFlags' are denied in unclaimed chunks.")
+        @Comment("Deny flags listed under deniedFlags in unclaimed chunks (landclaim.admin bypasses).")
         public boolean enabled = false;
 
-        @Comment({
-            "Worlds where wilderness protection does not apply (e.g. a creative build world or a",
-            "resource-gathering dimension). Use the Bukkit world name (e.g. 'world', 'world_nether')."
-        })
-        public java.util.List<String> exceptionWorlds = java.util.List.of();
+        @Comment("Plain Bukkit world names exempt from wilderness protection.")
+        public List<String> exceptionWorlds = List.of();
 
-        @Comment({
-            "List of permission flags denied in the wilderness when 'enabled' is true.",
-            "Default: build / interaction flags only. Combat flags (DAMAGE_ANIMALS, DAMAGE_MONSTERS,",
-            "BREED_ANIMALS, SHEAR_ENTITIES, TRADE_VILLAGERS, FEED_ANIMALS, LEASH_ENTITIES), PvP,",
-            "item pickup/drop, projectile use, and vehicle use are NOT in the default list — players",
-            "can still hunt mobs, drop items, throw ender pearls, etc. in the wilderness.",
-            "Add a flag here to deny it; remove a flag to allow it. Matching is case-insensitive."
-        })
-        public java.util.List<String> deniedFlags = java.util.List.of(
+        @Comment("Permission flags denied in unclaimed chunks when enabled is true.")
+        public List<String> deniedFlags = List.of(
                 "BLOCK_BREAK",
                 "BLOCK_PLACE",
                 "BLOCK_IGNITE",
@@ -137,262 +173,126 @@ public class PluginConfig extends OkaeriConfig {
                 "MODIFY_ITEM_FRAMES");
     }
 
-    @Comment("Default maximum number of chunks a player is allowed to claim (can be bypassed with landclaim.limit.X permission).")
-    public int chunkClaimLimit = 5;
-
-    @Comment("Maximum bonus claim blocks a player can buy or receive (0 = unlimited).")
-    public int maxBonusClaimBlocks = 0;
-
-    @Comment("Maximum total claim limit a player can reach through base limit + permissions + purchases (0 = unlimited).")
-    public int maxTotalClaimLimit = 0;
-    
-    @Comment("Maximum number of claims a player is allowed to join as a trusted member (default: 1).")
-    public int maxMemberships = 1;
-
-    @Comment("Default maximum members allowed per claim profile.")
-    public int maxClaimMembers = 5;
-
-    @Comment("Database connection and backend settings (Supported backends: SQLITE, MYSQL, MARIADB).")
-    public DatabaseConfig database = new DatabaseConfig();
-
     public static class DatabaseConfig extends OkaeriConfig {
-        @Comment("Database type: SQLITE, MYSQL, or MARIADB")
+        @Comment("Supported backends: SQLITE, MYSQL, MARIADB.")
         public String type = "SQLITE";
-        @Comment("MySQL/MariaDB host address (ignored for SQLite)")
         public String host = "localhost";
-        @Comment("MySQL/MariaDB port (ignored for SQLite)")
         public int port = 3306;
-        @Comment("Database name")
         public String databaseName = "landclaim";
-        @Comment("MySQL/MariaDB username (leave empty for SQLite)")
         public String username = "";
-        @Comment({
-            "MySQL/MariaDB password (leave empty for SQLite)",
-            "For improved security, this can also be set via the LANDCLAIM_DB_PASSWORD environment variable."
-        })
+        @Comment("Password or override with LANDCLAIM_DB_PASSWORD environment variable.")
         public String password = "";
-        @Comment("Table prefix for all plugin tables in the database")
         public String tablePrefix = "lc_";
-        @Comment("Maximum number of active database connections in the HikariCP pool")
         public int maximumPoolSize = 10;
-        @Comment("Minimum number of idle connections to maintain in the pool")
         public int minimumIdle = 2;
-        @Comment("Maximum connection timeout in milliseconds before failing")
         public long connectionTimeout = 30000;
     }
 
-    @Comment("Redis settings for cross-server synchronization (useful for BungeeCord/Velocity proxy networks).")
-    public RedisConfig redis = new RedisConfig();
-
     public static class RedisConfig extends OkaeriConfig {
-        @Comment("Enable/disable Redis synchronization.")
         public boolean enabled = false;
-        @Comment("Redis server host address.")
         public String host = "localhost";
-        @Comment("Redis server port.")
         public int port = 6379;
-        @Comment("Redis server password (leave empty if no authentication is required).")
         public String password = "";
-        @Comment("Redis Pub/Sub channel name used for synchronization messages.")
         public String channel = "landclaim:sync";
     }
 
-    @Comment({
-        "WorldGuard Adjacency Protection Gap",
-        "Minimum distance in chunks that must be maintained between a player claim and any WorldGuard region.",
-        "Set to 0 to disable this gap restriction."
-    })
-    public int worldguardGap = 0;
+    public static class DisplayConfig extends OkaeriConfig {
+        @Comment("Show territory status in the player action bar.")
+        public boolean actionbarEnabled = true;
 
-    @Comment({
-        "Claim Adjacency Protection Gap",
-        "Minimum distance in chunks that must be maintained between claims owned by different players.",
-        "Set to 0 to allow players to claim chunks adjacent to other players' claims."
-    })
-    public int minClaimGap = 0;
+        @Comment("Update interval in server ticks (20 ticks = 1 second).")
+        public int actionbarUpdateInterval = 20;
 
-    @Comment("Enable or disable the action bar display for claim status and wilderness.")
-    public boolean actionbarEnabled = true;
-
-    @Comment("Interval in server ticks (20 ticks = 1 second) for updating the player action bar display (boundary titles, claim status, etc.).")
-    public int actionbarUpdateInterval = 20;
-
-    @Comment("Enable or disable chat messages when entering or leaving a claim.")
-    public boolean claimChatNotifications = false;
-
-    @Comment({
-        "Visitor Settings Control & Enforced Defaults",
-        "When 'locked' is true:",
-        "  - Claim owners cannot open or modify visitor settings (GUI and command are blocked).",
-        "  - All claims enforce the server-defined 'defaultFlags' for visitors.",
-        "When 'locked' is false:",
-        "  - 'defaultFlags' are assigned to newly created claims.",
-        "  - Claim owners can freely customize their claim's visitor flags in /claim."
-    })
-    public VisitorSettingsConfigSection visitorSettings = new VisitorSettingsConfigSection();
+        @Comment("Send territory enter/leave messages in chat by default.")
+        public boolean claimChatNotifications = false;
+    }
 
     public static class VisitorSettingsConfigSection extends OkaeriConfig {
-        @Comment("Lock visitor settings server-wide so players cannot modify them.")
+        @Comment("Lock visitor settings across every claim so owners cannot override defaultFlags.")
         public boolean locked = false;
 
-        @Comment({
-            "Default visitor flags (case-insensitive).",
-            "When locked is true, these flags are strictly enforced across ALL claims for visitors.",
-            "When locked is false, these flags are assigned to newly created claims.",
-            "Available flags:",
-            "  BLOCK_BREAK, BLOCK_PLACE, BLOCK_IGNITE, USE_BUCKETS, USE_FERTILIZER, MODIFY_SIGNS, TRAMPLE_CROPS,",
-            "  USE_DOORS, USE_TRAPDOORS, USE_FENCE_GATES, USE_CONTAINERS, USE_WORKSTATIONS, USE_BEDS, USE_REDSTONE,",
-            "  USE_LECTERNS, USE_BELLS, DAMAGE_ANIMALS, DAMAGE_MONSTERS, BREED_ANIMALS, SHEAR_ENTITIES, TRADE_VILLAGERS,",
-            "  FEED_ANIMALS, LEASH_ENTITIES, MODIFY_ARMOR_STANDS, MODIFY_ITEM_FRAMES, RIDE_VEHICLES, MOUNT_ANIMALS,",
-            "  PLACE_VEHICLES, DESTROY_VEHICLES, USE_ENDER_PEARLS, USE_CHORUS_FRUIT, PICKUP_ITEMS, DROP_ITEMS"
-        })
+        @Comment("Default visitor flags assigned to new claims (or enforced globally when locked).")
         public List<String> defaultFlags = List.of("DAMAGE_MONSTERS");
     }
 
-    @Comment({
-        "Geyser / Bedrock form support.",
-        "When enabled and Geyser 2.x is installed, Bedrock players receive native Bedrock forms",
-        "(e.g. a text input form for claim renaming, a yes/no confirmation for dangerous actions)",
-        "instead of Java-only fallbacks (chat prompts, clickable chat messages).",
-        "If Geyser is not installed, this option has no effect and Java fallbacks are used."
-    })
-    public boolean geyserForms = true;
-
-    @Comment("Default maximum claim warps a player can set (can be bypassed with landclaim.warps.limit.X permission).")
-    public int maxWarps = 3;
-
-    @Comment({
-        "Force-enable PvP across every claim, server-wide.",
-        "When true, PvpProtectionListener always allows PvP regardless of the",
-        "per-claim pvpEnabled flag, and /claim pvp refuses to toggle. Useful for",
-        "PvP-focused servers that don't want owners opting out.",
-        "When false (default), each claim's pvpEnabled flag is honored normally."
-    })
-    public PvpConfig pvp = new PvpConfig();
-
     public static class PvpConfig extends OkaeriConfig {
+        @Comment("Force PvP on in every claim and block /claim pvp toggling.")
         public boolean forceEnabled = false;
 
-        @Comment({
-            "When true, claim PvP protection is temporarily bypassed for players who are in combat.",
-            "This prevents players from starting a fight in the wilderness and running into a claim to hide.",
-            "Requires a supported combat tag plugin (DeluxeCombat, PvPManager, EternalCombat).",
-            "When false, claims always protect players from PvP unless /claim pvp is enabled."
-        })
+        @Comment("Disable claim PvP sanctuary while a player has an active combat tag.")
         public boolean combatTagBypass = true;
     }
 
-    @Comment({
-        "Inactive Claim Auto-Decay",
-        "Automatically clear out claims belonging to players who have been offline for a set period.",
-        "Admins and VIPs can be exempted per-player via '/claim admin decay exempt <player>'",
-        "or via the exemptPermission (e.g. landclaim.decay.exempt)."
-    })
-    public DecayConfig decay = new DecayConfig();
-
     public static class DecayConfig extends OkaeriConfig {
-        @Comment("Enable automatic claim decay for inactive players.")
         public boolean enabled = false;
 
-        @Comment("Days of inactivity (player offline) before their claims automatically decay.")
+        @Comment("Days offline before an unexempted owner's claim decays.")
         public int inactiveDays = 14;
 
-        @Comment("How often (in hours) the plugin should scan for inactive claims.")
+        @Comment("Hours between automated decay scans.")
         public int checkIntervalHours = 12;
 
-        @Comment("Permission that exempts players from claim decay.")
+        @Comment("Online permission node checked alongside stored decay exemptions.")
         public String exemptPermission = "landclaim.decay.exempt";
 
-        @Comment("If true, only the claim owner's activity is checked. If false, active claim members protect the claim from decay.")
+        @Comment("Check only owner activity (true) or also active members (false).")
         public boolean onlyCheckOwner = true;
     }
 
-    @Comment({
-        "LuckPerms / Bukkit Permissions Bypass",
-        "If true, separate permissions like landclaim.menu.<menu>, landclaim.menu.*, ",
-        "and command-specific permissions (e.g., landclaim.unstuck) will be checked.",
-        "If false, these separate permissions are bypassed. This is ideal for friendly/vanilla SMP ",
-        "servers where players don't want to set up an elaborate permission group system."
-    })
-    public boolean useSeparatePremission = false;
-
-    @Comment({
-        "Banned Claim Names File",
-        "The text file containing words (one per line) that cannot be used in claim profiles or renamed claims.",
-        "Useful for blocking slurs, swearing, or other inappropriate/reserved names."
-    })
-    public String bannedClaimNamesFile = "banned-claim-name.txt";
-
-    @Comment({
-        "Update Checker & Version Notification",
-        "Automatically checks Modrinth for new versions of LandClaimPlugin.",
-        "When an update is available, server operators and players with the permission",
-        "will receive a notification on join."
-    })
-    public UpdateCheckerConfig updateChecker = new UpdateCheckerConfig();
-
     public static class UpdateCheckerConfig extends OkaeriConfig {
-        @Comment("Enable or disable checking for new plugin versions.")
         public boolean enabled = true;
-
-        @Comment("The project ID (PAlDTriF) or slug (landclaimplugin) on Modrinth to check for updates.")
         public String modrinthProjectId = "PAlDTriF";
-
-        @Comment("Permission required to receive update notifications on join (or OP).")
         public String notifyPermission = "landclaim.admin";
     }
 
-    @Comment({
-        "In-Game Held Territory Map (Minimap)",
-        "Renders a 128x128 live territory radar on a vanilla Filled Map item.",
-        "Fully compatible with Java Edition and Bedrock/Geyser players."
-    })
-    public MinimapConfig minimap = new MinimapConfig();
-
     public static class MinimapConfig extends OkaeriConfig {
-        @Comment("Enable or disable the in-game held territory map feature.")
         public boolean enabled = true;
-
-        @Comment("Persisted MapView ID assigned to the territory map (-1 for automatic creation).")
         public int mapId = -1;
-
-        @Comment("Custom display name for the Territory Map item.")
-        public String itemName = "<gold><bold>Territory Map</bold></gold>";
-
-        @Comment("Custom lore lines for the Territory Map item.")
+        public String itemName = "<color:#38BDF8><b>Territory Map</b></color>";
         public List<String> itemLore = List.of(
-            "<gray>Hold in hand or off-hand to view nearby claims.",
-            "<yellow>Right-click to toggle zoom level.</yellow>"
+                "<color:#9AA5B4>Hold in hand or off-hand to view nearby claims.",
+                "<color:#FBBF24>Right-click to switch zoom level."
         );
     }
-    
-    /**
-     * Validate configuration values and return a list of error messages.
-     * Empty list means no errors.
-     */
-    public java.util.List<String> validateConfig() {
-        java.util.List<String> errors = new java.util.ArrayList<>();
-        if (chunkClaimLimit <= 0) {
-            errors.add("chunkClaimLimit must be greater than 0, found: " + chunkClaimLimit);
+
+    public List<String> validateConfig() {
+        List<String> errors = new ArrayList<>();
+        if (limits.chunkClaimLimit <= 0) {
+            errors.add("limits.chunkClaimLimit must be greater than 0, found: " + limits.chunkClaimLimit);
         }
-        if (cooldownUnstuck < 0) {
-            errors.add("cooldownUnstuck cannot be negative, found: " + cooldownUnstuck);
+        if (general.cooldownUnstuck < 0) {
+            errors.add("general.cooldownUnstuck cannot be negative, found: " + general.cooldownUnstuck);
         }
-        if (maxWarps <= 0) {
-            errors.add("maxWarps must be greater than 0, found: " + maxWarps);
+        if (limits.maxWarps <= 0) {
+            errors.add("limits.maxWarps must be greater than 0, found: " + limits.maxWarps);
         }
-        if (actionbarUpdateInterval <= 0) {
-            errors.add("actionbarUpdateInterval must be greater than 0, found: " + actionbarUpdateInterval);
+        if (limits.maxMemberships <= 0) {
+            errors.add("limits.maxMemberships must be greater than 0, found: " + limits.maxMemberships);
         }
-        if (worldguardGap < 0) {
-            errors.add("worldguardGap cannot be negative, found: " + worldguardGap);
+        if (limits.maxClaimMembers <= 0) {
+            errors.add("limits.maxClaimMembers must be greater than 0, found: " + limits.maxClaimMembers);
         }
-        if (minClaimGap < 0) {
-            errors.add("minClaimGap cannot be negative, found: " + minClaimGap);
+        if (claiming.maxProfilesPerPlayer <= 0) {
+            errors.add("claiming.maxProfilesPerPlayer must be greater than 0, found: " + claiming.maxProfilesPerPlayer);
         }
-        // Database config validation
-        if (!database.type.equalsIgnoreCase("SQLITE") && !database.type.equalsIgnoreCase("MYSQL") && 
-                !database.type.equalsIgnoreCase("MARIADB")) {
+        if (display.actionbarUpdateInterval <= 0) {
+            errors.add("display.actionbarUpdateInterval must be greater than 0, found: " + display.actionbarUpdateInterval);
+        }
+        if (claiming.worldguardGap < 0) {
+            errors.add("claiming.worldguardGap cannot be negative, found: " + claiming.worldguardGap);
+        }
+        if (claiming.minClaimGap < 0) {
+            errors.add("claiming.minClaimGap cannot be negative, found: " + claiming.minClaimGap);
+        }
+        if (decay.inactiveDays <= 0) {
+            errors.add("decay.inactiveDays must be greater than 0, found: " + decay.inactiveDays);
+        }
+        if (decay.checkIntervalHours <= 0) {
+            errors.add("decay.checkIntervalHours must be greater than 0, found: " + decay.checkIntervalHours);
+        }
+        if (!database.type.equalsIgnoreCase("SQLITE")
+                && !database.type.equalsIgnoreCase("MYSQL")
+                && !database.type.equalsIgnoreCase("MARIADB")) {
             errors.add("database.type must be SQLITE, MYSQL, or MARIADB, found: " + database.type);
         }
         if (database.port <= 0 || database.port > 65535) {
@@ -407,7 +307,6 @@ public class PluginConfig extends OkaeriConfig {
         if (database.connectionTimeout <= 0) {
             errors.add("database.connectionTimeout must be greater than 0, found: " + database.connectionTimeout);
         }
-        // Redis config validation
         if (redis.enabled) {
             if (redis.port <= 0 || redis.port > 65535) {
                 errors.add("redis.port must be between 1 and 65535, found: " + redis.port);

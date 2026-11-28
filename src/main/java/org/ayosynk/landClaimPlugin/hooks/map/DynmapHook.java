@@ -64,8 +64,8 @@ public class DynmapHook {
             marker.deleteMarker();
         }
 
-        double fillOpacity = plugin.getConfigManager().getPluginConfig().dynmap.fillOpacity;
-        double borderOpacity = plugin.getConfigManager().getPluginConfig().dynmap.borderOpacity;
+        double fillOpacity = plugin.getConfigManager().getPluginConfig().maps.dynmap.fillOpacity;
+        double borderOpacity = plugin.getConfigManager().getPluginConfig().maps.dynmap.borderOpacity;
 
         for (UUID playerId : getAllPlayerIds()) {
             org.ayosynk.landClaimPlugin.models.ClaimProfile profile = claimManager.getProfile(playerId);

@@ -158,10 +158,12 @@ public class BanCommand implements LandClaimCommand {
      */
     public void applyBan(Player owner, ClaimProfile profile, UUID targetId, String targetName) {
         if (GeyserFormHelper.shouldUseForms(owner)) {
-            String title = configManager.getMessage("geyser-confirm-title");
-            String content = configManager.getMessage("geyser-ban-content",
+            String title = configManager.getRawMessage("bedrock.geyser-confirm-title");
+            String content = configManager.getRawMessage("bedrock.geyser-ban-content",
                     "<player>", targetName);
-            GeyserFormHelper.sendModalForm(owner, title, content, "Confirm", "Cancel", confirmed -> {
+            String confirmBtn = configManager.getRawMessage("bedrock.geyser-confirm-button");
+            String cancelBtn = configManager.getRawMessage("bedrock.geyser-cancel-button");
+            GeyserFormHelper.sendModalForm(owner, title, content, confirmBtn, cancelBtn, confirmed -> {
                 if (!confirmed) {
                     owner.sendMessage(configManager.getMessage("geyser-form-cancelled"));
                     return;

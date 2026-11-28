@@ -79,8 +79,8 @@ public class SquaremapHook {
         if (!active)
             return;
 
-        double fillOpacity = plugin.getConfigManager().getPluginConfig().squaremap.fillOpacity;
-        double borderOpacity = plugin.getConfigManager().getPluginConfig().squaremap.borderOpacity;
+        double fillOpacity = plugin.getConfigManager().getPluginConfig().maps.squaremap.fillOpacity;
+        double borderOpacity = plugin.getConfigManager().getPluginConfig().maps.squaremap.borderOpacity;
 
         SquaremapProvider.get().mapWorlds().forEach(mapWorld -> {
             SimpleLayerProvider provider;

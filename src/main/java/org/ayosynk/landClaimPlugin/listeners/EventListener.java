@@ -127,29 +127,26 @@ public class EventListener implements Listener {
 
                 if (isChatNotifyEnabled(playerId)) {
                     if (oldProfile != null) {
-                        String rawLeave = configManager.getMessagesConfig().claimLeaveChat;
+                        String rawLeave = configManager.getMessagesConfig().chatNotifications.claimLeaveChat;
                         if (rawLeave != null && !rawLeave.isBlank()) {
-                            String leaveMsg = configManager.getMessage("claim-leave-chat",
+                            player.sendMessage(configManager.getMessage("claim-leave-chat",
                                     "<owner>", oldProfile.getColoredOwnerName(),
                                     "<claim>", oldProfile.getColoredName(),
-                                    "<name>", oldProfile.getColoredName());
-                            player.sendMessage(leaveMsg);
+                                    "<name>", oldProfile.getColoredName()));
                         }
                     }
                     if (newProfile != null) {
-                        String rawEnter = configManager.getMessagesConfig().claimEnterChat;
+                        String rawEnter = configManager.getMessagesConfig().chatNotifications.claimEnterChat;
                         if (rawEnter != null && !rawEnter.isBlank()) {
-                            String enterMsg = configManager.getMessage("claim-enter-chat",
+                            player.sendMessage(configManager.getMessage("claim-enter-chat",
                                     "<owner>", newProfile.getColoredOwnerName(),
                                     "<claim>", newProfile.getColoredName(),
-                                    "<name>", newProfile.getColoredName());
-                            player.sendMessage(enterMsg);
+                                    "<name>", newProfile.getColoredName()));
                         }
                     } else if (oldProfile != null) {
-                        String rawWild = configManager.getMessagesConfig().wildernessEnterChat;
+                        String rawWild = configManager.getMessagesConfig().chatNotifications.wildernessEnterChat;
                         if (rawWild != null && !rawWild.isBlank()) {
-                            String wildMsg = configManager.getMessage("wilderness-enter-chat");
-                            player.sendMessage(wildMsg);
+                            player.sendMessage(configManager.getMessage("wilderness-enter-chat"));
                         }
                     }
                 }
@@ -161,11 +158,10 @@ public class EventListener implements Listener {
 
             String message;
             if (isClaimed && newProfile != null) {
-                UUID ownerId = claimManager.getChunkOwner(currentPos);
                 String ownerName = newProfile.getColoredOwnerName();
                 String claimName = newProfile.getColoredName();
 
-                if (playerId.equals(ownerId)) {
+                if (newProfile.isOwner(playerId)) {
                     message = configManager.getActionBarMessage("actionbar-owned-by-you")
                             .replace("<claim>", claimName)
                             .replace("<name>", claimName);
@@ -277,23 +273,6 @@ public class EventListener implements Listener {
         }
     }
 
-    private boolean isConnectedToOtherClaims(ChunkPosition pos, ClaimProfile profile) {
-        if (!configManager.requireConnectedClaims())
-            return false;
-
-        if (profile == null)
-            return false;
-        Set<ChunkPosition> claims = profile.getOwnedChunks();
-        if (claims.isEmpty())
-            return false;
-
-        Set<ChunkPosition> neighbors = new HashSet<>(pos.getNeighbors(configManager.allowDiagonalConnections()));
-        neighbors.retainAll(claims);
-        neighbors.remove(pos);
-
-        return !neighbors.isEmpty();
-    }
-
     public void cleanupPlayer(UUID playerId) {
         lastChunkMap.remove(playerId);
         lastActionBarMap.remove(playerId);
@@ -347,30 +326,21 @@ public class EventListener implements Listener {
             }
 
             final ChunkPosition target = safe;
-            FoliaScheduler.runForPlayer(plugin, player, () -> {
-                org.bukkit.World world = player.getWorld();
-                int blockX = (target.x() << 4) + 8;
-                int blockZ = (target.z() << 4) + 8;
-                FoliaScheduler.runAtLocation(plugin,
-                        new org.bukkit.Location(world, blockX + 0.5, 0, blockZ + 0.5), () -> {
-                    int blockY = world.getHighestBlockYAt(blockX, blockZ);
-                    org.bukkit.Location safeLoc = new org.bukkit.Location(world, blockX + 0.5, blockY + 1.0, blockZ + 0.5);
-                    player.teleportAsync(safeLoc).thenAccept(success -> {
-                        if (success) {
-                            player.sendMessage(configManager.getMessage("banned-teleported-out",
-                                    "<owner>", bannedFrom.getDisplayOwnerName()));
-                        }
-                    });
+            org.bukkit.World world = player.getWorld();
+            int blockX = (target.x() << 4) + 8;
+            int blockZ = (target.z() << 4) + 8;
+            FoliaScheduler.runAtLocation(plugin,
+                    new org.bukkit.Location(world, blockX + 0.5, 0, blockZ + 0.5), () -> {
+                int blockY = world.getHighestBlockYAt(blockX, blockZ);
+                org.bukkit.Location safeLoc = new org.bukkit.Location(world, blockX + 0.5, blockY + 1.0, blockZ + 0.5);
+                player.teleportAsync(safeLoc).thenAccept(success -> {
+                    if (success) {
+                        player.sendMessage(configManager.getMessage("banned-teleported-out",
+                                "<owner>", bannedFrom.getDisplayOwnerName()));
+                    }
                 });
             });
         });
-    }
-
-    private boolean isAdjacentTo(ChunkPosition pos, ClaimProfile profile) {
-        for (ChunkPosition neighbor : pos.getNeighbors(false)) {
-            if (profile.ownsChunk(neighbor)) return true;
-        }
-        return false;
     }
 
     private ChunkPosition findNearbySafeChunk(ChunkPosition start, ClaimProfile profile) {

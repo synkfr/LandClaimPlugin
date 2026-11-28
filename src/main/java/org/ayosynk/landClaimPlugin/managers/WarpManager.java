@@ -210,14 +210,19 @@ public class WarpManager {
     public int getWarpLimit(Player player) {
         if (player.hasPermission("landclaim.admin"))
             return Integer.MAX_VALUE;
-        int limit = configManager.getPluginConfig().maxWarps;
-        for (int i = 100; i > 0; i--) {
-            if (player.hasPermission("landclaim.warps.limit." + i)) {
-                limit = i;
-                break;
+        int limit = configManager.getPluginConfig().limits.maxWarps;
+        for (org.bukkit.permissions.PermissionAttachmentInfo permInfo : player.getEffectivePermissions()) {
+            String perm = permInfo.getPermission();
+            if (perm.startsWith("landclaim.warps.limit.")) {
+                try {
+                    int amount = Integer.parseInt(perm.substring("landclaim.warps.limit.".length()));
+                    if (amount > limit) {
+                        limit = amount;
+                    }
+                } catch (NumberFormatException ignored) {}
             }
         }
-        org.ayosynk.landClaimPlugin.models.ClaimProfile profile = plugin.getClaimManager().getActiveProfile(player);
+        ClaimProfile profile = plugin.getClaimManager().getActiveProfile(player);
         if (profile != null) {
             limit += profile.getBonusWarpSlots();
         }

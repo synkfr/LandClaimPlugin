@@ -51,33 +51,19 @@ public class PermissionResolver {
             }
         }
 
-        // 4. Check if player belongs to an allied claim
+        // 4. Check if player owns or belongs to an allied claim
         LandClaimPlugin plugin = LandClaimPlugin.getInstance();
-        if (plugin != null && plugin.getClaimManager() != null) {
-            // Does this player own any claim?
-            ClaimProfile playerProfile = plugin.getClaimManager().getProfile(playerId);
-            if (playerProfile != null) {
-                // Is player's claim an ally of the target profile?
-                if (profile.hasAlly(playerProfile.getProfileId())) {
-                    Set<String> allyFlags = profile.getAllyFlags(playerProfile.getProfileId());
-                    if (allyFlags != null && allyFlags.contains(flag.toUpperCase())) {
-                        return true;
-                    }
+        if (plugin != null && plugin.getClaimManager() != null && !profile.getAllyFlags().isEmpty()) {
+            String upperFlag = flag.toUpperCase();
+            for (var allyEntry : profile.getAllyFlags().entrySet()) {
+                Set<String> allyFlags = allyEntry.getValue();
+                if (allyFlags == null || !allyFlags.contains(upperFlag)) {
+                    continue;
                 }
-            } else {
-                // If the player doesn't own a claim, maybe they are a member of an allied
-                // claim?
-                // Iterating through all allies of the target profile to see if the player is a
-                // member.
-                for (UUID allyOwnerId : profile.getAllyFlags().keySet()) {
-                    ClaimProfile allyProfile = plugin.getClaimManager().getProfile(allyOwnerId);
-                    if (allyProfile != null
-                            && (allyProfile.isOwner(playerId) || allyProfile.getMemberRole(playerId) != null)) {
-                        Set<String> allyFlags = profile.getAllyFlags(allyOwnerId);
-                        if (allyFlags != null && allyFlags.contains(flag.toUpperCase())) {
-                            return true;
-                        }
-                    }
+                ClaimProfile allyProfile = plugin.getClaimManager().getProfile(allyEntry.getKey());
+                if (allyProfile != null
+                        && (allyProfile.isOwner(playerId) || allyProfile.getMemberRole(playerId) != null)) {
+                    return true;
                 }
             }
         }

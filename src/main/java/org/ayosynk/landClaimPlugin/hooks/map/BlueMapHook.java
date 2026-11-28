@@ -81,8 +81,8 @@ public class BlueMapHook {
 
             plugin.getLogger().info("[BlueMap] Updating markers: " + allProfiles.size() + " profiles, " + totalChunks + " total chunks across " + worldProfileClaims.size() + " worlds.");
 
-            double fillOpacity = plugin.getConfigManager().getPluginConfig().bluemap.fillOpacity;
-            double borderOpacity = plugin.getConfigManager().getPluginConfig().bluemap.borderOpacity;
+            double fillOpacity = plugin.getConfigManager().getPluginConfig().maps.bluemap.fillOpacity;
+            double borderOpacity = plugin.getConfigManager().getPluginConfig().maps.bluemap.borderOpacity;
 
             int totalMarkers = 0;
 

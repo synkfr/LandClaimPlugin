@@ -20,23 +20,32 @@ public class PistonProtectionListener implements Listener {
         this.claimManager = claimManager;
     }
 
+    private boolean isCrossBorderProtected(ChunkPosition pos, UUID pistonOwner) {
+        if (!claimManager.isChunkClaimed(pos)) {
+            return false;
+        }
+        UUID targetOwner = claimManager.getChunkOwner(pos);
+        return pistonOwner == null || !pistonOwner.equals(targetOwner);
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPistonExtend(BlockPistonExtendEvent event) {
         ChunkPosition pistonChunk = new ChunkPosition(event.getBlock());
         UUID pistonOwner = claimManager.isChunkClaimed(pistonChunk) ? claimManager.getChunkOwner(pistonChunk) : null;
 
-        for (Block block : event.getBlocks()) {
-            Block pushedTo = block.getRelative(event.getDirection());
-            ChunkPosition targetChunk = new ChunkPosition(pushedTo);
+        if (event.getBlocks().isEmpty()) {
+            ChunkPosition headTarget = new ChunkPosition(event.getBlock().getRelative(event.getDirection()));
+            if (isCrossBorderProtected(headTarget, pistonOwner)) {
+                event.setCancelled(true);
+            }
+            return;
+        }
 
-            // If pushing into a claim
-            if (claimManager.isChunkClaimed(targetChunk)) {
-                UUID targetOwner = claimManager.getChunkOwner(targetChunk);
-                // Allow only if pushed from the SAME claim
-                if (pistonOwner == null || !pistonOwner.equals(targetOwner)) {
-                    event.setCancelled(true);
-                    return;
-                }
+        for (Block block : event.getBlocks()) {
+            if (isCrossBorderProtected(new ChunkPosition(block), pistonOwner)
+                    || isCrossBorderProtected(new ChunkPosition(block.getRelative(event.getDirection())), pistonOwner)) {
+                event.setCancelled(true);
+                return;
             }
         }
     }
@@ -47,16 +56,9 @@ public class PistonProtectionListener implements Listener {
         UUID pistonOwner = claimManager.isChunkClaimed(pistonChunk) ? claimManager.getChunkOwner(pistonChunk) : null;
 
         for (Block block : event.getBlocks()) {
-            ChunkPosition targetChunk = new ChunkPosition(block);
-
-            // If pulling from a claim
-            if (claimManager.isChunkClaimed(targetChunk)) {
-                UUID targetOwner = claimManager.getChunkOwner(targetChunk);
-                // Allow only if pulled from the SAME claim
-                if (pistonOwner == null || !pistonOwner.equals(targetOwner)) {
-                    event.setCancelled(true);
-                    return;
-                }
+            if (isCrossBorderProtected(new ChunkPosition(block), pistonOwner)) {
+                event.setCancelled(true);
+                return;
             }
         }
     }

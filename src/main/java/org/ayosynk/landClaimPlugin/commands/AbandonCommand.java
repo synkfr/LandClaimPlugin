@@ -63,9 +63,11 @@ public class AbandonCommand implements LandClaimCommand {
     }
 
     private void showAbandonForm(Player player, ClaimProfile profile) {
-        String title = configManager.getMessage("geyser-confirm-title");
-        String content = configManager.getMessage("geyser-abandon-content");
-        GeyserFormHelper.sendModalForm(player, title, content, "Confirm", "Cancel", confirmed -> {
+        String title = configManager.getRawMessage("bedrock.geyser-confirm-title");
+        String content = configManager.getRawMessage("bedrock.geyser-abandon-content");
+        String confirmBtn = configManager.getRawMessage("bedrock.geyser-confirm-button");
+        String cancelBtn = configManager.getRawMessage("bedrock.geyser-cancel-button");
+        GeyserFormHelper.sendModalForm(player, title, content, confirmBtn, cancelBtn, confirmed -> {
             if (!confirmed) {
                 player.sendMessage(configManager.getMessage("geyser-form-cancelled"));
                 return;

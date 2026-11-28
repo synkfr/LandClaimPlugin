@@ -36,7 +36,6 @@ public class SellCommand implements LandClaimCommand {
                     String profileName = context.get("profile");
                     double price = context.get("price");
 
-                    // 1. Find profile by name and check ownership
                     ClaimProfile targetProfile = null;
                     for (ClaimProfile cp : claimManager.getAllProfiles()) {
                         if (cp.isOwner(player.getUniqueId()) && cp.getName().equalsIgnoreCase(profileName)) {
@@ -46,21 +45,19 @@ public class SellCommand implements LandClaimCommand {
                     }
 
                     if (targetProfile == null) {
-                        player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                                .deserialize("<red>Could not find a claim profile owned by you named: " + profileName));
+                        player.sendMessage(configManager.getMessage("profile.not-owned-by-name", "<name>", profileName));
                         return;
                     }
 
                     ClaimProfile activeProfile = claimManager.getActiveProfile(player);
                     boolean isActive = activeProfile != null && activeProfile.getProfileId().equals(targetProfile.getProfileId());
-
                     final ClaimProfile profileToSell = targetProfile;
 
                     if (isActive) {
-                        // Prompt for confirmation using ConfirmationGUI
-                        org.ayosynk.landClaimPlugin.gui.ConfirmationGUI.open(player, "§cSell Active Profile?",
+                        org.ayosynk.landClaimPlugin.gui.ConfirmationGUI.open(player,
+                                configManager.getRawTemplate("gui.confirm-sell-active"),
                                 () -> executeSell(player, profileToSell, price),
-                                () -> player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize("<gray>Listing cancelled."))
+                                () -> player.sendMessage(configManager.getMessage("economy.sell-cancelled"))
                         );
                     } else {
                         executeSell(player, profileToSell, price);
@@ -72,8 +69,7 @@ public class SellCommand implements LandClaimCommand {
         try {
             Plugin ecoPlugin = Bukkit.getPluginManager().getPlugin("LandClaimPlugin-Economy");
             if (ecoPlugin == null || !ecoPlugin.isEnabled()) {
-                player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>Economy features are disabled."));
+                player.sendMessage(configManager.getMessage("economy.disabled"));
                 return;
             }
 
@@ -83,8 +79,7 @@ public class SellCommand implements LandClaimCommand {
         } catch (Exception e) {
             plugin.getLogger().severe("Error listing profile for sale: " + e.getMessage());
             e.printStackTrace();
-            player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize("<red>An error occurred while listing the claim."));
+            player.sendMessage(configManager.getMessage("economy.sell-error"));
         }
     }
 }

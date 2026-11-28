@@ -45,8 +45,7 @@ public class ClaimDecayManager {
     public void runDecayCheck(CommandSender notifySender) {
         if (isRunning.getAndSet(true)) {
             if (notifySender != null) {
-                notifySender.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize("<red>A claim decay scan is already in progress."));
+                notifySender.sendMessage(configManager.getMessage("admin.decay-already-running"));
             }
             return;
         }
@@ -173,17 +172,7 @@ public class ClaimDecayManager {
     }
 
     private long getPlayerLastSeen(OfflinePlayer player) {
-        long lastPlayed = player.getLastPlayed();
-        if (lastPlayed > 0) {
-            return lastPlayed;
-        }
-        try {
-            Method m = player.getClass().getMethod("getLastLogin");
-            Object val = m.invoke(player);
-            if (val instanceof Long l && l > 0) {
-                return l;
-            }
-        } catch (Throwable ignored) {}
-        return 0L;
+        long lastSeen = player.getLastSeen();
+        return lastSeen > 0 ? lastSeen : player.getLastLogin();
     }
 }

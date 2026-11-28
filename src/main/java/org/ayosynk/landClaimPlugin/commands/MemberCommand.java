@@ -102,10 +102,10 @@ public class MemberCommand implements LandClaimCommand {
                         return;
                     }
 
-                    int maxMembers = configManager.getPluginConfig().maxClaimMembers + profile.getBonusMemberSlots();
+                    int maxMembers = configManager.getPluginConfig().limits.maxClaimMembers + profile.getBonusMemberSlots();
                     if (profile.getMemberRoles().size() >= maxMembers && !player.hasPermission("landclaim.admin")) {
-                        player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<red>You have reached your maximum member limit (" + maxMembers + " members). Upgrade your claim limit to invite more."));
+                        player.sendMessage(configManager.getMessage("members.limit-reached",
+                                "<limit>", String.valueOf(maxMembers)));
                         return;
                     }
 
@@ -148,7 +148,7 @@ public class MemberCommand implements LandClaimCommand {
 
                     profile.removeMember(targetId);
 
-                    plugin.getCacheManager().getProfileCache().put(player.getUniqueId(), profile);
+                    plugin.getCacheManager().getProfileCache().put(profile.getProfileId(), profile);
                     claimManager.saveAndSync(profile);
 
                     player.sendMessage(configManager.getMessage("member-kicked", "<player>", targetName));
@@ -180,8 +180,8 @@ public class MemberCommand implements LandClaimCommand {
                     int currentMemberships = claimManager.getMemberProfiles(playerId).size();
                     int maxMemberships = configManager.getMaxMemberships();
                     if (currentMemberships >= maxMemberships && !player.hasPermission("landclaim.admin")) {
-                        player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                            .deserialize("<red>You cannot join more than " + maxMemberships + " claims."));
+                        player.sendMessage(configManager.getMessage("members.membership-limit-reached",
+                                "<limit>", String.valueOf(maxMemberships)));
                         return;
                     }
 

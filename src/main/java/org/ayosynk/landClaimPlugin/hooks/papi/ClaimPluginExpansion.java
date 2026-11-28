@@ -145,7 +145,7 @@ public class ClaimPluginExpansion extends PlaceholderExpansion {
             if (player != null) {
                 ClaimProfile profile = plugin.getClaimManager().getActiveProfile(player);
                 if (profile != null) {
-                    return String.valueOf(plugin.getConfigManager().getPluginConfig().maxClaimMembers + profile.getBonusMemberSlots());
+                    return String.valueOf(plugin.getConfigManager().getPluginConfig().limits.maxClaimMembers + profile.getBonusMemberSlots());
                 }
             }
             return "0";

@@ -22,6 +22,7 @@ public class UnstuckCommand implements LandClaimCommand {
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
+    private final java.util.Map<java.util.UUID, Long> cooldowns = new java.util.concurrent.ConcurrentHashMap<>();
 
     public UnstuckCommand(LandClaimPlugin plugin, ClaimManager claimManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -35,6 +36,19 @@ public class UnstuckCommand implements LandClaimCommand {
                 .handler(ctx -> {
                     Player player = ctx.sender().source();
                     if (!org.ayosynk.landClaimPlugin.gui.GuiHelper.checkPermission(player, "landclaim.unstuck", plugin)) return;
+                    int cooldownSeconds = configManager.getUnstuckCooldown();
+                    if (cooldownSeconds > 0 && !player.hasPermission("landclaim.admin")) {
+                        Long lastUse = cooldowns.get(player.getUniqueId());
+                        if (lastUse != null) {
+                            long elapsedSeconds = (System.currentTimeMillis() - lastUse) / 1000L;
+                            if (elapsedSeconds < cooldownSeconds) {
+                                long remaining = cooldownSeconds - elapsedSeconds;
+                                player.sendMessage(configManager.getMessage("protection.unstuck-cooldown",
+                                        "<seconds>", String.valueOf(remaining)));
+                                return;
+                            }
+                        }
+                    }
                     // Capture the start position synchronously, on the player's region thread
                     // (this is where commands run on both Paper and Folia). Reading
                     // player.getLocation() here is safe.
@@ -49,6 +63,9 @@ public class UnstuckCommand implements LandClaimCommand {
             return;
         }
 
+        if (configManager.getUnstuckCooldown() > 0) {
+            cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+        }
         player.sendMessage(configManager.getMessage("unstuck-searching"));
 
         Queue<ChunkPosition> queue = new LinkedList<>();
