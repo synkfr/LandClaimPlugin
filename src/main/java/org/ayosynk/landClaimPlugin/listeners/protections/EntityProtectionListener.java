@@ -15,6 +15,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
@@ -22,7 +23,25 @@ import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 public class EntityProtectionListener implements Listener {
+
+    private static final Set<CreatureSpawnEvent.SpawnReason> BLOCKED_SPAWN_REASONS = EnumSet.of(
+            CreatureSpawnEvent.SpawnReason.NATURAL,
+            CreatureSpawnEvent.SpawnReason.JOCKEY,
+            CreatureSpawnEvent.SpawnReason.MOUNT,
+            CreatureSpawnEvent.SpawnReason.REINFORCEMENTS,
+            CreatureSpawnEvent.SpawnReason.NETHER_PORTAL,
+            CreatureSpawnEvent.SpawnReason.LIGHTNING,
+            CreatureSpawnEvent.SpawnReason.PATROL,
+            CreatureSpawnEvent.SpawnReason.RAID,
+            CreatureSpawnEvent.SpawnReason.VILLAGE_INVASION,
+            CreatureSpawnEvent.SpawnReason.SPAWNER,
+            CreatureSpawnEvent.SpawnReason.TRIAL_SPAWNER,
+            CreatureSpawnEvent.SpawnReason.TRAP,
+            CreatureSpawnEvent.SpawnReason.SILVERFISH_BLOCK);
 
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
@@ -111,8 +130,9 @@ public class EntityProtectionListener implements Listener {
             if (damager != null) {
                 checkPermission(damager, pos, event, "MODIFY_ITEM_FRAMES");
             } else {
-                // If broken by a non-player entity (like a stray arrow), cancel if it's in a claim
-                if (claimManager.isChunkClaimed(pos)) {
+                ClaimProfile profile = claimManager.getProfileAt(pos);
+                boolean isTnt = remover.getType() == EntityType.TNT || remover.getType() == EntityType.TNT_MINECART;
+                if (profile != null && !(isTnt && profile.isTntEnabled())) {
                     event.setCancelled(true);
                 }
             }
@@ -214,6 +234,17 @@ public class EntityProtectionListener implements Listener {
                 // We default to cancelling non-player entity changes in claims
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (!BLOCKED_SPAWN_REASONS.contains(event.getSpawnReason())) {
+            return;
+        }
+        ClaimProfile profile = claimManager.getProfileAt(new ChunkPosition(event.getLocation()));
+        if (profile != null && !profile.isMobSpawningEnabled()) {
+            event.setCancelled(true);
         }
     }
 }

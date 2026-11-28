@@ -33,7 +33,7 @@ public class ClaimSettingsGUI {
                                         "1 1 2 2 O 2 2 1 1",
                                         "1 2 2 2 2 2 2 2 1",
                                         "2 N C R W V T A 2",
-                                        "1 2 2 2 2 2 2 2 1",
+                                        "1 2 2 E 2 M 2 2 1",
                                         "1 1 2 2 B 2 2 1 1"
                         };
 
@@ -107,6 +107,9 @@ public class ClaimSettingsGUI {
                                                 profile.setVisualizationMode(newMode);
                                                 plugin.getDatabaseManager().getProfileDao().saveProfile(profile);
                                                 plugin.getVisualizationManager().invalidateCache(profile.getProfileId());
+                                                if (!p.getUniqueId().equals(profile.getProfileId())) {
+                                                        plugin.getVisualizationManager().invalidateCache(p.getUniqueId());
+                                                }
                                                 p.sendMessage(plugin.getConfigManager().getMessage(
                                                                  "visibility-mode-changed", "<mode>", newMode));
                                                 p.closeInventory();
@@ -118,6 +121,18 @@ public class ClaimSettingsGUI {
                                                 p.closeInventory();
                                                 TitleToggleGUI.open(p, profile, plugin);
                                         }) : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
+                        ingredients.put('E', canManageSettings ? buildToggleSlot(config.tntToggle, "<tnt_status>",
+                                        profile.isTntEnabled(), () -> profile.setTntEnabled(!profile.isTntEnabled()),
+                                        () -> profile.isTntEnabled(), "tnt-enabled", "tnt-disabled",
+                                        profile, player, ownerName, claimName, plugin)
+                                        : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
+
+                        ingredients.put('M', canManageSettings ? buildToggleSlot(config.mobSpawningToggle, "<mob_spawning_status>",
+                                        profile.isMobSpawningEnabled(), () -> profile.setMobSpawningEnabled(!profile.isMobSpawningEnabled()),
+                                        () -> profile.isMobSpawningEnabled(), "mob-spawning-enabled", "mob-spawning-disabled",
+                                        profile, player, ownerName, claimName, plugin)
+                                        : GuiHelper.buildSlot(config.filler2.material, config.filler2.name, config.filler2.lore));
 
                         // Abandon: OWNER or ADMIN BYPASS
                         ingredients.put('A', canManage ? GuiHelper.buildSlot(config.abandonAll.material, config.abandonAll.name,
@@ -143,6 +158,24 @@ public class ClaimSettingsGUI {
                         CustomGui gui = new CustomGui(title, 5);
                         gui.fillFromStructure(structure, ingredients);
                         gui.open(player);
+                });
+        }
+
+        private static SlotDefinition buildToggleSlot(ClaimSettingsConfig.ItemConfig item, String placeholder,
+                        boolean initialState, Runnable toggleAction, java.util.function.BooleanSupplier stateSupplier,
+                        String enabledKey, String disabledKey, ClaimProfile profile, Player player,
+                        String ownerName, String claimName, LandClaimPlugin plugin) {
+                java.util.List<String> lore = new java.util.ArrayList<>(item.lore.size());
+                String status = initialState ? "<green>Enabled" : "<red>Disabled";
+                for (String line : item.lore) {
+                        lore.add(line.replace(placeholder, status));
+                }
+                return GuiHelper.buildSlot(item.material, item.name, lore, profile, player, ownerName, claimName, (p, e) -> {
+                        toggleAction.run();
+                        plugin.getClaimManager().saveAndSync(profile);
+                        p.sendMessage(plugin.getConfigManager().getMessage(stateSupplier.getAsBoolean() ? enabledKey : disabledKey));
+                        p.closeInventory();
+                        ClaimSettingsGUI.open(p, profile, plugin);
                 });
         }
 }

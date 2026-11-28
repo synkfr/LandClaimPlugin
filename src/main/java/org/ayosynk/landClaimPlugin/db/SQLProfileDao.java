@@ -107,7 +107,9 @@ public class SQLProfileDao implements ProfileDao {
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN real_owner_id VARCHAR(36) NULL",
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN bonus_role_slots INT DEFAULT 0",
                     "ALTER TABLE " + p + "claim_profiles ADD COLUMN bonus_member_slots INT DEFAULT 0",
-                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN bonus_warp_slots INT DEFAULT 0"
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN bonus_warp_slots INT DEFAULT 0",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN tnt_enabled BOOLEAN DEFAULT FALSE",
+                    "ALTER TABLE " + p + "claim_profiles ADD COLUMN mob_spawning_enabled BOOLEAN DEFAULT TRUE"
             };
             for (String alter : alters) {
                 try (PreparedStatement stmt = conn.prepareStatement(alter)) {
@@ -130,9 +132,9 @@ public class SQLProfileDao implements ProfileDao {
 
             String upsertProfile = sqlite
                     ? "INSERT OR REPLACE INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id, bonus_role_slots, bonus_member_slots, bonus_warp_slots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id, bonus_role_slots, bonus_member_slots, bonus_warp_slots, tnt_enabled, mob_spawning_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                     : "INSERT INTO " + p
-                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id, bonus_role_slots, bonus_member_slots, bonus_warp_slots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title), enter_title_mode=VALUES(enter_title_mode), leave_title_mode=VALUES(leave_title_mode), owner_alias=VALUES(owner_alias), pvp_enabled=VALUES(pvp_enabled), pvp_timer_end=VALUES(pvp_timer_end), real_owner_id=VALUES(real_owner_id), bonus_role_slots=VALUES(bonus_role_slots), bonus_member_slots=VALUES(bonus_member_slots), bonus_warp_slots=VALUES(bonus_warp_slots)";
+                            + "claim_profiles (owner_id, name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id, bonus_role_slots, bonus_member_slots, bonus_warp_slots, tnt_enabled, mob_spawning_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), claim_color=VALUES(claim_color), vis_mode=VALUES(vis_mode), title_enabled=VALUES(title_enabled), enter_title=VALUES(enter_title), leave_title=VALUES(leave_title), enter_title_mode=VALUES(enter_title_mode), leave_title_mode=VALUES(leave_title_mode), owner_alias=VALUES(owner_alias), pvp_enabled=VALUES(pvp_enabled), pvp_timer_end=VALUES(pvp_timer_end), real_owner_id=VALUES(real_owner_id), bonus_role_slots=VALUES(bonus_role_slots), bonus_member_slots=VALUES(bonus_member_slots), bonus_warp_slots=VALUES(bonus_warp_slots), tnt_enabled=VALUES(tnt_enabled), mob_spawning_enabled=VALUES(mob_spawning_enabled)";
 
             Connection conn = null;
             try {
@@ -157,6 +159,8 @@ public class SQLProfileDao implements ProfileDao {
                     stmt.setInt(14, profile.getBonusRoleSlots());
                     stmt.setInt(15, profile.getBonusMemberSlots());
                     stmt.setInt(16, profile.getBonusWarpSlots());
+                    stmt.setBoolean(17, profile.isTntEnabled());
+                    stmt.setBoolean(18, profile.isMobSpawningEnabled());
                     stmt.executeUpdate();
                 }
 
@@ -377,9 +381,11 @@ public class SQLProfileDao implements ProfileDao {
                 int bonusRoleSlots;
                 int bonusMemberSlots;
                 int bonusWarpSlots;
+                boolean tntEnabled;
+                boolean mobSpawningEnabled;
                 try (PreparedStatement stmt = conn
                         .prepareStatement(
-                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id, bonus_role_slots, bonus_member_slots, bonus_warp_slots FROM " + p
+                                "SELECT name, claim_color, vis_mode, title_enabled, enter_title, leave_title, enter_title_mode, leave_title_mode, owner_alias, pvp_enabled, pvp_timer_end, real_owner_id, bonus_role_slots, bonus_member_slots, bonus_warp_slots, tnt_enabled, mob_spawning_enabled FROM " + p
                                         + "claim_profiles WHERE owner_id = ?")) {
                     stmt.setString(1, ownerId.toString());
                     try (ResultSet rs = stmt.executeQuery()) {
@@ -400,6 +406,8 @@ public class SQLProfileDao implements ProfileDao {
                         bonusRoleSlots = rs.getInt("bonus_role_slots");
                         bonusMemberSlots = rs.getInt("bonus_member_slots");
                         bonusWarpSlots = rs.getInt("bonus_warp_slots");
+                        tntEnabled = rs.getBoolean("tnt_enabled");
+                        mobSpawningEnabled = rs.getObject("mob_spawning_enabled") == null || rs.getBoolean("mob_spawning_enabled");
                     }
                 }
 
@@ -423,6 +431,8 @@ public class SQLProfileDao implements ProfileDao {
                 profile.setBonusRoleSlots(bonusRoleSlots);
                 profile.setBonusMemberSlots(bonusMemberSlots);
                 profile.setBonusWarpSlots(bonusWarpSlots);
+                profile.setTntEnabled(tntEnabled);
+                profile.setMobSpawningEnabled(mobSpawningEnabled);
                 loadChunks(conn, p, profile);
                 loadVisitorFlags(conn, p, profile);
                 loadTrustedPlayers(conn, p, profile);
@@ -487,6 +497,8 @@ public class SQLProfileDao implements ProfileDao {
                     profile.setBonusRoleSlots(rs.getInt("bonus_role_slots"));
                     profile.setBonusMemberSlots(rs.getInt("bonus_member_slots"));
                     profile.setBonusWarpSlots(rs.getInt("bonus_warp_slots"));
+                    profile.setTntEnabled(rs.getBoolean("tnt_enabled"));
+                    profile.setMobSpawningEnabled(rs.getObject("mob_spawning_enabled") == null || rs.getBoolean("mob_spawning_enabled"));
                     loadChunks(conn, p, profile);
                     loadVisitorFlags(conn, p, profile);
                     loadTrustedPlayers(conn, p, profile);

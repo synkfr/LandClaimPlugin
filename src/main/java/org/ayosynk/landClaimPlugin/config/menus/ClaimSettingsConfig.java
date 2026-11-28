@@ -68,6 +68,22 @@ public class ClaimSettingsConfig extends OkaeriConfig {
             List.of(
                     "<gray>Toggle showing a title when players enter/leave."));
 
+    @Comment("TNT Explosions Toggle Button")
+    public ItemConfig tntToggle = new ItemConfig(
+            "TNT",
+            "<red>Toggle TNT Explosions",
+            List.of(
+                    "<gray>Allow or block TNT explosions inside this claim.",
+                    "<gray>Status: <tnt_status>"));
+
+    @Comment("Mob Spawning Toggle Button")
+    public ItemConfig mobSpawningToggle = new ItemConfig(
+            "SPAWNER",
+            "<green>Toggle Mob Spawning",
+            List.of(
+                    "<gray>Allow or block natural mob spawning inside this claim.",
+                    "<gray>Status: <mob_spawning_status>"));
+
     @Comment("Abandon All Button")
     public ItemConfig abandonAll = new ItemConfig(
             "FLOWER_BANNER_PATTERN",

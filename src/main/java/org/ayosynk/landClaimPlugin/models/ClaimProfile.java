@@ -42,6 +42,10 @@ public class ClaimProfile {
     private boolean pvpEnabled = false;
     private long pvpTimerEnd = 0L;
 
+    // Claim protection toggles
+    private boolean tntEnabled = false;
+    private boolean mobSpawningEnabled = true;
+
     // Bonus slots from purchasing
     private int bonusRoleSlots = 0;
     private int bonusMemberSlots = 0;
@@ -181,6 +185,24 @@ public class ClaimProfile {
 
     public void setPvpTimerEnd(long pvpTimerEnd) {
         this.pvpTimerEnd = pvpTimerEnd;
+    }
+
+    // --- Claim Protection Toggles ---
+
+    public boolean isTntEnabled() {
+        return tntEnabled;
+    }
+
+    public void setTntEnabled(boolean tntEnabled) {
+        this.tntEnabled = tntEnabled;
+    }
+
+    public boolean isMobSpawningEnabled() {
+        return mobSpawningEnabled;
+    }
+
+    public void setMobSpawningEnabled(boolean mobSpawningEnabled) {
+        this.mobSpawningEnabled = mobSpawningEnabled;
     }
 
     // --- Chunks ---
