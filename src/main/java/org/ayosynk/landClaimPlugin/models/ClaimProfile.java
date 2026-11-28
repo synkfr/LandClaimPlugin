@@ -31,11 +31,14 @@ public class ClaimProfile {
     private String claimColor; // Hex color string, e.g. "#00FF00", nullable (falls back to default)
     private String visualizationMode = "DISPLAY_ENTITY"; // "DISPLAY_ENTITY" or "PARTICLE"
 
+    public static final String DEFAULT_ENTER_TITLE = "<color:#00E262>Entering <color:#FFFFFF><owner><color:#A0A0A0>'s Claim";
+    public static final String DEFAULT_LEAVE_TITLE = "<color:#A0A0A0>Leaving <color:#FFFFFF><owner><color:#A0A0A0>'s Claim";
+
     // Title settings
     private boolean enterTitleEnabled = false;
-    private String enterTitle = "<gold>Entering <owner>'s Claim";
+    private String enterTitle = DEFAULT_ENTER_TITLE;
     private String enterTitleMode = "TITLE"; // "TITLE" or "SUBTITLE"
-    private String leaveTitle = "<yellow>Leaving <owner>'s Claim";
+    private String leaveTitle = DEFAULT_LEAVE_TITLE;
     private String leaveTitleMode = "SUBTITLE"; // "TITLE" or "SUBTITLE"
 
     // PvP settings

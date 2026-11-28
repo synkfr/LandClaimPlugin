@@ -10,7 +10,7 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class WarpControlPanelConfig extends OkaeriConfig {
 
-    public String title = "<color:#1E293B>Warp <color:#64748B>· <color:#0369A1>{name}";
+    public String title = "<color:#1F1F1F>Warp · {name}";
 
     @Comment("Outer border frame")
     public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
@@ -21,38 +21,38 @@ public class WarpControlPanelConfig extends OkaeriConfig {
     @Comment("Change Location Button")
     public ItemConfig changeLocation = new ItemConfig(
             "LIME_BED",
-            "<color:#34D399><b>Update Location",
-            List.of("<color:#9AA5B4>Move this warp to your", "<color:#9AA5B4>current standing position."));
+            "<color:#00E262><b>Update Location",
+            List.of("<color:#A0A0A0>Move this warp to your", "<color:#A0A0A0>current standing position."));
 
     @Comment("Change Icon Button")
     public ItemConfig changeIcon = new ItemConfig(
             "ITEM_FRAME",
-            "<color:#38BDF8><b>Change Icon",
-            List.of("<color:#9AA5B4>Pick a new display icon", "<color:#9AA5B4>for this claim warp."));
+            "<color:#00E262><b>Change Icon",
+            List.of("<color:#A0A0A0>Pick a new display icon", "<color:#A0A0A0>for this claim warp."));
 
     @Comment("Delete Warp Button")
     public ItemConfig deleteWarp = new ItemConfig(
             "BARRIER",
-            "<color:#F87171><b>Delete Warp",
-            List.of("<color:#9AA5B4>Permanently remove this warp."));
+            "<color:#E20000><b>Delete Warp",
+            List.of("<color:#A0A0A0>Permanently remove this warp."));
 
     @Comment("Privacy toggle — shown when the warp is private. Click to make it public.")
     public ItemConfig makePublic = new ItemConfig(
             "LIME_DYE",
-            "<color:#34D399><b>Make Public",
-            List.of("<color:#9AA5B4>Publish to /claim publicwarps", "<color:#9AA5B4>so anyone on the server", "<color:#9AA5B4>can teleport here."));
+            "<color:#00E262><b>Make Public",
+            List.of("<color:#A0A0A0>Publish to /claim publicwarps", "<color:#A0A0A0>so anyone on the server", "<color:#A0A0A0>can teleport here."));
 
     @Comment("Privacy toggle — shown when the warp is public. Click to make it private.")
     public ItemConfig makePrivate = new ItemConfig(
             "GRAY_DYE",
-            "<color:#FBBF24><b>Make Private",
-            List.of("<color:#9AA5B4>Remove from /claim publicwarps.", "<color:#9AA5B4>Only claim members can use it."));
+            "<color:#E2B700><b>Make Private",
+            List.of("<color:#A0A0A0>Remove from /claim publicwarps.", "<color:#A0A0A0>Only claim members can use it."));
 
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
             "ARROW",
-            "<color:#38BDF8>← Back",
-            List.of("<color:#9AA5B4>Return to Warps"));
+            "<color:#00E262>← Back",
+            List.of("<color:#A0A0A0>Return to Warps"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

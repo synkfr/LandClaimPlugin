@@ -140,23 +140,23 @@ public class ConfigManager {
     private void ensureVisitorAdminFlags() {
         boolean changed = false;
         if (!visitorSettingsConfig.flags.containsKey("CLAIM_LAND")) {
-            visitorSettingsConfig.flags.put("CLAIM_LAND", new VisitorSettingsConfig.ItemConfig("GOLDEN_SHOVEL", "<color:#38BDF8>Claim Land", List.of("<color:#9AA5B4>Allow claiming land on behalf of the owner.")));
+            visitorSettingsConfig.flags.put("CLAIM_LAND", new VisitorSettingsConfig.ItemConfig("GOLDEN_SHOVEL", "<color:#00E262>Claim Land", List.of("<color:#A0A0A0>Allow claiming land on behalf of the owner.")));
             changed = true;
         }
         if (!visitorSettingsConfig.flags.containsKey("ADMIN_MENU")) {
-            visitorSettingsConfig.flags.put("ADMIN_MENU", new VisitorSettingsConfig.ItemConfig("COMMAND_BLOCK", "<color:#FBBF24>Admin Menu Access", List.of("<color:#9AA5B4>Allow members to open /claim menu.", "<color:#9AA5B4>Does not permit abandoning the claim.")));
+            visitorSettingsConfig.flags.put("ADMIN_MENU", new VisitorSettingsConfig.ItemConfig("COMMAND_BLOCK", "<color:#E2B700>Admin Menu Access", List.of("<color:#A0A0A0>Allow members to open /claim menu.", "<color:#A0A0A0>Does not permit abandoning the claim.")));
             changed = true;
         }
         if (!visitorSettingsConfig.flags.containsKey("MANAGE_SETTINGS")) {
-            visitorSettingsConfig.flags.put("MANAGE_SETTINGS", new VisitorSettingsConfig.ItemConfig("COMPARATOR", "<color:#38BDF8>Manage Settings", List.of("<color:#9AA5B4>Allow changing claim toggles, color, and name.")));
+            visitorSettingsConfig.flags.put("MANAGE_SETTINGS", new VisitorSettingsConfig.ItemConfig("COMPARATOR", "<color:#00E262>Manage Settings", List.of("<color:#A0A0A0>Allow changing claim toggles, color, and name.")));
             changed = true;
         }
         if (!visitorSettingsConfig.flags.containsKey("MANAGE_MEMBERS")) {
-            visitorSettingsConfig.flags.put("MANAGE_MEMBERS", new VisitorSettingsConfig.ItemConfig("PLAYER_HEAD", "<color:#38BDF8>Manage Members", List.of("<color:#9AA5B4>Allow inviting and managing members or trust.")));
+            visitorSettingsConfig.flags.put("MANAGE_MEMBERS", new VisitorSettingsConfig.ItemConfig("PLAYER_HEAD", "<color:#00E262>Manage Members", List.of("<color:#A0A0A0>Allow inviting and managing members or trust.")));
             changed = true;
         }
         if (!visitorSettingsConfig.flags.containsKey("MANAGE_ROLES")) {
-            visitorSettingsConfig.flags.put("MANAGE_ROLES", new VisitorSettingsConfig.ItemConfig("WRITABLE_BOOK", "<color:#38BDF8>Manage Roles", List.of("<color:#9AA5B4>Allow creating, editing, and deleting roles.")));
+            visitorSettingsConfig.flags.put("MANAGE_ROLES", new VisitorSettingsConfig.ItemConfig("WRITABLE_BOOK", "<color:#00E262>Manage Roles", List.of("<color:#A0A0A0>Allow creating, editing, and deleting roles.")));
             changed = true;
         }
         if (changed) {
@@ -385,7 +385,7 @@ public class ConfigManager {
             String value = reader.get();
             return value != null ? value : "";
         }
-        return "<color:#F87171>Message not found: " + key;
+        return "<color:#E20000>Message not found: " + key;
     }
 
     // --- Upgrade backup & legacy flat-to-grouped YAML migration ---

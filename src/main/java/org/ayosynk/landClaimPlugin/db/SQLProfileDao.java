@@ -413,9 +413,19 @@ public class SQLProfileDao implements ProfileDao {
         profile.setVisualizationMode(visMode != null ? visMode : "DISPLAY_ENTITY");
         profile.setEnterTitleEnabled(rs.getBoolean("title_enabled"));
         String enterTitle = rs.getString("enter_title");
-        if (enterTitle != null) profile.setEnterTitle(enterTitle);
+        if (enterTitle != null) {
+            if ("<gold>Entering <owner>'s Claim".equals(enterTitle)) {
+                enterTitle = ClaimProfile.DEFAULT_ENTER_TITLE;
+            }
+            profile.setEnterTitle(enterTitle);
+        }
         String leaveTitle = rs.getString("leave_title");
-        if (leaveTitle != null) profile.setLeaveTitle(leaveTitle);
+        if (leaveTitle != null) {
+            if ("<yellow>Leaving <owner>'s Claim".equals(leaveTitle)) {
+                leaveTitle = ClaimProfile.DEFAULT_LEAVE_TITLE;
+            }
+            profile.setLeaveTitle(leaveTitle);
+        }
         String enterTitleMode = rs.getString("enter_title_mode");
         if (enterTitleMode != null) profile.setEnterTitleMode(enterTitleMode);
         String leaveTitleMode = rs.getString("leave_title_mode");

@@ -61,7 +61,7 @@ public class ChangeClaimColorGUI {
                                         p.closeInventory();
                                         AnvilInputGUI.open(plugin, p,
                                                         plugin.getConfigManager().getRawTemplate("gui.prompt-hex-color"),
-                                                        profile.getClaimColor() != null ? profile.getClaimColor() : "#38BDF8", input -> {
+                                                        profile.getClaimColor() != null ? profile.getClaimColor() : "#00E262", input -> {
                                                 FoliaScheduler.runForPlayer(plugin, p, () -> {
                                                         if (input == null) {
                                                                 p.sendMessage(plugin.getConfigManager().getMessage("rename-cancelled"));

@@ -10,7 +10,7 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class RoleSetupConfig extends OkaeriConfig {
 
-    public String title = "<color:#1E293B>Role Setup";
+    public String title = "<color:#1F1F1F>Role Setup";
 
     @Comment("Outer border frame")
     public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
@@ -21,32 +21,32 @@ public class RoleSetupConfig extends OkaeriConfig {
     @Comment("Set Name Button")
     public ItemConfig setName = new ItemConfig(
             "NAME_TAG",
-            "<color:#38BDF8><b>Set Name",
-            List.of("<color:#9AA5B4>Set the display name", "<color:#9AA5B4>for this custom role."));
+            "<color:#00E262><b>Set Name",
+            List.of("<color:#A0A0A0>Set the display name", "<color:#A0A0A0>for this custom role."));
 
     @Comment("Permissions Button")
     public ItemConfig permissions = new ItemConfig(
             "WRITABLE_BOOK",
-            "<color:#60A5FA><b>Permissions",
-            List.of("<color:#9AA5B4>Edit permission flags", "<color:#9AA5B4>granted to this role."));
+            "<color:#FFFFFF><b>Permissions",
+            List.of("<color:#A0A0A0>Edit permission flags", "<color:#A0A0A0>granted to this role."));
 
     @Comment("Set Priority Button")
     public ItemConfig setPriority = new ItemConfig(
             "COMPARATOR",
-            "<color:#FBBF24><b>Set Priority",
-            List.of("<color:#9AA5B4>Higher priority overrides lower", "<color:#9AA5B4>roles inside the hierarchy."));
+            "<color:#E2B700><b>Set Priority",
+            List.of("<color:#A0A0A0>Higher priority overrides lower", "<color:#A0A0A0>roles inside the hierarchy."));
 
     @Comment("Cancel and Return")
     public ItemConfig back = new ItemConfig(
             "ARROW",
-            "<color:#F87171>← Cancel",
-            List.of("<color:#9AA5B4>Discard unsaved changes", "<color:#9AA5B4>and return to Roles."));
+            "<color:#E20000>← Cancel",
+            List.of("<color:#A0A0A0>Discard unsaved changes", "<color:#A0A0A0>and return to Roles."));
 
     @Comment("Save and Exit")
     public ItemConfig saveExit = new ItemConfig(
             "LIME_DYE",
-            "<color:#34D399><b>Save Role",
-            List.of("<color:#9AA5B4>Save changes and return", "<color:#9AA5B4>to Role Management."));
+            "<color:#00E262><b>Save Role",
+            List.of("<color:#A0A0A0>Save changes and return", "<color:#A0A0A0>to Role Management."));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;

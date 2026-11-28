@@ -248,10 +248,10 @@ public class PluginConfig extends OkaeriConfig {
     public static class MinimapConfig extends OkaeriConfig {
         public boolean enabled = true;
         public int mapId = -1;
-        public String itemName = "<color:#38BDF8><b>Territory Map</b></color>";
+        public String itemName = "<color:#00E262><b>Territory Map</b></color>";
         public List<String> itemLore = List.of(
-                "<color:#9AA5B4>Hold in hand or off-hand to view nearby claims.",
-                "<color:#FBBF24>Right-click to switch zoom level."
+                "<color:#A0A0A0>Hold in hand or off-hand to view nearby claims.",
+                "<color:#E2B700>Right-click to switch zoom level."
         );
     }
 

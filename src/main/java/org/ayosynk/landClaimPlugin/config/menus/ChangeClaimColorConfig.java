@@ -10,7 +10,7 @@ import java.util.List;
 @Header("Names and lore support MiniMessage formatting (e.g., <red>Test</red>, <gradient:blue:aqua>Gradient</gradient>)")
 public class ChangeClaimColorConfig extends OkaeriConfig {
 
-    public String title = "<color:#1E293B>Claim Color";
+    public String title = "<color:#1F1F1F>Claim Color";
 
     @Comment("Outer border frame")
     public ItemConfig frameFill = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
@@ -21,14 +21,14 @@ public class ChangeClaimColorConfig extends OkaeriConfig {
     @Comment("Opens HEX color input")
     public ItemConfig customColor = new ItemConfig(
             "BRUSH",
-            "<color:#38BDF8>Custom Hex Color",
-            List.of("<color:#9AA5B4>Enter a custom hex code", "<color:#9AA5B4>such as <color:#F1F5F9>#38BDF8<color:#9AA5B4>."));
+            "<color:#00E262>Custom Hex Color",
+            List.of("<color:#A0A0A0>Enter a custom hex code", "<color:#A0A0A0>such as <color:#FFFFFF>#00E262<color:#A0A0A0>."));
 
     @Comment("Return to Claim Settings")
     public ItemConfig back = new ItemConfig(
             "ARROW",
-            "<color:#38BDF8>← Back",
-            List.of("<color:#9AA5B4>Return to Claim Settings"));
+            "<color:#00E262>← Back",
+            List.of("<color:#A0A0A0>Return to Claim Settings"));
 
     @Comment("Color Selection Options")
     public ItemConfig colorBlack = new ItemConfig("BLACK_WOOL", "<black><bold>Black",

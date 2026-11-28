@@ -8,7 +8,7 @@ import java.util.List;
 @Header("OnlinePlayerSelector GUI Configuration")
 public class OnlinePlayerSelectorConfig extends OkaeriConfig {
 
-    public String title = "<color:#1E293B>Select Player";
+    public String title = "<color:#1F1F1F>Select Player";
 
     @Comment("Outer border frame")
     public ItemConfig frame = new ItemConfig("BLACK_STAINED_GLASS_PANE", " ", List.of());
@@ -19,20 +19,20 @@ public class OnlinePlayerSelectorConfig extends OkaeriConfig {
     @Comment("Return to previous menu")
     public ItemConfig back = new ItemConfig(
             "ARROW",
-            "<color:#38BDF8>← Back",
-            List.of("<color:#9AA5B4>Return to previous menu"));
+            "<color:#00E262>← Back",
+            List.of("<color:#A0A0A0>Return to previous menu"));
 
     @Comment("Previous Page Button")
     public ItemConfig previousPage = new ItemConfig(
             "ARROW",
-            "<color:#38BDF8>← Previous Page",
-            List.of("<color:#9AA5B4>View previous items"));
+            "<color:#00E262>← Previous Page",
+            List.of("<color:#A0A0A0>View previous items"));
 
     @Comment("Next Page Button")
     public ItemConfig nextPage = new ItemConfig(
             "ARROW",
-            "<color:#38BDF8>Next Page →",
-            List.of("<color:#9AA5B4>View next items"));
+            "<color:#00E262>Next Page →",
+            List.of("<color:#A0A0A0>View next items"));
 
     public static class ItemConfig extends OkaeriConfig {
         public String material;
