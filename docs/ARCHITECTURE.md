@@ -6,7 +6,7 @@ LandClaimPlugin follows a **modular, manager-based architecture** with clear sep
 
 ```
 LandClaimPlugin (entry point)
-├── ConfigManager         — Configuration loading (Okaeri)
+├── ConfigManager         — Upgrade backups (.bk), grouped Okaeri YAML configs, locales, and menus
 ├── DatabaseManager       — Database connection + DAO routing
 ├── CacheManager          — Caffeine in-memory caches
 ├── RedisManager          — Cross-server pub/sub sync

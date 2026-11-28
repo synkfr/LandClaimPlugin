@@ -41,7 +41,7 @@ These commands respect the same permission checks as clicking the GUI buttons.
 
 | Command | Permission Required | Description |
 |---|---|---|
-| `/claim menu settings` | `MANAGE_SETTINGS` | Open claim settings (color, PvP, visibility, titles) |
+| `/claim menu settings` | `MANAGE_SETTINGS` | Open claim settings (color, PvP, visibility, titles, TNT explosions, mob spawning) |
 | `/claim menu members` | `MANAGE_MEMBERS` | Open member management |
 | `/claim menu roles` | `MANAGE_ROLES` | Open role management |
 | `/claim menu trusted` | `MANAGE_MEMBERS` | Open trusted player management |

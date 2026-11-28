@@ -1,62 +1,42 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: "LandClaimPlugin",
-  description: "Advanced Territory Protection for Minecraft",
-  base: "/LandClaimPlugin/",
+  title: 'LandClaimPlugin',
+  description: 'Chunk-based territory protection, custom roles, web maps, and per-claim toggles for Paper servers.',
+  base: '/LandClaimPlugin/',
+  lang: 'en-US',
+  appearance: false,
 
   head: [
-    ['meta', { name: 'theme-color', content: '#e6a817' }],
+    ['meta', { name: 'theme-color', content: '#3b6cf5' }],
     ['meta', { property: 'og:title', content: 'LandClaimPlugin' }],
-    ['meta', { property: 'og:description', content: 'Advanced Territory Protection for Minecraft' }],
+    ['meta', { property: 'og:description', content: 'Chunk-based territory protection for Paper servers.' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap' }]
   ],
 
   themeConfig: {
-    logo: 'https://i.postimg.cc/jS6mh13k/minecraft-title-2.png',
-    siteTitle: false,
+    siteTitle: 'LandClaimPlugin',
 
     nav: [
       { text: 'Guide', link: '/guide/installation' },
       { text: 'Commands', link: '/guide/commands' },
-      { text: 'Placeholders', link: '/guide/placeholders' },
-      { text: 'Integrations', link: '/guide/integrations' },
       { text: 'Config', link: '/CONFIGURATION' },
+      { text: 'Integrations', link: '/guide/integrations' },
       { text: 'API', link: '/guide/api' },
       { text: 'FAQ', link: '/FAQ' }
     ],
 
     sidebar: {
-      '/guide/': [
-        {
-          text: 'User Guide',
-          items: [
-            { text: 'Installation', link: '/guide/installation' },
-            { text: 'Commands & Permissions', link: '/guide/commands' },
-            { text: 'Placeholders', link: '/guide/placeholders' },
-            { text: 'Integrations (NPC & Shop)', link: '/guide/integrations' },
-            { text: 'Configuration', link: '/CONFIGURATION' },
-            { text: 'FAQ', link: '/FAQ' }
-          ]
-        },
-        {
-          text: 'Developer',
-          items: [
-            { text: 'Public API', link: '/guide/api' },
-            { text: 'Internal API', link: '/API' },
-            { text: 'Architecture', link: '/ARCHITECTURE' },
-            { text: 'Database', link: '/DATABASE' },
-            { text: 'Developer Guide', link: '/DEVELOPMENT' }
-          ]
-        }
-      ],
       '/': [
         {
-          text: 'User Guide',
+          text: 'User guide',
           items: [
             { text: 'Installation', link: '/guide/installation' },
-            { text: 'Commands & Permissions', link: '/guide/commands' },
+            { text: 'Commands and permissions', link: '/guide/commands' },
             { text: 'Placeholders', link: '/guide/placeholders' },
-            { text: 'Integrations (NPC & Shop)', link: '/guide/integrations' },
+            { text: 'Integrations', link: '/guide/integrations' },
             { text: 'Configuration', link: '/CONFIGURATION' },
             { text: 'FAQ', link: '/FAQ' }
           ]
@@ -67,8 +47,8 @@ export default defineConfig({
             { text: 'Public API', link: '/guide/api' },
             { text: 'Internal API', link: '/API' },
             { text: 'Architecture', link: '/ARCHITECTURE' },
-            { text: 'Database', link: '/DATABASE' },
-            { text: 'Developer Guide', link: '/DEVELOPMENT' }
+            { text: 'Database schema', link: '/DATABASE' },
+            { text: 'Developer guide', link: '/DEVELOPMENT' }
           ]
         }
       ]
@@ -76,7 +56,7 @@ export default defineConfig({
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/synkfr/LandClaimPlugin' },
-      { icon: 'discord', link: 'https://discord.gg/fGyDyp3Ak4' }
+      { icon: 'discord', link: 'https://discord.gg/UAgsmk6KEr' }
     ],
 
     search: {
@@ -84,13 +64,13 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/synkfr/LandClaimPlugin/edit/v2/docs/:path',
+      pattern: 'https://github.com/synkfr/LandClaimPlugin/edit/master/docs/:path',
       text: 'Edit this page on GitHub'
     },
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-present AyoSynk'
+      copyright: 'AyoSynk / LandClaimPlugin'
     }
   }
 })

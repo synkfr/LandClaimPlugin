@@ -1,0 +1,86 @@
+/* Base typography, browser surface theming, and accessibility resets */
+
+html,
+body {
+  overflow-x: clip;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+html {
+  scrollbar-color: var(--color-rule-2) var(--color-paper-2);
+  scroll-padding-top: var(--space-3xl);
+}
+
+body {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  font-synthesis: none;
+  text-align: start;
+}
+
+::selection {
+  background: var(--color-accent-wash);
+  color: var(--color-ink);
+}
+
+:where(input, textarea, [contenteditable]) {
+  caret-color: var(--color-accent);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--color-ink);
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+h1,
+h2 {
+  font-weight: var(--display-weight);
+  line-height: 1.04;
+}
+
+h3,
+h4 {
+  font-weight: 500;
+  line-height: 1.18;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+:where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  transition: none;
+}
+
+.visually-hidden:where(:not(:focus-within, :active)) {
+  position: absolute !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+@media (forced-colors: active) {
+  .key,
+  .lcp-cut,
+  .lcp-table th,
+  .lcp-table td {
+    border-color: ButtonBorder;
+  }
+}

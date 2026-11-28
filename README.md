@@ -1,368 +1,110 @@
 <div align="center">
 
-<img src="https://i.postimg.cc/jS6mh13k/minecraft-title-2.png" alt="LandClaim Banner" width="100%">
+<img src="https://i.postimg.cc/jS6mh13k/minecraft-title-2.png" alt="LandClaimPlugin banner" width="100%">
 
-# 💠 LandClaimPlugin
-**Advanced Territory Protection for Minecraft**
+# LandClaimPlugin
 
-A powerful, feature-rich chunk-based land protection plugin for Paper servers. Create claim profiles, protect your builds, manage members with granular roles, form alliances, set warps, and customize every aspect of your territory.
+**Chunk-based territory protection for Paper servers.**
 
-[![Paper](https://img.shields.io/badge/Paper-1.21+-blue?style=flat-square)](https://papermc.io/)
+Create claim profiles, protect builds and entities, configure custom roles and visitor rules, form alliances, set public or private warps, and render territories on your server web map or held radar map.
+
+[![Paper](https://img.shields.io/badge/Paper-26.2+-blue?style=flat-square)](https://papermc.io/)
 [![Java](https://img.shields.io/badge/Java-25+-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
 [![Modrinth](https://img.shields.io/badge/Modrinth-LandClaimPlugin-00AF5C?style=flat-square&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/landclaimplugin)
 [![Version](https://img.shields.io/github/v/release/synkfr/LandClaimPlugin?style=flat-square&color=40ae24&label=Version)](https://github.com/synkfr/LandClaimPlugin/releases)
-[![License](https://img.shields.io/github/license/synkfr/LandClaimPlugin?style=flat-square&color=blue)](LICENSE)
+[![License](https://img.shields.io/github/license/synkfr/LandClaimPlugin?style=flat-square&color=blue)](LICENSE.md)
 [![Discord](https://img.shields.io/discord/1378591879393710110?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/UAgsmk6KEr)
+
+[Documentation](https://synkfr.github.io/LandClaimPlugin/) | [Installation](https://synkfr.github.io/LandClaimPlugin/guide/installation) | [Commands](https://synkfr.github.io/LandClaimPlugin/guide/commands) | [Configuration](https://synkfr.github.io/LandClaimPlugin/CONFIGURATION)
 
 </div>
 
-<br>
-
-> ⚠️ **DEVELOPMENT BUILDS**
->
-> Development builds are automatically generated from the latest commits and may include unfinished features, breaking changes, or experimental code. **These builds are not recommended for production use.**
-> 
-> **If you choose to run a dev build:**
-> - Expect bugs, crashes, or incomplete functionality.
-> - Configs and data formats may change without notice.
-> - No guarantee of backward compatibility.
-> 
-> Use them only for testing, early access, or contributing feedback.
-> 📦 **Download latest dev builds:** [GitHub Releases](https://github.com/synkfr/LandClaimPlugin/releases)
-
 ---
 
-## ✨ Features
+## Features
 
-### Core Claiming
-- **Claim Profiles** — Manage your land using claim profiles. Depending on server configuration, players can own a single profile or utilize the **Multi-Profile System** to manage multiple independent bases and quickly switch between them via an interactive GUI.
-- **Chunk-Based Claims** — 16×16 block protection zones, simple and intuitive.
-- **Auto-Claim** — Automatically claim chunks as you walk.
-- **Connected Claims** — Optionally require claims to be adjacent (with diagonal support).
-- **Held Territory Map (Minimap)** — Live 128×128 pixel radar map in hand/off-hand or Item Frames showing chunk boundaries, claim colors, and real-time player orientation.
-- **Interactive Selectors** — Programmatically select online players via their heads for Trust, Member, and Ally management.
-- **Unstuck Command** — A safe `/claim unstuck` feature that teleports trapped players to the nearest safe wilderness block.
+### Core claiming
+- **Claim profiles.** Give each player a single claim profile or enable Multi-Profile mode so players manage separate bases and switch active profiles through a GUI.
+- **Chunk and radius claiming.** Claim single 16x16 chunks with `/claim` or bulk squares up to 5 chunks out with `/claim radius <1-5>`.
+- **Auto-claim and auto-unclaim.** Toggle walking claim/unclaim with `/claim auto` and `/unclaim auto`, with optional connected-chunk and diagonal-adjacency enforcement.
+- **Held territory map.** Render a live 128x128 pixel radar onto a held `FILLED_MAP` or item frame showing claim colors, alliances, and player heading.
+- **Boundary visualization.** Switch between 64-block range-culled `display_entities`, `particles`, or `off`. Automatically falls back to particles for Bedrock clients.
+- **Safe unstuck.** `/claim unstuck` runs an async search to teleport trapped players to the nearest safe wilderness block.
 
-### Permission System
-- **4-Tier Priority Chain** — `Owner > Role > Trusted > Visitor` — the first matching tier decides
-- **Custom Roles** — Create and configure custom roles (e.g., Member, CoOwner) with granular flag-based permissions
-- **Trusted Players** — Grant individual players specific permission overrides
-- **Visitor Settings** — Configure what non-members can do in your claims
-- **25+ Permission Flags** — Doors, trapdoors, containers, workstations, animals, vehicles, redstone, and more
+### Permissions and social
+- **Four-tier priority chain.** Evaluates `Owner > Role > Trusted > Visitor` on the first matching tier.
+- **Custom roles and 39 flags.** Configure built-in `Member` and `CoOwner` roles or add custom roles covering blocks, containers, workstations, animals, vehicles, items, and management menus.
+- **Trust, members, allies, and bans.** Invite members and trusted builders via interactive player-head selectors, form inter-claim alliances, or ban troublemakers so they are turned back at chunk borders across restarts.
+- **Public and private warps.** Create named claim warps, publish bases to `/claim publicwarps`, and handle duplicate warp names through a disambiguation menu.
 
-### Social Systems
-- **Member System** — Invite players to join your claim, assign them roles, and manage access
-- **Ally System** — Form mutual alliances between claims with configurable inter-claim permissions
-- **Trust System** — Grant individual players per-player permission overrides
-- **Ban System** — Hard-deny a player from entering or interacting with your claim. Banned players are physically pushed back at chunk boundaries and (if online at the moment of the ban) teleported outside. Survives server restarts.
-- **Warp System** — Set named warps within your claims with custom icons and per-player limits
-- **Public Warps** — Publish any of your warps to the server-wide public list. Other players can browse and teleport via `/claim publicwarps`.
+### Protection and toggles
+- **Per-claim toggles.** Control claim PvP (`/claim pvp <on/off> [seconds]`), TNT explosions, natural and spawner mob spawning, and enter/leave titles directly inside `/claim menu settings`.
+- **World and explosion safety.** Block pistons crossing claim borders, creepers, enderman griefing, vehicle theft, item drops/pickups, and configured commands inside claims.
+- **Wilderness protection.** Optional `wildernessProtection.enabled` mode denies build and interaction flags outside claims while letting players fight mobs or travel freely unless locked down further.
+- **Combat tag bypass and auto-decay.** Prevents combat-tagged players from hiding behind claim PvP protection and optionally unclaims land from long-inactive players with VIP/staff exemptions.
 
-### Protection
-- **Block Protection** — Prevent unauthorized breaking and placing
-- **Entity Protection** — Protect animals, armor stands, and item frames
-- **Explosion Protection** — Block TNT, creeper, and other explosion damage
-- **Interaction Protection** — Control door, container, and workstation access
-- **Item Protection** — Prevent unauthorized pickup and drop
-- **Piston Protection** — Block pistons from pushing/pulling across claim borders
-- **PvP Protection** — Disable PvP inside claims
-- **Combat Tag PvP Bypass** — Actively combat-tagged players temporarily lose claim protection against attacks, preventing safe-zone abuse during fights
-- **Inactive Claim Auto-Decay** — Automatically clean up claims from players inactive for a configurable period, with exemption options for VIPs and staff
-- **Vehicle Protection** — Prevent unauthorized vehicle use and destruction
-- **Command Blocking** — Block specific commands inside other players' claims
-- **Wilderness Protection** — Opt-in `wildernessProtection.enabled` flag flips the default: players can only build/break inside claims, never in unclaimed chunks. Designed for clan/town-style servers.
+## Supported integrations
 
-### Customization
-- **Owner Alias** — Set a custom display name to replace your Minecraft username in UI elements, map hooks, and titles
-- **Claim Colors** — Pick a custom hex color for your claim used on maps and borders
-- **Visualization Modes** — Toggle between Display Entity or Particle-based boundary rendering
-- **Entry/Exit Titles** — Custom MiniMessage-formatted titles shown when players enter or leave your claim
-- **Rename Claims** — Change your claim's display name at any time
-- **Full Message Customization** — All plugin messages are configurable via Okaeri Configs
+- **Web maps.** BlueMap, Dynmap, Squaremap, and Pl3xMap render colored claim polygons with owner metadata.
+- **Combat taggers.** DeluxeCombat, CombatLogX, PvPManager, and EternalCombat block combat-escape warps and disable PvP sanctuary while tagged.
+- **WorldGuard.** 3D volumetric region intersection checks, configurable chunk buffers, and the custom `allow-land-claims` state flag.
+- **Geyser and Floodgate.** Reflection-based Bedrock CustomForm and ModalForm dialogs for renames, colors, abandons, unclaim-all, and bans with zero hard dependency.
+- **PlaceholderAPI and addons.** Exposes `landclaim` and `claimplugin` placeholders plus the `LandClaimAPI` interface and Bukkit lifecycle events used by addons like [LandClaimPlugin-Eco-Addon](https://github.com/synkfr/LandClaimPlugin-Eco-Addon).
 
-## 🔌 Supported Integrations
+## Installation
 
-LandClaimPlugin seamlessly hooks into various popular server plugins to provide an interconnected experience out-of-the-box.
+1. Download the release JAR from [GitHub Releases](https://github.com/synkfr/LandClaimPlugin/releases) or [Modrinth](https://modrinth.com/plugin/landclaimplugin).
+2. Place `LandClaimPlugin.jar` into your server `plugins/` folder.
+3. Restart your server (requires Paper 26.2+ or Folia on Java 25+).
+4. Edit `plugins/LandClaimPlugin/config.yml`, `plugins/LandClaimPlugin/locales/messages_en-US.yml`, and menus under `plugins/LandClaimPlugin/menus/`, then run `/claim admin reload`.
 
-### 🗺️ Web Map Plugins
-Visualize claims directly on your server's web map! Claims are drawn as colored polygons matching the claim's chosen color, complete with owner and size information.
-- **BlueMap**
-- **Dynmap**
-- **Squaremap**
-- **Pl3xMap**
+Upgrading from 3.4.0 automatically backs up existing files to `config.yml.bk`, `locales/<message>.yml.bk`, and `menus/<menu>.yml.bk` before migrating YAML layouts and generating refreshed 3.5.0 menu defaults.
 
-### ⚔️ Combat Tagger Plugins
-Prevent combat exploitation and command abuse while in active combat. Automatically detects combat tagging:
-- **DeluxeCombat**
-- **CombatLogX**
-- **PvPManager**
-- **EternalCombat**
-- **Claim Protection Bypass:** Actively combat-tagged players cannot flee into claims to hide from PvP fights — claim PvP protection temporarily drops for them until their tag expires (`combatTag.combatTagBypass: true`).
-- **Command Blocking:** Prevents tagged players from teleporting or abandoning claims during combat.
+## Commands
 
-### 🛡️ WorldGuard
-Respect WorldGuard regions when players attempt to claim land.
-- **Volumetric Intersection Check:** 100% accurate 3D boundary checking to prevent players from claiming over your spawn or protected areas.
-- **Gap Enforcement:** Configurable required distance between claims and WorldGuard regions.
-- **Custom Flag Support:** Apply the custom `allow-land-claims` WorldGuard state flag to regions (e.g., Wilderness/Warzone) to explicitly allow players to claim land inside them, overriding the gap and intersection protections!
+All subcommands use `/claim` (alias `/c`) or `/unclaim`.
 
-### 🎮 Bedrock / Geyser Support
-Bedrock players get a tailored UI when Geyser 2.x is installed. No hard Geyser dependency — the plugin uses reflection to detect the form API and falls back to the Java-only chat prompts if Geyser is missing.
-- **CustomForm text input** for anvil-based prompts (rename, color, role name)
-- **ModalForm confirmation** for destructive actions (abandon, unclaim all, ban)
-- Visualization automatically switches to particle mode for Bedrock clients
-
-### Technical
-- **Cloud Command Framework** — Async command execution with dedicated thread pools
-- **Modular Architecture** — Separate command groups, listeners, and managers
-- **Eager Class Preloading** — Eliminates first-execution lag spikes for GUI classes
-
----
-
-## 🧩 Addons
-
-The plugin's public API (`LandClaimAPI`) and event bus (`ClaimCreateEvent`,
-`ClaimDeleteEvent`, `PlayerEnterClaimEvent`, `PlayerLeaveClaimEvent`) let
-you build standalone addons in a sibling Maven project. Soft-depend on
-LandClaimPlugin so the addon only loads when the parent is present.
-
-### Official Addons
-
-| Addon | Description | Repository |
-|---|---|---|
-| **LandClaimPlugin-Economy** | Charge for claiming, warps, and member invites; per-chunk daily tax with auto-unclaim; server-wide claim marketplace + time-limited auctions with a GUI browser. Vault-based. | [synkfr/LandClaimPlugin-Eco-Addon](https://github.com/synkfr/LandClaimPlugin-Eco-Addon) |
-
-### Building Your Own
-
-The API exposes:
-- `getClaimAt(...)`, `getClaimsByOwner(UUID)`, `getClaimByName(String)`, `getClaimById(UUID)`
-- `getAllClaimProfiles()` — every loaded claim, for global iteration (tax, leaderboards, etc.)
-- `transferClaim(Player actor, UUID profileId, UUID newOwnerId)` and `unclaimAll(Player actor, UUID profileId)` — programmatic ownership / claim management (the actor is either the new owner or has `landclaim.admin`)
-- `addBonusBlocks(UUID, int)`, `getBonusBlocks(UUID)`, and `setBonusBlocks(UUID, int)` — for paid-claim-block plugins
-- `isInCombat(Player)` — hook for combat-taggers
-- The full claim profile model — `getOwnedChunks()`, `getRoles()`, `getTrustedPlayerFlags()`, etc.
-
-For addons that want to act on claim lifecycle, listen for
-`org.ayosynk.landClaimPlugin.api.event.*` events.
-
----
-
-## 📥 Installation
-
-1. Download the latest release and drop `LandClaimPlugin.jar` into your `plugins/` folder.
-2. Restart your server.
-3. Configure `plugins/LandClaimPlugin/config.yml` to your liking.
-
-> **Requirements:** Paper 26.2+ | Java 25+
-
----
-
-## 💬 Commands
-
-*All commands use `/claim` (alias: `/c`) as the base.*
-
-### General Commands
 | Command | Description |
 |---|---|
-| `/claim` | Claim the chunk you're standing in |
-| `/claim radius <1-5>` | Claim a square area of chunks centered on your current chunk (e.g. `1` = 3×3, `2` = 5×5) |
-| `/claim profiles` | Open the active profile selector (if Multi-Profile is enabled) |
-| `/claim create <name>` | Create a new claim profile with the given name |
-| `/claim auto` | Toggle auto-claim mode (claim chunks as you walk) |
-| `/claim map` | Receive the live held Territory Map item (alias: `/claim minimap`) |
+| `/claim` | Claim the chunk you are standing in |
+| `/claim radius <1-5>` | Claim a square of chunks centered on your position |
+| `/claim profiles` | Open the active profile selector GUI |
+| `/claim create <name>` | Create a new claim profile |
+| `/claim auto` | Toggle auto-claim as you walk |
+| `/claim map` | Receive the held Territory Map (alias `/claim minimap`) |
 | `/claim menu` | Open the main claim management GUI |
-| `/claim info` | View info about the claim at your location |
+| `/claim menu <tab>` | Jump to `settings`, `members`, `roles`, `trusted`, `visitors`, `allies`, `map`, or `warps` |
+| `/claim info` | Inspect the claim at your current chunk |
 | `/claim visible` | Toggle claim boundary visualization |
-| `/claim toggle <mode>` | Switch visualization mode (`display_entities`, `particles`, `off`) |
-| `/claim visualization <mode>` | Alias for `/claim toggle` |
-| `/claim notify` | Toggle claim enter and leave chat notifications (alias: `/claim chatnotify`) |
-| `/claim rename <name>` | Rename your active claim profile (3-32 alphanumeric characters) |
-| `/claim color <color>` | Change claim color using a named color or hex code (e.g., `red`, `#FF5500`) |
-| `/claim unstuck` | Safely teleport to the nearest wilderness block if trapped |
-| `/claim abandon` | Delete your entire active claim profile and all its chunks |
-| `/claim pvp <on/off> [time]` | Toggle PvP globally in the claim, with an optional time duration in seconds |
-| `/unclaim` | Unclaim the chunk you're standing in |
-| `/unclaim auto` | Toggle auto-unclaim mode (unclaim your owned chunks as you walk) |
-| `/unclaim radius <1-5>` | Unclaim all your owned chunks in a square radius (e.g. `1` = 3×3, `2` = 5×5) |
-| `/unclaim all` | Unclaim all chunks belonging to your active profile (prompts for confirmation) |
-| `/unclaim all confirm` | Confirm unclaiming all chunks |
+| `/claim toggle <mode>` | Switch mode (`display_entities`, `particles`, `off`) |
+| `/claim pvp <on/off> [time]` | Toggle claim PvP with optional duration in seconds |
+| `/claim rename <name>` | Rename your active profile |
+| `/claim color <color>` | Set claim color by name or hex code |
+| `/claim ban <player>` | Ban a player from entering or interacting with your claim |
+| `/claim unstuck` | Teleport to the nearest safe wilderness block |
+| `/claim abandon` | Delete your active claim profile and all its chunks |
+| `/unclaim` | Unclaim the current chunk |
+| `/unclaim radius <1-5>` | Unclaim your chunks within a radius |
+| `/unclaim all [confirm]` | Unclaim every chunk in your active profile |
 
-### Menu Shortcuts
+See the full [Commands Reference](https://synkfr.github.io/LandClaimPlugin/guide/commands) for member, trust, ally, warp, and admin commands (`add/set/remove/reset chunk`, decay controls, and `/claim reload`).
 
-Jump directly to specific GUI panels without navigating through the main menu.
-
-| Command | Description |
-|---|---|
-| `/claim menu settings` | Open claim settings (color, PvP, visibility, etc.) |
-| `/claim menu members` | Open member management |
-| `/claim menu roles` | Open role management |
-| `/claim menu trusted` | Open trusted player management |
-| `/claim menu visitors` | Open visitor settings |
-| `/claim menu allies` | Open ally management |
-| `/claim menu map` | Receive the held Territory Map |
-| `/claim menu warps` | Open warp management |
-
-### Management Commands
-<details>
-<summary><b>Members</b></summary>
-
-| Command | Description |
-|---|---|
-| `/claim member invite <player>` | Invite a player to join your claim |
-| `/claim member kick <player>` | Remove a member from your claim |
-| `/claim member list` | List all members and their roles |
-| `/claim accept <name>` | Accept a pending member invitation |
-| `/claim deny <name>` | Deny a pending member invitation |
-</details>
-
-<details>
-<summary><b>Trust</b></summary>
-
-| Command | Description |
-|---|---|
-| `/claim trust invite <player>` | Send a trust invitation to a player |
-| `/claim trust accept` | Accept a pending trust invitation |
-| `/claim trust deny` | Deny a pending trust invitation |
-| `/claim trust remove <player>` | Remove a trusted player |
-| `/claim trust list` | List all trusted players and their flags |
-</details>
-
-<details>
-<summary><b>Allies</b></summary>
-
-| Command | Description |
-|---|---|
-| `/claim ally invite <name>` | Send an alliance request to another claim |
-| `/claim ally accept <name>` | Accept an alliance request |
-| `/claim ally deny <name>` | Deny an alliance request |
-| `/claim ally remove <name>` | Remove an existing alliance |
-</details>
-
-<details>
-<summary><b>Warps & Admin</b></summary>
-
-| Command | Description |
-|---|---|
-| `/claim setwarp <name> [public|private]` | Set a warp at your current location with optional visibility |
-| `/claim delwarp <name>` | Delete a warp |
-| `/claim warp <name> [warpName]` | Teleport to your warp, or a public warp (`/claim warp <name>` or `/claim warp <owner>:<name>`) |
-| `/claim publicwarps` | Open the server-wide public warps browser GUI |
-| `/claim warps` | Open the active claim's warp management GUI |
-| `/claim admin check` | View detailed claim info (owner UUID, profile name) |
-| `/claim admin unclaim` | Force-unclaim the chunk you're standing in |
-| `/claim admin edit <player>` | Open any player's claim management GUI (supports `@p`, `@s`, `@r`) |
-| `/claim admin add chunk <player> <amount>` | Add bonus claim chunks to a player's limit *(Console & Player)*. Supports selectors (`@p`, `@s`, `@r`, `@a`), reverse ordering (`<amount> <player>`), and self-granting (`<amount>`). |
-| `/claim admin set chunk <player> <amount>` | Set a player's bonus claim chunks directly *(Console & Player, supports selectors, reverse ordering, and self-targeting)* |
-| `/claim admin remove chunk <player> <amount>` | Deduct bonus claim chunks from a player's allowance *(Console & Player, supports selectors, reverse ordering, and self-targeting)* |
-| `/claim admin reset chunk [player]` | Reset bonus claim chunks to 0 *(Console & Player, supports selectors, defaults to self for in-game players)* |
-| `/claim admin setalias <claim> <alias>` | Set or reset an owner's custom alias *(Console & Player)* |
-| `/claim admin trust list <owner>` | List players trusted by this owner *(Console & Player, supports selectors)* |
-| `/claim admin trust who <player>` | List claims where this player is trusted *(Console & Player, supports selectors)* |
-| `/claim admin decay run` | Trigger a manual scan to decay inactive claims *(Console & Player)* |
-| `/claim admin decay exempt <player> [true\|false]` | Toggle or set a player's exemption from claim decay *(Console & Player, supports selectors)* |
-| `/claim admin decay list` | List all players manually exempt from claim decay *(Console & Player)* |
-| `/claim admin reload` | Reload configuration and messages *(Console & Player)* |
-| `/claim reload` | Shortcut to reload configuration and messages *(Console & Player)* |
-
----
-
-## 🔐 Permissions
+## Permissions
 
 | Permission | Description | Default |
 |---|---|---|
-| `landclaim.*` | All LandClaim permissions | `false` |
-| `landclaim.claim` | Basic claiming ability | ✅ `true` |
-| `landclaim.minimap` | Access to the held Territory Map | ✅ `true` |
-| `landclaim.auto` | Use auto-claim mode | ✅ `true` |
-| `landclaim.admin` | Admin commands & bypass all protection | `op` |
-| `landclaim.decay.exempt` | Exempts player from automatic claim decay | `op` |
-| `landclaim.update.notify` | Receive update notifications on join | `op` |
-| `landclaim.limit.<n>` | Override the chunk claim limit (e.g., `landclaim.limit.50`) | `false` |
-| `landclaim.list` | List claims | ✅ `true` |
-| `landclaim.warps.limit.<n>` | Override the warps limit (e.g., `landclaim.warps.limit.10`) | `false` |
-| `landclaim.createrole.<n>` | Override the max number of custom roles | `false` |
+| `landclaim.*` | Grants all LandClaimPlugin nodes | `false` |
+| `landclaim.claim` | Claim land | `true` |
+| `landclaim.minimap` | Obtain and use the held Territory Map | `true` |
+| `landclaim.auto` | Toggle auto-claim mode | `true` |
+| `landclaim.admin` | Admin commands and full claim/wilderness bypass | `op` |
+| `landclaim.decay.exempt` | Exempt player claims from automatic decay | `op` |
+| `landclaim.update.notify` | Receive update alerts on join | `op` |
+| `landclaim.limit.<n>` | Override max claimed chunks (for example `landclaim.limit.50`) | `false` |
+| `landclaim.warps.limit.<n>` | Override max claim warps (for example `landclaim.warps.limit.10`) | `false` |
+| `landclaim.createrole.<n>` | Override max custom roles | `false` |
 
----
+## Disclosures
 
-## 🛒 Shop & NPC Integration (DeluxeMenus & Citizens 2)
-
-LandClaimPlugin integrates seamlessly with **DeluxeMenus** and **Citizens 2** to allow players to purchase extra claim chunks with items (e.g. Gold Blocks) or economy currency.
-
-### 1. DeluxeMenus GUI Shop
-In your DeluxeMenus configuration (e.g. `plugins/DeluxeMenus/gui_menus/claimshop.yml`):
-```yaml
-menu_title: '&8Buy Land Claim Chunks'
-open_command: claimshop
-size: 27
-items:
-  buy_chunk:
-    material: GOLD_BLOCK
-    slot: 13
-    display_name: '&e&lBuy 1 Extra Chunk'
-    lore:
-      - '&7Cost: &630x Gold Block'
-      - '&7Your Chunks: &a%landclaim_chunks% &7/ &b%landclaim_limit%'
-      - ''
-      - '&a&lCLICK &fto purchase 1 claim chunk!'
-    left_click_commands:
-      - '[console] clear %player_name% gold_block 30'
-      - '[console] claim admin add chunk %player_name% 1'
-      - '[message] &aSuccessfully traded 30 Gold Blocks for 1 extra claim chunk!'
-      - '[sound] ENTITY_PLAYER_LEVELUP 1 1'
-      - '[refresh]'
-    left_click_requirement:
-      requirements:
-        has_gold_blocks:
-          type: has item
-          material: GOLD_BLOCK
-          amount: 30
-      deny_commands:
-        - '[message] &cYou need 30 Gold Blocks in your inventory to buy this!'
-        - '[sound] BLOCK_ANVIL_LAND 1 1'
-```
-
-### 2. Citizens 2 NPC Setup
-- **Option A: Link NPC to DeluxeMenus (Recommended)**
-  ```bash
-  /npc create "Territory Surveyor" --type player
-  /npc select
-  /npc command add -p "claimshop"
-  ```
-  *(Right-clicking the NPC opens the `/claimshop` GUI for the player!)*
-
-- **Option B: Direct Console Command**
-  ```bash
-  /npc select
-  /npc command add -c "claim admin add chunk <p> 1"
-  ```
-  *(Both Citizens placeholder `<p>` and Minecraft entity selector `@p` are supported!)*
-
-For complete setup guides and Vault economy examples, see our [Integrations Documentation](https://synkfr.github.io/LandClaimPlugin/guide/integrations).
-
----
-
-## 📋 Disclosures & Transparency
-
-In compliance with platform guidelines and Modrinth disclosure policies:
-
-### 🤖 AI Assistance Disclosure
-This project uses AI assistance (LLMs) for code drafting, refactoring, optimization, and documentation under the direct design, review, and testing of the maintainers. All game logic, security gates, and database transactions are human-architected and audited.
-
-### 🌐 External Network Calls & Telemetry
-LandClaimPlugin communicates with the following external endpoints:
-- **Modrinth API (`https://api.modrinth.com`)**: Queries the public Modrinth v2 API on startup to check for new versions. Sends only the standard `User-Agent` header (`LandClaimPlugin/{version}`). No player or server-identifying data is shared. *Opt-out: set `updateChecker.enabled: false` in `config.yml`.*
-- **bStats Analytics (`https://bstats.org`)**: Collects anonymous usage metrics (Java version, server software, online player count) via [bStats](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407). No personally identifiable information is collected. *Opt-out: set `enabled: false` in `plugins/bStats/config.yml`.*
-- **Redis & Remote MySQL (Optional)**: Connects only to user-configured endpoints for cross-server pub/sub synchronization or centralized database storage.
-
----
-
-<div align="center">
-
-### 🔗 Quick Links
-
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/UAgsmk6KEr)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/synkfr/LandClaimPlugin)
-[![Issues](https://img.shields.io/badge/Issues-EA4335?style=flat-square&logo=github&logoColor=white)](https://github.com/synkfr/LandClaimPlugin/issues)
-[![bStats](https://img.shields.io/badge/bStats-313131?style=flat-square&logo=chart-dot&logoColor=white)](https://bstats.org/plugin/bukkit/LandClaimPlugin/28407)
-
-</div>
+- **AI assistance.** Parts of this project use AI coding and documentation tools under direct maintainer review, testing, and architectural ownership.
+- **External network calls.** Startup version checking queries the public Modrinth v2 API (`api.modrinth.com`) unless `updateChecker.enabled: false`. Anonymous metrics report via bStats unless disabled in `plugins/bStats/config.yml`. SQLite runs locally; MySQL and Redis connect only when configured.

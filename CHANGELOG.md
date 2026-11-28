@@ -1,6 +1,32 @@
 # Changelog
 
-All notable changes to LandClaimPlugin will be documented in this file.
+All notable changes to LandClaimPlugin are documented in this file.
+
+## [3.5.0] - 2026-11-28
+
+### Added
+- **Per-claim TNT explosion toggle** (`tnt_enabled`, default `false`) in Claim Settings (`/claim menu settings`), letting claim owners and managers with `MANAGE_SETTINGS` allow TNT explosions inside their claim while keeping other explosions blocked.
+- **Per-claim mob spawning toggle** (`mob_spawning_enabled`, default `true`) in Claim Settings, blocking natural, spawner, trial spawner, patrol, raid, portal, trap, and reinforcement creature spawns when disabled while keeping breeding and custom spawns intact.
+- **Automatic `.bk` upgrade backups.** Upgrading from `3.4.0` creates `config.yml.bk`, `locales/<message>.yml.bk`, and `menus/<menu>.yml.bk` before migrating `config.yml` and `locales/*.yml` to grouped sections and writing refreshed `3.5.0` menu layouts.
+- **Configurable economy, admin, and GUI locale keys.** Moved remaining UI text (GUI prompts, skull titles, role labels, warp cards, economy messages, minimap zoom labels, admin inspection lists, and Modrinth update notices) into `MessagesConfig`.
+
+### Changed
+- **Grouped `config.yml` and `locales/messages_<lang>.yml` schemas.** Organized `PluginConfig` into 14 domain sections (`general`, `claiming`, `limits`, `permissions`, `pvp`, `visitorSettings`, `wildernessProtection`, `decay`, `display`, `minimap`, `maps`, `database`, `redis`, `updateChecker`), renamed `useSeparatePremission` to `permissions.useSeparatePermission` with compatibility aliasing, moved chat `prefix` into locale files, and styled `MessagesConfig` with a minimal Cobalt and Mint hex palette rendered as native Adventure Components.
+- **GUI performance and Obsidian/Cobalt visual revamp.** Added prototype `ItemStack` and `Material` caching in `GuiHelper`, Paper `PlayerProfile` skull helpers (`Bukkit.createProfile`) to avoid synchronous usercache lookups, unified `buildToggleFlagItem` across all flag editors, removed redundant async-to-sync round-trips on in-memory menus, updated paginated menus with 5-row bordered frames and centered empty indicators, and standardized dark slate window headers with Obsidian (`BLACK_STAINED_GLASS_PANE`) and Slate (`GRAY_STAINED_GLASS_PANE`) borders across all 23 menu configs.
+
+### Fixed
+- **Display entity visualization leaks and distant chunk loading.** Canceled stale async visualization tasks when toggling modes or turning visualization `off`, tracked and removed entities per Folia region, and culled `display_entities` spawns to loaded chunks within 64 blocks of the player so distant unloaded chunks never turn invisible or get forced loaded.
+- **Multi-profile ally permission resolution, action bar ownership, and claim reset names.** Fixed `PermissionResolver` skipping ally member checks when a player also owns an unallied profile, fixed action bar ownership detection for secondary profiles, and fixed `RenameClaimGUI` resetting claim names using `profile.getOwnerId()` instead of `profile.getProfileId()`.
+- **Cross-border piston pushes and unstuck cooldowns.** Blocked pistons extending blocks or heads from inside claims outward across claim borders in `PistonProtectionListener`, enforced `general.cooldownUnstuck` in `UnstuckCommand`, and matched `MemberManagementGUI` invite limit checks with `/claim member invite`.
+- **GUI click cleanup and broken material/key lookups.** Cleared stale `PaginatedGui` slot click handlers when turning to shorter pages, fixed `"BED"` (`RED_BED` / `OAK_DOOR`) material fallback in `PlayerControlPanelConfig`, fixed `"gui.member-kicked"` and `"gui.already-banned"` key lookups in `PlayerControlPanelGUI`, and resolved `"no-permission"` and `"no-pending-invite"` locale keys.
+- **`CoOwner` default role flags.** Replaced deprecated V1 flag names with active V2 permission flags (`DAMAGE_ANIMALS`, `BREED_ANIMALS`, `RIDE_VEHICLES`, `MODIFY_ARMOR_STANDS`, `CLAIM_LAND`, and kin).
+- **PvP state across restarts.** `SQLProfileDao.getAllProfiles()` now shares full row hydration with `getProfile()`, restoring `pvp_enabled` and `pvp_timer_end` on startup.
+- **Multi-profile command and minimap resolution.** Updated `/claim member kick`, `/claim trust`, `/claim ally`, and held Territory Map rendering to target `getActiveProfile(player)` and key membership caches by `profile.getProfileId()`.
+- **Animal interaction protection.** Routed `MOUNT_ANIMALS`, `BREED_ANIMALS`, and `FEED_ANIMALS` through `EntityProtectionListener` claim and wilderness checks with `landclaim.admin` bypass support.
+- **API and resource hygiene.** Switched `WarpManager.getWarpLimit()` to scan `landclaim.warps.limit.<n>` effective permissions directly, migrated `ClaimDecayManager` to `OfflinePlayer.getLastSeen()`, and wrapped `UpdateManager`'s `HttpClient` in try-with-resources.
+
+### Removed
+- Dead internal helpers in `EventListener`, `ClaimCommand`, and `AdminCommand`, 27 unused legacy message keys, and stale scratch planning files under `tasks/`.
 
 ## [3.4.0] - 2026-10-06
 
