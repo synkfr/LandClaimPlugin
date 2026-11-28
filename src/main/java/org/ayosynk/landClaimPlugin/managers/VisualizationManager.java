@@ -20,20 +20,24 @@ import org.joml.Vector3f;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class VisualizationManager {
     private final LandClaimPlugin plugin;
     private final ClaimManager claimManager;
     private final ConfigManager configManager;
 
+    private static final int DISPLAY_RANGE = 64;
     private static final int MAX_CACHE_ENTRIES = 100;
-    private final Map<UUID, Map<String, Set<Edge>>> mergedEdgesCache = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Set<Edge>>> mergedEdgesCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheSize = new AtomicInteger(0);
 
     private final Map<UUID, Boolean> visualizationActive = new ConcurrentHashMap<>();
     private final Map<UUID, Long> temporaryTimers = new ConcurrentHashMap<>();
 
     private final Map<UUID, List<BlockDisplay>> activeDisplays = new ConcurrentHashMap<>();
+    private final Map<UUID, AtomicLong> displayGenerations = new ConcurrentHashMap<>();
+    private final Map<UUID, ChunkPosition> lastVisualizedChunk = new ConcurrentHashMap<>();
 
     // Hex → stained glass mapping for Display Entity mode
     private static final Map<String, Material> HEX_TO_GLASS = Map.ofEntries(
@@ -91,18 +95,27 @@ public class VisualizationManager {
         FoliaScheduler.runPlayerTaskTimer(plugin, player -> {
             if (player == null || !player.isOnline()) return;
             UUID playerId = player.getUniqueId();
-            boolean inActive = visualizationActive.containsKey(playerId);
-            boolean inTemp = temporaryTimers.containsKey(playerId);
-            if (!inActive && !inTemp) return;
+            if (!isVisualizing(playerId)) return;
 
-            ClaimProfile profile = claimManager.getProfile(playerId);
-            if (profile == null) return;
-            String visMode = profile.getVisualizationMode();
-            if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
-                visMode = "PARTICLE";
+            ClaimProfile profile = claimManager.getActiveProfile(player);
+            ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
+            ClaimProfile currentProfile = claimManager.getProfileAt(currentChunk);
+            if (profile == null && currentProfile == null) {
+                clearDisplays(playerId);
+                return;
+            }
+            String visMode = resolveVisMode(player, profile);
+            if ("OFF".equalsIgnoreCase(visMode)) {
+                clearDisplays(playerId);
+                return;
             }
             if ("PARTICLE".equals(visMode)) {
-                spawnParticles(player, profile);
+                spawnParticles(player, profile, currentProfile);
+            } else {
+                ChunkPosition prevChunk = lastVisualizedChunk.get(playerId);
+                if (!currentChunk.equals(prevChunk)) {
+                    redrawDisplays(player);
+                }
             }
         }, 40L, 40L);
     }
@@ -110,14 +123,21 @@ public class VisualizationManager {
     public boolean toggleVisualization(Player player) {
         UUID playerId = player.getUniqueId();
         if (visualizationActive.containsKey(playerId)) {
-            visualizationActive.remove(playerId);
-            clearDisplays(playerId);
+            disableVisualization(player);
             return false;
         } else {
             visualizationActive.put(playerId, true);
             redrawDisplays(player);
             return true;
         }
+    }
+
+    public void disableVisualization(Player player) {
+        if (player == null) return;
+        UUID playerId = player.getUniqueId();
+        visualizationActive.remove(playerId);
+        temporaryTimers.remove(playerId);
+        clearDisplays(playerId);
     }
 
     public void showTemporary(Player player) {
@@ -131,21 +151,51 @@ public class VisualizationManager {
      */
     public void redrawDisplaysForPlayer(Player player) {
         if (player == null || !player.isOnline()) return;
+        ClaimProfile ownProfile = claimManager.getActiveProfile(player);
+        if ("OFF".equalsIgnoreCase(resolveVisMode(player, ownProfile))) {
+            disableVisualization(player);
+            return;
+        }
         // Ensure visualization is active and redraw
         visualizationActive.put(player.getUniqueId(), true);
         redrawDisplays(player);
     }
 
-    public void invalidateCache(UUID playerId) {
-        if (mergedEdgesCache.remove(playerId) != null) {
-            cacheSize.decrementAndGet();
+    public void invalidateCache(UUID profileOrPlayerId) {
+        if (profileOrPlayerId == null) return;
+        String idToken = profileOrPlayerId.toString();
+        for (Iterator<String> it = mergedEdgesCache.keySet().iterator(); it.hasNext();) {
+            if (it.next().contains(idToken)) {
+                it.remove();
+                cacheSize.decrementAndGet();
+            }
         }
-        if (activeDisplays.containsKey(playerId)) {
-            Player player = Bukkit.getPlayer(playerId);
-            if (player != null && player.isOnline()) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            UUID playerId = player.getUniqueId();
+            if (!isVisualizing(playerId) && !activeDisplays.containsKey(playerId)) {
+                continue;
+            }
+            if (playerId.equals(profileOrPlayerId)) {
+                redrawDisplays(player);
+                continue;
+            }
+            ClaimProfile activeProfile = claimManager.getActiveProfile(player);
+            if (activeProfile != null && profileOrPlayerId.equals(activeProfile.getProfileId())) {
                 redrawDisplays(player);
             }
         }
+    }
+
+    private boolean isVisualizing(UUID playerId) {
+        return visualizationActive.containsKey(playerId) || temporaryTimers.containsKey(playerId);
+    }
+
+    private String resolveVisMode(Player player, ClaimProfile profile) {
+        if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
+            return "PARTICLE";
+        }
+        String visMode = profile != null ? profile.getVisualizationMode() : "DISPLAY_ENTITY";
+        return visMode != null ? visMode : "DISPLAY_ENTITY";
     }
 
     private void redrawDisplays(Player player) {
@@ -153,46 +203,56 @@ public class VisualizationManager {
             return;
         UUID playerId = player.getUniqueId();
 
-        clearDisplays(playerId);
+        long gen = nextGeneration(playerId);
+        removeTrackedDisplays(playerId);
 
-        // Collect chunks from player's own profile
-        Set<ChunkPosition> claims = new HashSet<>();
-        ClaimProfile ownProfile = claimManager.getProfile(playerId);
-        if (ownProfile != null) {
-            claims.addAll(ownProfile.getOwnedChunks());
-        }
-
-        // Also include the claim the player is currently standing in
-        ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
-        ClaimProfile currentProfile = claimManager.getProfileAt(currentChunk);
-        if (currentProfile != null) {
-            claims.addAll(currentProfile.getOwnedChunks());
-        }
-
-        if (claims.isEmpty())
-            return;
-
-        Set<Edge> edges = getMergedEdges(playerId, player.getWorld().getName(), claims);
-        if (edges.isEmpty())
-            return;
-
-        // Determine visualization mode from profile
-        String visMode = ownProfile != null ? ownProfile.getVisualizationMode() : "DISPLAY_ENTITY";
-        if (visMode == null)
-            visMode = "DISPLAY_ENTITY";
-
-        if (org.ayosynk.landClaimPlugin.util.GeyserHelper.isBedrockPlayer(player)) {
-            visMode = "PARTICLE";
-        }
-
-        if ("PARTICLE".equals(visMode)) {
-            // Particles are spawned by the repeating task; just ensure edges are cached
+        ClaimProfile ownProfile = claimManager.getActiveProfile(player);
+        String visMode = resolveVisMode(player, ownProfile);
+        if ("OFF".equalsIgnoreCase(visMode)) {
+            lastVisualizedChunk.remove(playerId);
             return;
         }
 
-        // Display Entity mode
-        Material material = resolveMaterial(ownProfile, playerId);
-        spawnDisplays(player, edges, material);
+        Runnable work = () -> {
+            if (!player.isOnline() || isGenerationStale(playerId, gen) || !isVisualizing(playerId)) {
+                return;
+            }
+
+            ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
+            ClaimProfile currentProfile = claimManager.getProfileAt(currentChunk);
+
+            Set<ChunkPosition> claims = new HashSet<>();
+            if (ownProfile != null) {
+                claims.addAll(ownProfile.getOwnedChunks());
+            }
+            if (currentProfile != null) {
+                claims.addAll(currentProfile.getOwnedChunks());
+            }
+            if (claims.isEmpty()) {
+                lastVisualizedChunk.remove(playerId);
+                return;
+            }
+
+            Set<Edge> edges = getMergedEdges(ownProfile, currentProfile, player.getWorld().getName(), claims);
+            if (edges.isEmpty()) {
+                lastVisualizedChunk.remove(playerId);
+                return;
+            }
+
+            lastVisualizedChunk.put(playerId, currentChunk);
+            if ("PARTICLE".equals(visMode)) {
+                return;
+            }
+
+            Material material = resolveMaterial(ownProfile, playerId);
+            spawnDisplays(player, edges, material, gen);
+        };
+
+        if (!FoliaScheduler.isFolia() && Bukkit.isPrimaryThread()) {
+            work.run();
+        } else {
+            FoliaScheduler.runForPlayer(plugin, player, work);
+        }
     }
 
     /**
@@ -250,22 +310,20 @@ public class VisualizationManager {
     /**
      * Spawn Particle.DUST along claim edges at the player's Y level.
      */
-    private void spawnParticles(Player player, ClaimProfile profile) {
+    private void spawnParticles(Player player, ClaimProfile profile, ClaimProfile currentProfile) {
         UUID playerId = player.getUniqueId();
 
         Set<ChunkPosition> claims = new HashSet<>();
         if (profile != null) {
             claims.addAll(profile.getOwnedChunks());
         }
-        ChunkPosition currentChunk = new ChunkPosition(player.getLocation().getChunk());
-        ClaimProfile currentProfile = claimManager.getProfileAt(currentChunk);
         if (currentProfile != null) {
             claims.addAll(currentProfile.getOwnedChunks());
         }
         if (claims.isEmpty())
             return;
 
-        Set<Edge> edges = getMergedEdges(playerId, player.getWorld().getName(), claims);
+        Set<Edge> edges = getMergedEdges(profile, currentProfile, player.getWorld().getName(), claims);
         if (edges.isEmpty())
             return;
 
@@ -332,40 +390,61 @@ public class VisualizationManager {
         }
     }
 
-    private void spawnDisplays(Player player, Set<Edge> edges, Material material) {
+    private void spawnDisplays(Player player, Set<Edge> edges, Material material, long gen) {
         UUID playerId = player.getUniqueId();
-        List<BlockDisplay> displays = new ArrayList<>();
         World world = player.getWorld();
+        double px = player.getLocation().getX();
+        double playerY = player.getLocation().getY();
+        double pz = player.getLocation().getZ();
 
-        // On Folia, spawning entities and showing them to a player must run on the player's
-        // region thread. The work is region-mutating (world.spawn, player.showEntity).
-        FoliaScheduler.runForPlayer(plugin, player, () -> {
-            final org.bukkit.block.data.BlockData blockData = Bukkit.createBlockData(material);
-            final org.joml.AxisAngle4f emptyRotation = new org.joml.AxisAngle4f();
+        int minHeight = world.getMinHeight();
+        float scaleY = (float) (world.getMaxHeight() - minHeight);
+        float transY = (float) (minHeight - playerY);
 
-            for (Edge edge : edges) {
-                double minX = Math.min(edge.x1(), edge.x2());
-                double minZ = Math.min(edge.z1(), edge.z2());
-                double lengthX = Math.abs(edge.x2() - edge.x1());
-                double lengthZ = Math.abs(edge.z2() - edge.z1());
+        org.bukkit.block.data.BlockData blockData = Bukkit.createBlockData(material);
+        org.joml.AxisAngle4f emptyRotation = new org.joml.AxisAngle4f();
 
-                float scaleX = (float) (lengthX == 0 ? 0.05f : lengthX);
-                float scaleZ = (float) (lengthZ == 0 ? 0.05f : lengthZ);
-                float scaleY = 384f;
+        List<BlockDisplay> displays = Collections.synchronizedList(new ArrayList<>());
+        activeDisplays.put(playerId, displays);
 
-                double playerY = player.getLocation().getY();
-                Location loc = new Location(world, minX, playerY, minZ);
+        for (Edge edge : edges) {
+            if (isGenerationStale(playerId, gen) || !player.isOnline()) {
+                break;
+            }
+            if (!isEdgeNearPlayer(edge, px, pz, DISPLAY_RANGE)) {
+                continue;
+            }
 
+            double minX = Math.min(edge.x1(), edge.x2());
+            double minZ = Math.min(edge.z1(), edge.z2());
+            int chunkX = ((int) Math.floor(minX)) >> 4;
+            int chunkZ = ((int) Math.floor(minZ)) >> 4;
+            if (!world.isChunkLoaded(chunkX, chunkZ)) {
+                continue;
+            }
+
+            double lengthX = Math.abs(edge.x2() - edge.x1());
+            double lengthZ = Math.abs(edge.z2() - edge.z1());
+            float scaleX = (float) (lengthX == 0 ? 0.05f : lengthX);
+            float scaleZ = (float) (lengthZ == 0 ? 0.05f : lengthZ);
+            float transX = lengthX == 0 ? -0.025f : 0f;
+            float transZ = lengthZ == 0 ? -0.025f : 0f;
+            Location loc = new Location(world, minX, playerY, minZ);
+
+            Runnable spawnOne = () -> {
+                if (isGenerationStale(playerId, gen) || !player.isOnline() || !isVisualizing(playerId)) {
+                    return;
+                }
+                if (!world.isChunkLoaded(chunkX, chunkZ)) {
+                    return;
+                }
                 BlockDisplay display = world.spawn(loc, BlockDisplay.class, e -> {
                     e.setPersistent(false);
                     e.setVisibleByDefault(false);
                     e.setBlock(blockData);
                     e.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
                     e.setGravity(false);
-
-                    float transX = lengthX == 0 ? -0.025f : 0f;
-                    float transY = (float) (-64 - playerY);
-                    float transZ = lengthZ == 0 ? -0.025f : 0f;
+                    e.setViewRange(1.5f);
 
                     Transformation transform = new Transformation(
                             new Vector3f(transX, transY, transZ),
@@ -375,44 +454,118 @@ public class VisualizationManager {
                     e.setTransformation(transform);
                 });
 
-                player.showEntity(plugin, display);
-                displays.add(display);
+                boolean keep;
+                synchronized (displays) {
+                    keep = !isGenerationStale(playerId, gen) && player.isOnline() && isVisualizing(playerId);
+                    if (keep) {
+                        displays.add(display);
+                    }
+                }
+                if (!keep) {
+                    display.remove();
+                } else if (FoliaScheduler.isFolia()) {
+                    FoliaScheduler.runForPlayer(plugin, player, () -> {
+                        if (!isGenerationStale(playerId, gen) && player.isOnline() && display.isValid()) {
+                            player.showEntity(plugin, display);
+                        }
+                    });
+                } else {
+                    player.showEntity(plugin, display);
+                }
+            };
+
+            if (!FoliaScheduler.isFolia() || Bukkit.isOwnedByCurrentRegion(loc)) {
+                spawnOne.run();
+            } else {
+                FoliaScheduler.runAtLocation(plugin, loc, spawnOne);
             }
-            activeDisplays.put(playerId, displays);
-        });
+        }
+    }
+
+    private static boolean isEdgeNearPlayer(Edge edge, double px, double pz, int maxDist) {
+        double cx = Math.max(edge.x1(), Math.min(px, edge.x2()));
+        double cz = Math.max(edge.z1(), Math.min(pz, edge.z2()));
+        double dx = px - cx;
+        double dz = pz - cz;
+        return (dx * dx + dz * dz) <= (double) maxDist * maxDist;
+    }
+
+    private long nextGeneration(UUID playerId) {
+        return displayGenerations.computeIfAbsent(playerId, k -> new AtomicLong()).incrementAndGet();
+    }
+
+    private boolean isGenerationStale(UUID playerId, long gen) {
+        AtomicLong current = displayGenerations.get(playerId);
+        return current == null || current.get() != gen;
     }
 
     private void clearDisplays(UUID playerId) {
-        // Removing entities (BlockDisplay) must run on the entity's region thread on Folia.
-        // The displays are owned by the player's region (they're visible only to that player
-        // and spawned in chunks near them), so we route to the player's region. If the player
-        // has logged out, fall back to a global-region task to clear stale entries.
-        Player player = Bukkit.getPlayer(playerId);
-        Runnable work = () -> {
-            List<BlockDisplay> displays = activeDisplays.remove(playerId);
-            if (displays != null) {
-                for (BlockDisplay display : displays) {
-                    if (display.isValid()) {
-                        display.remove();
-                    }
+        nextGeneration(playerId);
+        lastVisualizedChunk.remove(playerId);
+        removeTrackedDisplays(playerId);
+    }
+
+    private void removeTrackedDisplays(UUID playerId) {
+        List<BlockDisplay> displays = activeDisplays.remove(playerId);
+        if (displays == null || displays.isEmpty()) {
+            return;
+        }
+        List<BlockDisplay> snapshot;
+        synchronized (displays) {
+            snapshot = new ArrayList<>(displays);
+            displays.clear();
+        }
+        if (snapshot.isEmpty()) {
+            return;
+        }
+
+        if (!plugin.isEnabled()) {
+            for (BlockDisplay display : snapshot) {
+                if (!FoliaScheduler.isFolia() || Bukkit.isOwnedByCurrentRegion(display)) {
+                    removeDisplaySafely(display);
                 }
             }
-        };
-        if (player != null) {
-            FoliaScheduler.runForPlayer(plugin, player, work);
+            return;
+        }
+
+        if (!FoliaScheduler.isFolia()) {
+            if (Bukkit.isPrimaryThread()) {
+                for (BlockDisplay display : snapshot) {
+                    removeDisplaySafely(display);
+                }
+            } else {
+                FoliaScheduler.runTask(plugin, () -> {
+                    for (BlockDisplay display : snapshot) {
+                        removeDisplaySafely(display);
+                    }
+                });
+            }
         } else {
-            FoliaScheduler.runTask(plugin, work);
+            for (BlockDisplay display : snapshot) {
+                FoliaScheduler.runForEntity(plugin, display, () -> removeDisplaySafely(display));
+            }
+        }
+    }
+
+    private static void removeDisplaySafely(BlockDisplay display) {
+        try {
+            if (!display.isDead()) {
+                display.remove();
+            }
+        } catch (Throwable ignored) {
         }
     }
 
     // --- Caching and Edge Merging ---
 
-    private Set<Edge> getMergedEdges(UUID playerId, String worldName, Set<ChunkPosition> claims) {
-        if (mergedEdgesCache.containsKey(playerId)) {
-            Map<String, Set<Edge>> worldCache = mergedEdgesCache.get(playerId);
-            if (worldCache.containsKey(worldName)) {
-                return worldCache.get(worldName);
-            }
+    private Set<Edge> getMergedEdges(ClaimProfile ownProfile, ClaimProfile currentProfile, String worldName,
+            Set<ChunkPosition> claims) {
+        String cacheKey = (ownProfile != null ? ownProfile.getProfileId().toString() : "none")
+                + ":" + (currentProfile != null ? currentProfile.getProfileId().toString() : "none");
+
+        Map<String, Set<Edge>> worldCache = mergedEdgesCache.get(cacheKey);
+        if (worldCache != null && worldCache.containsKey(worldName)) {
+            return worldCache.get(worldName);
         }
 
         Map<Edge, Integer> edgeCounts = new HashMap<>();
@@ -444,29 +597,28 @@ public class VisualizationManager {
             }
         }
 
-        cacheEdges(playerId, worldName, uniqueEdges);
+        cacheEdges(cacheKey, worldName, uniqueEdges);
         return uniqueEdges;
     }
 
-    private void cacheEdges(UUID playerId, String worldName, Set<Edge> edges) {
-        if (!mergedEdgesCache.containsKey(playerId) && cacheSize.get() >= MAX_CACHE_ENTRIES) {
+    private void cacheEdges(String cacheKey, String worldName, Set<Edge> edges) {
+        if (!mergedEdgesCache.containsKey(cacheKey) && cacheSize.get() >= MAX_CACHE_ENTRIES) {
             evictOldestCacheEntry();
         }
 
-        boolean isNewPlayer = !mergedEdgesCache.containsKey(playerId);
-        mergedEdgesCache.computeIfAbsent(playerId, k -> new HashMap<>()).put(worldName, edges);
+        boolean isNewEntry = !mergedEdgesCache.containsKey(cacheKey);
+        mergedEdgesCache.computeIfAbsent(cacheKey, k -> new ConcurrentHashMap<>()).put(worldName, edges);
 
-        if (isNewPlayer) {
+        if (isNewEntry) {
             cacheSize.incrementAndGet();
         }
     }
 
     private void evictOldestCacheEntry() {
-        Iterator<UUID> iterator = mergedEdgesCache.keySet().iterator();
+        Iterator<String> iterator = mergedEdgesCache.keySet().iterator();
         if (iterator.hasNext()) {
-            UUID toRemove = iterator.next();
-            if (Bukkit.getPlayer(toRemove) == null) {
-                mergedEdgesCache.remove(toRemove);
+            String toRemove = iterator.next();
+            if (mergedEdgesCache.remove(toRemove) != null) {
                 cacheSize.decrementAndGet();
             }
         }
@@ -484,8 +636,13 @@ public class VisualizationManager {
         visualizationActive.remove(playerId);
         temporaryTimers.remove(playerId);
         clearDisplays(playerId);
-        if (mergedEdgesCache.remove(playerId) != null) {
-            cacheSize.decrementAndGet();
+        displayGenerations.remove(playerId);
+        String idToken = playerId.toString();
+        for (Iterator<String> it = mergedEdgesCache.keySet().iterator(); it.hasNext();) {
+            if (it.next().contains(idToken)) {
+                it.remove();
+                cacheSize.decrementAndGet();
+            }
         }
     }
 

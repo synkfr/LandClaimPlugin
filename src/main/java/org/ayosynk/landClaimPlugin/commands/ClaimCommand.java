@@ -604,7 +604,7 @@ public class ClaimCommand implements LandClaimCommand {
             }
 
             String newMode;
-            switch (mode) {
+            switch (mode.toLowerCase(java.util.Locale.ROOT)) {
                 case "display_entities":
                 case "display-entities":
                 case "entity":
@@ -623,13 +623,15 @@ public class ClaimCommand implements LandClaimCommand {
                     return;
             }
 
-            String oldMode = profile.getVisualizationMode();
             profile.setVisualizationMode(newMode);
             claimManager.saveAndSync(profile);
 
             // Update visualization immediately
-            visualizationManager.handlePlayerJoin(player);
-            visualizationManager.redrawDisplaysForPlayer(player);
+            if ("OFF".equals(newMode)) {
+                visualizationManager.disableVisualization(player);
+            } else {
+                visualizationManager.redrawDisplaysForPlayer(player);
+            }
 
             String modeName = newMode.equals("DISPLAY_ENTITY") ? "Display Entities" :
                               newMode.equals("PARTICLE") ? "Particles" : "Off";
